@@ -1,0 +1,7 @@
+include MANIFEST.in
+include *.txt
+include setup.py VERSION
+
+recursive-include carray *.py *.pyx *.pxd *.c
+recursive-include blosc *.c *.h
+recursive-include LICENSES *
