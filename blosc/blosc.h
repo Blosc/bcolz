@@ -104,6 +104,17 @@ int blosc_decompress(const void *src, void *dest, size_t destsize);
 
 
 /**
+  Get items in `src` buffer in the range of `start` and `stop`.  The
+  items are returned in the `dest`, which has a size specified in
+  `destsize`.  Returns the number of bytes returned in `dest` or a
+  negative value if some error happens.
+ */
+
+int blosc_getitem(const void *src, int start, int stop,
+		  void *dest, size_t destsize);
+
+
+/**
   Free possible memory temporaries and thread resources.  Use this
   when you are not going to use Blosc for a long while.
 */

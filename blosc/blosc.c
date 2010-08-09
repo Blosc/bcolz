@@ -267,7 +267,10 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
     else {
       /* dest is not aligned.  Use tmp2, which is aligned, and copy. */
       unshuffle(typesize, blocksize, tmp, tmp2);
-      memcpy(dest, tmp2, blocksize);
+      if (tmp2 != dest) {
+        /* Copy only when dest is not tmp2 (e.g. not blosc_getitem())  */
+        memcpy(dest, tmp2, blocksize);
+      }
     }
   }
 
@@ -405,7 +408,7 @@ void create_temporaries(void)
   size_t blocksize = params.blocksize;
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
-   hurt other modes either. */
+   hurt serial mode either. */
   size_t ebsize = blocksize + typesize*sizeof(int32_t);
   uint8_t *tmp = NULL, *tmp2 = NULL;
   int result1 = 0, result2 = 0;
@@ -683,7 +686,6 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   uint8_t *_dest=NULL;           /* current pos for destination buffer */
   uint8_t version, versionlz;    /* versions for compressed header */
   uint8_t flags;                 /* flags for header */
-  int32_t doshuffle = 0;         /* do unshuffle? */
   int32_t ntbytes;               /* the number of uncompressed bytes */
   uint32_t nblocks;              /* number of total blocks in buffer */
   uint32_t leftover;             /* extra bytes at end of buffer */
@@ -712,20 +714,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
   nblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int32_t)*nblocks;
 
-  /* Check zero typesizes.  From Blosc version format 2 on, this value
-   has been reserved for future use. */
-  if ((version == 1) && (typesize == 0)) {
-    typesize = 256;             /* 0 means 256 in format version 1 */
-  }
-
   /* Check that we have enough space to decompress */
   if (nbytes > destsize) {
     return -1;
-  }
-
-  if (flags & BLOSC_DOSHUFFLE) {
-    /* Input is shuffled.  Unshuffle it. */
-    doshuffle = 1;
   }
 
   /* Populate parameters for decompression routines */
@@ -759,8 +750,100 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     ntbytes = do_job();
   }
 
-
   assert(ntbytes <= (int32_t)destsize);
+  return ntbytes;
+}
+
+
+int blosc_getitem(const void *src, int start, int stop,
+                  void *dest, size_t destsize)
+{
+  uint8_t *_src=NULL;               /* current pos for source buffer */
+  uint8_t version, versionlz;       /* versions for compressed header */
+  uint8_t flags;                    /* flags for header */
+  int32_t ntbytes = 0;              /* the number of uncompressed bytes */
+  uint32_t nblocks;                 /* number of total blocks in buffer */
+  uint32_t leftover;                /* extra bytes at end of buffer */
+  uint32_t *bstarts;                /* start pointers for each block */
+  uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
+  uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
+  uint32_t typesize, blocksize, nbytes, ctbytes;
+  uint32_t j, bsize, bsize2, leftoverblock;
+  int32_t cbytes, startb, stopb;
+
+  _src = (uint8_t *)(src);
+
+  /* Read the header block */
+  version = _src[0];                         /* blosc format version */
+  versionlz = _src[1];                       /* blosclz format version */
+  flags = _src[2];                           /* flags */
+  typesize = (uint32_t)_src[3];              /* typesize */
+  _src += 4;
+  nbytes = sw32(((uint32_t *)_src)[0]);      /* buffer size */
+  blocksize = sw32(((uint32_t *)_src)[1]);   /* block size */
+  ctbytes = sw32(((uint32_t *)_src)[2]);     /* compressed buffer size */
+
+  _src += sizeof(int32_t)*3;
+  bstarts = (uint32_t *)_src;
+  /* Compute some params */
+  /* Total blocks */
+  nblocks = nbytes / blocksize;
+  leftover = nbytes % blocksize;
+  nblocks = (leftover>0)? nblocks+1: nblocks;
+  _src += sizeof(int32_t)*nblocks;
+
+  /* Check that we have enough space to decompress */
+  if ((stop-start)*typesize > destsize) {
+    return -1;
+  }
+
+  /* Parameters needed by blosc_d */
+  params.typesize = typesize;
+  params.flags = flags;
+
+  for (j = 0; j < nblocks; j++) {
+    bsize = blocksize;
+    leftoverblock = 0;
+    if ((j == nblocks - 1) && (leftover > 0)) {
+      bsize = leftover;
+      leftoverblock = 1;
+    }
+
+    /* Compute start & stop for each block */
+    startb = start*typesize - j*blocksize;
+    stopb = stop*typesize - j*blocksize;
+    if ((startb >= (int)blocksize) || (stopb <= 0)) {
+      continue;
+    }
+    if (startb < 0) {
+      startb = 0;
+    }
+    if (stopb > (int)blocksize) {
+      stopb = blocksize;
+    }
+    bsize2 = stopb - startb;
+
+    /* Do the actual data copy */
+    if (flags & BLOSC_MEMCPYED) {
+      /* We want to memcpy only */
+      memcpy(dest+ntbytes, src+BLOSC_MAX_OVERHEAD+j*blocksize+startb, bsize2);
+      cbytes = bsize2;
+    }
+    else {
+      /* Regular decompression.  Put results in tmp2. */
+      cbytes = blosc_d(bsize, leftoverblock,
+                       (uint8_t *)src+sw32(bstarts[j]), tmp2, tmp, tmp2);
+      if (cbytes < 0) {
+        ntbytes = cbytes;
+        break;
+      }
+      /* Copy to destination */
+      memcpy(dest+ntbytes, tmp2+startb, bsize2);
+      cbytes = bsize2;
+    }
+    ntbytes += cbytes;
+  }
+
   return ntbytes;
 }
 

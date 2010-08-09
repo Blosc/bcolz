@@ -40,14 +40,18 @@ from definitions cimport import_array, ndarray, \
 cdef extern from "blosc.h":
 
   cdef enum:
-    BLOSC_VERSION_STRING, BLOSC_VERSION_DATE
+    BLOSC_MAX_OVERHEAD,
+    BLOSC_VERSION_STRING,
+    BLOSC_VERSION_DATE
 
   void blosc_get_versions(char *version_str, char *version_date)
   int blosc_set_nthreads(int nthreads)
-  unsigned int blosc_compress(int clevel, int doshuffle, size_t typesize,
-                              size_t nbytes, void *src, void *dest,
-                              size_t destsize)
-  unsigned int blosc_decompress(void *src, void *dest, size_t destsize)
+  int blosc_compress(int clevel, int doshuffle, size_t typesize,
+                     size_t nbytes, void *src, void *dest,
+                     size_t destsize)
+  int blosc_decompress(void *src, void *dest, size_t destsize)
+  int blosc_getitem(void *src, int start, int stop,
+                    void *dest, size_t destsize)
   void blosc_free_resources()
   void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
                            size_t *cbytes, size_t *blocksize)
@@ -86,7 +90,9 @@ cdef class carray:
   Public instance variables
   -------------------------
 
-  - none yet
+  shape
+  dtype
+
   Public methods
   --------------
 
@@ -104,6 +110,7 @@ cdef class carray:
 
   cdef object dtype
   cdef object shape
+  cdef int itemsize
   cdef npy_intp nbytes, cbytes
   cdef void *data
 
@@ -121,19 +128,16 @@ cdef class carray:
     nbytes = itemsize
     for i in self.shape:
       nbytes *= i
-    self.data = malloc(nbytes)
+    self.data = malloc(nbytes+BLOSC_MAX_OVERHEAD)
     # Compress up to nbytes-1 maximum
     cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
-                            self.data, nbytes-1)
-    if cbytes < 0:
+                            self.data, nbytes+BLOSC_MAX_OVERHEAD)
+    if cbytes <= 0:
       raise RuntimeError, "Fatal error during Blosc compression: %d" % cbytes
-    if cbytes == 0:
-      # Compression not successful.  Copy data directly.
-      memcpy(self.data, array.data, nbytes)
-      cbytes = nbytes
     # Set size info for the instance
     self.cbytes = cbytes
     self.nbytes = nbytes
+    self.itemsize = itemsize
 
 
   def toarray(self):
@@ -144,19 +148,38 @@ cdef class carray:
     # Build a NumPy container
     array = numpy.empty(shape=self.shape, dtype=self.dtype)
     # Fill it with uncompressed data
-    if self.cbytes == self.nbytes:
-      memcpy(array.data, self.data, self.nbytes)
-    else:
-      ret = blosc_decompress(self.data, array.data, self.nbytes)
-      if ret <= 0:
-        raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
+    ret = blosc_decompress(self.data, array.data, self.nbytes)
+    if ret <= 0:
+      raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
     return array
 
 
   def __getitem__(self, key):
     """__getitem__(self, key) -> values
     """
-    raise NotImplementedError
+    cdef ndarray array
+
+    scalar = False
+    if isinstance(key, int):
+      (start, stop, step) = key, key+1, 1
+      scalar = True
+    elif isinstance(key, slice):
+      (start, stop, step) = key.start, key.stop, key.step
+    else:
+      raise KeyError, "key not supported:", key
+    length = stop-start
+    # Build a NumPy container
+    array = numpy.empty(shape=(length,), dtype=self.dtype)
+    # Uncompress and read data into it
+    ret = blosc_getitem(self.data, start, stop,
+                        array.data, length*self.itemsize)
+    if step == 1:
+      if scalar:
+        return array[0]
+      else:
+        return array
+    else:
+      return array[::step]
 
 
   def __setitem__(self, object key, object value):
