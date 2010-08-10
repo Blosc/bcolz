@@ -13,6 +13,7 @@
 Classes (type extensions):
 
     carray
+    earray
 
     __version__
 """
@@ -20,6 +21,12 @@ Classes (type extensions):
 import sys
 import numpy
 
+_KB = 1024
+_MB = 1024*_KB
+
+# The type used for size values: indexes, coordinates, dimension
+# lengths, row numbers, shapes, chunk shapes, byte counts...
+SizeType = numpy.int64
 
 __version__ = "$Revision: 4417 $"
 
@@ -111,8 +118,14 @@ cdef class carray:
   cdef object dtype
   cdef object shape
   cdef int itemsize
-  cdef npy_intp nbytes, cbytes
+  cdef npy_intp nbytes, _cbytes
   cdef void *data
+
+  property cbytes:
+    """The number of compressed bytes."""
+    def __get__(self):
+      return SizeType(self._cbytes)
+
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=1):
     """Initialize and compress data based on passed `array`.
@@ -120,7 +133,7 @@ cdef class carray:
     You can pass `clevel` and `shuffle` params to the internal compressor.
     """
     cdef int i, itemsize
-    cdef npy_intp nbytes, cbytes
+    cdef int nbytes, cbytes
 
     self.dtype = dtype = array.dtype
     self.shape = shape = array.shape
@@ -129,13 +142,13 @@ cdef class carray:
     for i in self.shape:
       nbytes *= i
     self.data = malloc(nbytes+BLOSC_MAX_OVERHEAD)
-    # Compress up to nbytes-1 maximum
+    # Compress data
     cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
                             self.data, nbytes+BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
       raise RuntimeError, "Fatal error during Blosc compression: %d" % cbytes
     # Set size info for the instance
-    self.cbytes = cbytes
+    self._cbytes = cbytes
     self.nbytes = nbytes
     self.itemsize = itemsize
 
@@ -154,10 +167,175 @@ cdef class carray:
     return array
 
 
+  cpdef _getitem(self, start, stop):
+    """Read data from `start` to `stop` and return it as a NumPy array."""
+    cdef ndarray array
+
+    # Build a NumPy container
+    array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
+    # Fill it with uncompressed data
+    ret = blosc_getitem(self.data, start, stop,
+                        array.data, array.size*self.itemsize)
+    if ret < 0:
+      raise RuntimeError, "Error in `blosc_getitem()` method."
+    return array
+
+
+  def __getitem__(self, key):
+    """__getitem__(self, key) -> values."""
+
+    scalar = False
+    if isinstance(key, int):
+      (start, stop, step) = key, key+1, 1
+      scalar = True
+    elif isinstance(key, slice):
+      (start, stop, step) = key.start, key.stop, key.step
+    else:
+      raise KeyError, "key not supported:", key
+
+    # Read actual data
+    array = self._getitem(start, stop)
+
+    # Return the value depending on the key and step
+    if scalar:
+      return array[0]
+    elif step > 1:
+      return array[::step]
+    return array
+
+
+  def __setitem__(self, object key, object value):
+    """__setitem__(self, key, value) -> None."""
+    raise NotImplementedError
+
+
+  def __str__(self):
+    """Represent the carray as an string."""
+    return str(self.toarray())
+
+
+  def __repr__(self):
+    """Represent the record as an string."""
+    cratio = self.nbytes / float(self._cbytes)
+    fullrepr = "nbytes: %d; cbytes: %d; compr. ratio: %.2f\n%r" % \
+        (self.nbytes, self._cbytes, cratio, self.toarray())
+    return fullrepr
+
+
+  def __dealloc__(self):
+    """Release C resources before destruction."""
+    free(self.data)
+
+
+
+cdef class earray:
+  """
+  Compressed and enlargeable in-memory data container.
+
+  ...blurb...
+
+  Public instance variables
+  -------------------------
+
+  shape
+  dtype
+
+  Public methods
+  --------------
+
+  toarray()
+      Get a NumPy ndarray from earray.
+
+  Special methods
+  ---------------
+
+  __getitem__(key)
+      Get the values specified by the ``key``.
+  __setitem__(key, value)
+      Set the specified ``value`` in ``key``.
+  """
+
+  cdef object dtype, shape, chunks
+  cdef int itemsize, chunksize, leftover
+  cdef int clevel, shuffle
+  cdef npy_intp nbytes, _cbytes
+  cdef void *lastchunk
+
+  property cbytes:
+    """The number of compressed bytes."""
+    def __get__(self):
+      return SizeType(self._cbytes)
+
+
+  def __cinit__(self, ndarray array, int clevel=5, int shuffle=1,
+                int chunksize=1*_MB):
+    """Initialize and compress data based on passed `array`.
+
+    You can pass `clevel` and `shuffle` params to the internal compressor.
+    """
+    cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
+    cdef npy_intp nbytes, cbytes
+    cdef ndarray remainder
+
+    self.clevel = clevel
+    self.shuffle = shuffle
+    self.dtype = dtype = array.dtype
+    self.shape = shape = array.shape
+    self.chunks = chunks = []
+    self.itemsize = itemsize = dtype.itemsize
+    # Chunksize must be a multiple of itemsize
+    cs = (chunksize // itemsize) * itemsize
+    self.chunksize = cs
+    # Book memory for last chunk (uncompressed)
+    self.lastchunk = malloc(self.chunksize)
+
+    # The number of bytes in incoming array
+    nbytes = itemsize
+    for i in self.shape:
+      nbytes *= i
+    self.nbytes = nbytes
+
+    # Compress data in chunks
+    cbytes = 0
+    nchunks = self.nbytes // self.chunksize
+    nelemchunk = self.chunksize // itemsize
+    for i in range(nchunks):
+      chunk = carray(array[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
+      chunks.append(chunk)
+      cbytes += chunk.cbytes 
+    self.leftover = leftover = nbytes % cs
+    if leftover:
+      remainder = array[nchunks*nelemchunk:]
+      memcpy(self.lastchunk, remainder.data, leftover)
+    cbytes += self.chunksize  # count the space in last chunk 
+    self._cbytes = cbytes
+
+
+  def toarray(self):
+    """Convert this `earray` instance into a NumPy array."""
+    cdef ndarray array, chunk
+    cdef int ret, i, nchunks
+
+    # Build a NumPy container
+    array = numpy.empty(shape=self.shape, dtype=self.dtype)
+
+    # Fill it with uncompressed data
+    nchunks = self.nbytes // self.chunksize
+    for i in range(nchunks):
+      chunk = self.chunks[i].toarray()
+      memcpy(array.data+i*self.chunksize, chunk.data, self.chunksize) 
+    if self.leftover:
+      memcpy(array.data+nchunks*self.chunksize, self.lastchunk, self.leftover)
+
+    return array
+
+
   def __getitem__(self, key):
     """__getitem__(self, key) -> values
     """
-    cdef ndarray array
+    cdef ndarray array, chunk
+    cdef int i, itemsize, chunklen, leftover, nchunks
+    cdef int startb, stopb, bsize, ntbytes
 
     scalar = False
     if isinstance(key, int):
@@ -168,11 +346,35 @@ cdef class carray:
     else:
       raise KeyError, "key not supported:", key
     length = stop-start
+
     # Build a NumPy container
     array = numpy.empty(shape=(length,), dtype=self.dtype)
-    # Uncompress and read data into it
-    ret = blosc_getitem(self.data, start, stop,
-                        array.data, length*self.itemsize)
+
+    # Fill it from data in chunks
+    itemsize = self.itemsize
+    leftover = self.leftover
+    chunklen = self.chunksize // itemsize
+    nchunks = self.nbytes // self.chunksize
+    ntbytes = 0
+    for i in range(nchunks+1):
+      # Compute start & stop for each block
+      startb = start - i*chunklen
+      stopb = stop - i*chunklen
+      if (startb >= chunklen) or (stopb <= 0):
+        continue
+      if startb < 0:
+        startb = 0
+      if stopb > chunklen:
+        stopb = chunklen
+      bsize = (stopb - startb) * itemsize
+      if i == nchunks and leftover:
+        memcpy(array.data+ntbytes, self.lastchunk+startb*itemsize, bsize)
+      else:
+        # Get the data chunk
+        chunk = self.chunks[i]._getitem(startb, stopb)
+        memcpy(array.data+ntbytes, chunk.data, bsize)
+      ntbytes += bsize
+
     if step == 1:
       if scalar:
         return array[0]
@@ -189,21 +391,21 @@ cdef class carray:
 
 
   def __str__(self):
-    """Represent the carray as an string."""
+    """Represent the earray as an string."""
     return str(self.toarray())
 
 
   def __repr__(self):
     """Represent the record as an string."""
-    cratio = self.nbytes / float(self.cbytes)
+    cratio = self.nbytes / float(self._cbytes)
     fullrepr = "nbytes: %d; cbytes: %d; compr. ratio: %.2f\n%r" % \
-        (self.nbytes, self.cbytes, cratio, self.toarray())
+        (self.nbytes, self._cbytes, cratio, self.toarray())
     return fullrepr
 
 
   def __dealloc__(self):
     """Release C resources before destruction."""
-    free(self.data)
+    free(self.lastchunk)
 
 
 

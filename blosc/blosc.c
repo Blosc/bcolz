@@ -794,6 +794,7 @@ int blosc_getitem(const void *src, int start, int stop,
 
   /* Check that we have enough space to decompress */
   if ((stop-start)*typesize > destsize) {
+    printf("Not enough space to put results.");
     return -1;
   }
 

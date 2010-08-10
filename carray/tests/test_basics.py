@@ -14,7 +14,7 @@ import carray as ca
 import unittest
 
 
-class BasicCheck(unittest.TestCase):
+class carrayCheck(unittest.TestCase):
     
     def test00(self):
         """Testing `toarray()` method"""
@@ -55,10 +55,52 @@ class BasicCheck(unittest.TestCase):
         assert_array_equal(a[1:80000], b[1:80000], "Arrays are not equal")
 
 
+class earrayCheck(unittest.TestCase):
+    
+    def test00(self):
+        """Testing `toarray()` method"""
+        a = np.arange(1e2)
+        #a = np.linspace(-1, 1, 1e2)
+        b = ca.earray(a, chunksize=100)
+        print "b->", `b`
+        c = b.toarray()
+        print "c->", `c`
+        assert_array_equal(a, c, "Arrays are not equal")
+
+    def test01(self):
+        """Testing `__getitem()__` method with scalars"""
+        a = np.arange(1e1)
+        b = ca.earray(a, chunksize=100)
+        print "b[1]->", `b[1]`
+        self.assert_(a[1] == b[1], "Values in key 1 are not equal")
+
+    def test02(self):
+        """Testing `__getitem()__` method with ranges"""
+        a = np.arange(1e1)
+        b = ca.earray(a, chunksize=100)
+        print "b[1:3]->", `b[1:3]`
+        assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
+
+    def test03(self):
+        """Testing `__getitem()__` method with ranges and steps"""
+        a = np.arange(1e1)
+        b = ca.earray(a, chunksize=100)
+        print "b[1:8:3]->", `b[1:8:3]`
+        assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
+
+    def test04(self):
+        """Testing `__getitem()__` method with long ranges"""
+        a = np.arange(1e5)
+        b = ca.earray(a, chunksize=10000)
+        print "b[1:80000]->", `b[1:80000]`
+        assert_array_equal(a[1:80000], b[1:80000], "Arrays are not equal")
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
-    theSuite.addTest(unittest.makeSuite(BasicCheck))
+    theSuite.addTest(unittest.makeSuite(carrayCheck))
+    theSuite.addTest(unittest.makeSuite(earrayCheck))
 
     return theSuite
 
