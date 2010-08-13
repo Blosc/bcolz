@@ -135,8 +135,11 @@ cdef class carray:
     cdef int i, itemsize
     cdef int nbytes, cbytes
 
-    self.dtype = dtype = array.dtype
-    self.shape = shape = array.shape
+    dtype = array.dtype
+    shape = array.shape
+    self.dtype = dtype
+    self.shape = shape
+      
     itemsize = dtype.itemsize
     nbytes = itemsize
     for i in self.shape:
@@ -181,7 +184,7 @@ cdef class carray:
     return array
 
 
-  def __getitem__(self, key):
+  def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
 
     scalar = False
@@ -260,6 +263,7 @@ cdef class earray:
   cdef int clevel, shuffle
   cdef npy_intp nbytes, _cbytes
   cdef void *lastchunk
+  cdef object lastchunkarr
 
   property cbytes:
     """The number of compressed bytes."""
@@ -275,7 +279,9 @@ cdef class earray:
     """
     cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
     cdef npy_intp nbytes, cbytes
-    cdef ndarray remainder
+    cdef ndarray remainder, lastchunkarr
+
+    assert len(array.shape) == 1, "Only unidimensional shapes supported."
 
     self.clevel = clevel
     self.shuffle = shuffle
@@ -287,7 +293,9 @@ cdef class earray:
     cs = (chunksize // itemsize) * itemsize
     self.chunksize = cs
     # Book memory for last chunk (uncompressed)
-    self.lastchunk = malloc(self.chunksize)
+    lastchunkarr = numpy.empty(dtype=dtype, shape=(cs//itemsize,))
+    self.lastchunk = lastchunkarr.data
+    self.lastchunkarr = lastchunkarr
 
     # The number of bytes in incoming array
     nbytes = itemsize
@@ -330,14 +338,34 @@ cdef class earray:
     return array
 
 
-  def __getitem__(self, key):
-    """__getitem__(self, key) -> values
-    """
+  def _processRange(self, start, stop, step, nrows, warn_negstep=True):
+    """Return sensible values of start, stop and step for nrows length."""
+
+    if warn_negstep and step and step < 0 :
+      raise ValueError("slice step cannot be negative")
+    # In order to convert possible numpy.integer values to long ones
+    if start is not None: start = long(start)
+    if stop is not None: stop = long(stop)
+    if step is not None: step = long(step)
+    (start, stop, step) = slice(start, stop, step).indices(nrows)
+
+    return (start, stop, step)
+
+
+  def __getitem__(self, object key):
+    """__getitem__(self, key) -> values."""
     cdef ndarray array, chunk
     cdef int i, itemsize, chunklen, leftover, nchunks
-    cdef int startb, stopb, bsize, ntbytes
+    cdef int startb, stopb, bsize
+    cdef npy_intp nbytes, ntbytes, nrows
 
+    nbytes = self.nbytes
+    itemsize = self.itemsize
+    leftover = self.leftover
+    chunklen = self.chunksize // itemsize
+    nchunks = self.nbytes // self.chunksize
     scalar = False
+
     if isinstance(key, int):
       (start, stop, step) = key, key+1, 1
       scalar = True
@@ -345,16 +373,13 @@ cdef class earray:
       (start, stop, step) = key.start, key.stop, key.step
     else:
       raise KeyError, "key not supported:", key
-    length = stop-start
+    nrows = nbytes // itemsize
+    start, stop, step = self._processRange(start, stop, step, nrows)
 
     # Build a NumPy container
-    array = numpy.empty(shape=(length,), dtype=self.dtype)
+    array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
 
     # Fill it from data in chunks
-    itemsize = self.itemsize
-    leftover = self.leftover
-    chunklen = self.chunksize // itemsize
-    nchunks = self.nbytes // self.chunksize
     ntbytes = 0
     for i in range(nchunks+1):
       # Compute start & stop for each block
@@ -385,9 +410,72 @@ cdef class earray:
 
 
   def __setitem__(self, object key, object value):
-    """__setitem__(self, key, value) -> None
-    """
+    """__setitem__(self, key, value) -> None."""
     raise NotImplementedError
+
+
+  def append(self, ndarray array):
+    """Append `array` at the end of `self`.
+
+    Return the number of elements appended.
+    """
+    cdef int itemsize, chunksize, leftover, bsize
+    cdef int nbytesfirst, nelemchunk
+    cdef npy_intp nbytes, cbytes
+    cdef object chunk
+    cdef ndarray remainder
+
+    assert array.dtype == self.dtype, "array dtype does not match with self."
+    assert len(array.shape) == 1, "Only unidimensional shapes supported."
+
+    itemsize = self.itemsize
+    chunksize = self.chunksize
+    chunks = self.chunks
+    leftover = self.leftover
+    bsize = array.size*itemsize
+    cbytes = 0
+
+    # Check if array fits in existing buffer
+    if (bsize + leftover) < chunksize:
+      # Data fits in lastchunk buffer.  Just copy it
+      memcpy(self.lastchunk+leftover, array.data, bsize)
+      leftover += bsize
+    else:
+      # Data does not fit in buffer.  Break it in chunks.
+
+      # First, fill the last buffer completely
+      nbytesfirst = chunksize-leftover
+      memcpy(self.lastchunk+leftover, array.data, nbytesfirst)
+      # Compress the last chunk and add it to the list
+      chunk = carray(self.lastchunkarr, self.clevel, self.shuffle)
+      chunks.append(chunk)
+      cbytes = chunk.cbytes
+      
+      # Then fill other possible chunks
+      nbytes = bsize - nbytesfirst
+      nchunks = nbytes // chunksize
+      nelemchunk = chunksize // itemsize
+      # Get a new view skipping the elements that have been already copied
+      remainder = array[nbytesfirst // itemsize:]
+      for i in range(nchunks):
+        chunk = carray(remainder[i*nelemchunk:(i+1)*nelemchunk],
+                       self.clevel, self.shuffle)
+        chunks.append(chunk)
+        cbytes += chunk.cbytes
+
+      # Finally, deal with the leftover
+      leftover = nbytes % chunksize
+      if leftover:
+        remainder = remainder[nchunks*nelemchunk:]
+        memcpy(self.lastchunk, remainder.data, leftover)
+
+    # Update some counters
+    self.leftover = leftover
+    self._cbytes += cbytes
+    self.nbytes += bsize
+    self.shape = (self.nbytes//itemsize)
+    # Return the number of elements added
+    return array.size
 
 
   def __str__(self):
@@ -402,10 +490,6 @@ cdef class earray:
         (self.nbytes, self._cbytes, cratio, self.toarray())
     return fullrepr
 
-
-  def __dealloc__(self):
-    """Release C resources before destruction."""
-    free(self.lastchunk)
 
 
 

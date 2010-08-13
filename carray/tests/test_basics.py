@@ -22,9 +22,7 @@ class carrayCheck(unittest.TestCase):
         #a = np.linspace(-1, 1, 1e4)
         b = ca.carray(a)
         print "b->", `b`
-        c = b.toarray()
-        print "c->", `c`
-        assert_array_equal(a, c, "Arrays are not equal")
+        assert_array_equal(a, b.toarray(), "Arrays are not equal")
 
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
@@ -59,13 +57,11 @@ class earrayCheck(unittest.TestCase):
     
     def test00(self):
         """Testing `toarray()` method"""
-        a = np.arange(1e2)
+        a = np.arange(1e1)
         #a = np.linspace(-1, 1, 1e2)
-        b = ca.earray(a, chunksize=100)
+        b = ca.earray(a, chunksize=10)
         print "b->", `b`
-        c = b.toarray()
-        print "c->", `c`
-        assert_array_equal(a, c, "Arrays are not equal")
+        assert_array_equal(a, b.toarray(), "Arrays are not equal")
 
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
@@ -94,6 +90,56 @@ class earrayCheck(unittest.TestCase):
         b = ca.earray(a, chunksize=10000)
         print "b[1:80000]->", `b[1:80000]`
         assert_array_equal(a[1:80000], b[1:80000], "Arrays are not equal")
+
+    def test04a(self):
+        """Testing `__getitem()__` method with no start"""
+        a = np.arange(1e5)
+        b = ca.earray(a, chunksize=10000)
+        print "b[:80000]->", `b[:80000]`
+        assert_array_equal(a[:80000], b[:80000], "Arrays are not equal")
+
+    def test04b(self):
+        """Testing `__getitem()__` method with no stop"""
+        a = np.arange(1e5)
+        b = ca.earray(a, chunksize=10000)
+        print "b[80000:]->", `b[80000:]`
+        assert_array_equal(a[80000:], b[80000:], "Arrays are not equal")
+
+    def test04c(self):
+        """Testing `__getitem()__` method with no start and no stop"""
+        a = np.arange(1e5)
+        b = ca.earray(a, chunksize=10000)
+        print "b[:]->", `b[::2]`
+        assert_array_equal(a[::2], b[::2], "Arrays are not equal")
+
+    def test05(self):
+        """Testing `append()` method"""
+        a = np.arange(1e1)
+        b = ca.earray(a)
+        b.append(a)
+        print "b->", `b`
+        c = np.concatenate((a, a))
+        assert_array_equal(c, b.toarray(), "Arrays are not equal")
+
+    def test06(self):
+        """Testing `append()` method (small chunksize)"""
+        a = np.arange(1e1)
+        b = ca.earray(a, chunksize=10)
+        b.append(a)
+        print "b->", `b`
+        c = np.concatenate((a, a))
+        assert_array_equal(c, b.toarray(), "Arrays are not equal")
+
+    def test07(self):
+        """Testing `append()` method (large append)."""
+        a = np.arange(1e4)
+        c = np.arange(1e6)
+        b = ca.earray(a)
+        b.append(c)
+        print "b->", `b`
+        d = np.concatenate((a, c))
+        assert_array_equal(d, b.toarray(), "Arrays are not equal")
+
 
 
 def suite():
