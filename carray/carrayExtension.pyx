@@ -258,17 +258,22 @@ cdef class earray:
       Set the specified ``value`` in ``key``.
   """
 
-  cdef object dtype, shape, chunks
+  cdef object _dtype, chunks
   cdef int itemsize, chunksize, leftover
   cdef int clevel, shuffle
   cdef npy_intp nbytes, _cbytes
   cdef void *lastchunk
   cdef object lastchunkarr
 
-  property cbytes:
-    """The number of compressed bytes."""
+  property dtype:
+    """The dtype of this instance."""
     def __get__(self):
-      return SizeType(self._cbytes)
+      return self._dtype
+
+  property shape:
+    """The shape of this instance."""
+    def __get__(self):
+      return (self.nbytes//self.itemsize,)
 
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=1,
@@ -285,10 +290,10 @@ cdef class earray:
 
     self.clevel = clevel
     self.shuffle = shuffle
-    self.dtype = dtype = array.dtype
-    self.shape = shape = array.shape
+    self._dtype = dtype = array.dtype
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
+
     # Chunksize must be a multiple of itemsize
     cs = (chunksize // itemsize) * itemsize
     self.chunksize = cs
@@ -299,7 +304,7 @@ cdef class earray:
 
     # The number of bytes in incoming array
     nbytes = itemsize
-    for i in self.shape:
+    for i in array.shape:
       nbytes *= i
     self.nbytes = nbytes
 
@@ -325,7 +330,7 @@ cdef class earray:
     cdef int ret, i, nchunks
 
     # Build a NumPy container
-    array = numpy.empty(shape=self.shape, dtype=self.dtype)
+    array = numpy.empty(shape=self.shape, dtype=self._dtype)
 
     # Fill it with uncompressed data
     nchunks = self.nbytes // self.chunksize
@@ -366,18 +371,24 @@ cdef class earray:
     nchunks = self.nbytes // self.chunksize
     scalar = False
 
+    # Get rid of multidimensional keys
+    if isinstance(key, tuple):
+      assert len(key) == 1, "Multidimensional keys are not supported"
+      key = key[0]
+
     if isinstance(key, int):
       (start, stop, step) = key, key+1, 1
       scalar = True
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     else:
-      raise KeyError, "key not supported:", key
+      raise KeyError, "key not supported: %s" % repr(key)
+
     nrows = nbytes // itemsize
     start, stop, step = self._processRange(start, stop, step, nrows)
 
     # Build a NumPy container
-    array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
+    array = numpy.empty(shape=(stop-start,), dtype=self._dtype)
 
     # Fill it from data in chunks
     ntbytes = 0
@@ -425,7 +436,7 @@ cdef class earray:
     cdef object chunk
     cdef ndarray remainder
 
-    assert array.dtype == self.dtype, "array dtype does not match with self."
+    assert array.dtype == self._dtype, "array dtype does not match with self."
     assert len(array.shape) == 1, "Only unidimensional shapes supported."
 
     itemsize = self.itemsize
@@ -473,7 +484,6 @@ cdef class earray:
     self.leftover = leftover
     self._cbytes += cbytes
     self.nbytes += bsize
-    self.shape = (self.nbytes//itemsize)
     # Return the number of elements added
     return array.size
 

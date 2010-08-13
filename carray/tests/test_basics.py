@@ -131,7 +131,7 @@ class earrayCheck(unittest.TestCase):
         assert_array_equal(c, b.toarray(), "Arrays are not equal")
 
     def test07(self):
-        """Testing `append()` method (large append)."""
+        """Testing `append()` method (large append)"""
         a = np.arange(1e4)
         c = np.arange(1e6)
         b = ca.earray(a)
