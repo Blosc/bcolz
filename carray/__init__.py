@@ -1,2 +1,4 @@
-from carray.carrayExtension import carray, earray, whichLibVersion
+from carray.carrayExtension import (
+    carray, whichLibVersion, setBloscMaxThreads)
+
 

@@ -32,3 +32,18 @@ Installing
 Install it as a typical Python package:
 
 $ python setup.py install
+
+Documentation
+-------------
+
+Until more decent documentation is done, you will have to browse info
+from docstrings.  Start from `carray.carray` and continue reading the
+proposed links.  Also, look at the bench/ directory for some examples.
+
+License
+-------
+
+Please see CARRAY.txt in LICENSES/ directory.
+
+
+Francesc Alted

@@ -10,12 +10,15 @@
 
 """The carray extension.
 
-Classes (type extensions):
+Public classes (type extensions):
 
     carray
-    earray
 
-    __version__
+Public functions:
+
+    setBloscMaxThreads
+    whichLibVersion
+
 """
 
 import sys
@@ -27,8 +30,6 @@ _MB = 1024*_KB
 # The type used for size values: indexes, coordinates, dimension
 # lengths, row numbers, shapes, chunk shapes, byte counts...
 SizeType = numpy.int64
-
-__version__ = "$Revision: 4417 $"
 
 #-----------------------------------------------------------------
 
@@ -80,6 +81,14 @@ blosc_set_nthreads(2)
 
 #-------------------------------------------------------------
 
+# Some utilities
+def setBloscMaxThreads(nthreads):
+  """Set the maximum number of threads that Blosc can use.
+
+  Returns the previous setting for maximum threads.
+  """
+  return blosc_set_nthreads(nthreads)
+
 
 def whichLibVersion(libname):
   "Return versions of `libname` library"
@@ -88,23 +97,20 @@ def whichLibVersion(libname):
     return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
 
 
-cdef class carray:
+cdef class chunk:
   """
-  Compressed in-memory data container.
+  Compressed in-memory container for a data chunk.
 
-  ...blurb...
+  This class is meant to be used by carray class.
 
   Public instance variables
   -------------------------
-
-  shape
-  dtype
 
   Public methods
   --------------
 
   toarray()
-      Get a NumPy ndarray from carray.
+      Get a numpy ndarray from chunk.
 
   Special methods
   ---------------
@@ -117,18 +123,11 @@ cdef class carray:
 
   cdef object dtype
   cdef object shape
-  cdef int itemsize
-  cdef npy_intp nbytes, _cbytes
+  cdef int itemsize, nbytes, cbytes
   cdef void *data
 
-  property cbytes:
-    """The number of compressed bytes."""
-    def __get__(self):
-      return SizeType(self._cbytes)
-
-
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=1):
-    """Initialize and compress data based on passed `array`.
+    """Initialize chunk and compress data based on numpy `array`.
 
     You can pass `clevel` and `shuffle` params to the internal compressor.
     """
@@ -151,17 +150,17 @@ cdef class carray:
     if cbytes <= 0:
       raise RuntimeError, "Fatal error during Blosc compression: %d" % cbytes
     # Set size info for the instance
-    self._cbytes = cbytes
+    self.cbytes = cbytes
     self.nbytes = nbytes
     self.itemsize = itemsize
 
 
   def toarray(self):
-    """Convert this `carray` instance into a NumPy array."""
+    """Convert this `chunk` instance into a numpy array."""
     cdef ndarray array
     cdef int ret
 
-    # Build a NumPy container
+    # Build a numpy container
     array = numpy.empty(shape=self.shape, dtype=self.dtype)
     # Fill it with uncompressed data
     ret = blosc_decompress(self.data, array.data, self.nbytes)
@@ -171,10 +170,10 @@ cdef class carray:
 
 
   cpdef _getitem(self, start, stop):
-    """Read data from `start` to `stop` and return it as a NumPy array."""
+    """Read data from `start` to `stop` and return it as a numpy array."""
     cdef ndarray array
 
-    # Build a NumPy container
+    # Build a numpy container
     array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
     # Fill it with uncompressed data
     ret = blosc_getitem(self.data, start, stop,
@@ -213,15 +212,16 @@ cdef class carray:
 
 
   def __str__(self):
-    """Represent the carray as an string."""
+    """Represent the chunk as an string."""
     return str(self.toarray())
 
 
   def __repr__(self):
-    """Represent the record as an string."""
-    cratio = self.nbytes / float(self._cbytes)
-    fullrepr = "nbytes: %d; cbytes: %d; compr. ratio: %.2f\n%r" % \
-        (self.nbytes, self._cbytes, cratio, self.toarray())
+    """Represent the chunk as an string, with additional info."""
+    cratio = self.nbytes / float(self.cbytes)
+    array = self.toarray()
+    fullrepr = "chunk(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
+        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, array)
     return fullrepr
 
 
@@ -231,23 +231,26 @@ cdef class carray:
 
 
 
-cdef class earray:
+cdef class carray:
   """
   Compressed and enlargeable in-memory data container.
 
-  ...blurb...
+  This class is designed for public consumption.
 
   Public instance variables
   -------------------------
 
-  shape
-  dtype
+  shape -- the shape of this array
+  dtype -- the data type of this array
 
   Public methods
   --------------
 
   toarray()
-      Get a NumPy ndarray from earray.
+      Get a numpy array from this carray instance.
+
+  append(array)
+      Append a numpy array to this carray instance.
 
   Special methods
   ---------------
@@ -261,7 +264,7 @@ cdef class earray:
   cdef object _dtype, chunks
   cdef int itemsize, chunksize, leftover
   cdef int clevel, shuffle
-  cdef npy_intp nbytes, _cbytes
+  cdef npy_intp nbytes, cbytes
   cdef void *lastchunk
   cdef object lastchunkarr
 
@@ -281,10 +284,12 @@ cdef class earray:
     """Initialize and compress data based on passed `array`.
 
     You can pass `clevel` and `shuffle` params to the internal compressor.
+    Also, you can taylor the size of the `chunksize` too.
     """
     cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
     cdef npy_intp nbytes, cbytes
     cdef ndarray remainder, lastchunkarr
+    cdef chunk chunk_
 
     assert len(array.shape) == 1, "Only unidimensional shapes supported."
 
@@ -313,30 +318,30 @@ cdef class earray:
     nchunks = self.nbytes // self.chunksize
     nelemchunk = self.chunksize // itemsize
     for i in range(nchunks):
-      chunk = carray(array[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
-      chunks.append(chunk)
-      cbytes += chunk.cbytes 
+      chunk_ = chunk(array[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
+      chunks.append(chunk_)
+      cbytes += chunk_.cbytes 
     self.leftover = leftover = nbytes % cs
     if leftover:
       remainder = array[nchunks*nelemchunk:]
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self.chunksize  # count the space in last chunk 
-    self._cbytes = cbytes
+    self.cbytes = cbytes
 
 
   def toarray(self):
-    """Convert this `earray` instance into a NumPy array."""
-    cdef ndarray array, chunk
+    """Get a numpy array from this carray instance."""
+    cdef ndarray array, chunk_
     cdef int ret, i, nchunks
 
-    # Build a NumPy container
+    # Build a numpy container
     array = numpy.empty(shape=self.shape, dtype=self._dtype)
 
     # Fill it with uncompressed data
     nchunks = self.nbytes // self.chunksize
     for i in range(nchunks):
-      chunk = self.chunks[i].toarray()
-      memcpy(array.data+i*self.chunksize, chunk.data, self.chunksize) 
+      chunk_ = self.chunks[i].toarray()
+      memcpy(array.data+i*self.chunksize, chunk_.data, self.chunksize) 
     if self.leftover:
       memcpy(array.data+nchunks*self.chunksize, self.lastchunk, self.leftover)
 
@@ -359,7 +364,7 @@ cdef class earray:
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
-    cdef ndarray array, chunk
+    cdef ndarray array, chunk_
     cdef int i, itemsize, chunklen, leftover, nchunks
     cdef int startb, stopb, bsize
     cdef npy_intp nbytes, ntbytes, nrows
@@ -387,7 +392,7 @@ cdef class earray:
     nrows = nbytes // itemsize
     start, stop, step = self._processRange(start, stop, step, nrows)
 
-    # Build a NumPy container
+    # Build a numpy container
     array = numpy.empty(shape=(stop-start,), dtype=self._dtype)
 
     # Fill it from data in chunks
@@ -407,8 +412,8 @@ cdef class earray:
         memcpy(array.data+ntbytes, self.lastchunk+startb*itemsize, bsize)
       else:
         # Get the data chunk
-        chunk = self.chunks[i]._getitem(startb, stopb)
-        memcpy(array.data+ntbytes, chunk.data, bsize)
+        chunk_ = self.chunks[i]._getitem(startb, stopb)
+        memcpy(array.data+ntbytes, chunk_.data, bsize)
       ntbytes += bsize
 
     if step == 1:
@@ -426,15 +431,15 @@ cdef class earray:
 
 
   def append(self, ndarray array):
-    """Append `array` at the end of `self`.
+    """Append a numpy array to this carray instance.
 
     Return the number of elements appended.
     """
     cdef int itemsize, chunksize, leftover, bsize
     cdef int nbytesfirst, nelemchunk
     cdef npy_intp nbytes, cbytes
-    cdef object chunk
     cdef ndarray remainder
+    cdef chunk chunk_
 
     assert array.dtype == self._dtype, "array dtype does not match with self."
     assert len(array.shape) == 1, "Only unidimensional shapes supported."
@@ -458,9 +463,9 @@ cdef class earray:
       nbytesfirst = chunksize-leftover
       memcpy(self.lastchunk+leftover, array.data, nbytesfirst)
       # Compress the last chunk and add it to the list
-      chunk = carray(self.lastchunkarr, self.clevel, self.shuffle)
-      chunks.append(chunk)
-      cbytes = chunk.cbytes
+      chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
+      chunks.append(chunk_)
+      cbytes = chunk_.cbytes
       
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
@@ -469,10 +474,10 @@ cdef class earray:
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
       for i in range(nchunks):
-        chunk = carray(remainder[i*nelemchunk:(i+1)*nelemchunk],
+        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk],
                        self.clevel, self.shuffle)
-        chunks.append(chunk)
-        cbytes += chunk.cbytes
+        chunks.append(chunk_)
+        cbytes += chunk_.cbytes
 
       # Finally, deal with the leftover
       leftover = nbytes % chunksize
@@ -482,22 +487,23 @@ cdef class earray:
 
     # Update some counters
     self.leftover = leftover
-    self._cbytes += cbytes
+    self.cbytes += cbytes
     self.nbytes += bsize
     # Return the number of elements added
     return array.size
 
 
   def __str__(self):
-    """Represent the earray as an string."""
+    """Represent the carray as an string."""
     return str(self.toarray())
 
 
   def __repr__(self):
-    """Represent the record as an string."""
-    cratio = self.nbytes / float(self._cbytes)
-    fullrepr = "nbytes: %d; cbytes: %d; compr. ratio: %.2f\n%r" % \
-        (self.nbytes, self._cbytes, cratio, self.toarray())
+    """Represent the carray as an string, with additional info."""
+    cratio = self.nbytes / float(self.cbytes)
+    array = self.toarray()
+    fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
+        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, array)
     return fullrepr
 
 

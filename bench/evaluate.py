@@ -14,9 +14,9 @@ N = 1e6   # the number of elements in x
 # Create the numpy array
 x = np.arange(N)
 # Create a compressed array
-cx = ca.earray(x, clevel=9)
+cx = ca.carray(x, clevel=9)
 print "cx-->", repr(cx)
-cout = ca.earray(np.empty((0,), dtype='f8'), clevel=9)
+cout = ca.carray(np.empty((0,), dtype='f8'), clevel=9)
 
 t0 = time()
 out = ne.evaluate("x+1")
