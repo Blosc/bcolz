@@ -10,8 +10,11 @@ from Cython.Distutils import build_ext
 from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
-# Version
+# carray Version
 VERSION = open('VERSION').read().strip()
+# Create the version.py file
+open('carray/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
+
 
 # Global variables
 CFLAGS = ""

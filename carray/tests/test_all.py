@@ -38,6 +38,7 @@ def suite():
 def print_versions():
     """Print all the versions of software that carray relies on."""
     print '-=' * 38
+    print "carray version:    %s" % carray.__version__
     print "NumPy version:     %s" % numpy.__version__
     tinfo = carray.whichLibVersion("blosc")
     if tinfo is not None:
