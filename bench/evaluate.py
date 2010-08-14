@@ -10,13 +10,14 @@ import carray as ca
 from time import time
 
 N = 1e6   # the number of elements in x
+clevel = 3  # the compression level
 
 # Create the numpy array
 x = np.arange(N)
 # Create a compressed array
-cx = ca.carray(x, clevel=9)
+cx = ca.carray(x, clevel=clevel)
 print "cx-->", repr(cx)
-cout = ca.carray(np.empty((0,), dtype='f8'), clevel=9)
+cout = ca.carray(np.empty((0,), dtype='f8'), clevel=clevel)
 
 t0 = time()
 out = ne.evaluate("x+1")

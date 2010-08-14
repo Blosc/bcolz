@@ -56,10 +56,10 @@ cdef extern from "blosc.h":
   int blosc_set_nthreads(int nthreads)
   int blosc_compress(int clevel, int doshuffle, size_t typesize,
                      size_t nbytes, void *src, void *dest,
-                     size_t destsize)
-  int blosc_decompress(void *src, void *dest, size_t destsize)
+                     size_t destsize) nogil
+  int blosc_decompress(void *src, void *dest, size_t destsize) nogil
   int blosc_getitem(void *src, int start, int stop,
-                    void *dest, size_t destsize)
+                    void *dest, size_t destsize) nogil
   void blosc_free_resources()
   void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
                            size_t *cbytes, size_t *blocksize)
@@ -75,9 +75,6 @@ cdef extern from "blosc.h":
 # The numpy API requires this function to be called before
 # using any numpy facilities in an extension module.
 import_array()
-
-# Initialize Blosc
-blosc_set_nthreads(2)
 
 #-------------------------------------------------------------
 
@@ -95,6 +92,7 @@ def whichLibVersion(libname):
 
   if libname == "blosc":
     return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
+
 
 
 cdef class chunk:
@@ -145,8 +143,9 @@ cdef class chunk:
       nbytes *= i
     self.data = malloc(nbytes+BLOSC_MAX_OVERHEAD)
     # Compress data
-    cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
-                            self.data, nbytes+BLOSC_MAX_OVERHEAD)
+    with nogil:
+      cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
+                              self.data, nbytes+BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
       raise RuntimeError, "Fatal error during Blosc compression: %d" % cbytes
     # Set size info for the instance
@@ -163,23 +162,29 @@ cdef class chunk:
     # Build a numpy container
     array = numpy.empty(shape=self.shape, dtype=self.dtype)
     # Fill it with uncompressed data
-    ret = blosc_decompress(self.data, array.data, self.nbytes)
+    with nogil:
+      ret = blosc_decompress(self.data, array.data, self.nbytes)
     if ret <= 0:
       raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
     return array
 
 
-  cpdef _getitem(self, start, stop):
+  cpdef _getitem(self, int start, int stop):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef ndarray array
+    cdef int bsize, ret
 
     # Build a numpy container
     array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
+    bsize = array.size * self.itemsize
     # Fill it with uncompressed data
-    ret = blosc_getitem(self.data, start, stop,
-                        array.data, array.size*self.itemsize)
+    with nogil:
+      if bsize == self.nbytes:
+        ret = blosc_decompress(self.data, array.data, bsize)
+      else:
+        ret = blosc_getitem(self.data, start, stop, array.data, bsize)
     if ret < 0:
-      raise RuntimeError, "Error in `blosc_getitem()` method."
+      raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
     return array
 
 

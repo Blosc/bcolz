@@ -44,7 +44,6 @@ def show_stats(explain, tref):
     return tnow
 
 
-
 def detectNumberOfCores():
     """
     Detects the number of cores on a system. Cribbed from pp.
