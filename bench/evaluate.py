@@ -1,6 +1,6 @@
-# Small benchmark to compare the times for computing expressions by
-# using compressed arrays vs plain numpy arrays.  The tables.Expr
-# module is used for this.
+# Benchmark to compare the times for computing expressions by using
+# compressed arrays vs plain numpy arrays.  The tables.Expr module is
+# used for this.
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal

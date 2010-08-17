@@ -560,7 +560,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
   size_t maxbytes = destsize;  /* maximum size for dest buffer */
 
-
   /* Check buffer size limits */
   if (nbytes > MAX_BUFFERSIZE) {
     /* If buffer is too large, give up. */

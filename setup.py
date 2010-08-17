@@ -17,12 +17,25 @@ open('carray/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 
 
 # Global variables
-CFLAGS = ""
-LFLAGS = ""
+CFLAGS = os.environ.get('CFLAGS', '').split()
+LFLAGS = os.environ.get('LFLAGS', '').split()
 lib_dirs = []
 libs = []
 inc_dirs = ['carray', 'blosc']
 optional_libs = []   # for linking with zlib or LZO (if I ever implemented that!)
+
+# Handle --lflags=[FLAGS] --cflags=[FLAGS]
+args = sys.argv[:]
+for arg in args:
+    if arg.find('--lflags=') == 0:
+        LFLAGS = arg.split('=')[1].split()
+        sys.argv.remove(arg)
+    elif arg.find('--cflags=') == 0:
+        CFLAGS = arg.split('=')[1].split()
+        sys.argv.remove(arg)
+
+# Add -msse2 flag for optimizing shuffle in Blosc
+CFLAGS.append("-msse2")
 
 # Include NumPy header dirs 
 inc_dirs.extend(get_numpy_include_dirs())
