@@ -40,13 +40,13 @@ print("problem size: (%d) x %d = 10^%g" % (N, K, math.log10(N*K)))
 t = time.time()
 if style == 'numpy':
     for _ in xrange(T):
-        numpy.concatenate(a, 0)
+        r = numpy.concatenate(a, 0)
 elif style == 'concat':
     for _ in xrange(T):
-        concat(a)
+        r = concat(a)
 elif style == 'carray':
     for _ in xrange(T):
-        append(a, clevel)
+        r = append(a, clevel)
 else:
     A = numpy.concatenate(a, 0)
     B = concat(a)
@@ -55,4 +55,10 @@ else:
     assert_array_almost_equal(A, C)
 
 t = time.time() - t
-print('%.3fs' % (t / T))
+print('time for concat: %.3fs' % (t / T))
+
+if style == 'carray':
+    size = r.sizebytes
+else: 
+    size = r.size*r.dtype.itemsize
+print("size of the final container: %.3f MB" % (size / float(1024*1024)) )

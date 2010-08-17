@@ -1,6 +1,13 @@
 #!/usr/bin/env python
-#----------------------------------------------------------------------
-# Setup script for the tables package
+########################################################################
+#
+#       License: BSD
+#       Created: August 05, 2010
+#       Author:  Francesc Alted - faltet@pytables.org
+#
+#       $Id: setup.py  $
+#
+########################################################################
 
 import sys, os
 
@@ -10,7 +17,7 @@ from Cython.Distutils import build_ext
 from numpy.distutils.misc_util import get_numpy_include_dirs
 
 
-# carray Version
+# carray version
 VERSION = open('VERSION').read().strip()
 # Create the version.py file
 open('carray/version.py', 'w').write('__version__ = "%s"\n' % VERSION)

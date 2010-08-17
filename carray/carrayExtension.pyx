@@ -283,6 +283,11 @@ cdef class carray:
     def __get__(self):
       return (self.nbytes//self.itemsize,)
 
+  property sizebytes:
+    """The size taken of this array (in bytes)."""
+    def __get__(self):
+      return self.cbytes
+
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=1,
                 int chunksize=1*_MB):
