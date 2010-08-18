@@ -1,13 +1,14 @@
 carray: a compressed in-memory data container
 =============================================
 
-carray is a container for data that can be compressed.  Nowadays
-memory access is the most common bottleneck in many computational
-scenarios, and CPUs spend most of its time waiting for data.
+carray is a container for data that can be compressed in-memory.
+Nowadays memory access is the most common bottleneck in many
+computational scenarios, and CPUs spend most of its time waiting for
+data.  Having data compressed in memory can reduce the stress of the
+memory subsystem.
 
-Having data compressed in-memory can reduce the stress of the memory
-subsystem.  The net result is that carray operations can be faster
-than using a traditional ndarray object from NumPy.
+The net result is that carray operations can be faster than using a
+traditional ndarray object from NumPy.
 
 Building
 --------
