@@ -1,6 +1,17 @@
 # Benchmark that compares the times for concatenating arrays with
 # compressed arrays vs plain numpy arrays.  The 'numpy' and 'concat'
 # styles are for regular numpy arrays, while 'carray' is for carrays.
+#
+# Call this benchmark as:
+# 
+# python bench/concat.py style
+#
+# where `style` can be any of 'numpy', 'concat' or 'carray'
+#
+# You can modify other parameters from the command line if you want:
+#
+# python bench/concat.py style arraysize nchunks nrepeats clevel
+#
 
 import sys, math
 import numpy
@@ -26,12 +37,19 @@ def append(data, clevel):
 
     return alldata
 
+if len(sys.argv) < 2:
+    print "Pass at least one of these styles: 'numpy', 'concat' or 'carray' "
+    sys.exit(1)
+
 style = sys.argv[1]
-N,K,T = [int(arg) for arg in sys.argv[2:5]]
-if len(sys.argv) > 5:
-    clevel = int(sys.argv[5])
+if len(sys.argv) == 2:
+    N, K, T, clevel = (1000000, 10, 3, 1)
 else:
-    clevel = 0
+    N,K,T = [int(arg) for arg in sys.argv[2:5]]
+    if len(sys.argv) > 5:
+        clevel = int(sys.argv[5])
+    else:
+        clevel = 0
 
 # The next datasets allow for very high compression ratios
 a = [numpy.arange(N, dtype='f8') for _ in range(K)]

@@ -9,8 +9,9 @@ import tables as tb
 import carray as ca
 from time import time
 
-N = 1e6   # the number of elements in x
-clevel = 3  # the compression level
+N = 1e7       # the number of elements in x
+clevel = 1    # the compression level
+expr = "x+1"  # the expression to compute
 
 # Create the numpy array
 x = np.arange(N)
@@ -28,11 +29,12 @@ expr = tb.Expr("x+1")
 out = expr.eval()
 print "Time for numpy array--> %.3f" % (time()-t0,) 
 
+x = cx
 t0 = time()
-expr = tb.Expr("cx+1")
+expr = tb.Expr("x+1")
 expr.setOutput(cout, append_mode=True)
 expr.eval()
 print "Time for compressed array--> %.3f" % (time()-t0,) 
 print "cout-->", repr(cout)
 
-assert_array_equal(out, cout.toarray(), "Arrays are not equal")
+#assert_array_equal(out, cout.toarray(), "Arrays are not equal")

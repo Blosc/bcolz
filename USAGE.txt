@@ -235,6 +235,19 @@ carray allows for an extremely efficient way to perform computations
 that saves both memory and time, specially on very large arrays.
 
 
+Utility functions
+-----------------
+
+* setBloscMaxThreads(nthreads)
+      Set the maximum number of threads that Blosc can use.
+        
+      Returns the previous setting for maximum threads.
+    
+* whichLibVersion(libname)
+      Return versions of `libname` library.  Only 'blosc' is supported.
+
+
+
 carray limitations
 ------------------
 

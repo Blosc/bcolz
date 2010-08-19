@@ -69,9 +69,9 @@ setup(name = "carray",
       description = 'Compressed in-memory array',
       long_description = """\
 
-carray is a container for data that can be compressed.  Nowadays
-memory access is the most common bottleneck in many computational
-scenarios, and CPUs spend most of its time waiting for data.
+carray is a container for numerical data that can be compressed
+in-memory.  The compresion process is carried out internally by Blosc,
+a high-performance compressor that is optimized for binary data.
 
 Having data compressed in-memory can reduce the stress of the memory
 subsystem.  The net result is that carray operations can be faster

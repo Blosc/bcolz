@@ -99,10 +99,7 @@ cdef class chunk:
   """
   Compressed in-memory container for a data chunk.
 
-  This class is meant to be used by carray class.
-
-  Public instance variables
-  -------------------------
+  This class is meant to be used only by the `carray` class.
 
   Public methods
   --------------
@@ -147,7 +144,7 @@ cdef class chunk:
       cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
                               self.data, nbytes+BLOSC_MAX_OVERHEAD)
     if cbytes <= 0:
-      raise RuntimeError, "Fatal error during Blosc compression: %d" % cbytes
+      raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
     # Set size info for the instance
     self.cbytes = cbytes
     self.nbytes = nbytes
@@ -165,7 +162,7 @@ cdef class chunk:
     with nogil:
       ret = blosc_decompress(self.data, array.data, self.nbytes)
     if ret <= 0:
-      raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
+      raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
     return array
 
 
@@ -184,7 +181,7 @@ cdef class chunk:
       else:
         ret = blosc_getitem(self.data, start, stop, array.data, bsize)
     if ret < 0:
-      raise RuntimeError, "Fatal error during Blosc decompression: %d" % ret
+      raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
     return array
 
 
@@ -238,24 +235,18 @@ cdef class chunk:
 
 cdef class carray:
   """
-  Compressed and enlargeable in-memory data container.
+  A compressed and enlargeable in-memory data container.
 
   This class is designed for public consumption.
-
-  Public instance variables
-  -------------------------
-
-  shape -- the shape of this array
-  dtype -- the data type of this array
 
   Public methods
   --------------
 
   toarray()
-      Get a numpy array from this carray instance.
+      Get a numpy `array` from this carray instance.
 
   append(array)
-      Append a numpy array to this carray instance.
+      Append a numpy `array` to this carray instance.
 
   Special methods
   ---------------
@@ -289,19 +280,25 @@ cdef class carray:
       return self._cbytes
 
 
-  def __cinit__(self, ndarray array, int clevel=5, int shuffle=True,
+  def __cinit__(self, object array, int clevel=5, int shuffle=True,
                 int chunksize=1*_MB):
     """Initialize and compress data based on passed `array`.
 
-    You can pass `clevel` and `shuffle` params to the internal compressor.
-    Also, you can taylor the size of the `chunksize` too.
+    You can pass `clevel` and `shuffle` params to the compressor.
+
+    Also, you can taylor the size of the `chunksize` used for the internal I/O
+    buffer and the size of each chunk.  Only touch this if you know what are
+    you doing.
     """
     cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
     cdef npy_intp nbytes, cbytes
-    cdef ndarray remainder, lastchunkarr
+    cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
 
-    assert len(array.shape) == 1, "Only unidimensional shapes supported."
+    if type(array) != numpy.ndarray:
+      raise ValueError, "a numpy ndarray is expected in `array` param"
+    if len(array.shape) != 1:
+      raise ValueError, "only unidimensional shapes supported"
 
     self.clevel = clevel
     self.shuffle = shuffle
@@ -327,8 +324,9 @@ cdef class carray:
     cbytes = 0
     nchunks = self.nbytes // self.chunksize
     nelemchunk = self.chunksize // itemsize
+    array_ = array
     for i in range(nchunks):
-      chunk_ = chunk(array[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
+      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes 
     self.leftover = leftover = nbytes % cs
@@ -374,13 +372,14 @@ cdef class carray:
 
     # Get rid of multidimensional keys
     if isinstance(key, tuple):
-      assert len(key) == 1, "Multidimensional keys are not supported"
+      if len(key) != 1:
+        raise KeyError, "multidimensional keys are not supported"
       key = key[0]
 
     nrows = nbytes // itemsize
     if isinstance(key, int):
       if key >= nrows:
-        raise IndexError, "Index out of range"
+        raise IndexError, "index out of range"
       if key < 0:
         # To support negative values
         key += nrows
@@ -436,18 +435,22 @@ cdef class carray:
 
 
   def append(self, ndarray array):
-    """Append a numpy array to this carray instance.
+    """Append a numpy `array` to this carray instance.
 
     Return the number of elements appended.
     """
     cdef int itemsize, chunksize, leftover, bsize
     cdef int nbytesfirst, nelemchunk
     cdef npy_intp nbytes, cbytes
-    cdef ndarray remainder
+    cdef ndarray remainder, array_
     cdef chunk chunk_
 
-    assert array.dtype == self._dtype, "array dtype does not match with self."
-    assert len(array.shape) == 1, "Only unidimensional shapes supported."
+    if type(array) != numpy.ndarray:
+      raise ValueError, "a numpy ndarray is expected in `array` param"
+    if array.dtype != self._dtype:
+      raise TypeError, "array dtype does not match with self"
+    if len(array.shape) != 1:
+      raise ValueError, "only unidimensional shapes supported"
 
     itemsize = self.itemsize
     chunksize = self.chunksize
