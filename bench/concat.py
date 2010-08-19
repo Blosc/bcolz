@@ -58,7 +58,7 @@ t = time.time() - t
 print('time for concat: %.3fs' % (t / T))
 
 if style == 'carray':
-    size = r.sizebytes
+    size = r.cbytes
 else: 
     size = r.size*r.dtype.itemsize
 print("size of the final container: %.3f MB" % (size / float(1024*1024)) )

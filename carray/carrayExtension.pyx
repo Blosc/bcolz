@@ -269,7 +269,7 @@ cdef class carray:
   cdef object _dtype, chunks
   cdef int itemsize, chunksize, leftover
   cdef int clevel, shuffle
-  cdef npy_intp nbytes, cbytes
+  cdef npy_intp nbytes, _cbytes
   cdef void *lastchunk
   cdef object lastchunkarr
 
@@ -283,10 +283,10 @@ cdef class carray:
     def __get__(self):
       return (self.nbytes//self.itemsize,)
 
-  property sizebytes:
-    """The size taken of this array (in bytes)."""
+  property cbytes:
+    """The compressed size of this array (in bytes)."""
     def __get__(self):
-      return self.cbytes
+      return self._cbytes
 
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=1,
@@ -336,7 +336,7 @@ cdef class carray:
       remainder = array[nchunks*nelemchunk:]
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self.chunksize  # count the space in last chunk 
-    self.cbytes = cbytes
+    self._cbytes = cbytes
 
 
   def toarray(self):
@@ -497,7 +497,7 @@ cdef class carray:
 
     # Update some counters
     self.leftover = leftover
-    self.cbytes += cbytes
+    self._cbytes += cbytes
     self.nbytes += bsize
     # Return the number of elements added
     return array.size
@@ -510,10 +510,10 @@ cdef class carray:
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
-    cratio = self.nbytes / float(self.cbytes)
+    cratio = self.nbytes / float(self._cbytes)
     array = self.toarray()
     fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
-        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, array)
+        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, array)
     return fullrepr
 
 
