@@ -358,20 +358,6 @@ cdef class carray:
     return array
 
 
-  def _processRange(self, start, stop, step, nrows, warn_negstep=True):
-    """Return sensible values of start, stop and step for nrows length."""
-
-    if warn_negstep and step and step < 0 :
-      raise ValueError("slice step cannot be negative")
-    # In order to convert possible numpy.integer values to long ones
-    if start is not None: start = long(start)
-    if stop is not None: stop = long(stop)
-    if step is not None: step = long(step)
-    (start, stop, step) = slice(start, stop, step).indices(nrows)
-
-    return (start, stop, step)
-
-
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array, chunk_
@@ -391,7 +377,13 @@ cdef class carray:
       assert len(key) == 1, "Multidimensional keys are not supported"
       key = key[0]
 
+    nrows = nbytes // itemsize
     if isinstance(key, int):
+      if key >= nrows:
+        raise IndexError, "Index out of range"
+      if key < 0:
+        # To support negative values
+        key += nrows
       (start, stop, step) = key, key+1, 1
       scalar = True
     elif isinstance(key, slice):
@@ -399,8 +391,11 @@ cdef class carray:
     else:
       raise KeyError, "key not supported: %s" % repr(key)
 
-    nrows = nbytes // itemsize
-    start, stop, step = self._processRange(start, stop, step, nrows)
+    if step and step < 0 :
+      raise ValueError("slice step cannot be negative")
+
+    # Get the corrected values for start, stop, step
+    (start, stop, step) = slice(start, stop, step).indices(nrows)
 
     # Build a numpy container
     array = numpy.empty(shape=(stop-start,), dtype=self._dtype)
@@ -505,15 +500,17 @@ cdef class carray:
 
   def __str__(self):
     """Represent the carray as an string."""
-    return str(self.toarray())
+    return "[%s, %s, %s... %s, %s, %s]\n" % (self[0], self[1], self[2],
+                                             self[-3], self[-2], self[-1])
 
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
     cratio = self.nbytes / float(self._cbytes)
-    array = self.toarray()
-    fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
-        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, array)
+    excerpt = "[%r, %r, %r... %r, %r, %r]\n" % (self[0], self[1], self[2],
+                                                self[-3], self[-2], self[-1])
+    fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%s" % \
+        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, excerpt)
     return fullrepr
 
 

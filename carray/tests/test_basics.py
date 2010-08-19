@@ -65,11 +65,18 @@ class carrayTest(unittest.TestCase):
         assert_array_equal(a, b.toarray(), "Arrays are not equal")
 
     def test01(self):
-        """Testing `__getitem()__` method with scalars"""
+        """Testing `__getitem()__` method with only a start"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
         #print "b[1]->", `b[1]`
         self.assert_(a[1] == b[1], "Values in key 1 are not equal")
+
+    def test01b(self):
+        """Testing `__getitem()__` method with only a (negative) start"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[-1]->", `b[-1]`
+        self.assert_(a[-1] == b[-1], "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
@@ -77,6 +84,27 @@ class carrayTest(unittest.TestCase):
         b = ca.carray(a, chunksize=100)
         #print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
+
+    def test02b(self):
+        """Testing `__getitem()__` method with ranges (negative start)"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[-3:]->", `b[-3:]`
+        assert_array_equal(a[-3:], b[-3:], "Arrays are not equal")
+
+    def test02c(self):
+        """Testing `__getitem()__` method with ranges (negative stop)"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[1:-3]->", `b[1:-3]`
+        assert_array_equal(a[1:-3], b[1:-3], "Arrays are not equal")
+
+    def test02d(self):
+        """Testing `__getitem()__` method with ranges (negative start, stop)"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[-3:-1]->", `b[-3:-1]`
+        assert_array_equal(a[-3:-1], b[-3:-1], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
