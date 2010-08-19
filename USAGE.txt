@@ -166,7 +166,7 @@ For example, if `b` is a carray with 10 million elements::
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
-it can be enlarged by 10 elements with:
+it can be enlarged by 10 elements with::
 
   >>> b.append(np.arange(10.))
   10   # the number of rows appended
@@ -196,7 +196,7 @@ For example, let's create a carray::
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
-Now, let's add 1 to it:
+Now, let's add 1 to it::
 
   >>> import tables as tb
   >>> expr = tb.Expr("b+1")
@@ -239,12 +239,12 @@ Utility functions
 -----------------
 
 * setBloscMaxThreads(nthreads)
-      Set the maximum number of threads that Blosc can use.
+    Set the maximum number of threads that Blosc can use.
         
-      Returns the previous setting for maximum threads.
+    Returns the previous setting for maximum threads.
     
 * whichLibVersion(libname)
-      Return versions of `libname` library.  Only 'blosc' is supported.
+    Return versions of `libname` library.  Only 'blosc' is supported.
 
 
 
@@ -257,7 +257,7 @@ might get rid of these limitations though.
 
 
 .. Local Variables:
-.. mode: text
+.. mode: rst
 .. coding: utf-8
 .. fill-column: 70
 .. End:

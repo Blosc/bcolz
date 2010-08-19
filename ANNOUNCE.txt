@@ -1,0 +1,47 @@
+======================
+ Announcing carray 0.1
+======================
+
+What it is
+==========
+
+carray is a container for numerical data that can be compressed
+in-memory.  The compresion process is carried out internally by Blosc,
+a high-performance compressor that is optimized for binary data.
+
+Having data compressed in-memory can reduce the stress of the memory
+subsystem.  The net result is that carray operations can be faster
+than using a traditional ndarray object from NumPy.
+
+What's new
+==========
+
+Everything ;-) This is the first public release of carray, and it is
+more a proof of concept to see which possibilities opens efficient
+compression in in-memory data containers.
+
+Currently carray 0.1 implements the basic container creation and
+enlargeability.  Multidimensional arrays are not supported yet, and
+elements cannot be modified either (i.e. no `__setitem__()` support).
+
+You can download a source package from:
+http://github.com/FrancescAlted/carray/downloads
+
+Visit the main carray site repository at:
+http://github.com/FrancescAlted/carray
+
+Share your experience
+=====================
+
+Let us know of any bugs, suggestions, gripes, kudos, etc. you may
+have.
+
+----
+
+   Enjoy!
+
+.. Local Variables:
+.. mode: rst
+.. coding: utf-8
+.. fill-column: 72
+.. End:
