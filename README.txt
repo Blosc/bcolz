@@ -37,9 +37,12 @@ $ python setup.py install
 Documentation
 -------------
 
-Until more decent documentation is done, you will have to browse info
-from docstrings.  Start from `carray.carray` and continue reading the
-proposed links.  Also, look at the bench/ directory for some examples.
+Please refer to USAGE.txt.  In case you want an accurate description
+of the complete API, you will have to browse it from docstrings.
+Start from `carray.carray` and continue reading the proposed links.
+
+Also, you may want to look at the bench/ directory for some usage
+examples.
 
 License
 -------

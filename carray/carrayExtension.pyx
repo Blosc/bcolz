@@ -124,7 +124,7 @@ cdef class chunk:
   cdef int itemsize, nbytes, cbytes
   cdef void *data
 
-  def __cinit__(self, ndarray array, int clevel=5, int shuffle=1):
+  def __cinit__(self, ndarray array, int clevel=5, int shuffle=False):
     """Initialize chunk and compress data based on numpy `array`.
 
     You can pass `clevel` and `shuffle` params to the internal compressor.
@@ -289,7 +289,7 @@ cdef class carray:
       return self._cbytes
 
 
-  def __cinit__(self, ndarray array, int clevel=5, int shuffle=1,
+  def __cinit__(self, ndarray array, int clevel=5, int shuffle=True,
                 int chunksize=1*_MB):
     """Initialize and compress data based on passed `array`.
 

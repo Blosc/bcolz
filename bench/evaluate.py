@@ -1,5 +1,5 @@
 # Benchmark to compare the times for computing expressions by using
-# compressed arrays vs plain numpy arrays.  The tables.Expr module is
+# compressed arrays vs plain numpy arrays.  The tables.Expr class is
 # used for this.
 
 import numpy as np

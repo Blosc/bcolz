@@ -1,0 +1,250 @@
+carray short tutorial
+=====================
+
+During all this tutorial, it is supposed that you are importing NumPy
+and carray packages like this::
+
+  >>> import numpy as np
+  >>> import carray as ca
+
+
+Creating carrays
+----------------
+
+A carray can be created from any NumPy ndarray by using its `carray`
+constructor::
+
+  >>> a = np.arange(10)
+  >>> b = ca.carray(a)
+
+Now, `b` is a carray object.  Just check this::
+
+  >>> type(b)
+  <type 'carray.carrayExtension.carray'>
+
+You can have a peek at it by using its string form::
+
+  >>> print b
+  [0, 1, 2... 7, 8, 9]
+
+
+And get more info about uncompressed size (nbytes), compressed
+(cbytes) and the compression ratio (ratio = nbytes/cbytes)::
+
+  >>> b
+  carray((10,), int32)  nbytes: 40; cbytes: 1048576; ratio: 0.00
+  [0, 1, 2... 7, 8, 9]
+
+As you can see, the compressed size is much larger than the
+uncompressed one.  How this can be?  Well, it turns out that carray
+wears an I/O buffer for accelerating some internal operations, and
+this buffer defaults to 1 MB (but you can change its size by using the
+`chunksize` parameter of the `carray` constructor).  So, for small
+arrays (typically those taking less than 1 MB), there is little point
+in using a carray.
+
+However, when creating carrays larger than 1 MB (its natural
+scenario), the size of the I/O buffer is generally negligible in
+comparison::
+
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> b
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+
+Compression level and shuffle filter
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+carray uses Blosc as the internal compressor, and Blosc can be
+directed to use different compression levels and to use (or not) its
+internal shuffle filter.
+
+By default carrays are compressed using Blosc with compression level 5
+and shuffle is active.  But depending on you needs, you can use other
+compression levels too::
+
+  >>> ca.carray(a, clevel=1)
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 11152615; ratio: 7.17
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+  >>> ca.carray(a, clevel=9)
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 1714160; ratio: 46.67
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+Also, you can decide if you want to disable the shuffle filter that
+comes with Blosc::
+
+  >>> ca.carray(a, shuffle=False)
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 38983710; ratio: 2.05
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+but, as you can see, the compression ratio is much worse in this case.
+In general it is recommend to let shuffle active (unless you are
+fine-tuning the performance for an specific carray).
+
+
+Accessing carray data
+---------------------
+
+The way to access carray data is very similar to the NumPy indexing
+scheme, that is, by specifying an index or slice::
+
+  >>> a = np.arange(10)
+  >>> b = ca.carray(a)
+  >>> b[0]
+  0
+  >>> b[-1]
+  9
+  >>> b[2:4]
+  array([2, 3])
+  >>> b[4:]
+  array([4, 5, 6, 7, 8, 9])
+  >>> b[4:-2]
+  array([4, 5, 6, 7])
+  >>> b[:]
+  array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+As you see, NumPy objects are returned as the result of an indexing
+operation.  You can even specify steps::
+
+  >>> b[::2]
+  array([0, 2, 4, 6, 8])
+  >>> b[3:9:3]
+  array([3, 6])
+
+although negative steps are not supported::
+
+  >>> b[3:9:-3]
+  Traceback (most recent call last):
+    File "<stdin>", line 1, in <module>
+      File "carrayExtension.pyx", line 395, in carray.carrayExtension.carray.__getitem__ (carray/carrayExtension.c:3327)
+      KeyError: slice step cannot be negative
+
+
+carray metadata
+---------------
+
+carray implements a couple of attributes, `dtype` and `shape` that
+makes it to 'quack' like a NumPy array::
+
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> b.dtype
+  dtype('float64')
+  >>> b.shape
+  (10000000,)
+
+The fact that a carray 'quacks' like a NumPy array is important
+because it can be used in some circumstances (but not always) where a
+NumPy is expected (see ``Operating with carrays`` section below).
+
+In addition, it implements the `cbytes` attribute that tells how many
+bytes in memory uses the carray object::
+
+  >>> b.cbytes
+  3590458
+
+This figure is approximate (the real one is a little larger) and it is
+generally lower than the original NumPy array::
+
+  >>> a.size*a.dtype.itemsize
+  80000000
+
+
+Enlarging your carray
+---------------------
+
+One of the nicest features of carray objects is that they can be
+enlarged very efficiently.  This can be done via the `carray.append()`
+method.
+
+For example, if `b` is a carray with 10 million elements::
+
+  >>> b
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+it can be enlarged by 10 elements with:
+
+  >>> b.append(np.arange(10.))
+  10   # the number of rows appended
+  >>> b
+  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3590458; ratio: 22.28
+  [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
+
+You may want to compare the `carray.append()` method of carrays to the
+`numpy.concatenate()` function in NumPy that serves similar purposes
+with the 'bench/concat.py' script.  In general, you will see that the
+`carray.append()` method is faster (specially with modern CPUs, that
+can accelerate the compression/decompression process a lot).
+
+
+Operating with carrays
+----------------------
+
+A carray is not only useful as a high-performance in-memory data
+container, but you can also use it to perform operations with them by
+using the `tables.Expr` class that comes with PyTables (>= 2.2).
+
+For example, let's create a carray::
+
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> b
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+Now, let's add 1 to it:
+
+  >>> import tables as tb
+  >>> expr = tb.Expr("b+1")
+  >>> cout = ca.carray(np.empty((0,), dtype='f8'))
+  >>> expr.setOutput(cout, append_mode=True)
+  >>> expr.eval()
+  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3599988; ratio: 22.22
+  [1.0, 2.0, 3.0... 8.0, 9.0, 10.0]   # returns cout, as can be seen in:
+  >>> cout
+  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3599988; ratio: 22.22
+  [1.0, 2.0, 3.0... 8.0, 9.0, 10.0]  # same object than above
+
+where `cout` holds the results of the operation.  Initially we have
+created it as an empty carray, and we instructed the `expr` instance
+to add results to it (by using its `append()` mode under the hood).
+
+Of course, you can evaluate more complex expressions and mix carrays
+and NumPy arrays (as well as other PyTables objects) freely::
+
+  >>> expr = tb.Expr("a**2+b**3+sin(a*b)-cout")
+  >>> cout2 = ca.carray(np.empty((0,), dtype='f8'))
+  >>> expr.setOutput(cout2, append_mode=True)
+  >>> expr.eval()
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 40654959; ratio: 1.97
+  [-1.0, 0.84147098480789673, 8.2431975046920716... 9.9999920000020002e+20, 9.9999950000007007e+20, 9.9999980000000016e+20]
+
+In the expression above we have included a couple of carray instances
+(`b` and `cout`) with a pure NumPy array (`a`), and the result is a
+new carray (`cout2`).
+
+`tables.Expr` uses the Numexpr package under the covers, so operations
+are both memory-efficient and multi-threaded (i.e. they can use
+multiple cores, if available).  If we add the high-performance Blosc
+compressor (that is used by carray internally) into this equation,
+carray allows for an extremely efficient way to perform computations
+that saves both memory and time, specially on very large arrays.
+
+
+carray limitations
+------------------
+
+At this time, carray objects can only be uni-dimensional and you cannot
+modify its contents directly.  Newer versions of the carray package
+might get rid of these limitations though.
+
+
+.. Local Variables:
+.. mode: text
+.. coding: utf-8
+.. fill-column: 70
+.. End:
