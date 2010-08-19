@@ -392,7 +392,7 @@ cdef class carray:
       raise KeyError, "key not supported: %s" % repr(key)
 
     if step and step < 0 :
-      raise ValueError("slice step cannot be negative")
+      raise KeyError("slice step cannot be negative")
 
     # Get the corrected values for start, stop, step
     (start, stop, step) = slice(start, stop, step).indices(nrows)

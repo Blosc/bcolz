@@ -113,6 +113,13 @@ class carrayTest(unittest.TestCase):
         #print "b[1:8:3]->", `b[1:8:3]`
         assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
 
+    def test03b(self):
+        """Testing `__getitem()__` method with negative steps"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[::-3]->", `b[::-3]`
+        self.assertRaises(KeyError, b.__getitem__, slice(None, None,-3))
+
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e4)
