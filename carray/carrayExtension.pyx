@@ -280,6 +280,22 @@ cdef class carray:
       return self._cbytes
 
 
+  def _to_ndarray(self, object array):
+    """Convert object to a ndarray."""
+
+    if type(array) != numpy.ndarray:
+      try:
+        array = numpy.asarray(array)
+      except ValueError:
+        raise ValueError, "cannot convert to an ndarray object"
+    # We need a contiguous array
+    if not array.flags.contiguous:
+      array = array.copy()
+    if len(array.shape) != 1:
+      raise ValueError, "only unidimensional shapes supported"
+    return array
+
+
   def __cinit__(self, object array, int clevel=5, int shuffle=True,
                 int chunksize=1*_MB):
     """Initialize and compress data based on passed `array`.
@@ -295,14 +311,11 @@ cdef class carray:
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
 
-    if type(array) != numpy.ndarray:
-      raise ValueError, "a numpy ndarray is expected in `array` param"
-    if len(array.shape) != 1:
-      raise ValueError, "only unidimensional shapes supported"
+    array_ = self._to_ndarray(array)
 
     self.clevel = clevel
     self.shuffle = shuffle
-    self._dtype = dtype = array.dtype
+    self._dtype = dtype = array_.dtype
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
 
@@ -316,7 +329,7 @@ cdef class carray:
 
     # The number of bytes in incoming array
     nbytes = itemsize
-    for i in array.shape:
+    for i in array_.shape:
       nbytes *= i
     self.nbytes = nbytes
 
@@ -324,14 +337,13 @@ cdef class carray:
     cbytes = 0
     nchunks = self.nbytes // self.chunksize
     nelemchunk = self.chunksize // itemsize
-    array_ = array
     for i in range(nchunks):
       chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes 
     self.leftover = leftover = nbytes % cs
     if leftover:
-      remainder = array[nchunks*nelemchunk:]
+      remainder = array_[nchunks*nelemchunk:]
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self.chunksize  # count the space in last chunk 
     self._cbytes = cbytes
@@ -434,7 +446,7 @@ cdef class carray:
     raise NotImplementedError
 
 
-  def append(self, ndarray array):
+  def append(self, object array):
     """Append a numpy `array` to this carray instance.
 
     Return the number of elements appended.
@@ -445,31 +457,28 @@ cdef class carray:
     cdef ndarray remainder, array_
     cdef chunk chunk_
 
-    if type(array) != numpy.ndarray:
-      raise ValueError, "a numpy ndarray is expected in `array` param"
-    if array.dtype != self._dtype:
+    array_ = self._to_ndarray(array)
+    if array_.dtype != self._dtype:
       raise TypeError, "array dtype does not match with self"
-    if len(array.shape) != 1:
-      raise ValueError, "only unidimensional shapes supported"
 
     itemsize = self.itemsize
     chunksize = self.chunksize
     chunks = self.chunks
     leftover = self.leftover
-    bsize = array.size*itemsize
+    bsize = array_.size*itemsize
     cbytes = 0
 
     # Check if array fits in existing buffer
     if (bsize + leftover) < chunksize:
       # Data fits in lastchunk buffer.  Just copy it
-      memcpy(self.lastchunk+leftover, array.data, bsize)
+      memcpy(self.lastchunk+leftover, array_.data, bsize)
       leftover += bsize
     else:
       # Data does not fit in buffer.  Break it in chunks.
 
       # First, fill the last buffer completely
       nbytesfirst = chunksize-leftover
-      memcpy(self.lastchunk+leftover, array.data, nbytesfirst)
+      memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
       # Compress the last chunk and add it to the list
       chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
       chunks.append(chunk_)
@@ -498,7 +507,7 @@ cdef class carray:
     self._cbytes += cbytes
     self.nbytes += bsize
     # Return the number of elements added
-    return array.size
+    return array_.size
 
 
   def __str__(self):
