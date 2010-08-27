@@ -111,7 +111,7 @@ cdef class chunk:
   ---------------
 
   __getitem__(key)
-      Get the values specified by the ``key``.
+      Get the values specified in ``key``.
   __setitem__(key, value)
       Set the specified ``value`` in ``key``.
   """
@@ -252,17 +252,25 @@ cdef class carray:
   ---------------
 
   __getitem__(key)
-      Get the values specified by the ``key``.
+      Get the values specified in ``key``.
   __setitem__(key, value)
       Set the specified ``value`` in ``key``.
   """
 
-  cdef object _dtype, chunks
   cdef int itemsize, chunksize, leftover
   cdef int clevel, shuffle
+  cdef int startb, stopb, nrowsinbuf, _row, sss_init
+  cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
   cdef npy_intp nbytes, _cbytes
   cdef void *lastchunk
   cdef object lastchunkarr
+  cdef object _dtype, chunks
+  cdef ndarray iobuf
+
+  property nrows:
+    """The number of elements in this array."""
+    def __get__(self):
+      return self.nbytes // self.itemsize
 
   property dtype:
     """The dtype of this instance."""
@@ -272,7 +280,7 @@ cdef class carray:
   property shape:
     """The shape of this instance."""
     def __get__(self):
-      return (self.nbytes//self.itemsize,)
+      return (self.nrows,)
 
   property cbytes:
     """The compressed size of this array (in bytes)."""
@@ -347,6 +355,8 @@ cdef class carray:
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self.chunksize  # count the space in last chunk 
     self._cbytes = cbytes
+    self.nrowsinbuf = self.chunksize // self.itemsize
+    self.sss_init = False  # sentinel
 
 
   def toarray(self):
@@ -373,7 +383,7 @@ cdef class carray:
     cdef ndarray array, chunk_
     cdef int i, itemsize, chunklen, leftover, nchunks
     cdef int startb, stopb, bsize
-    cdef npy_intp nbytes, ntbytes, nrows
+    cdef npy_intp nbytes, ntbytes
 
     nbytes = self.nbytes
     itemsize = self.itemsize
@@ -388,25 +398,24 @@ cdef class carray:
         raise KeyError, "multidimensional keys are not supported"
       key = key[0]
 
-    nrows = nbytes // itemsize
     if isinstance(key, int):
-      if key >= nrows:
+      if key >= self.nrows:
         raise IndexError, "index out of range"
       if key < 0:
         # To support negative values
-        key += nrows
+        key += self.nrows
       (start, stop, step) = key, key+1, 1
       scalar = True
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     else:
-      raise KeyError, "key not supported: %s" % repr(key)
+      raise NotImplementedError, "key not supported: %s" % repr(key)
 
-    if step and step < 0 :
-      raise KeyError("slice step cannot be negative")
+    if step and step <= 0 :
+      raise NotImplementedError("step in slice can only be positive")
 
     # Get the corrected values for start, stop, step
-    (start, stop, step) = slice(start, stop, step).indices(nrows)
+    (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
     # Build a numpy container
     array = numpy.empty(shape=(stop-start,), dtype=self._dtype)
@@ -444,6 +453,64 @@ cdef class carray:
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
     raise NotImplementedError
+
+
+  def iter(self, start=0, stop=None, step=1):
+    """Iterator with `start`, `stop` and `step` bounds."""
+    # Check limits
+    if step <= 0:
+      raise NotImplementedError, "step param can only be positive"
+    self.start, self.stop, self.step = \
+        slice(start, stop, step).indices(self.nrows)
+    self.sss_init = True
+    return iter(self)
+
+
+  def __iter__(self):
+    """Iterator for traversing the data in carray."""
+
+    if not self.sss_init:
+      self.start = 0
+      self.stop = self.nbytes // self.itemsize
+      self.step = 1
+    # Initialize some internal values
+    self.startb = 0
+    self.nrowsread = self.start
+    self._nrow = self.start - self.step
+    self._row = -1  # a sentinel
+    return self
+
+
+  def __next__(self):
+    """Return the next element in iterator."""
+
+    self.nextelement = self._nrow + self.step
+    while self.nextelement < self.stop:
+      if self.nextelement >= self.nrowsread:
+        # Skip until there is interesting information
+        while self.nextelement >= self.nrowsread + self.nrowsinbuf:
+          self.nrowsread += self.nrowsinbuf
+        # Compute the end for this iteration
+        self.stopb = self.stop - self.nrowsread
+        if self.stopb > self.nrowsinbuf:
+          self.stopb = self.nrowsinbuf
+        self._row = self.startb - self.step
+        # Read a data chunk
+        self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        self.nrowsread += self.nrowsinbuf
+
+      self._row += self.step
+      self._nrow = self.nextelement
+      if self._row + self.step >= self.stopb:
+        # Compute the start row for the next buffer
+        self.startb = (self._row + self.step) % self.nrowsinbuf
+      self.nextelement = self._nrow + self.step
+      # Return the current value in I/O buffer
+      return PyArray_GETITEM(
+        self.iobuf, self.iobuf.data + self._row * self.itemsize)
+    else:
+      self.sss_init = False  # reset sss_init sentinel
+      raise StopIteration        # end of iteration
 
 
   def append(self, object array):

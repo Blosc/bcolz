@@ -118,7 +118,8 @@ class carrayTest(unittest.TestCase):
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
         #print "b[::-3]->", `b[::-3]`
-        self.assertRaises(KeyError, b.__getitem__, slice(None, None,-3))
+        self.assertRaises(NotImplementedError, b.__getitem__,
+                          slice(None, None,-3))
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
@@ -177,12 +178,84 @@ class carrayTest(unittest.TestCase):
         assert_array_equal(d, b.toarray(), "Arrays are not equal")
 
 
+class IterTest(unittest.TestCase):
+    
+    def test00(self):
+        """Testing `iter()` method"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter1->", sum(b)
+        #print "sum iter2->", sum((v for v in b))
+        self.assert_(sum(a) == sum(b), "Sums are not equal")
+        self.assert_(sum((v for v in a)) == sum((v for v in b)),
+                     "Sums are not equal")
+
+    def test01a(self):
+        """Testing `iter()` method with a positive start"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(3))
+        self.assert_(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
+
+    def test01b(self):
+        """Testing `iter()` method with a negative start"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(-3))
+        self.assert_(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
+
+    def test02a(self):
+        """Testing `iter()` method with positive start, stop"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(3, 24))
+        self.assert_(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
+
+    def test02b(self):
+        """Testing `iter()` method with negative start, stop"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(-24, -3))
+        self.assert_(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
+                     "Sums are not equal")
+
+    def test02c(self):
+        """Testing `iter()` method with positive start, negative stop"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(24, -3))
+        self.assert_(sum(a[24:-3]) == sum(b.iter(24, -3)),
+                     "Sums are not equal")
+
+    def test03a(self):
+        """Testing `iter()` method with only step"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(step=4))
+        self.assert_(sum(a[::4]) == sum(b.iter(step=4)),
+                     "Sums are not equal")
+
+    def test03b(self):
+        """Testing `iter()` method with start, stop, step"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        #print "sum iter->", sum(b.iter(3, 24, 4))
+        self.assert_(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
+                     "Sums are not equal")
+
+    def test03c(self):
+        """Testing `iter()` method with negative step"""
+        a = np.arange(101)
+        b = ca.carray(a, chunksize=9)
+        self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
+
 
 def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(chunkTest))
     theSuite.addTest(unittest.makeSuite(carrayTest))
+    theSuite.addTest(unittest.makeSuite(IterTest))
 
     return theSuite
 
