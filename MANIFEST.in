@@ -4,4 +4,5 @@ include setup.py VERSION
 
 recursive-include carray *.py *.pyx *.pxd
 recursive-include blosc *.c *.h
+recursive-include bench *.py README.txt
 recursive-include LICENSES *
