@@ -268,7 +268,7 @@ cdef class carray:
   cdef ndarray iobuf
 
   property nrows:
-    """The number of elements in this array."""
+    """The number of rows (leading dimension) in this array."""
     def __get__(self):
       return self.nbytes // self.itemsize
 
@@ -584,17 +584,18 @@ cdef class carray:
 
   def __str__(self):
     """Represent the carray as an string."""
-    return "[%s, %s, %s... %s, %s, %s]\n" % (self[0], self[1], self[2],
-                                             self[-3], self[-2], self[-1])
+    if self.nrows > 100:
+      return "[%s, %s, %s... %s, %s, %s]\n" % (self[0], self[1], self[2],
+                                               self[-3], self[-2], self[-1])
+    else:
+      return str(self.toarray())
 
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
     cratio = self.nbytes / float(self._cbytes)
-    excerpt = "[%r, %r, %r... %r, %r, %r]\n" % (self[0], self[1], self[2],
-                                                self[-3], self[-2], self[-1])
     fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%s" % \
-        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, excerpt)
+        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, str(self))
     return fullrepr
 
 
