@@ -455,17 +455,6 @@ cdef class carray:
     raise NotImplementedError
 
 
-  def iter(self, start=0, stop=None, step=1):
-    """Iterator with `start`, `stop` and `step` bounds."""
-    # Check limits
-    if step <= 0:
-      raise NotImplementedError, "step param can only be positive"
-    self.start, self.stop, self.step = \
-        slice(start, stop, step).indices(self.nrows)
-    self.sss_init = True
-    return iter(self)
-
-
   def __iter__(self):
     """Iterator for traversing the data in carray."""
 
@@ -479,6 +468,17 @@ cdef class carray:
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
     return self
+
+
+  def iter(self, start=0, stop=None, step=1):
+    """Iterator with `start`, `stop` and `step` bounds."""
+    # Check limits
+    if step <= 0:
+      raise NotImplementedError, "step param can only be positive"
+    self.start, self.stop, self.step = \
+        slice(start, stop, step).indices(self.nrows)
+    self.sss_init = True
+    return iter(self)
 
 
   def __next__(self):

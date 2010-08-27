@@ -123,6 +123,9 @@ although negative steps are not supported::
       File "carrayExtension.pyx", line 395, in carray.carrayExtension.carray.__getitem__ (carray/carrayExtension.c:3327)
       NotImplementedError: step in slice can only be positive
 
+Using iterators
+~~~~~~~~~~~~~~~
+
 carray also has support for efficient iterators::
 
   In [3]: a = np.arange(1e6)

@@ -51,6 +51,7 @@ The main advantage of these iterators is that you can use them in
 generators and hence, you don't need to waste memory for creating
 temporaries, which can be important when dealing with large arrays.
 
+For more info, see new ``Using iterators`` section in USAGE.txt.
 
 Resources
 =========
