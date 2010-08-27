@@ -2,6 +2,7 @@
 # carrays vs plain numpy arrays.  The tables.Expr class is used for
 # this.
 
+import math
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import numexpr as ne
@@ -14,12 +15,17 @@ clevel = 5    # the compression level
 #sexpr = "x+1"  # the expression to compute
 sexpr = "2*x**3+.3*x**2+x+1"  # the expression to compute
 
+print "Evaluating '%s' with 10**%d points" % (sexpr, int(math.log10(N)))
+
 # Create the numpy array
 x = np.arange(N)
 # Create a compressed array
 cx = ca.carray(x, clevel=clevel)
-print "cx-->", repr(cx)
 cout = ca.carray(np.empty((0,), dtype='f8'), clevel=clevel)
+
+t0 = time()
+out = eval(sexpr)
+print "Time for plain numpy--> %.3f" % (time()-t0,) 
 
 t0 = time()
 out = ne.evaluate(sexpr)
