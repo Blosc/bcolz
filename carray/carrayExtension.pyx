@@ -119,7 +119,7 @@ cdef class chunk:
   cdef object dtype
   cdef object shape
   cdef int itemsize, nbytes, cbytes
-  cdef void *data
+  cdef char *data
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=False):
     """Initialize chunk and compress data based on numpy `array`.
@@ -138,7 +138,7 @@ cdef class chunk:
     nbytes = itemsize
     for i in self.shape:
       nbytes *= i
-    self.data = malloc(nbytes+BLOSC_MAX_OVERHEAD)
+    self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     # Compress data
     with nogil:
       cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
@@ -262,7 +262,7 @@ cdef class carray:
   cdef int startb, stopb, nrowsinbuf, _row, sss_init
   cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
   cdef npy_intp nbytes, _cbytes
-  cdef void *lastchunk
+  cdef char *lastchunk
   cdef object lastchunkarr
   cdef object _dtype, chunks
   cdef ndarray iobuf

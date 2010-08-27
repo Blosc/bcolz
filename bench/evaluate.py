@@ -15,7 +15,7 @@ clevel = 5    # the compression level
 #sexpr = "x+1"  # the expression to compute
 sexpr = "2*x**3+.3*x**2+x+1"  # the expression to compute
 
-print "Evaluating '%s' with 10**%d points" % (sexpr, int(math.log10(N)))
+print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
 
 # Create the numpy array
 x = np.arange(N)
