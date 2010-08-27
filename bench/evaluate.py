@@ -10,8 +10,9 @@ import carray as ca
 from time import time
 
 N = 1e7       # the number of elements in x
-clevel = 1    # the compression level
-expr = "x+1"  # the expression to compute
+clevel = 5    # the compression level
+#sexpr = "x+1"  # the expression to compute
+sexpr = "2*x**3+.3*x**2+x+1"  # the expression to compute
 
 # Create the numpy array
 x = np.arange(N)
@@ -21,17 +22,17 @@ print "cx-->", repr(cx)
 cout = ca.carray(np.empty((0,), dtype='f8'), clevel=clevel)
 
 t0 = time()
-out = ne.evaluate("x+1")
-print "Time for numexpr--> %.3f" % (time()-t0,) 
+out = ne.evaluate(sexpr)
+print "Time for numexpr (numpy)--> %.3f" % (time()-t0,) 
 
 t0 = time()
-expr = tb.Expr("x+1")
+expr = tb.Expr(sexpr)
 out = expr.eval()
-print "Time for numpy array--> %.3f" % (time()-t0,) 
+print "Time for tables.Expr (numpy)--> %.3f" % (time()-t0,) 
 
 x = cx
 t0 = time()
-expr = tb.Expr("x+1")
+expr = tb.Expr(sexpr)
 expr.setOutput(cout, append_mode=True)
 expr.eval()
 print "Time for compressed array--> %.3f" % (time()-t0,) 
