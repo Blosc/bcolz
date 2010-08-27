@@ -211,6 +211,7 @@ generally lower than the original NumPy array::
   80000000
 
 
+
 Enlarging your carray
 ---------------------
 

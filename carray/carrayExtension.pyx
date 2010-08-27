@@ -378,6 +378,11 @@ cdef class carray:
     return array
 
 
+  def __len__(self):
+    """Return the length of self."""
+    return self.nrows
+
+
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array, chunk_

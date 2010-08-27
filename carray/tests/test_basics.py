@@ -177,6 +177,12 @@ class carrayTest(unittest.TestCase):
         d = np.concatenate((a, c))
         assert_array_equal(d, b.toarray(), "Arrays are not equal")
 
+    def test08(self):
+        """Testing len(carray)"""
+        a = np.arange(111)
+        b = ca.carray(a)
+        self.assert_(len(a) == len(b), "Arrays do not have the same length")
+
 
 class IterTest(unittest.TestCase):
     
