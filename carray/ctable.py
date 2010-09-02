@@ -72,6 +72,28 @@ class ctable(object):
         "The shape of this ctable."
         return (self.nrows,)
 
+    @property
+    def nbytes(self):
+        "The original (uncompressed) size of this carray (in bytes)."
+        return self.get_stats()[0]
+
+    @property
+    def cbytes(self):
+        "The compressed size of this carray (in bytes)."
+        return self.get_stats()[1]
+
+
+    def get_stats(self):
+        """Get some stats (nbytes, cbytes and ratio) about this carray."""
+        nbytes, cbytes, ratio = 0, 0, 0.0
+        names, cols = self.names, self.cols
+        for name in names:
+            column = cols[name]
+            nbytes += column.nbytes
+            cbytes += column.cbytes
+        cratio = nbytes / float(cbytes)
+        return (nbytes, cbytes, cratio)
+
 
     def __init__(self, cols, names=None):
         """Create a new ctable from `cols` with optional `names`.
@@ -210,6 +232,16 @@ class ctable(object):
         return n
 
 
+    def __len__(self):
+        """Return the length of self."""
+        return self.nrows
+
+
+    def __sizeof__(self):
+        """Return the number of bytes taken by self."""
+        return self.cbytes
+
+
     def __getitem__(self, key):
         """Get a row or a range of rows.  Also a column or range of columns.
 
@@ -297,15 +329,7 @@ class ctable(object):
 
     def __repr__(self):
         """Represent the carray as an string, with additional info."""
-        # Compute the number of uncompressed and compressed bytes
-        nbytes, cbytes = 0, 0
-        names, cols = self.names, self.cols
-        for name in names:
-            column = cols[name]
-            nbytes += column.nrows * column.dtype.itemsize
-            cbytes += column.cbytes
-
-        cratio = nbytes / float(cbytes)
+        nbytes, cbytes, cratio = self.get_stats()
         fullrepr = "ctable(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%s" % \
                    (self.shape, self.dtype, nbytes, cbytes, cratio, str(self))
         return fullrepr

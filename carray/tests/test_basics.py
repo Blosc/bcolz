@@ -8,6 +8,8 @@
 #
 ########################################################################
 
+import sys
+
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
@@ -178,10 +180,28 @@ class carrayTest(unittest.TestCase):
         assert_array_equal(d, b.toarray(), "Arrays are not equal")
 
     def test08(self):
-        """Testing len(carray)"""
+        """Testing __len__()"""
         a = np.arange(111)
         b = ca.carray(a)
         self.assert_(len(a) == len(b), "Arrays do not have the same length")
+
+    def test09(self):
+        """Testing __sizeof__() (big carrays)"""
+        a = np.arange(1e6)
+        b = ca.carray(a)
+        #print "size b uncompressed-->", b.nbytes
+        #print "size b compressed -->", b.cbytes
+        self.assert_(sys.getsizeof(b) < b.nbytes,
+                     "carray does not seem to compress at all")
+
+    def test10(self):
+        """Testing __sizeof__() (small carrays)"""
+        a = np.arange(111)
+        b = ca.carray(a)
+        #print "size b uncompressed-->", b.nbytes
+        #print "size b compressed -->", b.cbytes
+        self.assert_(sys.getsizeof(b) > b.nbytes,
+                     "carray compress too much??")
 
 
 class IterTest(unittest.TestCase):

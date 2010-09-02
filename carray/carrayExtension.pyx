@@ -250,6 +250,8 @@ cdef class carray:
 
   * __getitem__(key)
   * __setitem__(key, value)
+  * __len__()
+  * __sizeof__()
 
   """
 
@@ -257,29 +259,34 @@ cdef class carray:
   cdef int clevel, shuffle
   cdef int startb, stopb, nrowsinbuf, _row, sss_init
   cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
-  cdef npy_intp nbytes, _cbytes
+  cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
   cdef object lastchunkarr
   cdef object _dtype, chunks
   cdef ndarray iobuf
 
   property nrows:
-    """The number of rows (leading dimension) in this array."""
+    "The number of rows (leading dimension) in this carray."
     def __get__(self):
-      return self.nbytes // self.itemsize
+      return self._nbytes // self.itemsize
 
   property dtype:
-    """The dtype of this instance."""
+    "The dtype of this carray."
     def __get__(self):
       return self._dtype
 
   property shape:
-    """The shape of this instance."""
+    "The shape of this carray."
     def __get__(self):
       return (self.nrows,)
 
+  property nbytes:
+    "The original (uncompressed) size of this carray (in bytes)."
+    def __get__(self):
+      return self._nbytes
+
   property cbytes:
-    """The compressed size of this array (in bytes)."""
+    "The compressed size of this carray (in bytes)."
     def __get__(self):
       return self._cbytes
 
@@ -335,11 +342,11 @@ cdef class carray:
     nbytes = itemsize
     for i in array_.shape:
       nbytes *= i
-    self.nbytes = nbytes
+    self._nbytes = nbytes
 
     # Compress data in chunks
     cbytes = 0
-    nchunks = self.nbytes // self.chunksize
+    nchunks = self._nbytes // self.chunksize
     nelemchunk = self.chunksize // itemsize
     for i in range(nchunks):
       chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
@@ -364,7 +371,7 @@ cdef class carray:
     array = numpy.empty(shape=self.shape, dtype=self._dtype)
 
     # Fill it with uncompressed data
-    nchunks = self.nbytes // self.chunksize
+    nchunks = self._nbytes // self.chunksize
     for i in range(nchunks):
       chunk_ = self.chunks[i].toarray()
       memcpy(array.data+i*self.chunksize, chunk_.data, self.chunksize)
@@ -379,6 +386,11 @@ cdef class carray:
     return self.nrows
 
 
+  def __sizeof__(self):
+    """Return the number of bytes taken by self."""
+    return self._cbytes
+
+
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array, chunk_
@@ -386,11 +398,11 @@ cdef class carray:
     cdef int startb, stopb, bsize
     cdef npy_intp nbytes, ntbytes
 
-    nbytes = self.nbytes
+    nbytes = self._nbytes
     itemsize = self.itemsize
     leftover = self.leftover
     chunklen = self.chunksize // itemsize
-    nchunks = self.nbytes // self.chunksize
+    nchunks = self._nbytes // self.chunksize
     scalar = False
 
     # Get rid of multidimensional keys
@@ -461,7 +473,7 @@ cdef class carray:
 
     if not self.sss_init:
       self.start = 0
-      self.stop = self.nbytes // self.itemsize
+      self.stop = self._nbytes // self.itemsize
       self.step = 1
     # Initialize some internal values
     self.startb = 0
@@ -573,7 +585,7 @@ cdef class carray:
     # Update some counters
     self.leftover = leftover
     self._cbytes += cbytes
-    self.nbytes += bsize
+    self._nbytes += bsize
     # Return the number of elements added
     return array_.size
 
@@ -589,9 +601,9 @@ cdef class carray:
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
-    cratio = self.nbytes / float(self._cbytes)
+    cratio = self._nbytes / float(self._cbytes)
     fullrepr = "carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%s" % \
-        (self.shape, self.dtype, self.nbytes, self._cbytes, cratio, str(self))
+        (self.shape, self.dtype, self._nbytes, self._cbytes, cratio, str(self))
     return fullrepr
 
 

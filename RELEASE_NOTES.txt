@@ -6,6 +6,21 @@ Release notes for carray 0.2
 :Contact: faltet@pytables.org
 
 
+Changes from 0.2 to 0.3
+=======================
+
+- Added a new `ctable` class that implements a compressed, column-wise
+  table.
+
+- Added new `__len__()` and `__sizeof__()` special methods for both
+  `carray` and `ctable` objects.
+
+- Added new `nbytes` and `cbytes` properties for `carray` and `ctable`
+  objects.  The former accounts for the size of the original
+  (non-compressed) object, and the later for the actual compressed
+  object.
+
+
 Changes from 0.1 to 0.2
 =======================
 

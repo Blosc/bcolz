@@ -8,6 +8,8 @@
 #
 ########################################################################
 
+import sys
+
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
@@ -222,12 +224,44 @@ class getitemTest(unittest.TestCase):
                            "ctable values are not correct")
 
 
+class specialTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __len__()"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        self.assert_(len(t) == len(ra), "Objects do not have the same length")
+
+    def test01(self):
+        """Testing __sizeof__() (big ctables)"""
+        N = int(1e6)
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        #print "size t uncompressed-->", t.nbytes
+        #print "size t compressed -->", t.cbytes
+        self.assert_(sys.getsizeof(t) < t.nbytes,
+                     "ctable does not seem to compress at all")
+
+    def test02(self):
+        """Testing __sizeof__() (small ctables)"""
+        N = int(111)
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        #print "size t uncompressed-->", t.nbytes
+        #print "size t compressed -->", t.cbytes
+        self.assert_(sys.getsizeof(t) > t.nbytes,
+                     "ctable compress too much??")
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(createTest))
     theSuite.addTest(unittest.makeSuite(add_del_colTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(specialTest))
 
     return theSuite
 
