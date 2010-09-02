@@ -61,17 +61,6 @@ using `sys.getsizeof()`::
   >>> sys.getsizeof(b)
   2691754
 
-as well as using the `cbytes` attribute::
-
-  >>> b.cbytes
-  2691722
-
-The original (uncompressed) datasize can be accessed by using `nbytes`
-attribute::
-
-  >>> b.nbytes
-  80000000
-
 
 Compression level and shuffle filter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -255,14 +244,24 @@ In addition, it implements the `cbytes` attribute that tells how many
 bytes in memory uses the carray object::
 
   >>> b.cbytes
-  3590458
+  2691722
 
 This figure is approximate (the real one is a little larger) and it is
-generally lower than the original NumPy array::
+generally lower than the original (uncompressed) datasize can be
+accessed by using `nbytes` attribute::
+
+  >>> b.nbytes
+  80000000
+
+which is the same than the original NumPy array::
 
   >>> a.size*a.dtype.itemsize
   80000000
 
+Finally, you can access the `chunksize` for this carray::
+
+  >>> b.chunksize
+  131072
 
 
 Enlarging your carray
@@ -275,7 +274,7 @@ method.
 For example, if `b` is a carray with 10 million elements::
 
   >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 it can be enlarged by 10 elements with::
@@ -283,7 +282,7 @@ it can be enlarged by 10 elements with::
   >>> b.append(np.arange(10.))
   10   # the number of rows appended
   >>> b
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3590458; ratio: 22.28
+  carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722; ratio: 29.72
   [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
 
 You may want to compare the `carray.append()` method of carrays to the
