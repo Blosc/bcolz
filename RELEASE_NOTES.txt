@@ -26,6 +26,8 @@ Changes from 0.2 to 0.3
 - Added `chunksize` property for `carray` that allows querying the
   chunksize for the internal I/O buffer.
 
+- Added a new `append()` method to `ctable` class.
+
 
 Changes from 0.1 to 0.2
 =======================

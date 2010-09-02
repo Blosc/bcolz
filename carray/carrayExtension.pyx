@@ -302,12 +302,15 @@ cdef class carray:
 
     if type(array) != numpy.ndarray:
       try:
-        array = numpy.asarray(array)
+        array = numpy.asarray(array, dtype=self.dtype)
       except ValueError:
         raise ValueError, "cannot convert to an ndarray object"
     # We need a contiguous array
     if not array.flags.contiguous:
       array = array.copy()
+    if len(array.shape) == 0:
+      # We treat scalars like undimensional arrays
+      array.shape = (1,)
     if len(array.shape) != 1:
       raise ValueError, "only unidimensional shapes supported"
     return array
@@ -381,6 +384,70 @@ cdef class carray:
     self._cbytes = cbytes
     self.nrowsinbuf = self._chunksize // self.itemsize
     self.sss_init = False  # sentinel
+
+
+  def append(self, object array):
+    """Append a numpy `array` to this carray instance.
+
+    Return the number of elements appended.
+    """
+    cdef int itemsize, chunksize, leftover, bsize
+    cdef int nbytesfirst, nelemchunk
+    cdef npy_intp nbytes, cbytes
+    cdef ndarray remainder, array_
+    cdef chunk chunk_
+
+    array_ = self._to_ndarray(array)
+    if array_.dtype != self._dtype:
+      raise TypeError, "array dtype does not match with self"
+
+    itemsize = self.itemsize
+    chunksize = self._chunksize
+    chunks = self.chunks
+    leftover = self.leftover
+    bsize = array_.size*itemsize
+    cbytes = 0
+
+    # Check if array fits in existing buffer
+    if (bsize + leftover) < chunksize:
+      # Data fits in lastchunk buffer.  Just copy it
+      memcpy(self.lastchunk+leftover, array_.data, bsize)
+      leftover += bsize
+    else:
+      # Data does not fit in buffer.  Break it in chunks.
+
+      # First, fill the last buffer completely
+      nbytesfirst = chunksize-leftover
+      memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
+      # Compress the last chunk and add it to the list
+      chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
+      chunks.append(chunk_)
+      cbytes = chunk_.cbytes
+
+      # Then fill other possible chunks
+      nbytes = bsize - nbytesfirst
+      nchunks = nbytes // chunksize
+      nelemchunk = chunksize // itemsize
+      # Get a new view skipping the elements that have been already copied
+      remainder = array[nbytesfirst // itemsize:]
+      for i in range(nchunks):
+        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk],
+                       self.clevel, self.shuffle)
+        chunks.append(chunk_)
+        cbytes += chunk_.cbytes
+
+      # Finally, deal with the leftover
+      leftover = nbytes % chunksize
+      if leftover:
+        remainder = remainder[nchunks*nelemchunk:]
+        memcpy(self.lastchunk, remainder.data, leftover)
+
+    # Update some counters
+    self.leftover = leftover
+    self._cbytes += cbytes
+    self._nbytes += bsize
+    # Return the number of elements added
+    return array_.size
 
 
   def toarray(self):
@@ -545,70 +612,6 @@ cdef class carray:
     else:
       self.sss_init = False  # reset sss_init sentinel
       raise StopIteration        # end of iteration
-
-
-  def append(self, object array):
-    """Append a numpy `array` to this carray instance.
-
-    Return the number of elements appended.
-    """
-    cdef int itemsize, chunksize, leftover, bsize
-    cdef int nbytesfirst, nelemchunk
-    cdef npy_intp nbytes, cbytes
-    cdef ndarray remainder, array_
-    cdef chunk chunk_
-
-    array_ = self._to_ndarray(array)
-    if array_.dtype != self._dtype:
-      raise TypeError, "array dtype does not match with self"
-
-    itemsize = self.itemsize
-    chunksize = self._chunksize
-    chunks = self.chunks
-    leftover = self.leftover
-    bsize = array_.size*itemsize
-    cbytes = 0
-
-    # Check if array fits in existing buffer
-    if (bsize + leftover) < chunksize:
-      # Data fits in lastchunk buffer.  Just copy it
-      memcpy(self.lastchunk+leftover, array_.data, bsize)
-      leftover += bsize
-    else:
-      # Data does not fit in buffer.  Break it in chunks.
-
-      # First, fill the last buffer completely
-      nbytesfirst = chunksize-leftover
-      memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
-      # Compress the last chunk and add it to the list
-      chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
-      chunks.append(chunk_)
-      cbytes = chunk_.cbytes
-
-      # Then fill other possible chunks
-      nbytes = bsize - nbytesfirst
-      nchunks = nbytes // chunksize
-      nelemchunk = chunksize // itemsize
-      # Get a new view skipping the elements that have been already copied
-      remainder = array[nbytesfirst // itemsize:]
-      for i in range(nchunks):
-        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk],
-                       self.clevel, self.shuffle)
-        chunks.append(chunk_)
-        cbytes += chunk_.cbytes
-
-      # Finally, deal with the leftover
-      leftover = nbytes % chunksize
-      if leftover:
-        remainder = remainder[nchunks*nelemchunk:]
-        memcpy(self.lastchunk, remainder.data, leftover)
-
-    # Update some counters
-    self.leftover = leftover
-    self._cbytes += cbytes
-    self._nbytes += bsize
-    # Return the number of elements added
-    return array_.size
 
 
   def __str__(self):

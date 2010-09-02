@@ -114,7 +114,7 @@ class ctable(object):
 
         # Get the names of the cols
         if names is None:
-            if ratype:
+            if isinstance(cols, np.ndarray):  # ratype case
                 names = list(cols.dtype.names)
             else:
                 names = ["f%d"%i for i in range(len(cols))]
@@ -156,6 +156,56 @@ class ctable(object):
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `cols` must have the same length"
             clen = len(column)
+        self.nrows += clen
+
+
+    def append(self, rows):
+        """Append `rows` to ctable.
+
+        `rows` can be a collection of scalar values, NumPy arrays or
+        carrays.  It also can be a NumPy record, a NumPy recarray, or
+        another ctable.
+        """
+
+        # Guess the kind of rows input
+        calist, nalist, sclist, ratype = False, False, False, False
+        if type(rows) in (tuple, list):
+            calist = [type(v) for v in rows] == [ca.carray for v in rows]
+            nalist = [type(v) for v in rows] == [np.ndarray for v in rows]
+            if not (calist or nalist):
+                # Try with a scalar list
+                sclist = True
+        elif isinstance(rows, np.ndarray):
+            ratype = hasattr(rows.dtype, "names")
+        elif isinstance(rows, ca.ctable):
+            # Convert int a list of carrays
+            rows = [rows[name] for name in self.names]
+            calist = True
+        else:
+            raise ValueError, "`rows` input is not supported"
+        if not (calist or nalist or sclist or ratype):
+            raise ValueError, "`rows` input is not supported"
+
+        # Populate the columns
+        clen = -1
+        for i, name in enumerate(self.names):
+            if calist or sclist:
+                column = rows[i]
+            elif nalist:
+                column = rows[i]
+                if column.dtype == np.void:
+                    raise ValueError, "`rows` elements cannot be of type void"
+                column = column
+            elif ratype:
+                column = rows[name]
+            self.cols[name].append(column)
+            if sclist:
+                clen2 = 1
+            else:
+                clen2 = len(column)
+            if clen >= 0 and clen != clen2:
+                raise ValueError, "all cols in `rows` must have the same length"
+            clen = clen2
         self.nrows += clen
 
 
@@ -306,16 +356,6 @@ class ctable(object):
 
     def __setitem__(self, key, value):
         """Set a row or a range of rows."""
-        raise NotImplementedError
-
-
-    def append(self, rows):
-        """Append `rows` to ctable.
-
-        `rows` can be a collection of Python values, NumPy arrays or
-        carrays.  It also can be a NumPy record, a NumPy recarray, or
-        another ctable.
-        """
         raise NotImplementedError
 
 

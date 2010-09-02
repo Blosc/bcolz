@@ -224,6 +224,61 @@ class getitemTest(unittest.TestCase):
                            "ctable values are not correct")
 
 
+class appendTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing append() with scalar values"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        t.append((N, N*2))
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+1)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01(self):
+        """Testing append() with numpy arrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        a = np.arange(N, N+10, dtype='i4')
+        b = np.arange(N, N+10, dtype='f8')*2.
+        t.append((a, b))
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test02(self):
+        """Testing append() with carrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        a = np.arange(N, N+10, dtype='i4')
+        b = np.arange(N, N+10, dtype='f8')*2.
+        t.append((ca.carray(a), ca.carray(b)))
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test03(self):
+        """Testing append() with structured arrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        ra2 = np.fromiter(((i, i*2.) for i in xrange(N, N+10)), dtype='i4,f8')
+        t.append(ra2)
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test04(self):
+        """Testing append() with another ctable"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        ra2 = np.fromiter(((i, i*2.) for i in xrange(N, N+10)), dtype='i4,f8')
+        t2 = ca.ctable(ra2)
+        t.append(t2)
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+
 class specialTest(unittest.TestCase):
 
     def test00(self):
@@ -261,6 +316,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(createTest))
     theSuite.addTest(unittest.makeSuite(add_del_colTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
 
     return theSuite
