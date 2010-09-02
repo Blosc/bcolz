@@ -19,14 +19,6 @@ import unittest
 
 class chunkTest(unittest.TestCase):
 
-    def test00(self):
-        """Testing `toarray()` method"""
-        a = np.arange(1e1)
-        #a = np.linspace(-1, 1, 1e4)
-        b = chunk(a)
-        #print "b->", `b`
-        assert_array_equal(a, b.toarray(), "Arrays are not equal")
-
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
         a = np.arange(1e1)
@@ -57,14 +49,6 @@ class chunkTest(unittest.TestCase):
 
 
 class carrayTest(unittest.TestCase):
-
-    def test00(self):
-        """Testing `toarray()` method"""
-        a = np.arange(1e1)
-        #a = np.linspace(-1, 1, 1e2)
-        b = ca.carray(a, chunksize=10)
-        #print "b->", `b`
-        assert_array_equal(a, b.toarray(), "Arrays are not equal")
 
     def test01(self):
         """Testing `__getitem()__` method with only a start"""
@@ -158,7 +142,7 @@ class carrayTest(unittest.TestCase):
         b.append(a)
         #print "b->", `b`
         c = np.concatenate((a, a))
-        assert_array_equal(c, b.toarray(), "Arrays are not equal")
+        assert_array_equal(c, b[:], "Arrays are not equal")
 
     def test06(self):
         """Testing `append()` method (small chunksize)"""
@@ -167,7 +151,7 @@ class carrayTest(unittest.TestCase):
         b.append(a)
         #print "b->", `b`
         c = np.concatenate((a, a))
-        assert_array_equal(c, b.toarray(), "Arrays are not equal")
+        assert_array_equal(c, b[:], "Arrays are not equal")
 
     def test07(self):
         """Testing `append()` method (large append)"""
@@ -177,7 +161,7 @@ class carrayTest(unittest.TestCase):
         b.append(c)
         #print "b->", `b`
         d = np.concatenate((a, c))
-        assert_array_equal(d, b.toarray(), "Arrays are not equal")
+        assert_array_equal(d, b[:], "Arrays are not equal")
 
     def test08(self):
         """Testing __len__()"""

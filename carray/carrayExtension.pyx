@@ -105,8 +105,7 @@ cdef class chunk:
   Public methods
   --------------
 
-  toarray()
-      Get a numpy ndarray from chunk.
+  None
 
   Special methods
   ---------------
@@ -150,21 +149,6 @@ cdef class chunk:
     self.cbytes = cbytes
     self.nbytes = nbytes
     self.itemsize = itemsize
-
-
-  def toarray(self):
-    """Convert this `chunk` instance into a numpy array."""
-    cdef ndarray array
-    cdef int ret
-
-    # Build a numpy container
-    array = np.empty(shape=self.shape, dtype=self.dtype)
-    # Fill it with uncompressed data
-    with nogil:
-      ret = blosc_decompress(self.data, array.data, self.nbytes)
-    if ret <= 0:
-      raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    return array
 
 
   cpdef _getitem(self, int start, int stop):
@@ -216,15 +200,14 @@ cdef class chunk:
 
   def __str__(self):
     """Represent the chunk as an string."""
-    return str(self.toarray())
+    return str(self[:])
 
 
   def __repr__(self):
     """Represent the chunk as an string, with additional info."""
     cratio = self.nbytes / float(self.cbytes)
-    array = self.toarray()
     fullrepr = "chunk(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
-        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, array)
+        (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, str(self))
     return fullrepr
 
 
@@ -243,7 +226,6 @@ cdef class carray:
   Public methods
   --------------
 
-  * toarray()
   * append(array)
 
   Special methods
@@ -452,25 +434,6 @@ cdef class carray:
     return array_.size
 
 
-  def toarray(self):
-    """Get a numpy array from this carray instance."""
-    cdef ndarray array, chunk_
-    cdef int ret, i, nchunks
-
-    # Build a numpy container
-    array = np.empty(shape=self.shape, dtype=self._dtype)
-
-    # Fill it with uncompressed data
-    nchunks = self._nbytes // self._chunksize
-    for i in range(nchunks):
-      chunk_ = self.chunks[i].toarray()
-      memcpy(array.data+i*self._chunksize, chunk_.data, self._chunksize)
-    if self.leftover:
-      memcpy(array.data+nchunks*self._chunksize, self.lastchunk, self.leftover)
-
-    return array
-
-
   def __len__(self):
     """Return the length of self."""
     return self.nrows
@@ -641,7 +604,7 @@ cdef class carray:
       return "[%s, %s, %s... %s, %s, %s]\n" % (self[0], self[1], self[2],
                                                self[-3], self[-2], self[-1])
     else:
-      return str(self.toarray())
+      return str(self[:])
 
 
   def __repr__(self):

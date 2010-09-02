@@ -31,6 +31,9 @@ Changes from 0.2 to 0.3
 - Added a new `where()` iterator for `carray` that mimics the
   `nonzero()` method in NumPy.
 
+- Removed the `toarray()` method in `carray` as this was equivalent to
+  carray[:] idiom.
+
 
 Changes from 0.1 to 0.2
 =======================
