@@ -16,7 +16,7 @@ import unittest
 
 
 class chunkTest(unittest.TestCase):
-    
+
     def test00(self):
         """Testing `toarray()` method"""
         a = np.arange(1e1)
@@ -55,7 +55,7 @@ class chunkTest(unittest.TestCase):
 
 
 class carrayTest(unittest.TestCase):
-    
+
     def test00(self):
         """Testing `toarray()` method"""
         a = np.arange(1e1)
@@ -185,7 +185,7 @@ class carrayTest(unittest.TestCase):
 
 
 class IterTest(unittest.TestCase):
-    
+
     def test00(self):
         """Testing `iter()` method"""
         a = np.arange(101)

@@ -46,7 +46,7 @@ class ctable(object):
     --------------
 
     * addcol(newcol[, name][, pos])
-    * removecol([name][, pos])
+    * delcol([name][, pos])
     * append(rows)
 
     Special methods
@@ -63,9 +63,8 @@ class ctable(object):
     @property
     def dtype(self):
         "The data type of this ctable (numpy dtype)."
-        names = self.names
-        ivcols = self.cols.itervalues()
-        l = [(names[i], col.dtype) for i, col in enumerate(ivcols)]
+        names, cols = self.names, self.cols
+        l = [(name, cols[name].dtype) for name in names]
         return np.dtype(l)
 
     @property
@@ -93,7 +92,7 @@ class ctable(object):
         """The number of rows (int)."""
 
         calist, nalist, ratype = False, False, False
-        if type(cols) == tuple:
+        if type(cols) in (tuple, list):
             calist = [type(v) for v in cols] == [ca.carray for v in cols]
             nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
         elif isinstance(cols, np.ndarray):
@@ -107,7 +106,7 @@ class ctable(object):
         if ratype:
             names = list(cols.dtype.names)
         elif names is None:
-            names = ["c%d"%i for i in range(len(cols))]
+            names = ["f%d"%i for i in range(len(cols))]
         else:
             if type(names) != list:
                 try:
@@ -117,7 +116,6 @@ class ctable(object):
             if len(names) != len(cols):
                 raise ValueError, "`cols` and `names` must have the same length"
         self.names = names
-        print "names-->", names
 
         # Populate the columns
         clen = -1
@@ -139,7 +137,7 @@ class ctable(object):
 
 
     def addcol(self, newcol, name=None, pos=None):
-        """Add a new `newcol` carray as column.
+        """Add a new `newcol` carray or ndarray as column.
 
         If `name` is specified, the column will have this name.  If
         not, it will receive an automatic name.
@@ -148,6 +146,7 @@ class ctable(object):
         position.  If not, it will be appended at the end.
         """
 
+        # Check params
         if pos is None:
             pos = len(self.names)
         else:
@@ -156,19 +155,24 @@ class ctable(object):
             if pos < 0 or pos > len(self.names):
                 raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
         if name is None:
-            name = "c%d" % pos
+            name = "f%d" % pos
         else:
             if type(name) != str:
                 raise ValueError, "`name` must be a string"
+        if name in self.names:
+            raise ValueError, "'%s' column already exists" % name
         if len(newcol) != self.nrows:
             raise ValueError, "`newcol` must have the same length than ctable"
+
+        if isinstance(newcol, np.ndarray):
+            newcol = ca.carray(newcol)
 
         # Insert the column
         self.names.insert(pos, name)
         self.cols[name] = newcol
 
 
-    def removecol(self, name=None, pos=None):
+    def delcol(self, name=None, pos=None):
         """Remove a column.
 
         If `name` is specified, the column with this name is removed.
@@ -186,7 +190,7 @@ class ctable(object):
             if name not in self.names:
                 raise ValueError, "`name` not found in columns"
             pos = self.names.index(name)
-        elif pos:
+        elif pos is not None:
             if type(pos) != int:
                 raise ValueError, "`pos` must be an int"
             if pos < 0 or pos > len(self.names):
@@ -223,7 +227,7 @@ class ctable(object):
         if type(key) is str:
             if key not in self.names:
                 raise KeyError, "key is not a column name."
-            return self.cols[name]
+            return self.cols[key]
         elif type(key) is list:
             strlist = [type(v) for v in key] == [str for v in key]
             if strlist:

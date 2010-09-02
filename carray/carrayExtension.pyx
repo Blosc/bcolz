@@ -133,7 +133,7 @@ cdef class chunk:
     shape = array.shape
     self.dtype = dtype
     self.shape = shape
-      
+
     itemsize = dtype.itemsize
     nbytes = itemsize
     for i in self.shape:
@@ -242,19 +242,15 @@ cdef class carray:
   Public methods
   --------------
 
-  toarray()
-      Get a numpy `array` from this carray instance.
-
-  append(array)
-      Append a numpy `array` to this carray instance.
+  * toarray()
+  * append(array)
 
   Special methods
   ---------------
 
-  __getitem__(key)
-      Get the values specified in ``key``.
-  __setitem__(key, value)
-      Set the specified ``value`` in ``key``.
+  * __getitem__(key)
+  * __setitem__(key, value)
+
   """
 
   cdef int itemsize, chunksize, leftover
@@ -348,12 +344,12 @@ cdef class carray:
     for i in range(nchunks):
       chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
       chunks.append(chunk_)
-      cbytes += chunk_.cbytes 
+      cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % cs
     if leftover:
       remainder = array_[nchunks*nelemchunk:]
       memcpy(self.lastchunk, remainder.data, leftover)
-    cbytes += self.chunksize  # count the space in last chunk 
+    cbytes += self.chunksize  # count the space in last chunk
     self._cbytes = cbytes
     self.nrowsinbuf = self.chunksize // self.itemsize
     self.sss_init = False  # sentinel
@@ -371,7 +367,7 @@ cdef class carray:
     nchunks = self.nbytes // self.chunksize
     for i in range(nchunks):
       chunk_ = self.chunks[i].toarray()
-      memcpy(array.data+i*self.chunksize, chunk_.data, self.chunksize) 
+      memcpy(array.data+i*self.chunksize, chunk_.data, self.chunksize)
     if self.leftover:
       memcpy(array.data+nchunks*self.chunksize, self.lastchunk, self.leftover)
 
@@ -555,7 +551,7 @@ cdef class carray:
       chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
       chunks.append(chunk_)
       cbytes = chunk_.cbytes
-      
+
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
       nchunks = nbytes // chunksize

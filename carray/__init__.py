@@ -15,17 +15,31 @@ carray is a container for numerical data that can be compressed
 in-memory.  The compresion process is carried out internally by Blosc,
 a high-performance compressor that is optimized for binary data.
 
+Public variables
+----------------
+
+* __version__
+* ncores
+
+Public functions
+----------------
+
+* detectNumberOfCores
+* setBloscMaxThreads
+* whichLibVersion
+
 Public classes
 --------------
 
-carray(...)
+* carray
+* ctable
 
 """
 
 
 from carray.carrayExtension import (
     carray, whichLibVersion, setBloscMaxThreads)
-
+from carray.ctable import ctable
 from carray.utils import detectNumberOfCores
 from carray.version import __version__
 
