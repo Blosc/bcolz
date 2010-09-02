@@ -26,7 +26,7 @@ min_numpy_version = "1.3"
 
 def suite():
     test_modules = [
-        'carray.tests.test_basics',
+        'carray.tests.test_carray',
         'carray.tests.test_ctable',
         ]
     alltests = unittest.TestSuite()
