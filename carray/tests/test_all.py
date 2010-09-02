@@ -44,6 +44,8 @@ def print_versions():
     tinfo = carray.whichLibVersion("blosc")
     if tinfo is not None:
         print "Blosc version:     %s (%s)" % (tinfo[0], tinfo[1])
+    from Cython.Compiler.Main import Version as Cython_Version
+    print 'Cython version:    %s' % Cython_Version.version
     print 'Python version:    %s' % sys.version
     if os.name == 'posix':
         (sysname, nodename, release, version, machine) = os.uname()
