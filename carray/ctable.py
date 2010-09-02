@@ -112,17 +112,6 @@ class ctable(object):
         self.nrows = 0
         """The number of rows (int)."""
 
-        calist, nalist, ratype = False, False, False
-        if type(cols) in (tuple, list):
-            calist = [type(v) for v in cols] == [ca.carray for v in cols]
-            nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
-        elif isinstance(cols, np.ndarray):
-            ratype = hasattr(cols.dtype, "names")
-        else:
-            raise ValueError, "`cols` input is not supported"
-        if not (calist or nalist or ratype):
-            raise ValueError, "`cols` input is not supported"
-
         # Get the names of the cols
         if names is None:
             if ratype:
@@ -138,6 +127,18 @@ class ctable(object):
             if len(names) != len(cols):
                 raise ValueError, "`cols` and `names` must have the same length"
         self.names = names
+
+        # Guess the kind of cols input
+        calist, nalist, ratype = False, False, False
+        if type(cols) in (tuple, list):
+            calist = [type(v) for v in cols] == [ca.carray for v in cols]
+            nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
+        elif isinstance(cols, np.ndarray):
+            ratype = hasattr(cols.dtype, "names")
+        else:
+            raise ValueError, "`cols` input is not supported"
+        if not (calist or nalist or ratype):
+            raise ValueError, "`cols` input is not supported"
 
         # Populate the columns
         clen = -1
@@ -155,7 +156,7 @@ class ctable(object):
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `cols` must have the same length"
             clen = len(column)
-        self.nrows = clen
+        self.nrows += clen
 
 
     def addcol(self, newcol, name=None, pos=None):
