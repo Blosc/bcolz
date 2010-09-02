@@ -276,12 +276,46 @@ class IterTest(unittest.TestCase):
         self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
 
 
+class whereTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `where()` method (all true values)"""
+        a = np.arange(1, 11) > 0
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()
+        cwt = [i for i in b.where()]
+        #print "numpy ->", a.nonzero()[0].tolist()
+        #print "where ->", [i for i in b.where()]
+        self.assert_(wt == cwt, "where does not work correctly")
+
+    def test01(self):
+        """Testing `where()` method (all false values)"""
+        a = np.arange(1, 11) < 0
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()
+        cwt = [i for i in b.where()]
+        #print "numpy ->", a.nonzero()[0].tolist()
+        #print "where ->", [i for i in b.where()]
+        self.assert_(wt == cwt, "where does not work correctly")
+
+    def test03(self):
+        """Testing `where()` method (mix of true/false values)"""
+        a = np.arange(1, 11) > 5
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()
+        cwt = [i for i in b.where()]
+        #print "numpy ->", a.nonzero()[0].tolist()
+        #print "where ->", [i for i in b.where()]
+        self.assert_(wt == cwt, "where does not work correctly")
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(chunkTest))
     theSuite.addTest(unittest.makeSuite(carrayTest))
     theSuite.addTest(unittest.makeSuite(IterTest))
+    theSuite.addTest(unittest.makeSuite(whereTest))
 
     return theSuite
 

@@ -28,6 +28,9 @@ Changes from 0.2 to 0.3
 
 - Added a new `append()` method to `ctable` class.
 
+- Added a new `where()` iterator for `carray` that mimics the
+  `nonzero()` method in NumPy.
+
 
 Changes from 0.1 to 0.2
 =======================

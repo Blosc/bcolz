@@ -22,7 +22,7 @@ Public functions:
 """
 
 import sys
-import numpy
+import numpy as np
 from carray.utils import calc_chunksize
 
 _KB = 1024
@@ -30,7 +30,7 @@ _MB = 1024*_KB
 
 # The type used for size values: indexes, coordinates, dimension
 # lengths, row numbers, shapes, chunk shapes, byte counts...
-SizeType = numpy.int64
+SizeType = np.int64
 
 #-----------------------------------------------------------------
 
@@ -158,7 +158,7 @@ cdef class chunk:
     cdef int ret
 
     # Build a numpy container
-    array = numpy.empty(shape=self.shape, dtype=self.dtype)
+    array = np.empty(shape=self.shape, dtype=self.dtype)
     # Fill it with uncompressed data
     with nogil:
       ret = blosc_decompress(self.data, array.data, self.nbytes)
@@ -173,7 +173,7 @@ cdef class chunk:
     cdef int bsize, ret
 
     # Build a numpy container
-    array = numpy.empty(shape=(stop-start,), dtype=self.dtype)
+    array = np.empty(shape=(stop-start,), dtype=self.dtype)
     bsize = array.size * self.itemsize
     # Fill it with uncompressed data
     with nogil:
@@ -258,7 +258,8 @@ cdef class carray:
 
   cdef int itemsize, _chunksize, leftover
   cdef int clevel, shuffle
-  cdef int startb, stopb, nrowsinbuf, _row, sss_init
+  cdef int startb, stopb, nrowsinbuf, _row
+  cdef int sss_mode, where_mode
   cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
@@ -300,9 +301,9 @@ cdef class carray:
   def _to_ndarray(self, object array):
     """Convert object to a ndarray."""
 
-    if type(array) != numpy.ndarray:
+    if type(array) != np.ndarray:
       try:
-        array = numpy.asarray(array, dtype=self.dtype)
+        array = np.asarray(array, dtype=self.dtype)
       except ValueError:
         raise ValueError, "cannot convert to an ndarray object"
     # We need a contiguous array
@@ -358,7 +359,7 @@ cdef class carray:
     cs = (chunksize // itemsize) * itemsize
     self._chunksize = cs
     # Book memory for last chunk (uncompressed)
-    lastchunkarr = numpy.empty(dtype=dtype, shape=(cs//itemsize,))
+    lastchunkarr = np.empty(dtype=dtype, shape=(cs//itemsize,))
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
@@ -383,7 +384,8 @@ cdef class carray:
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
     self.nrowsinbuf = self._chunksize // self.itemsize
-    self.sss_init = False  # sentinel
+    self.sss_mode = False  # sentinel
+    self.where_mode = False  # sentinel
 
 
   def append(self, object array):
@@ -456,7 +458,7 @@ cdef class carray:
     cdef int ret, i, nchunks
 
     # Build a numpy container
-    array = numpy.empty(shape=self.shape, dtype=self._dtype)
+    array = np.empty(shape=self.shape, dtype=self._dtype)
 
     # Fill it with uncompressed data
     nchunks = self._nbytes // self._chunksize
@@ -519,7 +521,7 @@ cdef class carray:
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
     # Build a numpy container
-    array = numpy.empty(shape=(stop-start,), dtype=self._dtype)
+    array = np.empty(shape=(stop-start,), dtype=self._dtype)
 
     # Fill it from data in chunks
     ntbytes = 0
@@ -559,7 +561,7 @@ cdef class carray:
   def __iter__(self):
     """Iterator for traversing the data in carray."""
 
-    if not self.sss_init:
+    if not self.sss_mode:
       self.start = 0
       self.stop = self._nbytes // self.itemsize
       self.step = 1
@@ -578,12 +580,22 @@ cdef class carray:
       raise NotImplementedError, "step param can only be positive"
     self.start, self.stop, self.step = \
         slice(start, stop, step).indices(self.nrows)
-    self.sss_init = True
+    self.sss_mode = True
+    return iter(self)
+
+
+  def where(self):
+    """Iterator that returns indices where carray is true."""
+    # Check self
+    if self.dtype.type != np.bool_:
+      raise ValueError, "`self` is not a boolean carray"
+    self.where_mode = True
     return iter(self)
 
 
   def __next__(self):
     """Return the next element in iterator."""
+    cdef char *vbool
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -606,11 +618,20 @@ cdef class carray:
         # Compute the start row for the next buffer
         self.startb = (self._row + self.step) % self.nrowsinbuf
       self.nextelement = self._nrow + self.step
-      # Return the current value in I/O buffer
-      return PyArray_GETITEM(
-        self.iobuf, self.iobuf.data + self._row * self.itemsize)
+
+      # Return a value depending on the mode we are
+      if self.where_mode:
+        vbool = <char *>(self.iobuf.data + self._row * self.itemsize)
+        if vbool[0]:
+          return self._nrow
+      else:
+        # Return the current value in I/O buffer
+        return PyArray_GETITEM(
+          self.iobuf, self.iobuf.data + self._row * self.itemsize)
     else:
-      self.sss_init = False  # reset sss_init sentinel
+      # Reset sentinels
+      self.sss_mode = False
+      self.where_mode = False
       raise StopIteration        # end of iteration
 
 
