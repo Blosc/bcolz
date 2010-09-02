@@ -20,6 +20,12 @@ Changes from 0.2 to 0.3
   (non-compressed) object, and the later for the actual compressed
   object.
 
+- New algorithm for computing an optimal chunksize for carrays based on
+  the new `expectedrows` argument.
+
+- Added `chunksize` property for `carray` that allows querying the
+  chunksize for the internal I/O buffer.
+
 
 Changes from 0.1 to 0.2
 =======================

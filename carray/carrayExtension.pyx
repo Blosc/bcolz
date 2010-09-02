@@ -23,6 +23,7 @@ Public functions:
 
 import sys
 import numpy
+from carray.utils import calc_chunksize
 
 _KB = 1024
 _MB = 1024*_KB
@@ -255,7 +256,7 @@ cdef class carray:
 
   """
 
-  cdef int itemsize, chunksize, leftover
+  cdef int itemsize, _chunksize, leftover
   cdef int clevel, shuffle
   cdef int startb, stopb, nrowsinbuf, _row, sss_init
   cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
@@ -290,6 +291,11 @@ cdef class carray:
     def __get__(self):
       return self._cbytes
 
+  property chunksize:
+    "The chunksize of this carray (in bytes)."
+    def __get__(self):
+      return self._chunksize
+
 
   def _to_ndarray(self, object array):
     """Convert object to a ndarray."""
@@ -308,14 +314,18 @@ cdef class carray:
 
 
   def __cinit__(self, object array, int clevel=5, int shuffle=True,
-                int chunksize=1*_MB):
+                object expectedrows=None, object chunksize=None):
     """Initialize and compress data based on passed `array`.
 
     You can pass `clevel` and `shuffle` params to the compressor.
 
-    Also, you can taylor the size of the `chunksize` used for the internal I/O
-    buffer and the size of each chunk.  Only touch this if you know what are
-    you doing.
+    If you pass a guess on the expected number of rows of this carray in
+    `expectedrows` that wil serve to decide the best chunksize used for memory
+    I/O purposes.
+
+    Also, you can explicitely set the size of the `chunksize` used for the
+    internal I/O buffer and the size of each chunk.  Only touch this if you
+    know what are you doing.
     """
     cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
     cdef npy_intp nbytes, cbytes
@@ -330,9 +340,20 @@ cdef class carray:
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
 
+    # Only accept unidimensional arrays as input
+    if array_.ndim != 1:
+      raise ValueError, "`array` can only be unidimensional"
+
+    # Compute the chunksize
+    if expectedrows is None:
+      # Try a guess
+      expectedrows = len(array_)
+    if chunksize is None:
+      chunksize = calc_chunksize((expectedrows * itemsize) / float(_MB))
+
     # Chunksize must be a multiple of itemsize
     cs = (chunksize // itemsize) * itemsize
-    self.chunksize = cs
+    self._chunksize = cs
     # Book memory for last chunk (uncompressed)
     lastchunkarr = numpy.empty(dtype=dtype, shape=(cs//itemsize,))
     self.lastchunk = lastchunkarr.data
@@ -346,8 +367,8 @@ cdef class carray:
 
     # Compress data in chunks
     cbytes = 0
-    nchunks = self._nbytes // self.chunksize
-    nelemchunk = self.chunksize // itemsize
+    nchunks = self._nbytes // self._chunksize
+    nelemchunk = self._chunksize // itemsize
     for i in range(nchunks):
       chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
       chunks.append(chunk_)
@@ -356,9 +377,9 @@ cdef class carray:
     if leftover:
       remainder = array_[nchunks*nelemchunk:]
       memcpy(self.lastchunk, remainder.data, leftover)
-    cbytes += self.chunksize  # count the space in last chunk
+    cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
-    self.nrowsinbuf = self.chunksize // self.itemsize
+    self.nrowsinbuf = self._chunksize // self.itemsize
     self.sss_init = False  # sentinel
 
 
@@ -371,12 +392,12 @@ cdef class carray:
     array = numpy.empty(shape=self.shape, dtype=self._dtype)
 
     # Fill it with uncompressed data
-    nchunks = self._nbytes // self.chunksize
+    nchunks = self._nbytes // self._chunksize
     for i in range(nchunks):
       chunk_ = self.chunks[i].toarray()
-      memcpy(array.data+i*self.chunksize, chunk_.data, self.chunksize)
+      memcpy(array.data+i*self._chunksize, chunk_.data, self._chunksize)
     if self.leftover:
-      memcpy(array.data+nchunks*self.chunksize, self.lastchunk, self.leftover)
+      memcpy(array.data+nchunks*self._chunksize, self.lastchunk, self.leftover)
 
     return array
 
@@ -401,8 +422,8 @@ cdef class carray:
     nbytes = self._nbytes
     itemsize = self.itemsize
     leftover = self.leftover
-    chunklen = self.chunksize // itemsize
-    nchunks = self._nbytes // self.chunksize
+    chunklen = self._chunksize // itemsize
+    nchunks = self._nbytes // self._chunksize
     scalar = False
 
     # Get rid of multidimensional keys
@@ -542,7 +563,7 @@ cdef class carray:
       raise TypeError, "array dtype does not match with self"
 
     itemsize = self.itemsize
-    chunksize = self.chunksize
+    chunksize = self._chunksize
     chunks = self.chunks
     leftover = self.leftover
     bsize = array_.size*itemsize

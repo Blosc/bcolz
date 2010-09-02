@@ -187,10 +187,10 @@ class carrayTest(unittest.TestCase):
 
     def test09(self):
         """Testing __sizeof__() (big carrays)"""
-        a = np.arange(1e6)
+        a = np.arange(2e5)
         b = ca.carray(a)
         #print "size b uncompressed-->", b.nbytes
-        #print "size b compressed -->", b.cbytes
+        #print "size b compressed  -->", b.cbytes
         self.assert_(sys.getsizeof(b) < b.nbytes,
                      "carray does not seem to compress at all")
 
@@ -199,7 +199,7 @@ class carrayTest(unittest.TestCase):
         a = np.arange(111)
         b = ca.carray(a)
         #print "size b uncompressed-->", b.nbytes
-        #print "size b compressed -->", b.cbytes
+        #print "size b compressed  -->", b.cbytes
         self.assert_(sys.getsizeof(b) > b.nbytes,
                      "carray compress too much??")
 

@@ -12,7 +12,7 @@
 
 """
 
-import sys, os, os.path, subprocess
+import sys, os, os.path, subprocess, math
 from time import time, clock
 
 
@@ -63,6 +63,51 @@ def detectNumberOfCores():
         if ncpus > 0:
             return ncpus
     return 1 # Default
+
+
+##### Code for computing optimum chunksize follows  #####
+
+def csformula(expectedsizeinMB):
+    """Return the fitted chunksize for expectedsizeinMB."""
+    # For a basesize of 1 KB, this will return:
+    # 4 KB for datasets <= .1 KB
+    # 64 KB for datasets == 1 MB
+    # 1 MB for datasets >= 10 GB
+    basesize = 1024
+    return basesize * int(2**(math.log10(expectedsizeinMB)+6))
+
+
+def limit_es(expectedsizeinMB):
+    """Protection against creating too small or too large chunks."""
+    if expectedsizeinMB < 1e-4:     # < .1 KB
+        expectedsizeinMB = 1e-4
+    elif expectedsizeinMB > 1e4:    # > 10 GB
+        expectedsizeinMB = 1e4
+    return expectedsizeinMB
+
+
+def calc_chunksize(expectedsizeinMB):
+    """Compute the optimum chunksize for memory I/O in carray/ctable.
+
+    carray stores the data in chunks and there is an optimal length for
+    this chunk for compression purposes (it is around 1 MB for modern
+    processors).  However, due to the implementation, carray logic needs
+    to always reserve all this space in-memory.  Booking 1 MB is not a
+    drawback for large carrays (>> 1 MB), but for smaller ones this is
+    too much overhead.
+
+    The tuning of the chunksize parameter affects the performance and
+    the memory consumed.  This is based on my own experiments and, as
+    always, your mileage may vary.
+    """
+
+    expectedsizeinMB = limit_es(expectedsizeinMB)
+    zone = int(math.log10(expectedsizeinMB))
+    expectedsizeinMB = 10**zone
+    chunksize = csformula(expectedsizeinMB)
+    return chunksize
+
+
 
 
 

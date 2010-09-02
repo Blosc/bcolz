@@ -235,11 +235,11 @@ class specialTest(unittest.TestCase):
 
     def test01(self):
         """Testing __sizeof__() (big ctables)"""
-        N = int(1e6)
+        N = int(1e4)
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         #print "size t uncompressed-->", t.nbytes
-        #print "size t compressed -->", t.cbytes
+        #print "size t compressed  -->", t.cbytes
         self.assert_(sys.getsizeof(t) < t.nbytes,
                      "ctable does not seem to compress at all")
 
@@ -249,7 +249,7 @@ class specialTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         #print "size t uncompressed-->", t.nbytes
-        #print "size t compressed -->", t.cbytes
+        #print "size t compressed  -->", t.cbytes
         self.assert_(sys.getsizeof(t) > t.nbytes,
                      "ctable compress too much??")
 
