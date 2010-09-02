@@ -102,8 +102,7 @@ class ctable(object):
         also be a NumPy structured array.
 
         If `names` is passed, this will be taken as the list of names
-        for the columns.  If `cols` is an structured array, the names
-        will be taken from there and this parameter will be ignored.
+        for the columns.
         """
 
         self.names = []
@@ -125,10 +124,11 @@ class ctable(object):
             raise ValueError, "`cols` input is not supported"
 
         # Get the names of the cols
-        if ratype:
-            names = list(cols.dtype.names)
-        elif names is None:
-            names = ["f%d"%i for i in range(len(cols))]
+        if names is None:
+            if ratype:
+                names = list(cols.dtype.names)
+            else:
+                names = ["f%d"%i for i in range(len(cols))]
         else:
             if type(names) != list:
                 try:
