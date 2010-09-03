@@ -466,12 +466,19 @@ class ctable(object):
 
         # Compute in blocks
         bsize = EVAL_BLOCK_SIZE
+        vars_ = {}
         for i in xrange(0, self.nrows, bsize):
             # Get buffers for columns
-            for name in colnames:
-                vars[name] = self.cols[name][i:i+bsize]
+            for name in vars.iterkeys():
+                var = vars[name]
+                if name in colnames:
+                    vars_[name] = self.cols[name][i:i+bsize]
+                elif hasattr(var, "__len__") and len(var) > bsize:
+                    vars_[name] = var[i:i+bsize]
+                else:
+                    vars_[name] = var
             # Perform the evaluation for this block
-            res_block = ca.numexpr.evaluate(expression, local_dict=vars)
+            res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
             if i == 0:
                 result = ca.carray(res_block)
             else:

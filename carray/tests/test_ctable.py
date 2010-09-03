@@ -394,7 +394,6 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        var_ = 10.
         ctr = t.eval("f0 * sin(f1)")
         rar = ra['f0'] * np.sin(ra['f1'])
         #print "ctable -->", ctr
@@ -407,9 +406,21 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        var_ = 10.
         ctr = t.eval("f0 >= f1")
         rar = ra['f0'] >= ra['f1']
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+    def test05(self):
+        """Testing eval() with a mix of columns and numpy arrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        a = np.arange(N)
+        b = np.arange(N)
+        ctr = t.eval("f0 + f1 - a + b")
+        rar = ra['f0'] + ra['f1'] - a + b
         #print "ctable -->", ctr
         #print "numpy  -->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")

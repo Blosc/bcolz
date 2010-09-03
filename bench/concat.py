@@ -3,7 +3,7 @@
 # styles are for regular numpy arrays, while 'carray' is for carrays.
 #
 # Call this benchmark as:
-# 
+#
 # python bench/concat.py style
 #
 # where `style` can be any of 'numpy', 'concat' or 'carray'
@@ -65,18 +65,12 @@ elif style == 'concat':
 elif style == 'carray':
     for _ in xrange(T):
         r = append(a, clevel)
-else:
-    A = numpy.concatenate(a, 0)
-    B = concat(a)
-    assert_array_almost_equal(A, B)
-    C = append(a).toarray()
-    assert_array_almost_equal(A, C)
 
 t = time.time() - t
 print('time for concat: %.3fs' % (t / T))
 
 if style == 'carray':
     size = r.cbytes
-else: 
+else:
     size = r.size*r.dtype.itemsize
 print("size of the final container: %.3f MB" % (size / float(1024*1024)) )
