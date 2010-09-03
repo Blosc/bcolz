@@ -302,17 +302,14 @@ class ctable(object):
         return self.cbytes
 
 
-    def _getif(self, expression):
-        """Return rows fulfilling `expression` as an structured array."""
+    def _getif(self, boolarr):
+        """Return rows where `boolarr` is true as an structured array.
 
-        # First, compute the expression
-        boolarr = self.eval(expression)
+        This is called internally only, so we can assum that `boolarr`
+        is a boolean array.
+        """
 
-        # Got a boolean array?
-        if not boolarr.dtype.type == np.bool_:
-            raise KeyError, "key does not represent a boolean expression"
-
-        # Then, get the rows for each column
+        # Get the rows for each column
         rlen = sum(boolarr)   # very fast on boolean carrays
         result = np.empty(rlen, dtype=self.dtype)
         for name in self.names:
@@ -342,7 +339,12 @@ class ctable(object):
         if type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
-                return self._getif(key)
+                arr = self.eval(key)
+                if arr.dtype.type != np.bool_:
+                    raise KeyError, \
+                          "`key` %s does not represent a boolean expression" %\
+                          key
+                return self._getif(arr)
             return self.cols[key]
         elif type(key) is list:
             strlist = [type(v) for v in key] == [str for v in key]
@@ -369,6 +371,9 @@ class ctable(object):
             scalar = True
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
+        elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
+            # A boolean array (case of fancy indexing)
+            return self._getif(key)
         else:
             raise NotImplementedError, "key not supported: %s" % repr(key)
 

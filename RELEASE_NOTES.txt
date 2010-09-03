@@ -41,6 +41,9 @@ Changes from 0.2 to 0.3
 - Idiom `ctable[boolexpr]` is recognized now and returns the rows
   fullfilling the boolean expression.  Needs numexpr.
 
+- Idiom `ctable[boolarr]` is recognized now and returns the rows where
+  the boolean array is true.
+
 - Removed the `toarray()` method in `carray` as this was equivalent to
   carray[:] idiom.
 

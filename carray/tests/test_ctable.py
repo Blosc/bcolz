@@ -418,6 +418,50 @@ class eval_getitemTest(unittest.TestCase):
         self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
 
 
+class bool_getitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __getitem__ with a boolean array (all false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1 > f2')
+        rt = t[barr]
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing __getitem__ with a boolean array (mixed values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1*4 >= f2*2')
+        rt = t[barr]
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing __getitem__ with a short boolean array"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = np.zeros(len(t)-1, dtype=np.bool_)
+        self.assertRaises(ValueError, t.__getitem__, barr)
+
+    def test03(self):
+        """Testing __getitem__ with a non-boolean array"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = np.zeros(len(t), dtype=np.int_)
+        self.assertRaises(NotImplementedError, t.__getitem__, barr)
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -430,6 +474,7 @@ def suite():
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))
+        theSuite.addTest(unittest.makeSuite(bool_getitemTest))
 
     return theSuite
 
