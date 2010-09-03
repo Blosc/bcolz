@@ -35,6 +35,12 @@ Changes from 0.2 to 0.3
   only on those places where `boolarr` is true.  Also, calling
   `carray[boolarr]` is the same than `carray.getif(boolarr)`.
 
+- Added a new `eval()` method for `ctable` that is able to evaluate
+  expressions with columns.  It needs numexpr to be installed.
+
+- Idiom `ctable[boolexpr]` is recognized now and returns the rows
+  fullfilling the boolean expression.  Needs numexpr.
+
 - Removed the `toarray()` method in `carray` as this was equivalent to
   carray[:] idiom.
 

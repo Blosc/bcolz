@@ -302,6 +302,25 @@ class ctable(object):
         return self.cbytes
 
 
+    def _getif(self, expression):
+        """Return rows fulfilling `expression` as an structured array."""
+
+        # First, compute the expression
+        boolarr = self.eval(expression)
+
+        # Got a boolean array?
+        if not boolarr.dtype.type == np.bool_:
+            raise KeyError, "key does not represent a boolean expression"
+
+        # Then, get the rows for each column
+        rlen = sum(boolarr)   # very fast on boolean carrays
+        result = np.empty(rlen, dtype=self.dtype)
+        for name in self.names:
+            result[name] = self.cols[name][boolarr]
+
+        return result
+
+
     def __getitem__(self, key):
         """Get a row or a range of rows.  Also a column or range of columns.
 
@@ -311,14 +330,19 @@ class ctable(object):
         array.
 
         If `key` is a string, the corresponding ctable column name
-        will be returned.  If `key` is a list of names, the specified
-        columns will be returned as a new ctable object.
+        will be returned.  If `key` is not a colname, it will be
+        interpreted as a boolean expression and the rows fulfilling it
+        will be returned as a NumPy structured array.
+
+        If `key` is a list of strings, the specified column names will
+        be returned as a new ctable object.
         """
 
         # First check for a column name or range of names
         if type(key) is str:
             if key not in self.names:
-                raise KeyError, "key is not a column name."
+                # key is not a column name, try to evaluate
+                return self._getif(key)
             return self.cols[key]
         elif type(key) is list:
             strlist = [type(v) for v in key] == [str for v in key]

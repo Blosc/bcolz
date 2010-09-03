@@ -371,6 +371,53 @@ class evalTest(unittest.TestCase):
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
 
+class eval_getitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __getitem__ with an expression (all false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1 > f2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing __getitem__ with an expression (all true values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1 <= f2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i <= i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing __getitem__ with an expression (true/false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1*4 >= f2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test03(self):
+        """Testing __getitem__ with an invalid expression"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        # In t['f1*4 >= ppp'], 'ppp' variable name should be found
+        self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
+
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -382,6 +429,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(specialTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))
+        theSuite.addTest(unittest.makeSuite(eval_getitemTest))
 
     return theSuite
 
