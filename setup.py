@@ -23,7 +23,7 @@ def _print_admonition(kind, head, body):
     tw = textwrap.TextWrapper(
         initial_indent='   ', subsequent_indent='   ')
 
-    print ".. %s:: %s" % (kind.upper(), head)
+    print(".. %s:: %s" % (kind.upper(), head))
     for line in tw.wrap(body):
         print line
 
@@ -52,6 +52,8 @@ def check_import(pkgname, pkgver):
     globals()[pkgname] = mod
 
 
+########### Check versions ##########
+
 # Check for Python
 if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
     exit_with_error("You need Python 2.6 or greater to install carray!")
@@ -60,6 +62,8 @@ if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
 min_cython_version = '0.12.1'
 # The minimum version of NumPy required
 min_numpy_version = '1.4'
+# The minimum version of Numexpr (optional)
+min_numexpr_version = '1.4'
 
 # Check for Cython
 cython = False
@@ -84,6 +88,23 @@ if cython:
 # Check for NumPy
 check_import('numpy', min_numpy_version)
 
+# Check for Numexpr
+try:
+    import numexpr
+except ImportError:
+    pass
+else:
+    if numexpr.__version__ >= min_numexpr_version:
+        numexpr_here = True
+        print ( "* Found %(pkgname)s %(pkgver)s package installed."
+                % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__} )
+    else:
+        print_warning(
+            "Numexpr %s detected, but version is not >= %s.  "
+            "Disabling support for it." % (
+            numexpr.__version__, min_numexpr_version))
+
+########### End of version checks ##########
 
 
 # carray version

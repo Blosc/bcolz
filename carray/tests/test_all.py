@@ -38,21 +38,25 @@ def suite():
 
 def print_versions():
     """Print all the versions of software that carray relies on."""
-    print '-=' * 38
-    print "carray version:    %s" % carray.__version__
-    print "NumPy version:     %s" % numpy.__version__
+    print("-=" * 38)
+    print("carray version:    %s" % carray.__version__)
+    print("NumPy version:     %s" % numpy.__version__)
     tinfo = carray.whichLibVersion("blosc")
-    if tinfo is not None:
-        print "Blosc version:     %s (%s)" % (tinfo[0], tinfo[1])
+    print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
+    if carray.numexpr_here:
+        print("Numexpr version:   %s" % carray.numexpr.__version__)
+    else:
+        print("Numexpr version:   not available "
+              "(version >= %s not detected)" %  carray.min_numexpr_version)
     from Cython.Compiler.Main import Version as Cython_Version
-    print 'Cython version:    %s' % Cython_Version.version
-    print 'Python version:    %s' % sys.version
-    if os.name == 'posix':
+    print("Cython version:    %s" % Cython_Version.version)
+    print("Python version:    %s" % sys.version)
+    if os.name == "posix":
         (sysname, nodename, release, version, machine) = os.uname()
-        print 'Platform:          %s-%s' % (sys.platform, machine)
-    print 'Byte-ordering:     %s' % sys.byteorder
-    print 'Detected cores:    %s' % detectNumberOfCores()
-    print '-=' * 38
+        print("Platform:          %s-%s" % (sys.platform, machine))
+    print("Byte-ordering:     %s" % sys.byteorder)
+    print("Detected cores:    %s" % detectNumberOfCores())
+    print("-=" * 38)
 
 
 def test(verbose=False, heavy=False):
@@ -76,8 +80,8 @@ def test(verbose=False, heavy=False):
 if __name__ == '__main__':
 
     if numpy.__version__ < min_numpy_version:
-        print "*Warning*: NumPy version is lower than recommended: %s < %s" % \
-              (numpy.__version__, min_numpy_version)
+        print("*Warning*: NumPy version is lower than recommended: %s < %s" % \
+              (numpy.__version__, min_numpy_version))
 
     # Handle some global flags (i.e. only useful for test_all.py)
     only_versions = 0

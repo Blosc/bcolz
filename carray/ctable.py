@@ -16,8 +16,17 @@ Public classes:
 
 """
 
+import sys
+
 import numpy as np
 import carray as ca
+
+if ca.numexpr_here:
+    from numexpr.expressions import functions as numexpr_functions
+
+# The number of elements in evaluation blocks
+#EVAL_BLOCK_SIZE = 4           # use this for testing purposes
+EVAL_BLOCK_SIZE = 1000*1000
 
 
 class ctable(object):
@@ -357,6 +366,75 @@ class ctable(object):
     def __setitem__(self, key, value):
         """Set a row or a range of rows."""
         raise NotImplementedError
+
+
+    def _getvars(self, expression, depth=2):
+        """Get the variables in `expression`.
+
+        `depth` specifies the depth of the frame in order to reach local
+        or global variables.
+        """
+
+        cexpr = compile(expression, '<string>', 'eval')
+        exprvars = [ var for var in cexpr.co_names
+                     if var not in ['None', 'False', 'True']
+                     and var not in numexpr_functions ]
+
+        # Get the local and global variable mappings of the user frame
+        user_locals, user_globals = {}, {}
+        user_frame = sys._getframe(depth)
+        user_locals = user_frame.f_locals
+        user_globals = user_frame.f_globals
+
+        # Look for the required variables
+        reqvars = {}
+        colnames = []
+        for var in exprvars:
+            # Get the value.
+            if var in self.cols:
+                val = self.cols[var]
+                colnames.append(var)
+            elif var in user_locals:
+                val = user_locals[var]
+            elif var in user_globals:
+                val = user_globals[var]
+            else:
+                raise NameError("name ``%s`` is not found" % var)
+            # Check the value.
+            if hasattr(val, 'dtype') and val.dtype.str[1:] == 'u8':
+                raise NotImplementedError(
+                    "variable ``%s`` refers to "
+                    "a 64-bit unsigned integer object, that is "
+                    "not yet supported in expressions, sorry; " % var )
+            reqvars[var] = val
+        return reqvars, colnames
+
+
+    def eval(self, expression):
+        """Evaluate the `expression` on columns and return the result."""
+
+        if not ca.numexpr_here:
+            raise ImportError(
+                "You need numexpr %s or higher to use this method" % \
+                ca.min_numexpr_version)
+
+        # Get variables and column names participating in expression
+        vars, colnames = self._getvars(expression)
+
+        # Compute in blocks
+        bsize = EVAL_BLOCK_SIZE
+        for i in xrange(0, self.nrows, bsize):
+            # Get buffers for columns
+            for name in colnames:
+                vars[name] = self.cols[name][i:i+bsize]
+            # Perform the evaluation for this block
+            res_block = ca.numexpr.evaluate(expression, local_dict=vars)
+            if i == 0:
+                result = ca.carray(res_block)
+            else:
+                result.append(res_block)
+
+        return result
 
 
     def __str__(self):

@@ -309,6 +309,68 @@ class specialTest(unittest.TestCase):
                      "ctable compress too much??")
 
 
+class evalTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing eval() with only columns"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        ctr = t.eval("f0 * f1 * f2")
+        rar = ra['f0'] * ra['f1'] * ra['f2']
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing eval() with columns and constants"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        ctr = t.eval("f0 * f1 * 3")
+        rar = ra['f0'] * ra['f1'] * 3
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing eval() with columns, constants and other variables"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        var_ = 10.
+        ctr = t.eval("f0 * f2 * var_")
+        rar = ra['f0'] * ra['f2'] * var_
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+    def test03(self):
+        """Testing eval() with columns and numexpr functions"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        var_ = 10.
+        ctr = t.eval("f0 * sin(f1)")
+        rar = ra['f0'] * np.sin(ra['f1'])
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_almost_equal(ctr[:], rar, decimal=15,
+                                  err_msg="ctable values are not correct")
+
+    def test04(self):
+        """Testing eval() with a boolean as output"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        var_ = 10.
+        ctr = t.eval("f0 >= f1")
+        rar = ra['f0'] >= ra['f1']
+        #print "ctable -->", ctr
+        #print "numpy  -->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -318,6 +380,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(evalTest))
 
     return theSuite
 
