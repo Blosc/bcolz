@@ -292,6 +292,20 @@ class ctable(object):
         return n
 
 
+    def copy(self, clevel=None, shuffle=None):
+        """Return a copy of self.
+
+        If `clevel` or `shuffle` are specified, this settings will be
+        used for the new ctable.  If not, the settings in existing
+        columns will be kept.
+        """
+        # Copy the columns
+        cols = [ self.cols[name].copy(clevel, shuffle) for name in self.names ]
+        # Create the ctable
+        ccopy = ctable(cols, self.names)
+        return ccopy
+
+
     def __len__(self):
         """Return the length of self."""
         return self.nrows

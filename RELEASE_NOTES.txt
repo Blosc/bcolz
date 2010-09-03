@@ -33,19 +33,22 @@ Changes from 0.2 to 0.3
 
 - Added a new `getif(boolarr)` iterator for `carray` that returns values
   only on those places where `boolarr` is true.  Also, calling
-  `carray[boolarr]` is the same than `carray.getif(boolarr)`.
+  ``carray[boolarr]`` is the same than `carray.getif(boolarr)`.
 
 - Added a new `eval()` method for `ctable` that is able to evaluate
   expressions with columns.  It needs numexpr to be installed.
 
-- Idiom `ctable[boolexpr]` is recognized now and returns the rows
+- Idiom ``ctable[boolexpr]`` is recognized now and returns the rows
   fullfilling the boolean expression.  Needs numexpr.
 
-- Idiom `ctable[boolarr]` is recognized now and returns the rows where
+- Idiom ``ctable[boolarr]`` is recognized now and returns the rows where
   the boolean array is true.
 
+- Added `copy(clevel, shuffle)` method to both `carray` and `ctable`
+  objects.
+
 - Removed the `toarray()` method in `carray` as this was equivalent to
-  carray[:] idiom.
+  ``carray[:]`` idiom.
 
 
 Changes from 0.1 to 0.2

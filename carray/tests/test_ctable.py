@@ -279,6 +279,50 @@ class appendTest(unittest.TestCase):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
 
+class copyTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing copy() without params"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        t2 = t.copy()
+        a = np.arange(N, N+10, dtype='i4')
+        b = np.arange(N, N+10, dtype='f8')*2.
+        t2.append((a, b))
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
+        self.assert_(len(t) == N, "copy() does not work correctly")
+        self.assert_(len(t2) == N+10, "copy() does not work correctly")
+        assert_array_equal(t2[:], ra, "ctable values are not correct")
+
+    def test01(self):
+        """Testing copy() with higher clevel"""
+        N = 10*1000
+        ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        t2 = t.copy(clevel=9)
+        #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
+        self.assert_(t['f1'].cbytes > t2['f1'].cbytes, "clevel not changed")
+
+    def test02(self):
+        """Testing copy() with lower clevel"""
+        N = 10*1000
+        ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        t2 = t.copy(clevel=1)
+        #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
+        self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
+
+    def test03(self):
+        """Testing copy() with no shuffle"""
+        N = 10*1000
+        ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra)
+        t2 = t.copy(shuffle=False)
+        #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
+        self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
+
+
 class specialTest(unittest.TestCase):
 
     def test00(self):
@@ -470,6 +514,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(add_del_colTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))

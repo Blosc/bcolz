@@ -188,6 +188,44 @@ class carrayTest(unittest.TestCase):
                      "carray compress too much??")
 
 
+class copyTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing copy() without params"""
+        a = np.arange(111)
+        b = ca.carray(a)
+        c = b.copy()
+        c.append(np.arange(111, 122))
+        self.assert_(len(b) == 111, "copy() does not work well")
+        self.assert_(len(c) == 122, "copy() does not work well")
+        r = np.arange(122)
+        assert_array_equal(c[:], r, "incorrect correct values after copy()")
+
+    def test01(self):
+        """Testing copy() with higher compression"""
+        a = np.linspace(-1., 1., 1e4)
+        b = ca.carray(a)
+        c = b.copy(clevel=9)
+        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        self.assert_(b.cbytes > c.cbytes, "clevel not changed")
+
+    def test02(self):
+        """Testing copy() with lesser compression"""
+        a = np.linspace(-1., 1., 1e4)
+        b = ca.carray(a)
+        c = b.copy(clevel=1)
+        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        self.assert_(b.cbytes < c.cbytes, "clevel not changed")
+
+    def test03(self):
+        """Testing copy() with no shuffle"""
+        a = np.linspace(-1., 1., 1e4)
+        b = ca.carray(a)
+        c = b.copy(shuffle=False)
+        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        self.assert_(b.cbytes < c.cbytes, "shuffle not changed")
+
+
 class IterTest(unittest.TestCase):
 
     def test00(self):
@@ -382,6 +420,7 @@ def suite():
 
     theSuite.addTest(unittest.makeSuite(chunkTest))
     theSuite.addTest(unittest.makeSuite(carrayTest))
+    theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(IterTest))
     theSuite.addTest(unittest.makeSuite(whereTest))
     theSuite.addTest(unittest.makeSuite(getifTest))
