@@ -21,7 +21,6 @@ Public functions:
 
 """
 
-import sys
 import numpy as np
 from carray.utils import calc_chunksize
 
@@ -241,13 +240,14 @@ cdef class carray:
   cdef int itemsize, _chunksize, leftover
   cdef int clevel, shuffle
   cdef int startb, stopb, nrowsinbuf, _row
-  cdef int sss_mode, where_mode
+  cdef int sss_mode, where_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
   cdef object lastchunkarr
   cdef object _dtype, chunks
-  cdef ndarray iobuf
+  cdef object getif_arr
+  cdef ndarray iobuf, getif_buf
 
   property nrows:
     "The number of rows (leading dimension) in this carray."
@@ -366,8 +366,11 @@ cdef class carray:
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
     self.nrowsinbuf = self._chunksize // self.itemsize
-    self.sss_mode = False  # sentinel
-    self.where_mode = False  # sentinel
+
+    # Sentinels
+    self.sss_mode = False
+    self.where_mode = False
+    self.getif_mode = False
 
 
   def append(self, object array):
@@ -474,6 +477,9 @@ cdef class carray:
       scalar = True
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
+    elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
+      # A boolean array (case of fancy indexing)
+      return np.fromiter(self.getif(key), dtype=self.dtype)
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
 
@@ -551,8 +557,26 @@ cdef class carray:
     """Iterator that returns indices where carray is true."""
     # Check self
     if self.dtype.type != np.bool_:
-      raise ValueError, "`self` is not a boolean carray"
+      raise ValueError, "`self` is not an array of booleans"
     self.where_mode = True
+    return iter(self)
+
+
+  def getif(self, boolarr):
+    """Iterator that returns values where `boolarr` is true.
+
+    `boolarr` can either be a carray or a numpy array and must be of boolean
+    type.
+    """
+    # Check input
+    if not hasattr(boolarr, "dtype"):
+      raise ValueError, "`boolarr` is not an array"
+    if boolarr.dtype.type != np.bool_:
+      raise ValueError, "`boolarr` is not an array of booleans"
+    if len(boolarr) != self.nrows:
+      raise ValueError, "`boolarr` must be of the same length than ``self``"
+    self.getif_mode = True
+    self.getif_arr = boolarr
     return iter(self)
 
 
@@ -573,6 +597,10 @@ cdef class carray:
         self._row = self.startb - self.step
         # Read a data chunk
         self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        if self.getif_mode:
+          # Read a chunk of the boolean array too
+          self.getif_buf = self.getif_arr[
+            self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf
 
       self._row += self.step
@@ -584,9 +612,15 @@ cdef class carray:
 
       # Return a value depending on the mode we are
       if self.where_mode:
-        vbool = <char *>(self.iobuf.data + self._row * self.itemsize)
+        vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
           return self._nrow
+      elif self.getif_mode:
+        vbool = <char *>(self.getif_buf.data + self._row)
+        if vbool[0]:
+          # Return the current value in I/O buffer
+          return PyArray_GETITEM(
+            self.iobuf, self.iobuf.data + self._row * self.itemsize)
       else:
         # Return the current value in I/O buffer
         return PyArray_GETITEM(
@@ -595,6 +629,11 @@ cdef class carray:
       # Reset sentinels
       self.sss_mode = False
       self.where_mode = False
+      self.getif_mode = False
+      self.getif_arr = None
+      # Reset buffers
+      self.iobuf = np.empty(0, dtype=self.dtype)
+      self.getif_buf = np.empty(0, dtype=np.bool_)
       raise StopIteration        # end of iteration
 
 

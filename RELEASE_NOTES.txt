@@ -26,10 +26,14 @@ Changes from 0.2 to 0.3
 - Added `chunksize` property for `carray` that allows querying the
   chunksize for the internal I/O buffer.
 
-- Added a new `append()` method to `ctable` class.
+- Added a new `append(rows)` method to `ctable` class.
 
 - Added a new `where()` iterator for `carray` that mimics the
   `nonzero()` method in NumPy.
+
+- Added a new `getif(boolarr)` iterator for `carray` that returns values
+  only on those places where `boolarr` is true.  Also, calling
+  `carray[boolarr]` is the same than `carray.getif(boolarr)`.
 
 - Removed the `toarray()` method in `carray` as this was equivalent to
   carray[:] idiom.
