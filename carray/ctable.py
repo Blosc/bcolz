@@ -440,7 +440,7 @@ class ctable(object):
     def __str__(self):
         """Represent the ctable as an string."""
         if self.nrows > 100:
-            return "[%s, %s, %s... %s, %s, %s]\n" % \
+            return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
                    (self[0], self[1], self[2], self[-3], self[-2], self[-1])
         else:
             return str(self[:])

@@ -649,8 +649,8 @@ cdef class carray:
   def __str__(self):
     """Represent the carray as an string."""
     if self.nrows > 100:
-      return "[%s, %s, %s... %s, %s, %s]\n" % (self[0], self[1], self[2],
-                                               self[-3], self[-2], self[-1])
+      return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
+                                                  self[-3], self[-2], self[-1])
     else:
       return str(self[:])
 
