@@ -26,7 +26,7 @@ if ca.numexpr_here:
 
 # The number of elements in evaluation blocks
 #EVAL_BLOCK_SIZE = 4           # use this for testing purposes
-EVAL_BLOCK_SIZE = 1000*1000
+EVAL_BLOCK_SIZE = 100*1000
 
 
 class ctable(object):
