@@ -241,7 +241,8 @@ cdef class carray:
   cdef int clevel, shuffle
   cdef int startb, stopb, nrowsinbuf, _row
   cdef int sss_mode, where_mode, getif_mode
-  cdef npy_intp start, stop, step, nextelement, _nrow, nrowsread
+  cdef npy_intp start, stop, step, nextelement
+  cdef npy_intp _nrow, nrowsread, getif_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
   cdef object lastchunkarr
@@ -539,6 +540,7 @@ cdef class carray:
     self.nrowsread = self.start
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
+    self.getif_cached = -1
     return self
 
 
@@ -583,6 +585,7 @@ cdef class carray:
   def __next__(self):
     """Return the next element in iterator."""
     cdef char *vbool
+    cdef npy_intp start
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -595,12 +598,13 @@ cdef class carray:
         if self.stopb > self.nrowsinbuf:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
-        # Read a data chunk
-        self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         if self.getif_mode:
           # Read a chunk of the boolean array too
           self.getif_buf = self.getif_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        else:
+          # Read a data chunk
+          self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf
 
       self._row += self.step
@@ -618,6 +622,11 @@ cdef class carray:
       elif self.getif_mode:
         vbool = <char *>(self.getif_buf.data + self._row)
         if vbool[0]:
+          # Check whether I/O buffer is already cached or not
+          start = self.nrowsread - self.nrowsinbuf
+          if start != self.getif_cached:
+            self.iobuf = self[start:start+self.nrowsinbuf]
+            self.getif_cached = start
           # Return the current value in I/O buffer
           return PyArray_GETITEM(
             self.iobuf, self.iobuf.data + self._row * self.itemsize)
