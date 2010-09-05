@@ -44,10 +44,8 @@ def show_stats(explain, tref):
     return tnow
 
 
-def detectNumberOfCores():
-    """
-    Detects the number of cores on a system. Cribbed from pp.
-    """
+def detect_number_of_cores():
+    """Detect the number of cores on a system."""
     # Linux, Unix and MacOS:
     if hasattr(os, "sysconf"):
         if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):

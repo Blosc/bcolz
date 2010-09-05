@@ -18,7 +18,6 @@ import unittest
 import numpy
 import carray
 import carray.tests
-from carray.utils import detectNumberOfCores
 
 # Recommended minimum versions
 min_numpy_version = "1.3"
@@ -41,7 +40,7 @@ def print_versions():
     print("-=" * 38)
     print("carray version:    %s" % carray.__version__)
     print("NumPy version:     %s" % numpy.__version__)
-    tinfo = carray.whichLibVersion("blosc")
+    tinfo = carray.blosc_version()
     print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
     if carray.numexpr_here:
         print("Numexpr version:   %s" % carray.numexpr.__version__)
@@ -55,7 +54,7 @@ def print_versions():
         (sysname, nodename, release, version, machine) = os.uname()
         print("Platform:          %s-%s" % (sys.platform, machine))
     print("Byte-ordering:     %s" % sys.byteorder)
-    print("Detected cores:    %s" % detectNumberOfCores())
+    print("Detected cores:    %s" % carray.detect_number_of_cores())
     print("-=" * 38)
 
 

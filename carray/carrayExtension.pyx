@@ -16,8 +16,8 @@ Public classes (type extensions):
 
 Public functions:
 
-    setBloscMaxThreads
-    whichLibVersion
+    blosc_set_num_threads
+    blosc_version
 
 """
 
@@ -79,19 +79,18 @@ import_array()
 #-------------------------------------------------------------
 
 # Some utilities
-def setBloscMaxThreads(nthreads):
-  """Set the maximum number of threads that Blosc can use.
+def blosc_set_num_threads(nthreads):
+  """Set the number of threads that Blosc can use.
 
-  Returns the previous setting for maximum threads.
+  Returns the previous setting for this number.
   """
   return blosc_set_nthreads(nthreads)
 
 
-def whichLibVersion(libname):
-  "Return versions of `libname` library"
+def blosc_version():
+  """Return the version of the Blosc library."""
 
-  if libname == "blosc":
-    return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
+  return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
 
 
 

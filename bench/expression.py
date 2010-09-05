@@ -9,8 +9,8 @@ import carray as ca
 from time import time
 
 # Uncomment the next for disabling threading
-#ne.set_num_threads(1)
-#ca.setBloscMaxThreads(1)
+ne.set_num_threads(1)
+ca.blosc_set_num_threads(1)
 
 N = 1e7       # the number of elements in x
 clevel = 5    # the compression level

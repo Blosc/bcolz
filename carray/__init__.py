@@ -24,9 +24,9 @@ Public variables
 Public functions
 ----------------
 
-* detectNumberOfCores
-* setBloscMaxThreads
-* whichLibVersion
+* detect_number_of_cores
+* blosc_set_num_threads
+* blosc_version
 
 Public classes
 --------------
@@ -48,13 +48,13 @@ else:
         numexpr_here = True
 
 from carray.carrayExtension import (
-    carray, whichLibVersion, setBloscMaxThreads)
+    carray, blosc_version, blosc_set_num_threads)
 from carray.ctable import ctable
-from carray.utils import detectNumberOfCores
+from carray.utils import detect_number_of_cores
 from carray.version import __version__
 
 
 
 # Initialize Blosc
-ncores = detectNumberOfCores()
-setBloscMaxThreads(ncores)
+ncores = detect_number_of_cores()
+blosc_set_num_threads(ncores)

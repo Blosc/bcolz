@@ -349,14 +349,16 @@ new carray (`cout2`).
 Utility functions
 -----------------
 
-* setBloscMaxThreads(nthreads)
-    Set the maximum number of threads that Blosc can use.
-        
-    Returns the previous setting for maximum threads.
-    
-* whichLibVersion(libname)
-    Return versions of `libname` library.  Only 'blosc' is supported.
+* blosc_set_num_threads(nthreads)
+    Set the number of threads that Blosc can use.
 
+    Returns the previous setting for this number.
+
+* blosc_version()
+    Return the version of the Blosc library.
+
+* detect_number_of_cores()
+    Detect the number of cores on a system.
 
 
 carray limitations
