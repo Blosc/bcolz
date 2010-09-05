@@ -112,6 +112,39 @@ struct temp_data {
 } current_temp;
 
 
+uint8_t *my_malloc(size_t size)
+{
+  void *block = NULL;
+  int res = 0;
+
+#if defined(_WIN32)
+  block = _aligned_malloc(size, 16);
+#elif defined __APPLE__
+  /* Mac OS X guarantees 16-byte alignment in small allocs */
+  block = malloc(size);
+#else
+  res = posix_memalign(&block, 16, size);
+#endif  /* _WIN32 */
+
+  if (block == NULL || res != 0) {
+    printf("Error allocating memory!");
+    exit(1);
+  }
+
+  return (uint8_t *)block;
+}
+
+
+void my_free(void *block)
+{
+#if defined(_WIN32)
+    _aligned_free(block);
+#else
+    free(block);
+#endif  /* _WIN32 */
+}
+
+
 /* If `a` is little-endian, return it as-is.  If not, return a copy,
    with the endianness changed */
 int32_t sw32(int32_t a)
@@ -410,29 +443,11 @@ void create_temporaries(void)
    is only useful for compression in parallel mode, but it doesn't
    hurt serial mode either. */
   size_t ebsize = blocksize + typesize*sizeof(int32_t);
-  uint8_t *tmp = NULL, *tmp2 = NULL;
-  int result1 = 0, result2 = 0;
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
-#if defined(_WIN32)
-    tmp = (uint8_t *)_aligned_malloc(blocksize, 16);
-    tmp2 = (uint8_t *)_aligned_malloc(ebsize, 16);
-#elif defined __APPLE__
-    /* Mac OS X guarantees 16-byte alignment in small allocs */
-    tmp = (uint8_t *)malloc(blocksize);
-    tmp2 = (uint8_t *)malloc(ebsize);
-#else
-    result1 = posix_memalign((void **)&tmp, 16, blocksize);
-    result2 = posix_memalign((void **)&tmp2, 16, ebsize);
-#endif  /* _WIN32 */
-    params.tmp[tid] = tmp;
-    params.tmp2[tid] = tmp2;
-  }
-
-  if (tmp == NULL || tmp2 == NULL || result1 != 0 || result2 != 0) {
-    printf("Error allocating memory!");
-    exit(1);
+    params.tmp[tid] = my_malloc(blocksize);
+    params.tmp2[tid] = my_malloc(ebsize);
   }
 
   init_temps_done = 1;
@@ -440,30 +455,20 @@ void create_temporaries(void)
   current_temp.nthreads = nthreads;
   current_temp.typesize = typesize;
   current_temp.blocksize = blocksize;
-
 }
 
 
 void release_temporaries(void)
 {
   int32_t tid;
-  uint8_t *tmp, *tmp2;
 
   /* Release buffers */
   for (tid = 0; tid < nthreads; tid++) {
-    tmp = params.tmp[tid];
-    tmp2 = params.tmp2[tid];
-#if defined(_WIN32)
-    _aligned_free(tmp);
-    _aligned_free(tmp2);
-#else
-    free(tmp);
-    free(tmp2);
-#endif  /* _WIN32 */
+    my_free(params.tmp[tid]);
+    my_free(params.tmp2[tid]);
   }
 
   init_temps_done = 0;
-
 }
 
 
@@ -754,6 +759,9 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
 }
 
 
+/* Specific routine optimized for decompression a small chunk of a
+   block.  This does not use threads (it would affect negatively to
+   performance). */
 int blosc_getitem(const void *src, int start, int stop,
                   void *dest, size_t destsize)
 {
@@ -766,6 +774,7 @@ int blosc_getitem(const void *src, int start, int stop,
   uint32_t *bstarts;                /* start pointers for each block */
   uint8_t *tmp = params.tmp[0];     /* tmp for thread 0 */
   uint8_t *tmp2 = params.tmp2[0];   /* tmp2 for thread 0 */
+  int tmp_init = 0;
   uint32_t typesize, blocksize, nbytes, ctbytes;
   uint32_t j, bsize, bsize2, leftoverblock;
   int32_t cbytes, startb, stopb;
@@ -800,6 +809,13 @@ int blosc_getitem(const void *src, int start, int stop,
   /* Parameters needed by blosc_d */
   params.typesize = typesize;
   params.flags = flags;
+
+  /* Initialize temporaries if needed */
+  if (tmp == NULL || tmp2 == NULL || current_temp.blocksize < blocksize) {
+    tmp = my_malloc(blocksize);
+    tmp2 = my_malloc(blocksize);
+    tmp_init = 1;
+  }
 
   for (j = 0; j < nblocks; j++) {
     bsize = blocksize;
@@ -842,6 +858,11 @@ int blosc_getitem(const void *src, int start, int stop,
       cbytes = bsize2;
     }
     ntbytes += cbytes;
+  }
+
+  if (tmp_init) {
+    my_free(tmp);
+    my_free(tmp2);
   }
 
   return ntbytes;
