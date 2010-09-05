@@ -487,7 +487,7 @@ class ctable(object):
             # Perform the evaluation for this block
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
             if i == 0:
-                result = ca.carray(res_block)
+                result = ca.carray(res_block, expectedrows=self.nrows)
             else:
                 result.append(res_block)
 

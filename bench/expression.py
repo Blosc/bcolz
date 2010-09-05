@@ -8,7 +8,7 @@ import numexpr as ne
 import carray as ca
 from time import time
 
-N = 1e7       # the number of elements in x
+N = 1e8       # the number of elements in x
 clevel = 5    # the compression level
 #sexpr = "(x+1)>0"  # the expression to compute
 sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
@@ -35,9 +35,9 @@ else:
 
 print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
 
-t0 = time()
-out = eval(sexpr)
-print "Time for plain numpy--> %.3f" % (time()-t0,)
+# t0 = time()
+# out = eval(sexpr)
+# print "Time for plain numpy--> %.3f" % (time()-t0,)
 
 t0 = time()
 out = ne.evaluate(sexpr)
