@@ -16,7 +16,7 @@ Public classes:
 
 """
 
-import sys
+import sys, math
 
 import numpy as np
 import carray as ca
@@ -24,9 +24,11 @@ import carray as ca
 if ca.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
-# The number of elements in evaluation blocks
-#EVAL_BLOCK_SIZE = 4           # use this for testing purposes
-EVAL_BLOCK_SIZE = 100*1000
+# The size of the columns chunks to be used in `ctable.eval()`, in
+# bytes.  For optimal performance, set this so that it will not exceed
+# the size of your L2/L3 (whichever is larger) cache.
+#EVAL_BLOCK_SIZE = 16            # use this for testing purposes
+EVAL_BLOCK_SIZE = 3*1024*1024    # 3 MB represents a good average?
 
 
 class ctable(object):
@@ -464,8 +466,13 @@ class ctable(object):
         # Get variables and column names participating in expression
         vars, colnames = self._getvars(expression)
 
-        # Compute in blocks
-        bsize = EVAL_BLOCK_SIZE
+        # Compute the optimal block size (in elements)
+        typesize = sum(self.cols[name].dtype.itemsize for name in colnames)
+        bsize = EVAL_BLOCK_SIZE // typesize
+        # Evaluation seems more efficient if block size is a power of 2
+        bsize = 2 ** (int(math.log(bsize, 2)))
+
+        # Perform the evaluation in blocks
         vars_ = {}
         for i in xrange(0, self.nrows, bsize):
             # Get buffers for columns
