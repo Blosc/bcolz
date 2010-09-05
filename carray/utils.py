@@ -14,6 +14,7 @@
 
 import sys, os, os.path, subprocess, math
 from time import time, clock
+import carray
 
 
 def show_stats(explain, tref):
@@ -61,6 +62,18 @@ def detect_number_of_cores():
         if ncpus > 0:
             return ncpus
     return 1 # Default
+
+
+def set_num_threads(nthreads):
+    """Set the number of threads to be used during carray operation.
+
+    This affects to both Blosc and Numexpr (if available).  If you want
+    to change this number only for Blosc, use `blosc_set_number_threads`
+    instead.
+    """
+    carray.blosc_set_num_threads(nthreads)
+    if carray.numexpr_here:
+        carray.numexpr.set_num_threads(nthreads)
 
 
 ##### Code for computing optimum chunksize follows  #####

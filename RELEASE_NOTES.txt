@@ -50,6 +50,13 @@ Changes from 0.2 to 0.3
 - Removed the `toarray()` method in `carray` as this was equivalent to
   ``carray[:]`` idiom.
 
+- Renamed `setBloscMaxThreads()` to `blosc_set_num_threads()` and
+  `whichLibVersion()` to `blosc_version()` to follow carray name
+  conventions more closely.
+
+- Added a new `set_num_threads()` to set the number of threads in both
+  Blosc and Numexpr (if available).
+
 
 Changes from 0.1 to 0.2
 =======================

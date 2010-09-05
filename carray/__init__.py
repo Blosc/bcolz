@@ -24,9 +24,10 @@ Public variables
 Public functions
 ----------------
 
-* detect_number_of_cores
 * blosc_set_num_threads
 * blosc_version
+* detect_number_of_cores
+* set_num_threads
 
 Public classes
 --------------
@@ -50,7 +51,7 @@ else:
 from carray.carrayExtension import (
     carray, blosc_version, blosc_set_num_threads)
 from carray.ctable import ctable
-from carray.utils import detect_number_of_cores
+from carray.utils import detect_number_of_cores, set_num_threads
 from carray.version import __version__
 
 
