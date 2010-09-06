@@ -5,9 +5,9 @@ import carray as ca
 from time import time
 
 N = 1e7       # the number of elements in x
-clevel = 1    # the compression level
-#sexpr = "(x-1) % 1000 == 0."  # the expression to compute
-sexpr = "(x-1) < 10."  # the expression to compute
+clevel = 5    # the compression level
+sexpr = "((x-1) % 1000) == 0."  # the expression to compute
+#sexpr = "(x-1) < 10."  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
 print "Creating inputs..."
@@ -36,22 +36,24 @@ vals = [v for v in x[bout]]
 print "Time for array--> %.3f" % (time()-t0,)
 print "vals-->", len(vals)
 
+#ca.set_num_threads(ca.ncores//2)
+
+# Retrieve from a carray
+t0 = time()
+cvals = [v for v in cx[cbout]]
+print "Time for carray--> %.3f" % (time()-t0,)
+print "vals-->", len(cvals)
+assert vals == cvals
+
 # Retrieve from a structured ndarray
 t0 = time()
 vals = [v for v in t[bout]]
 print "Time for structured array--> %.3f" % (time()-t0,)
 print "vals-->", len(vals)
 
-#ca.set_num_threads(ca.ncores//2)
-
-# Retrieve from a carray
-t0 = time()
-vals = [v for v in cx[cbout]]
-print "Time for carray--> %.3f" % (time()-t0,)
-print "vals-->", len(vals)
-
 # Retrieve from a ctable
 t0 = time()
-vals = [v for v in ct[cbout]]
+cvals = [v for v in ct[cbout]]
 print "Time for ctable--> %.3f" % (time()-t0,)
-print "vals-->", len(vals)
+print "vals-->", len(cvals)
+assert vals == cvals

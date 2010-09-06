@@ -628,6 +628,7 @@ cdef class carray:
     """Return the next element in iterator."""
     cdef char *vbool
     cdef npy_intp start
+    cdef int _row
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -665,13 +666,14 @@ cdef class carray:
         vbool = <char *>(self.getif_buf.data + self._row)
         if vbool[0]:
           # Check whether I/O buffer is already cached or not
-          start = self.nrowsread - self.nrowsinblock
+          start = (self._nrow // self.nrowsinblock) * self.nrowsinblock
+          _row = self._nrow - start
           if start != self.getif_cached:
             self.iobuf = self[start:start+self.nrowsinblock]
             self.getif_cached = start
           # Return the current value in I/O buffer
           return PyArray_GETITEM(
-            self.iobuf, self.iobuf.data + self._row * self.itemsize)
+            self.iobuf, self.iobuf.data + _row * self.itemsize)
       else:
         # Return the current value in I/O buffer
         return PyArray_GETITEM(
