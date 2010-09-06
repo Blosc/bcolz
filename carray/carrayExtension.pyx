@@ -117,6 +117,7 @@ cdef class chunk:
   cdef object dtype
   cdef object shape
   cdef int itemsize, nbytes, cbytes
+  cdef ndarray arr1
   cdef char *data
 
   def __cinit__(self, ndarray array, int clevel=5, int shuffle=False):
@@ -148,45 +149,46 @@ cdef class chunk:
     self.nbytes = nbytes
     self.itemsize = itemsize
 
+    # Cache a length 1 array for accelerating getitem[int]
+    self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-  cpdef _getitem(self, int start, int stop):
+
+  cdef _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
-    cdef ndarray array
     cdef int bsize, ret
 
-    # Build a numpy container
-    array = np.empty(shape=(stop-start,), dtype=self.dtype)
-    bsize = array.size * self.itemsize
+    bsize = (stop - start) * self.itemsize
     # Fill it with uncompressed data
     with nogil:
       if bsize == self.nbytes:
-        ret = blosc_decompress(self.data, array.data, bsize)
+        ret = blosc_decompress(self.data, dest, bsize)
       else:
-        ret = blosc_getitem(self.data, start, stop, array.data, bsize)
+        ret = blosc_getitem(self.data, start, stop, dest, bsize)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-    return array
 
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
+    cdef ndarray array
 
-    scalar = False
     if isinstance(key, int):
-      (start, stop, step) = key, key+1, 1
-      scalar = True
+      array = self.arr1
+      # Quickly return a single element
+      self._getitem(key, key+1, array.data)
+      return PyArray_GETITEM(array, array.data)
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     else:
       raise KeyError, "key not supported:", key
 
+    # Build a numpy container
+    array = np.empty(shape=(stop-start,), dtype=self.dtype)
     # Read actual data
-    array = self._getitem(start, stop)
+    self._getitem(start, stop, array.data)
 
     # Return the value depending on the key and step
-    if scalar:
-      return array[0]
-    elif step > 1:
+    if step > 1:
       return array[::step]
     return array
 
@@ -491,10 +493,12 @@ cdef class carray:
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
-    cdef ndarray array, chunk_
-    cdef int i, itemsize, chunklen, leftover, nchunks
+    cdef ndarray array
+    cdef int i, itemsize, chunklen, leftover
+    cdef int nchunk, keychunk, nchunks
     cdef int startb, stopb, bsize
     cdef npy_intp nbytes, ntbytes
+    cdef chunk chunk_
 
     nbytes = self._nbytes
     itemsize = self.itemsize
@@ -503,20 +507,22 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     scalar = False
 
-    # Get rid of multidimensional keys
-    if isinstance(key, tuple):
-      if len(key) != 1:
-        raise KeyError, "multidimensional keys are not supported"
-      key = key[0]
-
     if isinstance(key, int):
-      if key >= self.nrows:
-        raise IndexError, "index out of range"
       if key < 0:
         # To support negative values
         key += self.nrows
-      (start, stop, step) = key, key+1, 1
-      scalar = True
+      if key >= self.nrows:
+        raise IndexError, "index out of range"
+      nchunk = key // chunklen
+      keychunk = key % chunklen
+      if nchunk == nchunks:
+        array = self.lastchunkarr
+        return PyArray_GETITEM(array, array.data + keychunk * itemsize)
+      else:
+        return self.chunks[nchunk][keychunk]
+    # Get rid of multidimensional keys
+    elif isinstance(key, tuple):
+      raise KeyError, "multidimensional keys are not supported"
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
@@ -551,15 +557,12 @@ cdef class carray:
         memcpy(array.data+ntbytes, self.lastchunk+startb*itemsize, bsize)
       else:
         # Get the data chunk
-        chunk_ = self.chunks[i]._getitem(startb, stopb)
-        memcpy(array.data+ntbytes, chunk_.data, bsize)
+        chunk_ = self.chunks[i]
+        chunk_._getitem(startb, stopb, array.data+ntbytes)
       ntbytes += bsize
 
     if step == 1:
-      if scalar:
-        return array[0]
-      else:
-        return array
+      return array
     else:
       return array[::step]
 

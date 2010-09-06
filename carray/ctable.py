@@ -169,6 +169,9 @@ class ctable(object):
             clen = len(column)
         self.nrows += clen
 
+        # Cache a structured array of len 1 for ctable[int] acceleration
+        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+
 
     def append(self, rows):
         """Append `rows` to ctable.
@@ -350,10 +353,26 @@ class ctable(object):
         be returned as a new ctable object.
         """
 
-        scalar = False
-
-        # First check for a column name or range of names
-        if type(key) is str:
+        # First, check for integer
+        if type(key) == int:
+            # Get a copy of the len-1 array
+            ra = self._arr1.copy()
+            # Fill it
+            ra[0] = tuple([self.cols[name][key] for name in self.names])
+            return ra[0]
+        # Get rid of multidimensional keys
+        elif type(key) == tuple:
+            raise KeyError, "multidimensional keys are not supported"
+        # Slices
+        elif type(key) == slice:
+            (start, stop, step) = key.start, key.stop, key.step
+            if step and step <= 0 :
+                raise NotImplementedError("step in slice can only be positive")
+        # A boolean array (case of fancy indexing)
+        elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
+            return self._getif(key)
+        # Column name
+        elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key)
@@ -363,6 +382,7 @@ class ctable(object):
                           key
                 return self._getif(arr)
             return self.cols[key]
+        # Range of column names
         elif type(key) is list:
             strlist = [type(v) for v in key] == [str for v in key]
             if strlist:
@@ -370,32 +390,9 @@ class ctable(object):
                 return ctable(cols, key)
             else:
                 raise KeyError, "key is not a list of names"
-
-        # First check for an int or range of ints
-        # Get rid of multidimensional keys
-        if type(key) == tuple:
-            if len(key) != 1:
-                raise KeyError, "multidimensional keys are not supported"
-            key = key[0]
-
-        if type(key) == int:
-            if key >= self.nrows:
-                raise IndexError, "index out of range"
-            if key < 0:
-                # To support negative values
-                key += self.nrows
-            (start, stop, step) = key, key+1, 1
-            scalar = True
-        elif type(key) == slice:
-            (start, stop, step) = key.start, key.stop, key.step
-        elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
-            # A boolean array (case of fancy indexing)
-            return self._getif(key)
+        # All the rest not implemented
         else:
             raise NotImplementedError, "key not supported: %s" % repr(key)
-
-        if step and step <= 0 :
-            raise NotImplementedError("step in slice can only be positive")
 
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.nrows)
@@ -406,10 +403,7 @@ class ctable(object):
         for name in self.names:
             ra[name][:] = self.cols[name][start:stop:step]
 
-        if scalar:
-            return ra[0]
-        else:
-            return ra
+        return ra
 
 
     def __setitem__(self, key, value):
