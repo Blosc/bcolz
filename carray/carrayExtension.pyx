@@ -238,7 +238,7 @@ cdef class carray:
 
   cdef int itemsize, _chunksize, leftover
   cdef int clevel, shuffle
-  cdef int startb, stopb, nrowsinbuf, _row
+  cdef int startb, stopb, nrowsinbuf, nrowsinblock, _row
   cdef int sss_mode, where_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread, getif_cached
@@ -371,6 +371,20 @@ cdef class carray:
     self.sss_mode = False
     self.where_mode = False
     self.getif_mode = False
+
+
+  cdef _get_chunk_block_rows(self):
+    """Get the number of rows in a block of the undelying Blosc chunks."""
+    cdef size_t nbytes, cbytes, blocksize
+    cdef chunk cbuffer
+
+    if len(self.chunks) > 0:
+      cbuffer = self.chunks[0]
+      blosc_cbuffer_sizes(<void *>cbuffer.data, &nbytes, &cbytes, &blocksize)
+      return blocksize // self.itemsize
+    else:
+      # No compressed chunks yet.  Return the size of last chunk.
+      return self.nrowsinbuf
 
 
   def append(self, object array):
@@ -606,6 +620,7 @@ cdef class carray:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.getif_mode = True
     self.getif_arr = boolarr
+    self.nrowsinblock = self._get_chunk_block_rows()
     return iter(self)
 
 
@@ -650,9 +665,9 @@ cdef class carray:
         vbool = <char *>(self.getif_buf.data + self._row)
         if vbool[0]:
           # Check whether I/O buffer is already cached or not
-          start = self.nrowsread - self.nrowsinbuf
+          start = self.nrowsread - self.nrowsinblock
           if start != self.getif_cached:
-            self.iobuf = self[start:start+self.nrowsinbuf]
+            self.iobuf = self[start:start+self.nrowsinblock]
             self.getif_cached = start
           # Return the current value in I/O buffer
           return PyArray_GETITEM(
