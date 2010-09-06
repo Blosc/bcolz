@@ -350,6 +350,8 @@ class ctable(object):
         be returned as a new ctable object.
         """
 
+        scalar = False
+
         # First check for a column name or range of names
         if type(key) is str:
             if key not in self.names:
@@ -404,7 +406,10 @@ class ctable(object):
         for name in self.names:
             ra[name][:] = self.cols[name][start:stop:step]
 
-        return ra
+        if scalar:
+            return ra[0]
+        else:
+            return ra
 
 
     def __setitem__(self, key, value):
