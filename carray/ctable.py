@@ -325,11 +325,10 @@ class ctable(object):
         is a boolean array.
         """
 
-        # Get the rows for each column
-        rlen = sum(boolarr)   # very fast on boolean carrays
-        result = np.empty(rlen, dtype=self.dtype)
+        cols = []
         for name in self.names:
-            result[name] = self.cols[name][boolarr]
+            cols.append(self.cols[name][boolarr])
+        result = np.rec.fromarrays(cols, dtype=self.dtype).view(np.ndarray)
 
         return result
 
