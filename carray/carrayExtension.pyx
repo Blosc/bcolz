@@ -620,6 +620,10 @@ cdef class carray:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.getif_mode = True
     self.getif_arr = boolarr
+    # The next is not used because it seems that reading blocks is not any
+    # faster than reading complete chunks, except for some cases.  For future
+    # reference, the corking code is here:
+    # http://github.com/FrancescAlted/carray/blob/5964a8fe0d6989c91a345f9a87016c0bbd154843/carray/carrayExtension.pyx
     self.nrowsinblock = self._get_chunk_block_rows()
     return iter(self)
 
@@ -628,7 +632,6 @@ cdef class carray:
     """Return the next element in iterator."""
     cdef char *vbool
     cdef npy_intp start
-    cdef int _row
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -666,14 +669,13 @@ cdef class carray:
         vbool = <char *>(self.getif_buf.data + self._row)
         if vbool[0]:
           # Check whether I/O buffer is already cached or not
-          start = (self._nrow // self.nrowsinblock) * self.nrowsinblock
-          _row = self._nrow - start
+          start = self.nrowsread - self.nrowsinbuf
           if start != self.getif_cached:
-            self.iobuf = self[start:start+self.nrowsinblock]
+            self.iobuf = self[start:start+self.nrowsinbuf]
             self.getif_cached = start
           # Return the current value in I/O buffer
           return PyArray_GETITEM(
-            self.iobuf, self.iobuf.data + _row * self.itemsize)
+            self.iobuf, self.iobuf.data + self._row * self.itemsize)
       else:
         # Return the current value in I/O buffer
         return PyArray_GETITEM(

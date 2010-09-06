@@ -6,8 +6,8 @@ from time import time
 
 N = 1e7       # the number of elements in x
 clevel = 5    # the compression level
-sexpr = "((x-1) % 1000) == 0."  # the expression to compute
 #sexpr = "(x-1) < 10."  # the expression to compute
+sexpr = "((x-1) % 1000) == 0."  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
 print "Creating inputs..."
