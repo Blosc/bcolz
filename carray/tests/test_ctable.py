@@ -509,13 +509,60 @@ class bool_getitemTest(unittest.TestCase):
         barr = np.zeros(len(t)-1, dtype=np.bool_)
         self.assertRaises(ValueError, t.__getitem__, barr)
 
-    def test03(self):
-        """Testing __getitem__ with a non-boolean array"""
+
+class fancy_indexingTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing fancy indexing with a small list"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        barr = np.zeros(len(t), dtype=np.int_)
-        self.assertRaises(NotImplementedError, t.__getitem__, barr)
+        rt = t[[3,1]]
+        rar = ra[[3,1]]
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing fancy indexing with a large numpy array"""
+        N = 10*1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        idx = np.random.randint(1000, size=1000)
+        rt = t[idx]
+        rar = ra[idx]
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing fancy indexing with an empty list"""
+        N = 10*1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t[[]]
+        rar = ra[[]]
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test03(self):
+        """Testing fancy indexing (list of floats)"""
+        N = 101
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t[[2.3, 5.6]]
+        rar = ra[[2.3, 5.6]]
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test04(self):
+        """Testing fancy indexing (list of floats, numpy)"""
+        a = np.arange(1,101)
+        b = ca.carray(a)
+        idx = np.array([1.1, 3.3], dtype='f8')
+        self.assertRaises(KeyError, b.__getitem__, idx)
 
 
 def suite():
@@ -527,6 +574,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexingTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))

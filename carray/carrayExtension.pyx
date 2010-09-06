@@ -505,9 +505,10 @@ cdef class carray:
     leftover = self.leftover
     chunklen = self._chunksize // itemsize
     nchunks = self._nbytes // self._chunksize
-    scalar = False
 
-    if isinstance(key, int):
+    # First, check for integer.
+    # isinstance(key, int) is not enough in Cython (?)
+    if isinstance(key, (int, np.int_)):
       if key < 0:
         # To support negative values
         key += self.nrows
@@ -525,14 +526,32 @@ cdef class carray:
       raise KeyError, "multidimensional keys are not supported"
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
-    elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
-      # A boolean array (case of fancy indexing)
-      return np.fromiter(self.getif(key), dtype=self.dtype)
+      if step and step <= 0 :
+        raise NotImplementedError("step in slice can only be positive")
+    # List of integers (case of fancy indexing)
+    elif isinstance(key, list):
+      # Try to convert to a integer array
+      try:
+        key = np.array(key, dtype=np.int_)
+      except:
+        raise KeyError, "key cannot be converted to an array of indices"
+      return np.array([self[i] for i in key], dtype=self.dtype)
+    # A boolean or integer array (case of fancy indexing)
+    elif hasattr(key, "dtype"):
+      if key.dtype.type == np.bool_:
+        # A boolean array
+        return np.fromiter(self.getif(key), dtype=self.dtype)
+      elif np.issubsctype(key, np.int_):
+        # An integer array
+        return np.array([self[i] for i in key], dtype=self.dtype)
+      else:
+        raise KeyError, \
+              "arrays used as indices must be of integer (or boolean) type"
+    # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
 
-    if step and step <= 0 :
-      raise NotImplementedError("step in slice can only be positive")
+    # From now on, will only deal with [start:stop:step] slices
 
     # Get the corrected values for start, stop, step
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)

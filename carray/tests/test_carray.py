@@ -414,6 +414,49 @@ class getifTest(unittest.TestCase):
         assert_array_equal(wt, cwt, "getif() does not work correctly")
 
 
+class fancy_indexingTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing fancy indexing (short list)"""
+        a = np.arange(1,111)
+        b = ca.carray(a)
+        c = b[[3,1]]
+        r = a[[3,1]]
+        assert_array_equal(c, r, "fancy indexing does not work correctly")
+
+    def test01(self):
+        """Testing fancy indexing (large list, numpy)"""
+        a = np.arange(1,1e4)
+        b = ca.carray(a)
+        idx = np.random.randint(1000, size=1000)
+        c = b[idx]
+        r = a[idx]
+        assert_array_equal(c, r, "fancy indexing does not work correctly")
+
+    def test02(self):
+        """Testing fancy indexing (empty list)"""
+        a = np.arange(101)
+        b = ca.carray(a)
+        c = b[[]]
+        r = a[[]]
+        assert_array_equal(c, r, "fancy indexing does not work correctly")
+
+    def test03(self):
+        """Testing fancy indexing (list of floats)"""
+        a = np.arange(1,101)
+        b = ca.carray(a)
+        c = b[[1.1, 3.3]]
+        r = a[[1.1, 3.3]]
+        assert_array_equal(c, r, "fancy indexing does not work correctly")
+
+    def test04(self):
+        """Testing fancy indexing (list of floats, numpy)"""
+        a = np.arange(1,101)
+        b = ca.carray(a)
+        idx = np.array([1.1, 3.3], dtype='f8')
+        self.assertRaises(KeyError, b.__getitem__, idx)
+
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -424,6 +467,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(IterTest))
     theSuite.addTest(unittest.makeSuite(whereTest))
     theSuite.addTest(unittest.makeSuite(getifTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexingTest))
 
     return theSuite
 

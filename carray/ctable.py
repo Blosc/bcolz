@@ -354,7 +354,7 @@ class ctable(object):
         """
 
         # First, check for integer
-        if type(key) == int:
+        if isinstance(key, int):
             # Get a copy of the len-1 array
             ra = self._arr1.copy()
             # Fill it
@@ -368,9 +368,31 @@ class ctable(object):
             (start, stop, step) = key.start, key.stop, key.step
             if step and step <= 0 :
                 raise NotImplementedError("step in slice can only be positive")
+        # List of integers (case of fancy indexing), or list of column names
+        elif type(key) is list:
+            if len(key) == 0:
+                return np.empty(0, self.dtype)
+            strlist = [type(v) for v in key] == [str for v in key]
+            # Range of column names
+            if strlist:
+                cols = [self.cols[name] for name in key]
+                return ctable(cols, key)
+            # Try to convert to a integer array
+            try:
+                key = np.array(key, dtype=np.int_)
+            except:
+                raise KeyError, "key cannot be converted to an array of indices"
+            return np.fromiter((self[i] for i in key),
+                               dtype=self.dtype, count=len(key))
         # A boolean array (case of fancy indexing)
-        elif hasattr(key, "dtype") and key.dtype.type == np.bool_:
-            return self._getif(key)
+        elif hasattr(key, "dtype"):
+            if key.dtype.type == np.bool_:
+                return self._getif(key)
+            elif np.issubsctype(key, np.int_):
+                # An integer array
+                return np.array([self[i] for i in key], dtype=self.dtype)
+            else:
+                raise KeyError, "arrays used as indices must be of integer (or boolean) type"
         # Column name
         elif type(key) is str:
             if key not in self.names:
@@ -382,17 +404,11 @@ class ctable(object):
                           key
                 return self._getif(arr)
             return self.cols[key]
-        # Range of column names
-        elif type(key) is list:
-            strlist = [type(v) for v in key] == [str for v in key]
-            if strlist:
-                cols = [self.cols[name] for name in key]
-                return ctable(cols, key)
-            else:
-                raise KeyError, "key is not a list of names"
         # All the rest not implemented
         else:
             raise NotImplementedError, "key not supported: %s" % repr(key)
+
+        # From now on, will only deal with [start:stop:step] slices
 
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.nrows)

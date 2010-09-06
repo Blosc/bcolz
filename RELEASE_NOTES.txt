@@ -44,6 +44,9 @@ Changes from 0.2 to 0.3
 - Idiom ``ctable[boolarr]`` is recognized now and returns the rows where
   the boolean array is true.
 
+- Added fancy indexing (as a list of integers) support to `carray` and
+  `ctable`.
+
 - Added `copy(clevel, shuffle)` method to both `carray` and `ctable`
   objects.
 
