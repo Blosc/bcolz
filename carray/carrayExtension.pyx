@@ -186,7 +186,7 @@ cdef class chunk:
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
     else:
-      raise KeyError, "key not supported:", key
+      raise IndexError, "key not supported:", key
 
     # Get the corrected values for start, stop, step
     (start, stop, step) = slice(start, stop, step).indices(self.shape[0])
@@ -538,7 +538,7 @@ cdef class carray:
     # Get rid of multidimensional keys
     if isinstance(key, tuple):
       if len(key) != 1:
-        raise KeyError, "multidimensional keys are not supported"
+        raise IndexError, "multidimensional keys are not supported"
       key = key[0]
 
     # Check for integer
@@ -566,7 +566,7 @@ cdef class carray:
       try:
         key = np.array(key, dtype=np.int_)
       except:
-        raise KeyError, "key cannot be converted to an array of indices"
+        raise IndexError, "key cannot be converted to an array of indices"
       return np.array([self[i] for i in key], dtype=self.dtype)
     # A boolean or integer array (case of fancy indexing)
     elif hasattr(key, "dtype"):
@@ -577,7 +577,7 @@ cdef class carray:
         # An integer array
         return np.array([self[i] for i in key], dtype=self.dtype)
       else:
-        raise KeyError, \
+        raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
     # All the rest not implemented
     else:

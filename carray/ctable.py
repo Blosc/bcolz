@@ -352,7 +352,7 @@ class ctable(object):
         # Get rid of multidimensional keys
         if isinstance(key, tuple):
             if len(key) != 1:
-                raise KeyError, "multidimensional keys are not supported"
+                raise IndexError, "multidimensional keys are not supported"
             key = key[0]
 
         # First, check for integer
@@ -380,7 +380,8 @@ class ctable(object):
             try:
                 key = np.array(key, dtype=np.int_)
             except:
-                raise KeyError, "key cannot be converted to an array of indices"
+                raise IndexError, \
+                      "key cannot be converted to an array of indices"
             return np.fromiter((self[i] for i in key),
                                dtype=self.dtype, count=len(key))
         # A boolean array (case of fancy indexing)
@@ -391,14 +392,15 @@ class ctable(object):
                 # An integer array
                 return np.array([self[i] for i in key], dtype=self.dtype)
             else:
-                raise KeyError, "arrays used as indices must be of integer (or boolean) type"
+                raise IndexError, \
+                      "arrays used as indices must be integer (or boolean)"
         # Column name
         elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key)
                 if arr.dtype.type != np.bool_:
-                    raise KeyError, \
+                    raise IndexError, \
                           "`key` %s does not represent a boolean expression" %\
                           key
                 return self._getif(arr)

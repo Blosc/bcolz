@@ -562,7 +562,7 @@ class fancy_indexingTest(unittest.TestCase):
         a = np.arange(1,101)
         b = ca.carray(a)
         idx = np.array([1.1, 3.3], dtype='f8')
-        self.assertRaises(KeyError, b.__getitem__, idx)
+        self.assertRaises(IndexError, b.__getitem__, idx)
 
 
 def suite():
