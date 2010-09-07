@@ -535,12 +535,6 @@ cdef class carray:
     chunklen = self._chunksize // itemsize
     nchunks = self._nbytes // self._chunksize
 
-    # Get rid of multidimensional keys
-    if isinstance(key, tuple):
-      if len(key) != 1:
-        raise IndexError, "multidimensional keys are not supported"
-      key = key[0]
-
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
     if isinstance(key, (int, np.int_)):
@@ -560,6 +554,11 @@ cdef class carray:
       (start, stop, step) = key.start, key.stop, key.step
       if step and step <= 0 :
         raise NotImplementedError("step in slice can only be positive")
+    # Multidimensional keys
+    elif isinstance(key, tuple):
+      if len(key) != 1:
+        raise IndexError, "multidimensional keys are not supported"
+      return self[key[0]]
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
       # Try to convert to a integer array

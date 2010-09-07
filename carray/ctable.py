@@ -349,12 +349,6 @@ class ctable(object):
         be returned as a new ctable object.
         """
 
-        # Get rid of multidimensional keys
-        if isinstance(key, tuple):
-            if len(key) != 1:
-                raise IndexError, "multidimensional keys are not supported"
-            key = key[0]
-
         # First, check for integer
         if isinstance(key, int):
             # Get a copy of the len-1 array
@@ -367,6 +361,11 @@ class ctable(object):
             (start, stop, step) = key.start, key.stop, key.step
             if step and step <= 0 :
                 raise NotImplementedError("step in slice can only be positive")
+        # Multidimensional keys
+        elif isinstance(key, tuple):
+            if len(key) != 1:
+                raise IndexError, "multidimensional keys are not supported"
+            return self[key[0]]
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
             if len(key) == 0:
