@@ -60,6 +60,9 @@ Changes from 0.2 to 0.3
 - Added a new `set_num_threads()` to set the number of threads in both
   Blosc and Numexpr (if available).
 
+- New `fromiter()` constructor for creating `carray` objects from
+  iterators.  It follows the NumPy API convention.
+
 
 Changes from 0.1 to 0.2
 =======================

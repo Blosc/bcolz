@@ -8,13 +8,15 @@
 #
 ########################################################################
 
-"""Utility functions
+"""Utility functions.
 
 """
 
 import sys, os, os.path, subprocess, math
+import itertools as it
 from time import time, clock
-import carray
+import numpy as np
+import carray as ca
 
 
 def show_stats(explain, tref):
@@ -71,9 +73,9 @@ def set_num_threads(nthreads):
     to change this number only for Blosc, use `blosc_set_number_threads`
     instead.
     """
-    carray.blosc_set_num_threads(nthreads)
-    if carray.numexpr_here:
-        carray.numexpr.set_num_threads(nthreads)
+    ca.blosc_set_num_threads(nthreads)
+    if ca.numexpr_here:
+        ca.numexpr.set_num_threads(nthreads)
 
 
 ##### Code for computing optimum chunksize follows  #####
@@ -119,6 +121,44 @@ def calc_chunksize(expectedsizeinMB):
     return chunksize
 
 
+def fromiter(iterator, dtype, count=-1, **kwargs):
+    """Create a carray/ctable from `iterator` object.
+
+    `dtype` specifies the type of the outcome object.
+
+    `count` specifies the number of items to read from iterable. The
+    default is -1, which means all data is read.
+
+    You can pass whatever additional arguments supported by
+    carray/ctable constructors in `kwargs`.
+    """
+
+    if count == -1:
+        if hasattr(iterator, "__length_hint__"):
+            count = iterator.__length_hint__()
+        else:
+            count = sys.maxint
+
+    # First, create the container
+    obj = ca.carray(np.array([], dtype=dtype), **kwargs)
+    chunksize = obj.chunksize
+    nread, bsize = 0, 0
+    while nread < count:
+        if count == sys.maxint:
+            bsize = -1
+        elif nread + chunksize > count:
+            bsize = count - nread
+        else:
+            bsize = chunksize
+        chunkiter = it.islice(iterator, bsize)
+        chunk = np.fromiter(chunkiter, dtype=dtype, count=bsize)
+        #print "chunk-->", chunk
+        obj.append(chunk)
+        nread += len(chunk)
+        # Check the end of the iterator
+        if len(chunk) < chunksize:
+            break
+    return obj
 
 
 

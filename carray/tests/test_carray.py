@@ -457,6 +457,35 @@ class fancy_indexingTest(unittest.TestCase):
         self.assertRaises(KeyError, b.__getitem__, idx)
 
 
+class fromiterTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing fromiter (short iter)"""
+        a = np.arange(1,111)
+        b = ca.fromiter(iter(a), dtype='i4')
+        assert_array_equal(b[:], a, "fromiter does not work correctly")
+
+    def test01(self):
+        """Testing fromiter (long iter)"""
+        a = np.arange(1e4)
+        #b = ca.fromiter(iter(a), dtype='f8', count=int(1e4))
+        b = ca.fromiter(iter(a), dtype='f8', count=-1)
+        assert_array_equal(b[:], a, "fromiter does not work correctly")
+
+    def test02(self):
+        """Testing fromiter (empty iter)"""
+        a = np.array([], dtype="f8")
+        b = ca.fromiter(iter(a), dtype='f8')
+        assert_array_equal(b[:], a, "fromiter does not work correctly")
+
+    def test03(self):
+        """Testing fromiter (dtype conversion)"""
+        a = np.arange(101, dtype="f8")
+        b = ca.fromiter(iter(a), dtype='f4')
+        assert_array_equal(b[:], a, "fromiter does not work correctly")
+
+
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -468,6 +497,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(whereTest))
     theSuite.addTest(unittest.makeSuite(getifTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexingTest))
+    theSuite.addTest(unittest.makeSuite(fromiterTest))
 
     return theSuite
 
