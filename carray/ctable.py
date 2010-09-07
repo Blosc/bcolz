@@ -531,6 +531,8 @@ class ctable(object):
     def __repr__(self):
         """Represent the carray as an string, with additional info."""
         nbytes, cbytes, cratio = self.get_stats()
-        fullrepr = "ctable(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%s" % \
-                   (self.shape, self.dtype, nbytes, cbytes, cratio, str(self))
+        snbytes = ca.utils.human_readable_size(nbytes)
+        scbytes = ca.utils.human_readable_size(cbytes)
+        fullrepr = "ctable(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f\n%s" % \
+                   (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
         return fullrepr

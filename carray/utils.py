@@ -212,12 +212,26 @@ def get_len_of_range(start, stop, step):
     return n
 
 
+def human_readable_size(size):
+    """Return a string for better assessing large number of bytes."""
+    if size < 1024:
+        return "%s" % size
+    elif size < 1024*1024:
+        return "%.2f KB" % (size / 1024.)
+    elif size < 1024*1024*1024:
+        return "%.2f MB" % (size / (1024*1024.))
+    else:
+        return "%.2f GB" % (size / (1024*1024*1024.))
+
 
 
 # Main part
 # =========
 if __name__ == '__main__':
-    _test()
+    print human_readable_size(10234)
+    print human_readable_size(10234*100)
+    print human_readable_size(10234*10000)
+    print human_readable_size(10234*1000000)
 
 
 ## Local Variables:

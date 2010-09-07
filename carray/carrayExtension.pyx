@@ -906,10 +906,12 @@ cdef class carray:
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
+    snbytes = ca.utils.human_readable_size(self._nbytes)
+    scbytes = ca.utils.human_readable_size(self._cbytes)
     cratio = self._nbytes / float(self._cbytes)
-    fullrepr = """carray(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f
+    fullrepr = """carray(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f
   cparms := %r
-%s""" % (self.shape, self.dtype, self._nbytes, self._cbytes, cratio,
+%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio,
          self.cparms, str(self))
     return fullrepr
 
