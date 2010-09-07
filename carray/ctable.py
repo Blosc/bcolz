@@ -357,6 +357,12 @@ class ctable(object):
         be returned as a new ctable object.
         """
 
+        # Get rid of multidimensional keys
+        if isinstance(key, tuple):
+            if len(key) != 1:
+                raise KeyError, "multidimensional keys are not supported"
+            key = key[0]
+
         # First, check for integer
         if isinstance(key, int):
             # Get a copy of the len-1 array
@@ -364,9 +370,6 @@ class ctable(object):
             # Fill it
             ra[0] = tuple([self.cols[name][key] for name in self.names])
             return ra[0]
-        # Get rid of multidimensional keys
-        elif type(key) == tuple:
-            raise KeyError, "multidimensional keys are not supported"
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
@@ -473,8 +476,17 @@ class ctable(object):
         return reqvars, colnames
 
 
-    def eval(self, expression):
-        """Evaluate the `expression` on columns and return the result."""
+    def eval(self, expression, **kwargs):
+        """Evaluate the `expression` on columns and return the result.
+
+        `expression` must be a string containing an expression
+        supported by Numexpr.  It may contain columns or other carrays
+        or NumPy arrays that can be found in the user space name.
+
+        The output is a carray object containing the result of the
+        expression.  You taylor this carray by passing additional
+        arguments supported by carray constructor in `kwargs`.
+        """
 
         if not ca.numexpr_here:
             raise ImportError(
@@ -505,7 +517,9 @@ class ctable(object):
             # Perform the evaluation for this block
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
             if i == 0:
-                result = ca.carray(res_block, expectedrows=self.nrows)
+                # Get a decent default for expectedrows
+                nrows = kwargs.pop('expectedrows', self.nrows)
+                result = ca.carray(res_block, expectedrows=nrows, **kwargs)
             else:
                 result.append(res_block)
 

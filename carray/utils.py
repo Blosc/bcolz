@@ -134,9 +134,11 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     """
 
     if count == -1:
+        # Try to guess the size of the iterator length
         if hasattr(iterator, "__length_hint__"):
             count = iterator.__length_hint__()
         else:
+            # No guess
             count = sys.maxint
 
     # First, create the container
@@ -152,7 +154,6 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
             bsize = chunksize
         chunkiter = it.islice(iterator, bsize)
         chunk = np.fromiter(chunkiter, dtype=dtype, count=bsize)
-        #print "chunk-->", chunk
         obj.append(chunk)
         nread += len(chunk)
         # Check the end of the iterator
@@ -188,7 +189,10 @@ class cparams(object):
 
     def __init__(self, clevel=5, shuffle=True):
         """Create an instance with `clevel` and `shuffle` params."""
-        clevel = int(clevel)
+        if not isinstance(clevel, int):
+            raise ValueError, "`clevel` must an int."
+        if not isinstance(shuffle, (bool, int)):
+            raise ValueError, "`shuffle` must a boolean."
         shuffle = bool(shuffle)
         if clevel < 0:
             raiseValueError, "clevel must be a positive integer"

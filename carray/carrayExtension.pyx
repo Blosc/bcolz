@@ -526,7 +526,13 @@ cdef class carray:
     chunklen = self._chunksize // itemsize
     nchunks = self._nbytes // self._chunksize
 
-    # First, check for integer.
+    # Get rid of multidimensional keys
+    if isinstance(key, tuple):
+      if len(key) != 1:
+        raise KeyError, "multidimensional keys are not supported"
+      key = key[0]
+
+    # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
     if isinstance(key, (int, np.int_)):
       if key < 0:
@@ -541,9 +547,6 @@ cdef class carray:
         return PyArray_GETITEM(array, array.data + keychunk * itemsize)
       else:
         return self.chunks[nchunk][keychunk]
-    # Get rid of multidimensional keys
-    elif isinstance(key, tuple):
-      raise KeyError, "multidimensional keys are not supported"
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
       if step and step <= 0 :

@@ -55,14 +55,21 @@ class carrayTest(unittest.TestCase):
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
         #print "b[1]->", `b[1]`
-        self.assert_(a[1] == b[1], "Values in key 1 are not equal")
+        self.assert_(a[1] == b[1], "Values with key 1 are not equal")
 
     def test01b(self):
         """Testing `__getitem()__` method with only a (negative) start"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
         #print "b[-1]->", `b[-1]`
-        self.assert_(a[-1] == b[-1], "Values in key 1 are not equal")
+        self.assert_(a[-1] == b[-1], "Values with key -1 are not equal")
+
+    def test01c(self):
+        """Testing `__getitem()__` method with only a (start,)"""
+        a = np.arange(1e1)
+        b = ca.carray(a, chunksize=100)
+        #print "b[(1,)]->", `b[(1,)]`
+        self.assert_(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""

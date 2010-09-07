@@ -15,15 +15,17 @@ sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
 print "Creating inputs..."
 
+cparams = ca.cparams(clevel)
+
 x = np.arange(N)
-cx = ca.carray(x, clevel=clevel)
+cx = ca.carray(x, cparams=cparams)
 if 'y' not in sexpr:
     t = ca.ctable((cx,), names=['x'])
 else:
     y = np.arange(N)
     z = np.arange(N)
-    cy = ca.carray(y, clevel=clevel)
-    cz = ca.carray(z, clevel=clevel)
+    cy = ca.carray(y, cparams=cparams)
+    cz = ca.carray(z, cparams=cparams)
     t = ca.ctable((cx, cy, cz), names=['x','y','z'])
 
 print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
@@ -44,7 +46,7 @@ print "Time for numexpr (numpy)--> %.3f" % (time()-t0,)
 ca.set_num_threads(ca.ncores//2)
 
 t0 = time()
-cout = t.eval(sexpr)
+cout = t.eval(sexpr, cparams=cparams)
 print "Time for ctable--> %.3f" % (time()-t0,)
 print "cout-->", repr(cout)
 

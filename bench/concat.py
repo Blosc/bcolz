@@ -16,7 +16,7 @@
 import sys, math
 import numpy
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-import carray
+import carray as ca
 import time
 
 def concat(data):
@@ -31,7 +31,7 @@ def concat(data):
     return alldata
 
 def append(data, clevel):
-    alldata = carray.carray(data[0], clevel=clevel)
+    alldata = ca.carray(data[0], cparams=ca.cparams(clevel))
     for carr in data[1:]:
         alldata.append(carr)
 
