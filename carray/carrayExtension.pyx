@@ -116,16 +116,16 @@ cdef class chunk:
 
   cdef object dtype
   cdef object shape
-  cdef object cparams
+  cdef object cparms
   cdef int itemsize, nbytes, cbytes
   cdef ndarray arr1
   cdef char *data
 
-  def __cinit__(self, ndarray array, object cparams):
+  def __cinit__(self, ndarray array, object cparms):
     """Initialize chunk and compress data based on numpy `array`.
 
-    You can pass parameters to the internal compressor in `cparams` that must
-    be an instance of the `cparams` class.
+    You can pass parameters to the internal compressor in `cparms` that must
+    be an instance of the `cparms` class.
     """
     cdef int i, itemsize
     cdef int nbytes, cbytes
@@ -135,7 +135,7 @@ cdef class chunk:
     shape = array.shape
     self.dtype = dtype
     self.shape = shape
-    self.cparams = cparams
+    self.cparms = cparms
 
     itemsize = dtype.itemsize
     nbytes = itemsize
@@ -143,8 +143,8 @@ cdef class chunk:
       nbytes *= i
     self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     # Compress data
-    clevel = cparams.clevel
-    shuffle = cparams.shuffle
+    clevel = cparms.clevel
+    shuffle = cparms.shuffle
     with nogil:
       cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
                               self.data, nbytes+BLOSC_MAX_OVERHEAD)
@@ -254,7 +254,7 @@ cdef class carray:
   cdef npy_intp _nrow, nrowsread, getif_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
-  cdef object _cparams
+  cdef object _cparms
   cdef object lastchunkarr
   cdef object _dtype, chunks
   cdef object getif_arr
@@ -275,10 +275,10 @@ cdef class carray:
     def __get__(self):
       return (self.nrows,)
 
-  property cparams:
+  property cparms:
     "The compression parameters for this carray."
     def __get__(self):
-      return self._cparams
+      return self._cparms
 
   property nbytes:
     "The original (uncompressed) size of this carray (in bytes)."
@@ -322,12 +322,12 @@ cdef class carray:
     return array
 
 
-  def __cinit__(self, object array, object cparams=None,
+  def __cinit__(self, object array, object cparms=None,
                 object expectedrows=None, object chunksize=None):
     """Initialize and compress data based on passed `array`.
 
-    You can pass parameters to the compressor via `cparams`, which must be an
-    instance of the `cparams` class.
+    You can pass parameters to the compressor via `cparms`, which must be an
+    instance of the `cparms` class.
 
     If you pass a guess on the expected number of rows of this carray in
     `expectedrows` that wil serve to decide the best chunksize used for memory
@@ -342,12 +342,12 @@ cdef class carray:
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
 
-    # Check defaults for cparams
-    if cparams is None:
-      cparams = ca.cparams()
+    # Check defaults for cparms
+    if cparms is None:
+      cparms = ca.cparms()
 
-    if not isinstance(cparams, ca.cparams):
-      raise ValueError, "`cparams` param must be an instance of `cparams` class"
+    if not isinstance(cparms, ca.cparms):
+      raise ValueError, "`cparms` param must be an instance of `cparms` class"
 
     array_ = self._to_ndarray(array)
 
@@ -355,7 +355,7 @@ cdef class carray:
     if array_.ndim != 1:
       raise ValueError, "`array` can only be unidimensional"
 
-    self._cparams = cparams
+    self._cparms = cparms
     self._dtype = dtype = array_.dtype
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
@@ -387,7 +387,7 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     nelemchunk = self._chunksize // itemsize
     for i in range(nchunks):
-      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], self._cparams)
+      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % cs
@@ -452,7 +452,7 @@ cdef class carray:
       nbytesfirst = chunksize-leftover
       memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
       # Compress the last chunk and add it to the list
-      chunk_ = chunk(self.lastchunkarr, self._cparams)
+      chunk_ = chunk(self.lastchunkarr, self._cparms)
       chunks.append(chunk_)
       cbytes = chunk_.cbytes
 
@@ -463,7 +463,7 @@ cdef class carray:
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
       for i in range(nchunks):
-        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk], self._cparams)
+        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
@@ -487,18 +487,18 @@ cdef class carray:
     You can pass whatever additional arguments supported by the carray
     constructor in `kwargs`.
 
-    If `cparams` is passed, these settings will be used for the new carray.
+    If `cparms` is passed, these settings will be used for the new carray.
     If not, the settings in self will be used.
     """
     cdef int itemsize, chunksize, bsize
 
     # Get defaults for some parameters
-    cparams = kwargs.pop('cparams', self._cparams)
+    cparms = kwargs.pop('cparms', self._cparms)
     expectedrows = kwargs.pop('expectedrows', self.nrows)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
-                   cparams=cparams,
+                   cparms=cparms,
                    expectedrows=expectedrows)
 
     # Now copy the carray chunk by chunk
@@ -686,7 +686,7 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[startb:stopb] = value[nwritten:nwritten+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._cparams)
+        chunk_ = chunk(cdata, self._cparms)
         self.chunks[i] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -767,7 +767,7 @@ cdef class carray:
     else:
       chunk_ = self.chunks[nchunk]      # get the data chunk
       self._cbytes -= chunk_.cbytes
-      chunk_ = chunk(iobuf, self._cparams)  # build the new chunk
+      chunk_ = chunk(iobuf, self._cparms)  # build the new chunk
       self.chunks[nchunk] = chunk_      # insert the new chunk
       self._cbytes += chunk_.cbytes
 

@@ -301,7 +301,7 @@ class ctable(object):
         # Copy the columns
         cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
         # Remove unsupported params for ctable constructor
-        kwargs.pop('cparams', None)
+        kwargs.pop('cparms', None)
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy

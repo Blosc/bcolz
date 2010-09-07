@@ -17,13 +17,13 @@ sexpr = "2*x**3+.3*x**2+x+1"  # the expression to compute
 
 print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
 
-cparams = ca.cparams(clevel)
+cparms = ca.cparms(clevel)
 
 # Create the numpy array
 x = np.arange(N)
 # Create a compressed array
-cx = ca.carray(x, cparams=cparams)
-cout = ca.carray(np.empty((0,), dtype='f8'), cparams=cparams)
+cx = ca.carray(x, cparms=cparms)
+cout = ca.carray(np.empty((0,), dtype='f8'), cparms=cparms)
 
 t0 = time()
 out = eval(sexpr)

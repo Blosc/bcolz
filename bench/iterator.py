@@ -10,19 +10,19 @@ clevel = 5    # the compression level
 sexpr = "((x-1) % 1000) == 0."  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
-cparams = ca.cparams(clevel)
+cparms = ca.cparms(clevel)
 
 print "Creating inputs..."
 
 x = np.arange(N)
-cx = ca.carray(x, cparams=cparams)
+cx = ca.carray(x, cparms=cparms)
 if 'y' not in sexpr:
     ct = ca.ctable((cx,), names=['x'])
 else:
     y = np.arange(N)
     z = np.arange(N)
-    cy = ca.carray(y, cparams=cparams)
-    cz = ca.carray(z, cparams=cparams)
+    cy = ca.carray(y, cparms=cparms)
+    cz = ca.carray(z, cparms=cparms)
     ct = ca.ctable((cx, cy, cz), names=['x','y','z'])
 
 print "Evaluating...", sexpr

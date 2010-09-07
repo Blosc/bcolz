@@ -73,18 +73,18 @@ By default carrays are compressed using Blosc with compression level 5
 and shuffle is active.  But depending on you needs, you can use other
 compression levels too::
 
-  >>> ca.carray(a, ca.cparams(clevel=1))
+  >>> ca.carray(a, ca.cparms(clevel=1))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 10279111; ratio: 7.78
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
-  >>> ca.carray(a, ca.cparams(clevel=9))
+  >>> ca.carray(a, ca.cparms(clevel=9))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 1088152; ratio: 73.52
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
-  >>> ca.carray(a, ca.cparams(shuffle=False))
+  >>> ca.carray(a, ca.cparms(shuffle=False))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 

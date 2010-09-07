@@ -162,7 +162,7 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     return obj
 
 
-class cparams(object):
+class cparms(object):
     """Class to host parameters for compression and other filters.
 
     You can pass the `clevel` and `shuffle` params to the constructor.

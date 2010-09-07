@@ -10,14 +10,14 @@ clevel = 1    # the compression level
 
 print "Creating inputs with %d elements..." % N
 
-cparams = ca.cparams(clevel)
+cparms = ca.cparms(clevel)
 
 x = np.arange(N)
 y = np.arange(N)
 z = np.arange(N)
-cx = ca.carray(x, cparams=cparams)
-cy = ca.carray(y, cparams=cparams)
-cz = ca.carray(z, cparams=cparams)
+cx = ca.carray(x, cparms=cparms)
+cy = ca.carray(y, cparms=cparms)
+cz = ca.carray(z, cparms=cparms)
 ct = ca.ctable((cx, cy, cz), names=['x','y','z'])
 t = ct[:]
 
