@@ -48,7 +48,7 @@ class chunkTest(unittest.TestCase):
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
 
-class carrayTest(unittest.TestCase):
+class getitemTest(unittest.TestCase):
 
     def test01(self):
         """Testing `__getitem()__` method with only a start"""
@@ -142,7 +142,58 @@ class carrayTest(unittest.TestCase):
         #print "b[:]->", `b[::2]`
         assert_array_equal(a[::2], b[::2], "Arrays are not equal")
 
-    def test05(self):
+
+class setitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `__setitem()__` method with only one element"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=100)
+        b[1] = 10.
+        a[1] = 10.
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test01(self):
+        """Testing `__setitem()__` method with a range"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=100)
+        b[10:100] = np.arange(1e2 - 10.)
+        a[10:100] = np.arange(1e2 - 10.)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test02(self):
+        """Testing `__setitem()__` method with broadcasting"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=100)
+        b[10:100] = 10.
+        a[10:100] = 10.
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test03(self):
+        """Testing `__setitem()__` method with the complete range"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=100)
+        b[:] = np.arange(10., 1e2 + 10.)
+        a[:] = np.arange(10., 1e2 + 10.)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test04(self):
+        """Testing `__setitem()__` method with start:stop:step"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=10)
+        b[1:30:3] = 3.
+        a[1:30:3] = 3.
+        print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+
+class appendTest(unittest.TestCase):
+
+    def test00(self):
         """Testing `append()` method"""
         a = np.arange(1e1)
         b = ca.carray(a)
@@ -151,7 +202,7 @@ class carrayTest(unittest.TestCase):
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test06(self):
+    def test01(self):
         """Testing `append()` method (small chunksize)"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=10)
@@ -160,7 +211,7 @@ class carrayTest(unittest.TestCase):
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test07(self):
+    def test02(self):
         """Testing `append()` method (large append)"""
         a = np.arange(1e4)
         c = np.arange(2e5)
@@ -170,13 +221,16 @@ class carrayTest(unittest.TestCase):
         d = np.concatenate((a, c))
         assert_array_equal(d, b[:], "Arrays are not equal")
 
-    def test08(self):
+
+class miscTest(unittest.TestCase):
+
+    def test00(self):
         """Testing __len__()"""
         a = np.arange(111)
         b = ca.carray(a)
         self.assert_(len(a) == len(b), "Arrays do not have the same length")
 
-    def test09(self):
+    def test01(self):
         """Testing __sizeof__() (big carrays)"""
         a = np.arange(2e5)
         b = ca.carray(a)
@@ -185,7 +239,7 @@ class carrayTest(unittest.TestCase):
         self.assert_(sys.getsizeof(b) < b.nbytes,
                      "carray does not seem to compress at all")
 
-    def test10(self):
+    def test02(self):
         """Testing __sizeof__() (small carrays)"""
         a = np.arange(111)
         b = ca.carray(a)
@@ -498,7 +552,10 @@ def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(chunkTest))
-    theSuite.addTest(unittest.makeSuite(carrayTest))
+    theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(setitemTest))
+    theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(miscTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(IterTest))
     theSuite.addTest(unittest.makeSuite(whereTest))

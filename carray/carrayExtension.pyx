@@ -188,6 +188,9 @@ cdef class chunk:
     else:
       raise KeyError, "key not supported:", key
 
+    # Get the corrected values for start, stop, step
+    (start, stop, step) = slice(start, stop, step).indices(self.shape[0])
+
     # Build a numpy container
     array = np.empty(shape=(stop-start,), dtype=self.dtype)
     # Read actual data
@@ -293,7 +296,7 @@ cdef class carray:
       return self._chunksize
 
 
-  def _to_ndarray(self, object array):
+  def _to_ndarray(self, object array, object alen=None):
     """Convert object to a ndarray."""
 
     if type(array) != np.ndarray:
@@ -309,6 +312,13 @@ cdef class carray:
       array.shape = (1,)
     if len(array.shape) != 1:
       raise ValueError, "only unidimensional shapes supported"
+
+    # Check if we need doing a broadcast
+    if (alen is not None) and (len(array) == 1) and (alen != len(array)):
+      array2 = np.empty(shape=(alen,), dtype=array.dtype)
+      array2[:] = array   # broadcast
+      array = array2
+
     return array
 
 
@@ -611,7 +621,75 @@ cdef class carray:
 
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
-    raise NotImplementedError
+    cdef int i, chunklen, alen
+    cdef int nchunk, nchunks, nwritten
+    cdef int startb, stopb, blen
+    cdef chunk chunk_
+    cdef object cdata
+
+    # Check for integer
+    # isinstance(key, int) is not enough in Cython (?)
+    if isinstance(key, (int, np.int_)):
+      if key < 0:
+        # To support negative values
+        key += self.nrows
+      if key >= self.nrows:
+        raise IndexError, "index out of range"
+      (start, stop, step) = key, key+1, 1
+    elif isinstance(key, slice):
+      (start, stop, step) = key.start, key.stop, key.step
+      if step and step <= 0 :
+        raise NotImplementedError("step in slice can only be positive")
+    # All the rest not implemented
+    else:
+      raise NotImplementedError, "key not supported: %s" % repr(key)
+
+    # Get the corrected values for start, stop, step
+    (start, stop, step) = slice(start, stop, step).indices(self.nrows)
+
+    # Ensure that value is a numpy array with the required length
+    alen = ca.utils.get_len_of_range(start, stop, step)
+    value = self._to_ndarray(value, alen=alen)
+
+    nwritten = 0
+    chunklen = self._chunksize // self.itemsize
+    nchunks = self._nbytes // self._chunksize
+
+    # Loop over the chunks and overwrite them from data in value
+    for i in range(nchunks+1):
+
+      # Compute start & stop for each block
+      startb = start - i*chunklen
+      stopb = stop - i*chunklen
+      if (startb >= chunklen) or (stopb <= 0):
+        continue
+      if startb < 0:
+        startb = 0
+      if stopb > chunklen:
+        stopb = chunklen
+      blen = (stopb - startb)
+
+      # Modify the data
+      if i == nchunks:
+        self.lastchunkarr[startb:stopb] = value[nwritten:]
+      else:
+        # Get the data chunk
+        chunk_ = self.chunks[i]
+        self._cbytes -= chunk_.cbytes
+        # Get all the values there
+        cdata = chunk_[:]
+        # Overwrite it with data from value
+        cdata[startb:stopb] = value[nwritten:nwritten+blen]
+        # Replace the chunk
+        chunk_ = chunk(cdata, self._cparams)
+        self.chunks[i] = chunk_
+        # Update cbytes counter
+        self._cbytes += chunk_.cbytes
+
+      nwritten += blen
+
+    # Safety check
+    #assert (nwritten == alen)
 
 
   def __iter__(self):

@@ -204,6 +204,15 @@ class cparams(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
+def get_len_of_range(start, stop, step):
+    """Get the length of a (start, stop, step) range."""
+    n = 0
+    if start < stop:
+        n = ((stop - start - 1) // step + 1);
+    return n
+
+
+
 
 # Main part
 # =========

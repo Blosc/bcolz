@@ -289,14 +289,6 @@ class ctable(object):
         del self.cols[name]
 
 
-    def _get_len_of_range(self, start, stop, step):
-        """Get the length of a (start, stop, step) range."""
-        n = 0
-        if start < stop:
-            n = ((stop - start - 1) // step + 1);
-        return n
-
-
     def copy(self, **kwargs):
         """Return a copy of self.
 
@@ -420,7 +412,7 @@ class ctable(object):
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.nrows)
         # Build a numpy container
-        n = self._get_len_of_range(start, stop, step)
+        n = ca.utils.get_len_of_range(start, stop, step)
         ra = np.empty(shape=(n,), dtype=self.dtype)
         # Fill it
         for name in self.names:
