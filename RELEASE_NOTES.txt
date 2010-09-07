@@ -66,6 +66,9 @@ Changes from 0.2 to 0.3
 - New `cparams(clevel=5, shuffle=True)` class to host all params related
   with compression.
 
+- Added support for `carray.__setitem__()`.  Only integers and
+  ``[start:stop]`` ranges ares supported at the moment.
+
 
 Changes from 0.1 to 0.2
 =======================

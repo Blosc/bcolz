@@ -87,32 +87,32 @@ class getitemTest(unittest.TestCase):
 
     def test02c(self):
         """Testing `__getitem()__` method with ranges (negative stop)"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
         #print "b[1:-3]->", `b[1:-3]`
         assert_array_equal(a[1:-3], b[1:-3], "Arrays are not equal")
 
     def test02d(self):
         """Testing `__getitem()__` method with ranges (negative start, stop)"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
         #print "b[-3:-1]->", `b[-3:-1]`
         assert_array_equal(a[-3:-1], b[-3:-1], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
-        #print "b[1:8:3]->", `b[1:8:3]`
-        assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
+        #print "b[1:800:3]->", `b[3:80:30]`
+        assert_array_equal(a[3:80:30], b[3:80:30], "Arrays are not equal")
 
     def test03b(self):
         """Testing `__getitem()__` method with negative steps"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
         #print "b[::-3]->", `b[::-3]`
         self.assertRaises(NotImplementedError, b.__getitem__,
-                          slice(None, None,-3))
+                          slice(None, None, -3))
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
@@ -185,10 +185,8 @@ class setitemTest(unittest.TestCase):
         """Testing `__setitem()__` method with start:stop:step"""
         a = np.arange(1e2)
         b = ca.carray(a, chunksize=10)
-        b[1:30:3] = 3.
-        a[1:30:3] = 3.
-        print "b->", `b`
-        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+        self.assertRaises(NotImplementedError, b.__setitem__,
+                          slice(1, 30, 3), 3.)
 
 
 class appendTest(unittest.TestCase):

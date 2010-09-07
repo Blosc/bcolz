@@ -296,7 +296,7 @@ cdef class carray:
       return self._chunksize
 
 
-  def _to_ndarray(self, object array, object alen=None):
+  def _to_ndarray(self, object array, object arrlen=None):
     """Convert object to a ndarray."""
 
     if type(array) != np.ndarray:
@@ -314,8 +314,8 @@ cdef class carray:
       raise ValueError, "only unidimensional shapes supported"
 
     # Check if we need doing a broadcast
-    if (alen is not None) and (len(array) == 1) and (alen != len(array)):
-      array2 = np.empty(shape=(alen,), dtype=array.dtype)
+    if (arrlen is not None) and (len(array) == 1) and (arrlen != len(array)):
+      array2 = np.empty(shape=(arrlen,), dtype=array.dtype)
       array2[:] = array   # broadcast
       array = array2
 
@@ -524,15 +524,14 @@ cdef class carray:
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array
-    cdef int i, itemsize, chunklen, leftover
-    cdef int nchunk, keychunk, nchunks
+    cdef int i, itemsize, chunklen
     cdef int startb, stopb, bsize
+    cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nbytes, ntbytes
     cdef chunk chunk_
 
     nbytes = self._nbytes
     itemsize = self.itemsize
-    leftover = self.leftover
     chunklen = self._chunksize // itemsize
     nchunks = self._nbytes // self._chunksize
 
@@ -605,7 +604,7 @@ cdef class carray:
       if stopb > chunklen:
         stopb = chunklen
       bsize = (stopb - startb) * itemsize
-      if i == nchunks and leftover:
+      if i == nchunks and self.leftover:
         memcpy(array.data+ntbytes, self.lastchunk+startb*itemsize, bsize)
       else:
         # Get the data chunk
@@ -616,12 +615,13 @@ cdef class carray:
     if step == 1:
       return array
     else:
-      return array[::step]
+      # Do a copy to get rid of unneeded data
+      return array[::step].copy()
 
 
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
-    cdef int i, chunklen, alen
+    cdef int i, chunklen, arrlen
     cdef int nchunk, nchunks, nwritten
     cdef int startb, stopb, blen
     cdef chunk chunk_
@@ -638,8 +638,11 @@ cdef class carray:
       (start, stop, step) = key, key+1, 1
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
-      if step and step <= 0 :
-        raise NotImplementedError("step in slice can only be positive")
+      if step:
+        if step <= 0 :
+          raise NotImplementedError("step in slice can only be positive")
+        if step > 1 :
+          raise NotImplementedError("step > 1 in slice not supported")
     # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
@@ -648,8 +651,11 @@ cdef class carray:
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
     # Ensure that value is a numpy array with the required length
-    alen = ca.utils.get_len_of_range(start, stop, step)
-    value = self._to_ndarray(value, alen=alen)
+    arrlen = ca.utils.get_len_of_range(start, stop, step)
+    value = self._to_ndarray(value, arrlen=arrlen)
+
+    # Finally, update array (does not work yet!)
+    #self._update(value, start, stop, step)
 
     nwritten = 0
     chunklen = self._chunksize // self.itemsize
@@ -689,7 +695,82 @@ cdef class carray:
       nwritten += blen
 
     # Safety check
-    #assert (nwritten == alen)
+    assert (nwritten == arrlen)
+
+
+  # The next is an attempt to update a carray with support for step > 1
+  # But this does not work because read I/O buffer is not aligned with
+  # carray chunks.  Keeping this here for later revision.
+  cdef _update(self, value, npy_intp start, npy_intp stop, npy_intp step):
+    """Update self with `value` array."""
+    cdef npy_intp nrow, nchunk, nextelement
+    cdef npy_intp nrowsread, nrowswritten, nrowsinbuf
+    cdef int startb, stopb, row
+    cdef int needsflush
+
+    nrowsinbuf = self._chunksize // self.itemsize
+    nrowsread = start
+    nrowswritten = 0
+    nrow = start - step
+    nextelement = nrow + step
+    startb = 0
+    needsflush = False
+    while nextelement < stop:
+      if nextelement >= nrowsread:
+        # Skip until there is interesting information
+        while nextelement >= nrowsread + nrowsinbuf:
+          nrowsread += nrowsinbuf
+        # Compute the end for this iteration
+        stopb -= nrowsread
+        if stopb > nrowsinbuf:
+          stopb = nrowsinbuf
+        row = startb - step
+        # Write back previous buffer (if needed)
+        if needsflush:
+          nchunk = nrowsread // nrowsinbuf
+          self._flush_chunk(nchunk, iobuf)
+        # Read a new data chunk
+        iobuf = self[nrowsread:nrowsread+nrowsinbuf]
+        nrowsread += nrowsinbuf
+
+      row += step
+      nrow = nextelement
+      if row + step >= stopb:
+        # Compute the start row for the next buffer
+        startb = (row + step) % nrowsinbuf
+      nextelement = nrow + step
+
+      # Update the current value in I/O buffer
+      iobuf[row] = value[nrowswritten]
+      nrowswritten += 1
+      needsflush = True
+
+    # Write back last buffer buffer (if needed)
+    if needsflush:
+      nchunk = nrowsread // nrowsinbuf
+      self._flush_chunk(nchunk, iobuf)
+
+    # Safety check
+    assert (nrowswritten == len(value))
+
+    return nrowswritten
+
+
+  cdef _flush_chunk(self, nchunk, iobuf):
+    """Flush a chunk with the contents of iobuf """
+    cdef npy_intp nchunks
+    cdef chunk chunk_
+
+    nchunks = self._nbytes // self._chunksize
+    if nchunk == nchunks and self.leftover:
+      # Last chunk.  Just update it.
+      self.lastchunkarr[:] = iobuf
+    else:
+      chunk_ = self.chunks[nchunk]      # get the data chunk
+      self._cbytes -= chunk_.cbytes
+      chunk_ = chunk(iobuf, self._cparams)  # build the new chunk
+      self.chunks[nchunk] = chunk_      # insert the new chunk
+      self._cbytes += chunk_.cbytes
 
 
   def __iter__(self):
