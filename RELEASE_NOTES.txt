@@ -63,6 +63,9 @@ Changes from 0.2 to 0.3
 - New `fromiter()` constructor for creating `carray` objects from
   iterators.  It follows the NumPy API convention.
 
+- New `cparams(clevel=5, shuffle=True)` class to host all params related
+  with compression.
+
 
 Changes from 0.1 to 0.2
 =======================

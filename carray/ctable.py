@@ -309,9 +309,7 @@ class ctable(object):
         # Copy the columns
         cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
         # Remove unsupported params for ctable constructor
-        for param in 'clevel', 'shuffle':
-            if param in kwargs:
-                del kwargs[param]
+        kwargs.pop('cparams', None)
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy

@@ -300,7 +300,7 @@ class copyTest(unittest.TestCase):
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
-        t2 = t.copy(clevel=9)
+        t2 = t.copy(cparams=ca.cparams(clevel=9))
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t['f1'].cbytes > t2['f1'].cbytes, "clevel not changed")
 
@@ -309,7 +309,7 @@ class copyTest(unittest.TestCase):
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
-        t2 = t.copy(clevel=1)
+        t2 = t.copy(cparams=ca.cparams(clevel=1))
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 
@@ -318,7 +318,7 @@ class copyTest(unittest.TestCase):
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
-        t2 = t.copy(shuffle=False)
+        t2 = t.copy(cparams=ca.cparams(shuffle=False))
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 

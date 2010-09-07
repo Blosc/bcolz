@@ -22,28 +22,28 @@ class chunkTest(unittest.TestCase):
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
         a = np.arange(1e1)
-        b = chunk(a)
+        b = chunk(a, cparams=ca.cparams())
         #print "b[1]->", `b[1]`
         self.assert_(a[1] == b[1], "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
         a = np.arange(1e1)
-        b = chunk(a)
+        b = chunk(a, cparams=ca.cparams())
         #print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
         a = np.arange(1e1)
-        b = chunk(a)
+        b = chunk(a, cparams=ca.cparams())
         #print "b[1:8:3]->", `b[1:8:3]`
         assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e4)
-        b = chunk(a)
+        b = chunk(a, cparams=ca.cparams())
         #print "b[1:8000]->", `b[1:8000]`
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
@@ -205,7 +205,7 @@ class copyTest(unittest.TestCase):
         """Testing copy() with higher compression"""
         a = np.linspace(-1., 1., 1e4)
         b = ca.carray(a)
-        c = b.copy(clevel=9)
+        c = b.copy(cparams=ca.cparams(clevel=9))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes > c.cbytes, "clevel not changed")
 
@@ -213,7 +213,7 @@ class copyTest(unittest.TestCase):
         """Testing copy() with lesser compression"""
         a = np.linspace(-1., 1., 1e4)
         b = ca.carray(a)
-        c = b.copy(clevel=1)
+        c = b.copy(cparams=ca.cparams(clevel=1))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes < c.cbytes, "clevel not changed")
 
@@ -221,7 +221,7 @@ class copyTest(unittest.TestCase):
         """Testing copy() with no shuffle"""
         a = np.linspace(-1., 1., 1e4)
         b = ca.carray(a)
-        c = b.copy(shuffle=False)
+        c = b.copy(cparams=ca.cparams(shuffle=False))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes < c.cbytes, "shuffle not changed")
 

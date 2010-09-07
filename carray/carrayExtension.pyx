@@ -22,7 +22,7 @@ Public functions:
 """
 
 import numpy as np
-from carray.utils import calc_chunksize
+import carray as ca
 
 _KB = 1024
 _MB = 1024*_KB
@@ -116,22 +116,26 @@ cdef class chunk:
 
   cdef object dtype
   cdef object shape
+  cdef object cparams
   cdef int itemsize, nbytes, cbytes
   cdef ndarray arr1
   cdef char *data
 
-  def __cinit__(self, ndarray array, int clevel=5, int shuffle=False):
+  def __cinit__(self, ndarray array, object cparams):
     """Initialize chunk and compress data based on numpy `array`.
 
-    You can pass `clevel` and `shuffle` params to the internal compressor.
+    You can pass parameters to the internal compressor in `cparams` that must
+    be an instance of the `cparams` class.
     """
     cdef int i, itemsize
     cdef int nbytes, cbytes
+    cdef int clevel, shuffle
 
     dtype = array.dtype
     shape = array.shape
     self.dtype = dtype
     self.shape = shape
+    self.cparams = cparams
 
     itemsize = dtype.itemsize
     nbytes = itemsize
@@ -139,6 +143,8 @@ cdef class chunk:
       nbytes *= i
     self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
     # Compress data
+    clevel = cparams.clevel
+    shuffle = cparams.shuffle
     with nogil:
       cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
                               self.data, nbytes+BLOSC_MAX_OVERHEAD)
@@ -239,13 +245,13 @@ cdef class carray:
   """
 
   cdef int itemsize, _chunksize, leftover
-  cdef int clevel, shuffle
   cdef int startb, stopb, nrowsinbuf, nrowsinblock, _row
   cdef int sss_mode, where_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread, getif_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
+  cdef object _cparams
   cdef object lastchunkarr
   cdef object _dtype, chunks
   cdef object getif_arr
@@ -265,6 +271,11 @@ cdef class carray:
     "The shape of this carray."
     def __get__(self):
       return (self.nrows,)
+
+  property cparams:
+    "The compression parameters for this carray."
+    def __get__(self):
+      return self._cparams
 
   property nbytes:
     "The original (uncompressed) size of this carray (in bytes)."
@@ -301,11 +312,12 @@ cdef class carray:
     return array
 
 
-  def __cinit__(self, object array, int clevel=5, int shuffle=True,
+  def __cinit__(self, object array, object cparams=None,
                 object expectedrows=None, object chunksize=None):
     """Initialize and compress data based on passed `array`.
 
-    You can pass `clevel` and `shuffle` params to the compressor.
+    You can pass parameters to the compressor via `cparams`, which must be an
+    instance of the `cparams` class.
 
     If you pass a guess on the expected number of rows of this carray in
     `expectedrows` that wil serve to decide the best chunksize used for memory
@@ -320,24 +332,31 @@ cdef class carray:
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
 
-    array_ = self._to_ndarray(array)
+    # Check defaults for cparams
+    if cparams is None:
+      cparams = ca.cparams()
 
-    self.clevel = clevel
-    self.shuffle = shuffle
-    self._dtype = dtype = array_.dtype
-    self.chunks = chunks = []
-    self.itemsize = itemsize = dtype.itemsize
+    if not isinstance(cparams, ca.cparams):
+      raise ValueError, "`cparams` param must be an instance of `cparams` class"
+
+    array_ = self._to_ndarray(array)
 
     # Only accept unidimensional arrays as input
     if array_.ndim != 1:
       raise ValueError, "`array` can only be unidimensional"
+
+    self._cparams = cparams
+    self._dtype = dtype = array_.dtype
+    self.chunks = chunks = []
+    self.itemsize = itemsize = dtype.itemsize
 
     # Compute the chunksize
     if expectedrows is None:
       # Try a guess
       expectedrows = len(array_)
     if chunksize is None:
-      chunksize = calc_chunksize((expectedrows * itemsize) / float(_MB))
+      chunksize = ca.utils.calc_chunksize(
+        (expectedrows * itemsize) / float(_MB))
 
     # Chunksize must be a multiple of itemsize
     cs = (chunksize // itemsize) * itemsize
@@ -358,7 +377,7 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     nelemchunk = self._chunksize // itemsize
     for i in range(nchunks):
-      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], clevel, shuffle)
+      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], self._cparams)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % cs
@@ -423,7 +442,7 @@ cdef class carray:
       nbytesfirst = chunksize-leftover
       memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
       # Compress the last chunk and add it to the list
-      chunk_ = chunk(self.lastchunkarr, self.clevel, self.shuffle)
+      chunk_ = chunk(self.lastchunkarr, self._cparams)
       chunks.append(chunk_)
       cbytes = chunk_.cbytes
 
@@ -434,8 +453,7 @@ cdef class carray:
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
       for i in range(nchunks):
-        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk],
-                       self.clevel, self.shuffle)
+        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk], self._cparams)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
@@ -459,18 +477,18 @@ cdef class carray:
     You can pass whatever additional arguments supported by the carray
     constructor in `kwargs`.
 
-    If `clevel` or `shuffle` are passed, these settings will be used for the
-    new carray.  If not, the settings in self will be used.
+    If `cparams` is passed, these settings will be used for the new carray.
+    If not, the settings in self will be used.
     """
     cdef int itemsize, chunksize, bsize
 
-    clevel = kwargs.pop('clevel', self.clevel)
-    shuffle = kwargs.pop('shuffle', self.shuffle)
+    # Get defaults for some parameters
+    cparams = kwargs.pop('cparams', self._cparams)
     expectedrows = kwargs.pop('expectedrows', self.nrows)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
-                   clevel=clevel, shuffle=shuffle,
+                   cparams=cparams,
                    expectedrows=expectedrows)
 
     # Now copy the carray chunk by chunk

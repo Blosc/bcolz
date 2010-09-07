@@ -161,6 +161,45 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     return obj
 
 
+class cparams(object):
+    """Class to host parameters for compression and other filters.
+
+    You can pass the `clevel` and `shuffle` params to the constructor.
+    If you do not pass them, the defaults are ``5`` and ``True``
+    respectively.
+
+    It offers these read-only attributes::
+
+      * clevel: the compression level
+
+      * shuffle: whether the shuffle filter is active or not
+
+    """
+
+    @property
+    def clevel(self):
+        """The compression level."""
+        return self._clevel
+
+    @property
+    def shuffle(self):
+        """Shuffle filter is active?"""
+        return self._shuffle
+
+    def __init__(self, clevel=5, shuffle=True):
+        """Create an instance with `clevel` and `shuffle` params."""
+        clevel = int(clevel)
+        shuffle = bool(shuffle)
+        if clevel < 0:
+            raiseValueError, "clevel must be a positive integer"
+        self._clevel = clevel
+        self._shuffle = shuffle
+
+    def __repr__(self):
+        args = ["clevel=%d"%self._clevel, "shuffle=%s"%self._shuffle]
+        return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
+
+
 
 # Main part
 # =========
