@@ -453,23 +453,25 @@ cdef class carray:
     return array_.size
 
 
-  def copy(self, clevel=None, shuffle=None):
+  def copy(self, **kwargs):
     """Return a copy of self.
 
-    If `clevel` or `shuffle` are specified, this settings will be used for the
+    You can pass whatever additional arguments supported by the carray
+    constructor in `kwargs`.
+
+    If `clevel` or `shuffle` are passed, these settings will be used for the
     new carray.  If not, the settings in self will be used.
     """
     cdef int itemsize, chunksize, bsize
 
-    if clevel is None:
-      clevel = self.clevel
-    if shuffle is None:
-      shuffle = self.shuffle
+    clevel = kwargs.pop('clevel', self.clevel)
+    shuffle = kwargs.pop('shuffle', self.shuffle)
+    expectedrows = kwargs.pop('expectedrows', self.nrows)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
                    clevel=clevel, shuffle=shuffle,
-                   expectedrows=self.nrows)
+                   expectedrows=expectedrows)
 
     # Now copy the carray chunk by chunk
     itemsize = self.itemsize

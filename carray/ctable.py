@@ -297,17 +297,23 @@ class ctable(object):
         return n
 
 
-    def copy(self, clevel=None, shuffle=None):
+    def copy(self, **kwargs):
         """Return a copy of self.
 
-        If `clevel` or `shuffle` are specified, this settings will be
-        used for the new ctable.  If not, the settings in existing
-        columns will be kept.
+        You can pass whatever additional arguments supported by
+        carray/ctable constructors in `kwargs`.
         """
+
+        # Remove possible unsupported args for columns
+        names = kwargs.pop('names', self.names)
         # Copy the columns
-        cols = [ self.cols[name].copy(clevel, shuffle) for name in self.names ]
+        cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
+        # Remove unsupported params for ctable constructor
+        for param in 'clevel', 'shuffle':
+            if param in kwargs:
+                del kwargs[param]
         # Create the ctable
-        ccopy = ctable(cols, self.names)
+        ccopy = ctable(cols, names, **kwargs)
         return ccopy
 
 
