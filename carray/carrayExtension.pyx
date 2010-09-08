@@ -161,8 +161,9 @@ cdef class chunk:
   cdef object shape
   cdef object cparms
   cdef int itemsize, nbytes, cbytes
-  cdef ndarray arr1
-  cdef char *data
+  cdef int blocksize, idxcache
+  cdef ndarray blockcache, arr1
+  cdef char *data, *datacache
 
   def __cinit__(self, ndarray array, object cparms):
     """Initialize chunk and compress data based on numpy `array`.
@@ -171,7 +172,7 @@ cdef class chunk:
     be an instance of the `cparms` class.
     """
     cdef int i, itemsize
-    cdef int nbytes, cbytes
+    cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
 
     dtype = array.dtype
@@ -194,24 +195,52 @@ cdef class chunk:
     if cbytes <= 0:
       raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
     # Set size info for the instance
-    self.cbytes = cbytes
-    self.nbytes = nbytes
+    blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
     self.itemsize = itemsize
+    self.nbytes = nbytes
+    self.cbytes = cbytes
+    self.blocksize = blocksize
 
-    # Cache a length 1 array for accelerating getitem[int]
+    # Cache an area for caching a block when reading.  As chunks are entirely
+    # destroyed upon updates we should not worry about refreshing this.
+    self.blockcache = np.empty(shape=(blocksize//itemsize,), dtype=self.dtype)
+    self.datacache = self.blockcache.data
+    self.idxcache = -1   # cache not initialized
+    # Cache a len-1 array for accelerating chunk[int] case
     self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
   cdef _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
-    cdef int bsize, ret
+    cdef int ret, bsize, blen
+    cdef int idxcache, posincache, nrowsinblock
 
-    bsize = (stop - start) * self.itemsize
-    # Fill it with uncompressed data
-    with nogil:
-      if bsize == self.nbytes:
-        ret = blosc_decompress(self.data, dest, bsize)
-      else:
+    blen = stop - start
+    bsize = blen * self.itemsize
+    nrowsinblock = self.blocksize // self.itemsize
+
+    # Check if data is in cached block
+    idxcache = (start // nrowsinblock) * nrowsinblock
+    posincache = (start % nrowsinblock) * self.itemsize
+    if bsize < self.blocksize and idxcache == self.idxcache:
+      # Hit!
+      memcpy(dest, self.datacache + posincache, bsize)
+      return
+
+    # Fill dest with uncompressed data
+    if bsize == self.nbytes:
+        with nogil:
+          ret = blosc_decompress(self.data, dest, bsize)
+    elif bsize < self.blocksize:
+      # Data fits in the block cache.  Read a complete block.
+      ret = blosc_getitem(self.data, idxcache, idxcache+nrowsinblock,
+                          self.datacache, self.blocksize)
+      # Copy the interesting bits to dest
+      memcpy(dest, self.datacache + posincache, bsize)
+      # Update the cache index
+      self.idxcache = idxcache
+    else:
+      with nogil:
         ret = blosc_getitem(self.data, start, stop, dest, bsize)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
@@ -222,8 +251,8 @@ cdef class chunk:
     cdef ndarray array
 
     if isinstance(key, int):
-      array = self.arr1
       # Quickly return a single element
+      array = self.arr1
       self._getitem(key, key+1, array.data)
       return PyArray_GETITEM(array, array.data)
     elif isinstance(key, slice):
@@ -423,13 +452,11 @@ cdef class carray:
 
   cdef _get_chunk_block_rows(self):
     """Get the number of rows in a block of the undelying Blosc chunks."""
-    cdef size_t nbytes, cbytes, blocksize
     cdef chunk cbuffer
 
     if len(self.chunks) > 0:
       cbuffer = self.chunks[0]
-      blosc_cbuffer_sizes(<void *>cbuffer.data, &nbytes, &cbytes, &blocksize)
-      return blocksize // self.itemsize
+      return cbuffer.blocksize // self.itemsize
     else:
       # No compressed chunks yet.  Return the size of last chunk.
       return self.nrowsinbuf
