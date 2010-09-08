@@ -357,10 +357,15 @@ cdef class carray:
       raise ValueError, "only unidimensional shapes supported"
 
     # Check if we need doing a broadcast
-    if (arrlen is not None) and (len(array) == 1) and (arrlen != len(array)):
-      array2 = np.empty(shape=(arrlen,), dtype=array.dtype)
-      array2[:] = array   # broadcast
-      array = array2
+    if arrlen is not None and arrlen != len(array):
+      if len(array) == 1:
+        # Scalar broadcast
+        array2 = np.empty(shape=(arrlen,), dtype=array.dtype)
+        array2[:] = array   # broadcast
+        array = array2
+      else:
+        # Other broadcasts not supported yet
+        raise NotImplementedError, "broadcast not supported for this case"
 
     return array
 
@@ -606,11 +611,13 @@ cdef class carray:
         key = np.array(key, dtype=np.int_)
       except:
         raise IndexError, "key cannot be converted to an array of indices"
-      return np.array([self[i] for i in key], dtype=self.dtype)
+      return self[key]
     # A boolean or integer array (case of fancy indexing)
     elif hasattr(key, "dtype"):
       if key.dtype.type == np.bool_:
         # A boolean array
+        if len(key) != self.nrows:
+          raise ValueError, "boolean array length must match len(self)"
         return np.fromiter(self.getif(key), dtype=self.dtype)
       elif np.issubsctype(key, np.int_):
         # An integer array
@@ -672,11 +679,39 @@ cdef class carray:
       if key >= self.nrows:
         raise IndexError, "index out of range"
       (start, stop, step) = key, key+1, 1
+    # Multidimensional keys
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
       if step:
         if step <= 0 :
           raise NotImplementedError("step in slice can only be positive")
+    # List of integers (case of fancy indexing)
+    elif isinstance(key, list):
+      # Try to convert to a integer array
+      try:
+        key = np.array(key, dtype=np.int_)
+      except:
+        raise IndexError, "key cannot be converted to an array of indices"
+      self[key] = value
+      return
+    # A boolean or integer array (case of fancy indexing)
+    elif hasattr(key, "dtype"):
+      if key.dtype.type == np.bool_:
+        # A boolean array
+        if len(key) != self.nrows:
+          raise ValueError, "boolean array length must match len(self)"
+        self.bool_update(key, value)
+        return
+      elif np.issubsctype(key, np.int_):
+        # An integer array
+        value = self._to_ndarray(value, arrlen=len(key))
+        # This could be optimised, but it works like this
+        for i, item in enumerate(key):
+          self[item] = value[i]
+        return
+      else:
+        raise IndexError, \
+              "arrays used as indices must be of integer (or boolean) type"
     # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
@@ -720,62 +755,54 @@ cdef class carray:
     assert (nwrow == vlen)
 
 
-  # The next is an attempt to update a carray with support for step > 1
-  # But this does not work because read I/O buffer is not aligned with
-  # carray chunks.  Keeping this here for later revision.
-  cdef _update(self, value, npy_intp start, npy_intp stop, npy_intp step):
-    """Update self with `value` array."""
-    cdef npy_intp nrow, nchunk, nextelement
-    cdef npy_intp nrowsread, nrowswritten, nrowsinbuf
-    cdef int startb, stopb, row
-    cdef int needsflush
+  cdef bool_update(self, boolarr, value):
+    """Update self in positions where `boolarr` is true with `value` array."""
+    cdef int startb, stopb, chunklen
+    cdef npy_intp nchunk, nchunks, nrows
+    cdef npy_intp nwrow, blen, vlen, n
+    cdef chunk chunk_
+    cdef object cdata, boolb
 
-    nrowsinbuf = self._chunksize // self.itemsize
-    nrowsread = start
-    nrowswritten = 0
-    nrow = start - step
-    nextelement = nrow + step
-    startb = 0
-    needsflush = False
-    while nextelement < stop:
-      if nextelement >= nrowsread:
-        # Skip until there is interesting information
-        while nextelement >= nrowsread + nrowsinbuf:
-          nrowsread += nrowsinbuf
-        # Compute the end for this iteration
-        stopb -= nrowsread
-        if stopb > nrowsinbuf:
-          stopb = nrowsinbuf
-        row = startb - step
-        # Write back previous buffer (if needed)
-        if needsflush:
-          nchunk = nrowsread // nrowsinbuf
-          self._flush_chunk(nchunk, iobuf)
-        # Read a new data chunk
-        iobuf = self[nrowsread:nrowsread+nrowsinbuf]
-        nrowsread += nrowsinbuf
+    chunklen = self._chunksize // self.itemsize
+    nchunks = self._nbytes // self._chunksize
+    nrows = self._nbytes // self.itemsize
 
-      row += step
-      nrow = nextelement
-      if row + step >= stopb:
-        # Compute the start row for the next buffer
-        startb = (row + step) % nrowsinbuf
-      nextelement = nrow + step
+    vlen = sum(boolarr)   # number of true values in bool array
+    value = self._to_ndarray(value, arrlen=vlen)
 
-      # Update the current value in I/O buffer
-      iobuf[row] = value[nrowswritten]
-      nrowswritten += 1
-      needsflush = True
-
-    # Write back last buffer buffer (if needed)
-    if needsflush:
-      nchunk = nrowsread // nrowsinbuf
-      self._flush_chunk(nchunk, iobuf)
+    # Fill it from data in chunks
+    nwrow = 0
+    for nchunk in xrange(nchunks+1):
+      # Compute start & stop for each block
+      startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
+      # Get boolean values for this chunk
+      n = nchunk * chunklen
+      boolb = boolarr[n+startb:n+stopb]
+      blen = sum(boolb)
+      if blen == 0:
+        continue
+      # Modify the data in chunk
+      if nchunk == nchunks and self.leftover:
+        self.lastchunkarr[boolb] = value[nwrow:nwrow+blen]
+      else:
+        # Get the data chunk
+        chunk_ = self.chunks[nchunk]
+        self._cbytes -= chunk_.cbytes
+        # Get all the values there
+        cdata = chunk_[:]
+        # Overwrite it with data from value
+        cdata[boolb] = value[nwrow:nwrow+blen]
+        # Replace the chunk
+        chunk_ = chunk(cdata, self._cparms)
+        self.chunks[nchunk] = chunk_
+        # Update cbytes counter
+        self._cbytes += chunk_.cbytes
+      nwrow += blen
 
     # Safety check
-    assert (nrowswritten == len(value))
+    assert (nwrow == vlen)
 
-    return nrowswritten
+    return nwrow
 
 
   cdef _flush_chunk(self, nchunk, iobuf):

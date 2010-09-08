@@ -66,7 +66,13 @@ Changes from 0.2 to 0.3
 - New `cparms(clevel=5, shuffle=True)` class to host all params related
   with compression.
 
-- Added support for `carray.__setitem__()`.
+- Added more indexing support for `carray.__getitem__()`.  All indexing
+  modes present in NumPy are supported now, including fancy indexing.
+  The only exception are negative steps in ``carray[start:stop:-step]``.
+
+- Added support for `carray.__setitem__()`.  All indexing modes present
+  in NumPy are supported, including fancy indexing.  The only exception
+  are negative steps in ``carray[start:stop:-step] = values``.
 
 
 Changes from 0.1 to 0.2

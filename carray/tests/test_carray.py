@@ -535,28 +535,8 @@ class getifTest(unittest.TestCase):
         #print "getif ->", [v for v in b.getif(ca.carray(a<=5))]
         self.assert_(wt == cwt, "getif() does not work correctly")
 
-    def test04a(self):
-        """Testing `getif()` iterator (using bool in fancy indexing)"""
-        a = np.arange(1, 11)
-        b = ca.carray(a)
-        wt = a[a<5]
-        cwt = b[a<5]
-        #print "numpy ->", a[a<5]
-        #print "getif ->", b[a<5]
-        assert_array_equal(wt, cwt, "getif() does not work correctly")
 
-    def test04b(self):
-        """Testing `getif()` iterator (using carray bool in fancy indexing)"""
-        a = np.arange(1, 11)
-        b = ca.carray(a)
-        wt = a[(a<5)|(a>9)]
-        cwt = b[ca.carray((a<5)|(a>9))]
-        #print "numpy ->", a[(a<5)|(a>9)]
-        #print "getif ->", b[ca.carray((a<5)|(a>9))]
-        assert_array_equal(wt, cwt, "getif() does not work correctly")
-
-
-class fancy_indexingTest(unittest.TestCase):
+class fancy_indexing_getitemTest(unittest.TestCase):
 
     def test00(self):
         """Testing fancy indexing (short list)"""
@@ -597,6 +577,91 @@ class fancy_indexingTest(unittest.TestCase):
         b = ca.carray(a)
         idx = np.array([1.1, 3.3], dtype='f8')
         self.assertRaises(IndexError, b.__getitem__, idx)
+
+    def test05(self):
+        """Testing `getif()` iterator (using bool in fancy indexing)"""
+        a = np.arange(1, 110)
+        b = ca.carray(a, chunksize=100)
+        wt = a[a<5]
+        cwt = b[a<5]
+        #print "numpy ->", a[a<5]
+        #print "getif ->", b[a<5]
+        assert_array_equal(wt, cwt, "getif() does not work correctly")
+
+    def test06(self):
+        """Testing `getif()` iterator (using carray bool in fancy indexing)"""
+        a = np.arange(1, 110)
+        b = ca.carray(a, chunksize=100)
+        wt = a[(a<5)|(a>9)]
+        cwt = b[ca.carray((a<5)|(a>9))]
+        #print "numpy ->", a[(a<5)|(a>9)]
+        #print "getif ->", b[ca.carray((a<5)|(a>9))]
+        assert_array_equal(wt, cwt, "getif() does not work correctly")
+
+
+class fancy_indexing_setitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing fancy indexing with __setitem__ (small values)"""
+        a = np.arange(1,111)
+        b = ca.carray(a, chunksize=100)
+        sl = [3, 1]
+        b[sl] = (10, 20)
+        a[sl] = (10, 20)
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
+
+    def test01(self):
+        """Testing fancy indexing with __setitem__ (large values)"""
+        a = np.arange(1,1e3)
+        b = ca.carray(a, chunksize=100)
+        sl = [0, 300, 998]
+        b[sl] = (5, 10, 20)
+        a[sl] = (5, 10, 20)
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
+
+    def test02(self):
+        """Testing fancy indexing with __setitem__ (large list)"""
+        a = np.arange(1,1000)
+        b = ca.carray(a, chunksize=100)
+        sl = np.random.randint(1000, size=3*30)
+        vals = np.random.randint(1000, size=3*30)
+        b[sl] = vals
+        a[sl] = vals
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
+
+    def test03(self):
+        """Testing fancy indexing with __setitem__ (bool array)"""
+        a = np.arange(1,1e2)
+        b = ca.carray(a, chunksize=100)
+        sl = a > 5
+        b[sl] = 3.
+        a[sl] = 3.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
+
+    def test04(self):
+        """Testing fancy indexing with __setitem__ (bool carray)"""
+        a = np.arange(1,1e2)
+        b = ca.carray(a, chunksize=100)
+        bc = (a > 5) & (a < 40)
+        sl = ca.carray(bc)
+        b[sl] = 3.
+        a[bc] = 3.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
+
+    def test05(self):
+        """Testing fancy indexing with __setitem__ (bool, value not scalar)"""
+        a = np.arange(1,1e2)
+        b = ca.carray(a, chunksize=100)
+        sl = a < 5
+        b[sl] = range(6, 10)
+        a[sl] = range(6, 10)
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
 
 class fromiterTest(unittest.TestCase):
@@ -641,7 +706,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(IterTest))
     theSuite.addTest(unittest.makeSuite(whereTest))
     theSuite.addTest(unittest.makeSuite(getifTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexingTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))
 
     return theSuite
