@@ -106,7 +106,7 @@ class ctable(object):
         return (nbytes, cbytes, cratio)
 
 
-    def __init__(self, cols, names=None):
+    def __init__(self, cols, names=None, **kwargs):
         """Create a new ctable from `cols` with optional `names`.
 
         `cols` can be a tuple/list of carrays or NumPy arrays.  It can
@@ -114,6 +114,10 @@ class ctable(object):
 
         If `names` is passed, this will be taken as the list of names
         for the columns.
+
+        If new carrays needs to be built, you can pass whatever
+        additional arguments supported by carray constructors in
+        `kwargs`.
         """
 
         self.names = []
@@ -160,9 +164,9 @@ class ctable(object):
                 column = cols[i]
                 if column.dtype == np.void:
                     raise ValueError, "`cols` elements cannot be of type void"
-                column = ca.carray(column)
+                column = ca.carray(column, **kwargs)
             elif ratype:
-                column = ca.carray(cols[name])
+                column = ca.carray(cols[name], **kwargs)
             self.cols[name] = column
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `cols` must have the same length"
@@ -424,7 +428,25 @@ class ctable(object):
 
     def __setitem__(self, key, value):
         """Set a row or a range of rows."""
-        raise NotImplementedError
+
+        # First, check for integer
+        if isinstance(key, int):
+            start, stop, step = key, key+1, 1
+        # Slices
+        elif type(key) == slice:
+            (start, stop, step) = key.start, key.stop, key.step
+        # All the rest not implemented
+        else:
+            raise NotImplementedError, "key not supported: %s" % repr(key)
+
+        # Get the corrected values for start, stop, step
+        (start, stop, step) = slice(start, stop, step).indices(self.nrows)
+        # Build a value compatible with thre required shape
+        vlen = ca.utils.get_len_of_range(start, stop, step)
+        value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
+        # Finally, modify the rows
+        for name in self.names:
+            self.cols[name][key] = value[name]
 
 
     def _getvars(self, expression, depth=2):

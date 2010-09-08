@@ -648,7 +648,7 @@ cdef class carray:
       if key >= self.nrows:
         raise IndexError, "index out of range"
       (start, stop, step) = key, key+1, 1
-    # Multidimensional keys
+    # Slices
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
       if step:

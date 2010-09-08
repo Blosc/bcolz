@@ -224,6 +224,70 @@ class getitemTest(unittest.TestCase):
                            "ctable values are not correct")
 
 
+class setitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __setitem__ with only a start"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = slice(9, None)
+        t[sl] = (0, 1)
+        ra[sl] = (0, 1)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01(self):
+        """Testing __setitem__ with only a stop"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = slice(None, 9, None)
+        t[sl] = (0, 1)
+        ra[sl] = (0, 1)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test02(self):
+        """Testing __setitem__ with a start, stop"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = slice(1,90, None)
+        t[sl] = (0, 1)
+        ra[sl] = (0, 1)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test03(self):
+        """Testing __setitem__ with a start, stop, step"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = slice(1,90, 2)
+        t[sl] = (0, 1)
+        ra[sl] = (0, 1)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test04(self):
+        """Testing __setitem__ with a large step"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = slice(1,43, 20)
+        t[sl] = (0, 1)
+        ra[sl] = (0, 1)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+
+
 class appendTest(unittest.TestCase):
 
     def test00(self):
@@ -510,7 +574,7 @@ class bool_getitemTest(unittest.TestCase):
         self.assertRaises(ValueError, t.__getitem__, barr)
 
 
-class fancy_indexingTest(unittest.TestCase):
+class fancy_indexing_getitemTest(unittest.TestCase):
 
     def test00(self):
         """Testing fancy indexing with a small list"""
@@ -571,10 +635,11 @@ def suite():
     theSuite.addTest(unittest.makeSuite(createTest))
     theSuite.addTest(unittest.makeSuite(add_del_colTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexingTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))
