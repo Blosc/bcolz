@@ -339,37 +339,6 @@ cdef class carray:
       return self._chunksize
 
 
-  def _to_ndarray(self, object array, object arrlen=None):
-    """Convert object to a ndarray."""
-
-    if type(array) != np.ndarray:
-      try:
-        array = np.asarray(array, dtype=self.dtype)
-      except ValueError:
-        raise ValueError, "cannot convert to an ndarray object"
-    # We need a contiguous array
-    if not array.flags.contiguous:
-      array = array.copy()
-    if len(array.shape) == 0:
-      # We treat scalars like undimensional arrays
-      array.shape = (1,)
-    if len(array.shape) != 1:
-      raise ValueError, "only unidimensional shapes supported"
-
-    # Check if we need doing a broadcast
-    if arrlen is not None and arrlen != len(array):
-      if len(array) == 1:
-        # Scalar broadcast
-        array2 = np.empty(shape=(arrlen,), dtype=array.dtype)
-        array2[:] = array   # broadcast
-        array = array2
-      else:
-        # Other broadcasts not supported yet
-        raise NotImplementedError, "broadcast not supported for this case"
-
-    return array
-
-
   def __cinit__(self, object array, object cparms=None,
                 object expectedrows=None, object chunksize=None):
     """Initialize and compress data based on passed `array`.
@@ -397,7 +366,7 @@ cdef class carray:
     if not isinstance(cparms, ca.cparms):
       raise ValueError, "`cparms` param must be an instance of `cparms` class"
 
-    array_ = self._to_ndarray(array)
+    array_ = ca.utils.to_ndarray(array, self.dtype)
 
     # Only accept unidimensional arrays as input
     if array_.ndim != 1:
@@ -477,7 +446,7 @@ cdef class carray:
     cdef ndarray remainder, array_
     cdef chunk chunk_
 
-    array_ = self._to_ndarray(array)
+    array_ = ca.utils.to_ndarray(array, self.dtype)
     if array_.dtype != self._dtype:
       raise TypeError, "array dtype does not match with self"
 
@@ -704,7 +673,7 @@ cdef class carray:
         return
       elif np.issubsctype(key, np.int_):
         # An integer array
-        value = self._to_ndarray(value, arrlen=len(key))
+        value = ca.utils.to_ndarray(value, self.dtype, arrlen=len(key))
         # This could be optimised, but it works like this
         for i, item in enumerate(key):
           self[item] = value[i]
@@ -724,7 +693,7 @@ cdef class carray:
     if vlen == 0:
       # If range is empty, return immediately
       return
-    value = self._to_ndarray(value, arrlen=vlen)
+    value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -768,7 +737,7 @@ cdef class carray:
     nrows = self._nbytes // self.itemsize
 
     vlen = sum(boolarr)   # number of true values in bool array
-    value = self._to_ndarray(value, arrlen=vlen)
+    value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
