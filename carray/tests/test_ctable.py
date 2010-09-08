@@ -401,8 +401,8 @@ class specialTest(unittest.TestCase):
         N = int(1e4)
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        #print "size t uncompressed-->", t.nbytes
-        #print "size t compressed  -->", t.cbytes
+        #print "size t uncompressed ->", t.nbytes
+        #print "size t compressed   ->", t.cbytes
         self.assert_(sys.getsizeof(t) < t.nbytes,
                      "ctable does not seem to compress at all")
 
@@ -411,8 +411,8 @@ class specialTest(unittest.TestCase):
         N = int(111)
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        #print "size t uncompressed-->", t.nbytes
-        #print "size t compressed  -->", t.cbytes
+        #print "size t uncompressed ->", t.nbytes
+        #print "size t compressed   ->", t.cbytes
         self.assert_(sys.getsizeof(t) > t.nbytes,
                      "ctable compress too much??")
 
@@ -426,8 +426,8 @@ class evalTest(unittest.TestCase):
         t = ca.ctable(ra)
         ctr = t.eval("f0 * f1 * f2")
         rar = ra['f0'] * ra['f1'] * ra['f2']
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
     def test01(self):
@@ -437,8 +437,8 @@ class evalTest(unittest.TestCase):
         t = ca.ctable(ra)
         ctr = t.eval("f0 * f1 * 3")
         rar = ra['f0'] * ra['f1'] * 3
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
     def test02(self):
@@ -449,8 +449,8 @@ class evalTest(unittest.TestCase):
         var_ = 10.
         ctr = t.eval("f0 * f2 * var_")
         rar = ra['f0'] * ra['f2'] * var_
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
     def test03(self):
@@ -460,8 +460,8 @@ class evalTest(unittest.TestCase):
         t = ca.ctable(ra)
         ctr = t.eval("f0 * sin(f1)")
         rar = ra['f0'] * np.sin(ra['f1'])
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_almost_equal(ctr[:], rar, decimal=15,
                                   err_msg="ctable values are not correct")
 
@@ -472,8 +472,8 @@ class evalTest(unittest.TestCase):
         t = ca.ctable(ra)
         ctr = t.eval("f0 >= f1")
         rar = ra['f0'] >= ra['f1']
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
     def test05(self):
@@ -485,8 +485,8 @@ class evalTest(unittest.TestCase):
         b = np.arange(N)
         ctr = t.eval("f0 + f1 - a + b")
         rar = ra['f0'] + ra['f1'] - a + b
-        #print "ctable -->", ctr
-        #print "numpy  -->", rar
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
 
@@ -629,6 +629,94 @@ class fancy_indexing_getitemTest(unittest.TestCase):
         self.assertRaises(IndexError, b.__getitem__, idx)
 
 
+class fancy_indexing_setitemTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing fancy indexing (setitem) with a small list"""
+        N = 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = [3,1]
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test00b(self):
+        """Testing fancy indexing (setitem) with a small list (II)"""
+        N = 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = [3,1]
+        t[sl] = [(-1, -2, -3), (-3, -2, -1)]
+        ra[sl] = [(-1, -2, -3), (-3, -2, -1)]
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01(self):
+        """Testing fancy indexing (setitem) with a large array"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = np.random.randint(N, size=100)
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test02a(self):
+        """Testing fancy indexing (setitem) with a boolean array (I)"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = np.random.randint(2, size=1000).astype('bool')
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test02b(self):
+        """Testing fancy indexing (setitem) with a boolean array"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = np.random.randint(10, size=1000).astype('bool')
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test03a(self):
+        """Testing fancy indexing (setitem) with a boolean array (all false)"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = np.zeros(N, dtype="bool")
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test03b(self):
+        """Testing fancy indexing (setitem) with a boolean array (all true)"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunksize=100)
+        sl = np.ones(N, dtype="bool")
+        t[sl] = (-1, -2, -3)
+        ra[sl] = (-1, -2, -3)
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -640,6 +728,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
+    theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))

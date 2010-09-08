@@ -403,7 +403,7 @@ cdef class carray:
     cbytes = 0
     nchunks = self._nbytes // self._chunksize
     nelemchunk = self._chunksize // itemsize
-    for i in range(nchunks):
+    for i in xrange(nchunks):
       chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
@@ -479,7 +479,7 @@ cdef class carray:
       nelemchunk = chunksize // itemsize
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
-      for i in range(nchunks):
+      for i in xrange(nchunks):
         chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
@@ -548,6 +548,8 @@ cdef class carray:
 
     chunklen = self._chunksize // self.itemsize
     nchunks = self._nbytes // self._chunksize
+    if self.leftover > 0:
+      nchunks += 1
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -559,7 +561,7 @@ cdef class carray:
         raise IndexError, "index out of range"
       nchunk = key // chunklen
       keychunk = key % chunklen
-      if nchunk == nchunks:
+      if nchunk == nchunks-1 and self.leftover:
         array = self.lastchunkarr
         return PyArray_GETITEM(array, array.data + keychunk * self.itemsize)
       else:
@@ -612,13 +614,13 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    for nchunk in xrange(nchunks+1):
+    for nchunk in xrange(nchunks):
       # Compute start & stop for each block
       startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
       if blen == 0:
         continue
       # Get the data chunk and assign it to result array
-      if nchunk == nchunks and self.leftover:
+      if nchunk == nchunks-1 and self.leftover:
         array[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
       else:
         array[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
@@ -635,9 +637,6 @@ cdef class carray:
     cdef chunk chunk_
     cdef object start, stop, step
     cdef object cdata
-
-    chunklen = self._chunksize // self.itemsize
-    nchunks = self._nbytes // self._chunksize
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -697,13 +696,17 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    for nchunk in xrange(nchunks+1):
+    chunklen = self._chunksize // self.itemsize
+    nchunks = self._nbytes // self._chunksize
+    if self.leftover > 0:
+      nchunks += 1
+    for nchunk in xrange(nchunks):
       # Compute start & stop for each block
       startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
       if blen == 0:
         continue
       # Modify the data in chunk
-      if nchunk == nchunks and self.leftover:
+      if nchunk == nchunks-1 and self.leftover:
         self.lastchunkarr[startb:stopb:step] = value[nwrow:nwrow+blen]
       else:
         # Get the data chunk
@@ -732,16 +735,17 @@ cdef class carray:
     cdef chunk chunk_
     cdef object cdata, boolb
 
-    chunklen = self._chunksize // self.itemsize
-    nchunks = self._nbytes // self._chunksize
-    nrows = self._nbytes // self.itemsize
-
     vlen = sum(boolarr)   # number of true values in bool array
     value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
-    for nchunk in xrange(nchunks+1):
+    chunklen = self._chunksize // self.itemsize
+    nchunks = self._nbytes // self._chunksize
+    if self.leftover > 0:
+      nchunks += 1
+    nrows = self._nbytes // self.itemsize
+    for nchunk in xrange(nchunks):
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
       # Get boolean values for this chunk
@@ -751,7 +755,7 @@ cdef class carray:
       if blen == 0:
         continue
       # Modify the data in chunk
-      if nchunk == nchunks and self.leftover:
+      if nchunk == nchunks-1 and self.leftover:
         self.lastchunkarr[boolb] = value[nwrow:nwrow+blen]
       else:
         # Get the data chunk
@@ -769,26 +773,7 @@ cdef class carray:
       nwrow += blen
 
     # Safety check
-    assert (nwrow == vlen)
-
-    return nwrow
-
-
-  cdef _flush_chunk(self, nchunk, iobuf):
-    """Flush a chunk with the contents of iobuf """
-    cdef npy_intp nchunks
-    cdef chunk chunk_
-
-    nchunks = self._nbytes // self._chunksize
-    if nchunk == nchunks and self.leftover:
-      # Last chunk.  Just update it.
-      self.lastchunkarr[:] = iobuf
-    else:
-      chunk_ = self.chunks[nchunk]      # get the data chunk
-      self._cbytes -= chunk_.cbytes
-      chunk_ = chunk(iobuf, self._cparms)  # build the new chunk
-      self.chunks[nchunk] = chunk_      # insert the new chunk
-      self._cbytes += chunk_.cbytes
+    assert (nwrow == vlen, "nwrow: %d != vlen: %d" % (nwrow, vlen))
 
 
   def __iter__(self):

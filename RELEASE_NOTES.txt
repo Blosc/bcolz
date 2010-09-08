@@ -74,6 +74,10 @@ Changes from 0.2 to 0.3
   in NumPy are supported, including fancy indexing.  The only exception
   are negative steps in ``carray[start:stop:-step] = values``.
 
+- Added support for `ctable.__setitem__()`.  All indexing modes present
+  in NumPy are supported, including fancy indexing.  The only exception
+  are negative steps in ``ctable[start:stop:-step] = values``.
+
 
 Changes from 0.1 to 0.2
 =======================

@@ -429,24 +429,12 @@ class ctable(object):
     def __setitem__(self, key, value):
         """Set a row or a range of rows."""
 
-        # First, check for integer
-        if isinstance(key, int):
-            start, stop, step = key, key+1, 1
-        # Slices
-        elif type(key) == slice:
-            (start, stop, step) = key.start, key.stop, key.step
-        # All the rest not implemented
-        else:
-            raise NotImplementedError, "key not supported: %s" % repr(key)
-
-        # Get the corrected values for start, stop, step
-        (start, stop, step) = slice(start, stop, step).indices(self.nrows)
-        # Build a value compatible with thre required shape
-        vlen = ca.utils.get_len_of_range(start, stop, step)
-        value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
-        # Finally, modify the rows
+        # First, convert value into a structured array
+        value = ca.utils.to_ndarray(value, self.dtype)
+        # Then, modify the rows
         for name in self.names:
             self.cols[name][key] = value[name]
+        return
 
 
     def _getvars(self, expression, depth=2):
