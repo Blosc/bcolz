@@ -533,6 +533,7 @@ class ctable(object):
         nbytes, cbytes, cratio = self.get_stats()
         snbytes = ca.utils.human_readable_size(nbytes)
         scbytes = ca.utils.human_readable_size(cbytes)
-        fullrepr = "ctable(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f\n%s" % \
-                   (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
+        fullrepr = """ctable(%s, %s)
+  nbytes: %s; cbytes: %s; ratio: %.2f
+%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
         return fullrepr
