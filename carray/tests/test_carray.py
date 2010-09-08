@@ -224,12 +224,52 @@ class setitemTest(unittest.TestCase):
         #print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
-    def test04(self):
+    def test04a(self):
         """Testing `__setitem()__` method with start:stop:step"""
         a = np.arange(1e2)
         b = ca.carray(a, chunksize=10)
-        self.assertRaises(NotImplementedError, b.__setitem__,
-                          slice(1, 30, 3), 3.)
+        sl = slice(10, 100, 3)
+        b[sl] = 10.
+        a[sl] = 10.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test04b(self):
+        """Testing `__setitem()__` method with start:stop:step (II)"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=10)
+        sl = slice(10, 11, 3)
+        b[sl] = 10.
+        a[sl] = 10.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test04c(self):
+        """Testing `__setitem()__` method with start:stop:step (III)"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=10)
+        sl = slice(96, 100, 3)
+        b[sl] = 10.
+        a[sl] = 10.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test04d(self):
+        """Testing `__setitem()__` method with start:stop:step (IV)"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=10)
+        sl = slice(2, 99, 30)
+        b[sl] = 10.
+        a[sl] = 10.
+        #print "b[%s] -> %r" % (sl, b)
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test05(self):
+        """Testing `__setitem()__` method with negative step"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunksize=10)
+        sl = slice(2, 99, -30)
+        self.assertRaises(NotImplementedError, b.__setitem__, sl, 3.)
 
 
 class appendTest(unittest.TestCase):

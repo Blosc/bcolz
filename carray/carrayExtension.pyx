@@ -567,10 +567,10 @@ cdef class carray:
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array
-    cdef int chunklen
-    cdef int startb, stopb
+    cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
+    cdef object start, stop, step
 
     chunklen = self._chunksize // self.itemsize
     nchunks = self._nbytes // self._chunksize
@@ -653,11 +653,15 @@ cdef class carray:
 
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
-    cdef int i, chunklen, arrlen
-    cdef int nchunk, nchunks, nwritten
-    cdef int startb, stopb, blen
+    cdef int startb, stopb, chunklen
+    cdef npy_intp nchunk, keychunk, nchunks
+    cdef npy_intp nwrow, blen, vlen
     cdef chunk chunk_
+    cdef object start, stop, step
     cdef object cdata
+
+    chunklen = self._chunksize // self.itemsize
+    nchunks = self._nbytes // self._chunksize
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -673,8 +677,6 @@ cdef class carray:
       if step:
         if step <= 0 :
           raise NotImplementedError("step in slice can only be positive")
-        if step > 1 :
-          raise NotImplementedError("step > 1 in slice not supported")
     # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)
@@ -682,52 +684,40 @@ cdef class carray:
     # Get the corrected values for start, stop, step
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
-    # Ensure that value is a numpy array with the required length
-    arrlen = get_len_of_range(start, stop, step)
-    value = self._to_ndarray(value, arrlen=arrlen)
+    # Build a numpy object out of value
+    vlen = get_len_of_range(start, stop, step)
+    if vlen == 0:
+      # If range is empty, return immediately
+      return
+    value = self._to_ndarray(value, arrlen=vlen)
 
-    # Finally, update array (does not work yet!)
-    #self._update(value, start, stop, step)
-
-    nwritten = 0
-    chunklen = self._chunksize // self.itemsize
-    nchunks = self._nbytes // self._chunksize
-
-    # Loop over the chunks and overwrite them from data in value
-    for i in range(nchunks+1):
-
+    # Fill it from data in chunks
+    nwrow = 0
+    for nchunk in xrange(nchunks+1):
       # Compute start & stop for each block
-      startb = start - i*chunklen
-      stopb = stop - i*chunklen
-      if (startb >= chunklen) or (stopb <= 0):
+      startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
+      if blen == 0:
         continue
-      if startb < 0:
-        startb = 0
-      if stopb > chunklen:
-        stopb = chunklen
-      blen = (stopb - startb)
-
-      # Modify the data
-      if i == nchunks:
-        self.lastchunkarr[startb:stopb] = value[nwritten:]
+      # Modify the data in chunk
+      if nchunk == nchunks and self.leftover:
+        self.lastchunkarr[startb:stopb:step] = value[nwrow:nwrow+blen]
       else:
         # Get the data chunk
-        chunk_ = self.chunks[i]
+        chunk_ = self.chunks[nchunk]
         self._cbytes -= chunk_.cbytes
         # Get all the values there
         cdata = chunk_[:]
         # Overwrite it with data from value
-        cdata[startb:stopb] = value[nwritten:nwritten+blen]
+        cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
         chunk_ = chunk(cdata, self._cparms)
-        self.chunks[i] = chunk_
+        self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
-
-      nwritten += blen
+      nwrow += blen
 
     # Safety check
-    assert (nwritten == arrlen)
+    assert (nwrow == vlen)
 
 
   # The next is an attempt to update a carray with support for step > 1
