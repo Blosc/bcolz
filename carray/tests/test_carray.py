@@ -50,19 +50,21 @@ class chunkTest(unittest.TestCase):
 
 class getitemTest(unittest.TestCase):
 
-    def test01(self):
+    def test01a(self):
         """Testing `__getitem()__` method with only a start"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
-        #print "b[1]->", `b[1]`
-        self.assert_(a[1] == b[1], "Values with key 1 are not equal")
+        sl = slice(1)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01b(self):
         """Testing `__getitem()__` method with only a (negative) start"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
-        #print "b[-1]->", `b[-1]`
-        self.assert_(a[-1] == b[-1], "Values with key -1 are not equal")
+        sl = slice(-1)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01c(self):
         """Testing `__getitem()__` method with only a (start,)"""
@@ -71,76 +73,117 @@ class getitemTest(unittest.TestCase):
         #print "b[(1,)]->", `b[(1,)]`
         self.assert_(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
 
-    def test02(self):
+    def test02a(self):
         """Testing `__getitem()__` method with ranges"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
-        #print "b[1:3]->", `b[1:3]`
-        assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
+        sl = slice(1, 3)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02b(self):
         """Testing `__getitem()__` method with ranges (negative start)"""
         a = np.arange(1e1)
         b = ca.carray(a, chunksize=100)
-        #print "b[-3:]->", `b[-3:]`
-        assert_array_equal(a[-3:], b[-3:], "Arrays are not equal")
+        sl = slice(-3)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02c(self):
         """Testing `__getitem()__` method with ranges (negative stop)"""
         a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
-        #print "b[1:-3]->", `b[1:-3]`
-        assert_array_equal(a[1:-3], b[1:-3], "Arrays are not equal")
+        sl = slice(1, -3)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02d(self):
         """Testing `__getitem()__` method with ranges (negative start, stop)"""
         a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
-        #print "b[-3:-1]->", `b[-3:-1]`
-        assert_array_equal(a[-3:-1], b[-3:-1], "Arrays are not equal")
+        sl = slice(-3, -1)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
-    def test03(self):
-        """Testing `__getitem()__` method with ranges and steps"""
+    def test02e(self):
+        """Testing `__getitem()__` method with start > stop"""
         a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
-        #print "b[1:800:3]->", `b[3:80:30]`
-        assert_array_equal(a[3:80:30], b[3:80:30], "Arrays are not equal")
+        sl = slice(4, 3, 30)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test03a(self):
+        """Testing `__getitem()__` method with ranges and steps (I)"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=100)
+        sl = slice(1, 80, 3)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03b(self):
+        """Testing `__getitem()__` method with ranges and steps (II)"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=100)
+        sl = slice(1, 80, 30)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test03c(self):
+        """Testing `__getitem()__` method with ranges and steps (III)"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=100)
+        sl = slice(990, 998, 2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test03d(self):
+        """Testing `__getitem()__` method with ranges and steps (IV)"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=100)
+        sl = slice(4, 80, 3000)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04a(self):
+        """Testing `__getitem()__` method with long ranges"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=1000)
+        sl = slice(1, 8000)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04b(self):
+        """Testing `__getitem()__` method with no start"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=1000)
+        sl = slice(None, 8000)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04c(self):
+        """Testing `__getitem()__` method with no stop"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=1000)
+        sl = slice(8000, None)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04d(self):
+        """Testing `__getitem()__` method with no start and no stop"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunksize=1000)
+        sl = slice(None, None, 2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test05(self):
         """Testing `__getitem()__` method with negative steps"""
         a = np.arange(1e3)
         b = ca.carray(a, chunksize=100)
-        #print "b[::-3]->", `b[::-3]`
-        self.assertRaises(NotImplementedError, b.__getitem__,
-                          slice(None, None, -3))
-
-    def test04(self):
-        """Testing `__getitem()__` method with long ranges"""
-        a = np.arange(1e4)
-        b = ca.carray(a, chunksize=1000)
-        #print "b[1:8000]->", `b[1:8000]`
-        assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
-
-    def test04a(self):
-        """Testing `__getitem()__` method with no start"""
-        a = np.arange(1e4)
-        b = ca.carray(a, chunksize=1000)
-        #print "b[:8000]->", `b[:8000]`
-        assert_array_equal(a[:8000], b[:8000], "Arrays are not equal")
-
-    def test04b(self):
-        """Testing `__getitem()__` method with no stop"""
-        a = np.arange(1e4)
-        b = ca.carray(a, chunksize=1000)
-        #print "b[8000:]->", `b[8000:]`
-        assert_array_equal(a[8000:], b[8000:], "Arrays are not equal")
-
-    def test04c(self):
-        """Testing `__getitem()__` method with no start and no stop"""
-        a = np.arange(1e4)
-        b = ca.carray(a, chunksize=1000)
-        #print "b[:]->", `b[::2]`
-        assert_array_equal(a[::2], b[::2], "Arrays are not equal")
+        sl = slice(None, None, -3)
+        #print "b[sl]->", `b[sl]`
+        self.assertRaises(NotImplementedError, b.__getitem__, sl)
 
 
 class setitemTest(unittest.TestCase):

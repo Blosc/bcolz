@@ -93,6 +93,49 @@ def blosc_version():
   return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
 
 
+# This is the same than in utils.py, but works faster in extensions
+cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
+    """Get the length of a (start, stop, step) range."""
+    cdef npy_intp n
+
+    n = 0
+    if start < stop:
+        n = ((stop - start - 1) // step + 1);
+    return n
+
+
+cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
+                npy_intp start, npy_intp stop, npy_intp step):
+  """Get the limits of a certain chunk based on its length."""
+  cdef npy_intp startb, stopb, blen, distance
+
+  startb = start - nchunk * chunklen
+  stopb = stop - nchunk * chunklen
+
+  # Check limits
+  if (startb >= chunklen) or (stopb <= 0):
+    return startb, stopb, 0   # null size
+  if startb < 0:
+    startb = 0
+  if stopb > chunklen:
+    stopb = chunklen
+
+  # step corrections
+  if step > 1:
+    # Just correcting startb is enough
+    distance = (nchunk * chunklen + startb) - start
+    if distance % step > 0:
+      startb += (step - (distance % step))
+      if startb > chunklen:
+        return startb, stopb, 0  # null size
+
+  # Compute size of the clipped block
+  blen = get_len_of_range(startb, stopb, step)
+
+  return startb, stopb, blen
+
+#-------------------------------------------------------------
+
 
 cdef class chunk:
   """
@@ -524,15 +567,12 @@ cdef class carray:
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array
-    cdef int i, itemsize, chunklen
-    cdef int startb, stopb, bsize
+    cdef int chunklen
+    cdef int startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks
-    cdef npy_intp nbytes, ntbytes
-    cdef chunk chunk_
+    cdef npy_intp nwrow, blen
 
-    nbytes = self._nbytes
-    itemsize = self.itemsize
-    chunklen = self._chunksize // itemsize
+    chunklen = self._chunksize // self.itemsize
     nchunks = self._nbytes // self._chunksize
 
     # Check for integer
@@ -547,7 +587,7 @@ cdef class carray:
       keychunk = key % chunklen
       if nchunk == nchunks:
         array = self.lastchunkarr
-        return PyArray_GETITEM(array, array.data + keychunk * itemsize)
+        return PyArray_GETITEM(array, array.data + keychunk * self.itemsize)
       else:
         return self.chunks[nchunk][keychunk]
     elif isinstance(key, slice):
@@ -588,34 +628,27 @@ cdef class carray:
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
     # Build a numpy container
-    array = np.empty(shape=(stop-start,), dtype=self._dtype)
+    blen = get_len_of_range(start, stop, step)
+    array = np.empty(shape=(blen,), dtype=self._dtype)
+    if blen == 0:
+      # If empty, return immediately
+      return array
 
     # Fill it from data in chunks
-    ntbytes = 0
-    for i in range(nchunks+1):
+    nwrow = 0
+    for nchunk in xrange(nchunks+1):
       # Compute start & stop for each block
-      startb = start - i*chunklen
-      stopb = stop - i*chunklen
-      if (startb >= chunklen) or (stopb <= 0):
+      startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
+      if blen == 0:
         continue
-      if startb < 0:
-        startb = 0
-      if stopb > chunklen:
-        stopb = chunklen
-      bsize = (stopb - startb) * itemsize
-      if i == nchunks and self.leftover:
-        memcpy(array.data+ntbytes, self.lastchunk+startb*itemsize, bsize)
+      # Get the data chunk and assign it to result array
+      if nchunk == nchunks and self.leftover:
+        array[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
       else:
-        # Get the data chunk
-        chunk_ = self.chunks[i]
-        chunk_._getitem(startb, stopb, array.data+ntbytes)
-      ntbytes += bsize
+        array[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
+      nwrow += blen
 
-    if step == 1:
-      return array
-    else:
-      # Do a copy to get rid of unneeded data
-      return array[::step].copy()
+    return array
 
 
   def __setitem__(self, object key, object value):
@@ -650,7 +683,7 @@ cdef class carray:
     (start, stop, step) = slice(start, stop, step).indices(self.nrows)
 
     # Ensure that value is a numpy array with the required length
-    arrlen = ca.utils.get_len_of_range(start, stop, step)
+    arrlen = get_len_of_range(start, stop, step)
     value = self._to_ndarray(value, arrlen=arrlen)
 
     # Finally, update array (does not work yet!)
