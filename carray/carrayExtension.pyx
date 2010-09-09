@@ -160,10 +160,9 @@ cdef class chunk:
   cdef object dtype
   cdef object shape
   cdef object cparms
-  cdef int itemsize, nbytes, cbytes
-  cdef int blocksize, idxcache
-  cdef ndarray blockcache, arr1
-  cdef char *data, *datacache
+  cdef int itemsize, nbytes, cbytes, blocksize
+  cdef ndarray arr1
+  cdef char *data
 
   def __cinit__(self, ndarray array, object cparms):
     """Initialize chunk and compress data based on numpy `array`.
@@ -201,46 +200,22 @@ cdef class chunk:
     self.cbytes = cbytes
     self.blocksize = blocksize
 
-    # Cache an area for caching a block when reading.  As chunks are entirely
-    # destroyed upon updates we should not worry about refreshing this.
-    self.blockcache = np.empty(shape=(blocksize//itemsize,), dtype=self.dtype)
-    self.datacache = self.blockcache.data
-    self.idxcache = -1   # cache not initialized
-    # Cache a len-1 array for accelerating chunk[int] case
+    # Cache a len-1 array for accelerating self[int] case
     self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
   cdef _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
-    cdef int ret, bsize, blen
-    cdef int idxcache, posincache, nrowsinblock
+    cdef int ret, bsize
 
-    blen = stop - start
-    bsize = blen * self.itemsize
+    bsize = (stop - start) * self.itemsize
     nrowsinblock = self.blocksize // self.itemsize
 
-    # Check if data is in cached block
-    idxcache = (start // nrowsinblock) * nrowsinblock
-    posincache = (start % nrowsinblock) * self.itemsize
-    if bsize < self.blocksize and idxcache == self.idxcache:
-      # Hit!
-      memcpy(dest, self.datacache + posincache, bsize)
-      return
-
     # Fill dest with uncompressed data
-    if bsize == self.nbytes:
-        with nogil:
-          ret = blosc_decompress(self.data, dest, bsize)
-    elif bsize < self.blocksize:
-      # Data fits in the block cache.  Read a complete block.
-      ret = blosc_getitem(self.data, idxcache, idxcache+nrowsinblock,
-                          self.datacache, self.blocksize)
-      # Copy the interesting bits to dest
-      memcpy(dest, self.datacache + posincache, bsize)
-      # Update the cache index
-      self.idxcache = idxcache
-    else:
-      with nogil:
+    with nogil:
+      if bsize == self.nbytes:
+        ret = blosc_decompress(self.data, dest, bsize)
+      else:
         ret = blosc_getitem(self.data, start, stop, dest, bsize)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
@@ -268,7 +243,7 @@ cdef class chunk:
     # Read actual data
     self._getitem(start, stop, array.data)
 
-    # Return the value depending on the key and step
+    # Return the value depending on the step
     if step > 1:
       return array[::step]
     return array
@@ -320,7 +295,7 @@ cdef class carray:
   """
 
   cdef int itemsize, _chunksize, leftover
-  cdef int startb, stopb, nrowsinbuf, nrowsinblock, _row
+  cdef int startb, stopb, nrowsinbuf, _row
   cdef int sss_mode, where_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread, getif_cached
@@ -331,6 +306,11 @@ cdef class carray:
   cdef object _dtype, chunks
   cdef object getif_arr
   cdef ndarray iobuf, getif_buf
+  # For block cache
+  cdef int blocksize, idxcache
+  cdef ndarray blockcache
+  cdef char *datacache
+  cdef ndarray arr1
 
   property nrows:
     "The number of rows (leading dimension) in this carray."
@@ -448,18 +428,10 @@ cdef class carray:
     self.sss_mode = False
     self.where_mode = False
     self.getif_mode = False
+    self.idxcache = -1       # cache not initialized
 
-
-  cdef _get_chunk_block_rows(self):
-    """Get the number of rows in a block of the undelying Blosc chunks."""
-    cdef chunk cbuffer
-
-    if len(self.chunks) > 0:
-      cbuffer = self.chunks[0]
-      return cbuffer.blocksize // self.itemsize
-    else:
-      # No compressed chunks yet.  Return the size of last chunk.
-      return self.nrowsinbuf
+    # Cache a len-1 array for accelerating self[int] case
+    self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
   def append(self, object array):
@@ -565,18 +537,73 @@ cdef class carray:
     return self._cbytes
 
 
+  cdef getitem_cache(self, npy_intp pos, char *dest):
+    """Get a single item from self.  It can use an internal cache.
+
+    It returns true if asked `pos` can be copied to `dest`.  Else, this
+    returns false.
+
+    WARNING: Any update operation (e.g. __setitem__) *must* disable this
+    cache by setting self.idxcache = -2.
+    """
+    cdef int ret, itemsize, blocksize, blocklen
+    cdef int idxcache, posincache, posinlast
+    cdef npy_intp nchunk, nchunks, chunklen
+    cdef chunk chunk_
+
+    itemsize = self.itemsize
+    nchunks = self._nbytes // self._chunksize
+    chunklen = self._chunksize // itemsize
+    nchunk = pos // chunklen
+
+    # Check whether pos is in the last chunk
+    if nchunk == nchunks and self.leftover:
+      posinlast = (pos % self._chunksize) * itemsize
+      memcpy(dest, self.lastchunk + posinlast, itemsize)
+      return True
+
+    chunk_ = self.chunks[nchunk]
+    blocksize = chunk_.blocksize
+    blocklen = blocksize // itemsize
+    posincache = (pos % chunklen) * itemsize
+
+    if itemsize > blocksize:
+      # This request cannot be resolved here
+      return False
+
+    # Check whether the cache block has to be initialized
+    if self.idxcache < 0:
+      self.blockcache = np.empty(shape=(blocklen,), dtype=self.dtype)
+      self.datacache = self.blockcache.data
+      if self.idxcache == -1:
+        # Absolute first time.  Add the cache size to cbytes counter.
+        self._cbytes += self.blocksize
+
+    # Check if data is cached
+    idxcache = (pos // blocklen) * blocklen
+    if idxcache == self.idxcache:
+      # Hit!
+      memcpy(dest, self.datacache + posincache, itemsize)
+      return True
+
+    # No luck. Read a complete block.
+    chunk_._getitem(idxcache, idxcache+blocklen, self.datacache)
+    # Copy the interesting bits to dest
+    memcpy(dest, self.datacache + posincache, itemsize)
+    # Update the cache index
+    self.idxcache = idxcache
+    return True
+
+
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
-    cdef ndarray array
     cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
+    cdef chunk chunk_
     cdef object start, stop, step
 
     chunklen = self._chunksize // self.itemsize
-    nchunks = self._nbytes // self._chunksize
-    if self.leftover > 0:
-      nchunks += 1
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -587,12 +614,11 @@ cdef class carray:
       if key >= self.nrows:
         raise IndexError, "index out of range"
       nchunk = key // chunklen
+      if self.getitem_cache(key, self.arr1.data):
+        return PyArray_GETITEM(self.arr1, self.arr1.data)
+      # Fallback action
       keychunk = key % chunklen
-      if nchunk == nchunks-1 and self.leftover:
-        array = self.lastchunkarr
-        return PyArray_GETITEM(array, array.data + keychunk * self.itemsize)
-      else:
-        return self.chunks[nchunk][keychunk]
+      return self.chunks[nchunk][keychunk]
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
       if step and step <= 0 :
@@ -641,6 +667,9 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
+    nchunks = self._nbytes // self._chunksize
+    if self.leftover > 0:
+      nchunks += 1
     for nchunk in xrange(nchunks):
       # Compute start & stop for each block
       startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
@@ -664,6 +693,11 @@ cdef class carray:
     cdef chunk chunk_
     cdef object start, stop, step
     cdef object cdata
+
+    # We are going to modify data.  Mark block cache as dirty.
+    if self.idxcache >= 0:
+      # -2 means that cbytes counter has not to be changed
+      self.idxcache = -2
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -854,11 +888,6 @@ cdef class carray:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.getif_mode = True
     self.getif_arr = boolarr
-    # The next is not used because it seems that reading blocks is not any
-    # faster than reading complete chunks, except for some cases.  For future
-    # reference, the corking code is here:
-    # http://github.com/FrancescAlted/carray/blob/5964a8fe0d6989c91a345f9a87016c0bbd154843/carray/carrayExtension.pyx
-    self.nrowsinblock = self._get_chunk_block_rows()
     return iter(self)
 
 

@@ -61,7 +61,7 @@ if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
 # The minimum version of Cython required for generating extensions
 min_cython_version = '0.12.1'
 # The minimum version of NumPy required
-min_numpy_version = '1.4'
+min_numpy_version = '1.3'
 # The minimum version of Numexpr (optional)
 min_numexpr_version = '1.4'
 
