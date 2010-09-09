@@ -623,10 +623,10 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test02(self):
         """Testing fancy indexing with __setitem__ (large list)"""
-        a = np.arange(1,1000)
+        a = np.arange(0,1000)
         b = ca.carray(a, chunksize=100)
-        sl = np.random.randint(1000, size=3*30)
-        vals = np.random.randint(1000, size=3*30)
+        sl = np.random.randint(0, 1000, size=3*30)
+        vals = np.random.randint(1, 1000, size=3*30)
         b[sl] = vals
         a[sl] = vals
         #print "b[%s] -> %r" % (sl, b)
