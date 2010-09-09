@@ -310,7 +310,7 @@ cdef class carray:
   cdef int blocksize, idxcache
   cdef ndarray blockcache
   cdef char *datacache
-  cdef ndarray arr1
+  cdef object arr1
 
   property nrows:
     "The number of rows (leading dimension) in this carray."
@@ -601,6 +601,7 @@ cdef class carray:
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
     cdef chunk chunk_
+    cdef ndarray arr1
     cdef object start, stop, step
 
     chunklen = self._chunksize // self.itemsize
@@ -614,8 +615,9 @@ cdef class carray:
       if key >= self.nrows:
         raise IndexError, "index out of range"
       nchunk = key // chunklen
-      if self.getitem_cache(key, self.arr1.data):
-        return PyArray_GETITEM(self.arr1, self.arr1.data)
+      arr1 = self.arr1
+      if self.getitem_cache(key, arr1.data):
+        return PyArray_GETITEM(arr1, arr1.data)
       # Fallback action
       keychunk = key % chunklen
       return self.chunks[nchunk][keychunk]
