@@ -28,7 +28,7 @@ print "out-->", out
 
 # Create a carray
 t0 = time()
-cout = ca.fromiter(iter(x), dtype='f8', count=N, cparms=ca.cparms(clevel))
+cout = ca.fromiter(x, dtype='f8', count=N, cparms=ca.cparms(clevel))
 print "Time for carray--> %.3f" % (time()-t0,)
 print "cout-->", cout
 #assert_array_equal(out, cout, "Arrays are not equal")

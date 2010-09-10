@@ -143,21 +143,21 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
 
     # First, create the container
     obj = ca.carray(np.array([], dtype=dtype), **kwargs)
-    chunksize = obj.chunksize
-    nread, bsize = 0, 0
+    chunklen = obj.chunklen
+    nread, blen = 0, 0
     while nread < count:
         if count == sys.maxint:
-            bsize = -1
-        elif nread + chunksize > count:
-            bsize = count - nread
+            blen = -1
+        elif nread + chunklen > count:
+            blen = count - nread
         else:
-            bsize = chunksize
-        chunkiter = it.islice(iterator, bsize)
-        chunk = np.fromiter(chunkiter, dtype=dtype, count=bsize)
+            blen = chunklen
+        chunkiter = it.islice(iterator, blen)
+        chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
         obj.append(chunk)
         nread += len(chunk)
         # Check the end of the iterator
-        if len(chunk) < chunksize:
+        if len(chunk) < chunklen:
             break
     return obj
 

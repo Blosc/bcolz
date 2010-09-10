@@ -294,7 +294,7 @@ cdef class carray:
 
   """
 
-  cdef int itemsize, _chunksize, leftover
+  cdef int itemsize, _chunksize, _chunklen, leftover
   cdef int startb, stopb, nrowsinbuf, _row
   cdef int sss_mode, where_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement
@@ -342,28 +342,28 @@ cdef class carray:
     def __get__(self):
       return self._cbytes
 
-  property chunksize:
-    "The chunksize of this carray (in bytes)."
+  property chunklen:
+    "The chunklen of this carray (in rows)."
     def __get__(self):
-      return self._chunksize
+      return self._chunklen
 
 
   def __cinit__(self, object array, object cparms=None,
-                object expectedrows=None, object chunksize=None):
+                object expectedrows=None, object chunklen=None):
     """Initialize and compress data based on passed `array`.
 
     You can pass parameters to the compressor via `cparms`, which must be an
     instance of the `cparms` class.
 
     If you pass a guess on the expected number of rows of this carray in
-    `expectedrows` that wil serve to decide the best chunksize used for memory
-    I/O purposes.
+    `expectedrows` that will serve to decide the best `chunklen` used for
+    compression and memory I/O purposes.
 
-    Also, you can explicitely set the size of the `chunksize` used for the
-    internal I/O buffer and the size of each chunk.  Only touch this if you
-    know what are you doing.
+    `chunklen` is be number of rows that fits on a chunk.  By specifying it
+    you can explicitely set the chunk size used for compression and memory
+    I/O.  Only use it if you know what are you doing.
     """
-    cdef int i, itemsize, leftover, cs, nchunks, nelemchunk
+    cdef int i, itemsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
@@ -386,19 +386,29 @@ cdef class carray:
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
 
-    # Compute the chunksize
+    # Compute the chunklen/chunksize
     if expectedrows is None:
       # Try a guess
       expectedrows = len(array_)
-    if chunksize is None:
+    if chunklen is None:
+      # Try a guess
       chunksize = ca.utils.calc_chunksize(
         (expectedrows * itemsize) / float(_MB))
+      # Chunksize must be a multiple of itemsize
+      chunksize = (chunksize // itemsize) * itemsize
+      # Protection against large itemsizes
+      if chunksize < itemsize:
+        chunksize = itemsize
+    else:
+      if not isinstance(chunklen, (int, np.int_)) or chunklen < 1:
+        raise ValueError, "chunklen must be a positive integer"
+      chunksize = chunklen * itemsize
+    chunklen = chunksize  // itemsize
+    self._chunksize = chunksize
+    self._chunklen = chunklen
 
-    # Chunksize must be a multiple of itemsize
-    cs = (chunksize // itemsize) * itemsize
-    self._chunksize = cs
     # Book memory for last chunk (uncompressed)
-    lastchunkarr = np.empty(dtype=dtype, shape=(cs//itemsize,))
+    lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
@@ -411,18 +421,19 @@ cdef class carray:
     # Compress data in chunks
     cbytes = 0
     nchunks = self._nbytes // self._chunksize
-    nelemchunk = self._chunksize // itemsize
     for i in xrange(nchunks):
-      chunk_ = chunk(array_[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
+      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparms)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
-    self.leftover = leftover = nbytes % cs
+    self.leftover = leftover = nbytes % chunksize
     if leftover:
-      remainder = array_[nchunks*nelemchunk:]
+      remainder = array_[nchunks*chunklen:]
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
-    self.nrowsinbuf = self._chunksize // self.itemsize
+
+    # Useful data for iterators and getters
+    self.nrowsinbuf = self._chunklen
 
     # Sentinels
     self.sss_mode = False
@@ -440,7 +451,7 @@ cdef class carray:
     Return the number of elements appended.
     """
     cdef int itemsize, chunksize, leftover, bsize
-    cdef int nbytesfirst, nelemchunk
+    cdef int nbytesfirst, chunklen
     cdef npy_intp nbytes, cbytes
     cdef ndarray remainder, array_
     cdef chunk chunk_
@@ -465,7 +476,7 @@ cdef class carray:
       # Data does not fit in buffer.  Break it in chunks.
 
       # First, fill the last buffer completely
-      nbytesfirst = chunksize-leftover
+      nbytesfirst = chunksize - leftover
       memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
       # Compress the last chunk and add it to the list
       chunk_ = chunk(self.lastchunkarr, self._cparms)
@@ -475,18 +486,18 @@ cdef class carray:
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
       nchunks = nbytes // chunksize
-      nelemchunk = chunksize // itemsize
+      chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
       for i in xrange(nchunks):
-        chunk_ = chunk(remainder[i*nelemchunk:(i+1)*nelemchunk], self._cparms)
+        chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparms)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
       # Finally, deal with the leftover
       leftover = nbytes % chunksize
       if leftover:
-        remainder = remainder[nchunks*nelemchunk:]
+        remainder = remainder[nchunks*chunklen:]
         memcpy(self.lastchunk, remainder.data, leftover)
 
     # Update some counters
@@ -506,7 +517,7 @@ cdef class carray:
     If `cparms` is passed, these settings will be used for the new carray.
     If not, the settings in self will be used.
     """
-    cdef int itemsize, chunksize, bsize
+    cdef object chunklen
 
     # Get defaults for some parameters
     cparms = kwargs.pop('cparms', self._cparms)
@@ -518,11 +529,9 @@ cdef class carray:
                    expectedrows=expectedrows)
 
     # Now copy the carray chunk by chunk
-    itemsize = self.itemsize
-    chunksize = self._chunksize
-    bsize = chunksize // itemsize
-    for i in xrange(0, self.nrows, bsize):
-      ccopy.append(self[i:i+bsize])
+    chunklen = self._chunklen
+    for i in xrange(0, self.nrows, chunklen):
+      ccopy.append(self[i:i + chunklen])
 
     return ccopy
 
@@ -553,13 +562,13 @@ cdef class carray:
 
     itemsize = self.itemsize
     nchunks = self._nbytes // self._chunksize
-    chunklen = self._chunksize // itemsize
+    chunklen = self._chunklen
     nchunk = pos // chunklen
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
-      posinlast = (pos % self._chunksize) * itemsize
-      memcpy(dest, self.lastchunk + posinlast, itemsize)
+      posinlast = pos % chunklen
+      memcpy(dest, self.lastchunk + posinlast * itemsize, itemsize)
       return True
 
     chunk_ = self.chunks[nchunk]
@@ -604,7 +613,7 @@ cdef class carray:
     cdef ndarray arr1
     cdef object start, stop, step
 
-    chunklen = self._chunksize // self.itemsize
+    chunklen = self._chunklen
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
@@ -759,7 +768,7 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    chunklen = self._chunksize // self.itemsize
+    chunklen = self._chunklen
     nchunks = self._nbytes // self._chunksize
     if self.leftover > 0:
       nchunks += 1
@@ -803,7 +812,7 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    chunklen = self._chunksize // self.itemsize
+    chunklen = self._chunklen
     nchunks = self._nbytes // self._chunksize
     if self.leftover > 0:
       nchunks += 1

@@ -230,7 +230,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with only a start"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = slice(9, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -242,7 +242,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with only a stop"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = slice(None, 9, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -254,7 +254,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a start, stop"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = slice(1,90, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -266,7 +266,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a start, stop, step"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = slice(1,90, 2)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -278,7 +278,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a large step"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = slice(1,43, 20)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -635,7 +635,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a small list"""
         N = 100
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = [3,1]
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)
@@ -647,7 +647,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a small list (II)"""
         N = 100
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = [3,1]
         t[sl] = [(-1, -2, -3), (-3, -2, -1)]
         ra[sl] = [(-1, -2, -3), (-3, -2, -1)]
@@ -659,7 +659,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a large array"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = np.random.randint(N, size=100)
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)
@@ -671,7 +671,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a boolean array (I)"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = np.random.randint(2, size=1000).astype('bool')
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)
@@ -683,7 +683,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a boolean array"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = np.random.randint(10, size=1000).astype('bool')
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)
@@ -695,7 +695,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a boolean array (all false)"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = np.zeros(N, dtype="bool")
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)
@@ -707,7 +707,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         """Testing fancy indexing (setitem) with a boolean array (all true)"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunksize=100)
+        t = ca.ctable(ra, chunklen=10)
         sl = np.ones(N, dtype="bool")
         t[sl] = (-1, -2, -3)
         ra[sl] = (-1, -2, -3)

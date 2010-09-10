@@ -40,7 +40,7 @@ As you can see, the compressed size is much larger than the
 uncompressed one.  How this can be?  Well, it turns out that carray
 wears an I/O buffer for accelerating some internal operations, and
 this buffer is 4 KB for this case (but you can change its size by
-using the `expectedrows` and `chunksize` parameters in the `carray`
+using the `expectedrows` and `chunklen` parameters in the `carray`
 constructor).  So, for small arrays (typically those taking less than
 1 MB), there is little point in using a carray.
 
@@ -51,8 +51,9 @@ comparison::
   >>> a = np.arange(1e7)
   >>> b = ca.carray(np.arange(1e7))
   >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+  cparms := cparms(clevel=5, shuffle=True)
+[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 You can always get a hint on how much space it takes your carray by
 using `sys.getsizeof()`::
@@ -92,40 +93,39 @@ but, as you can see, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
 fine-tuning the performance for an specific carray).
 
-You may want to use explictly the `chunksize` parameter to fine-tune
+You may want to use explictly the `chunklen` parameter to fine-tune
 your compression levels::
 
   >>> ca.carray(a)
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
-  >>> ca.carray(a).chunksize
-  131072   # 128 KB is the default chunksize for this carray
+  >>> ca.carray(a).chunklen
+  16384   # 128 KB = 16384 * 8 is the default chunk size for this carray
 
-  >>> ca.carray(a, chunksize=4*1024)
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 10693440; ratio: 7.48
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  >>> ca.carray(a, chunklen=512)
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
-  >>> ca.carray(a, chunksize=32*1024)
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2623992; ratio: 30.49
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
-
-  >>> ca.carray(a, chunksize=64*1024)
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 1572375; ratio: 50.88
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  >>> ca.carray(a, chunklen=8*1024)
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 Finally, if you are going to add a lot of rows to your carrays, be
 sure to use `expectedrows` parameter so that you inform the
 constructor about the expected length of your final carray::
 
-  >>> ca.carray(a, expectedrows=10).chunksize
+  >>> ca.carray(a, expectedrows=10).chunklen
+  512
+  >>> ca.carray(a, expectedrows=10*1000).chunklen
   4096
-  >>> ca.carray(a, expectedrows=10*1000).chunksize
-  32768
-  >>> ca.carray(a, expectedrows=10*1000*1000).chunksize
+  >>> ca.carray(a, expectedrows=10*1000*1000).chunklen
+  16384
+  >>> ca.carray(a, expectedrows=10*1000*1000*1000).chunklen
   131072
-  >>> ca.carray(a, expectedrows=10*1000*1000*1000).chunksize
-  1048576
 
 
 Accessing carray data
@@ -258,10 +258,10 @@ which is the same than the original NumPy array::
   >>> a.size*a.dtype.itemsize
   80000000
 
-Finally, you can access the `chunksize` for this carray::
+Finally, you can access the `chunklen` for this carray::
 
-  >>> b.chunksize
-  131072
+  >>> b.chunklen
+  16384
 
 
 Enlarging your carray

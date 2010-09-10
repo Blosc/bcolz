@@ -21,21 +21,21 @@ class chunkTest(unittest.TestCase):
 
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = chunk(a, cparms=ca.cparms())
         #print "b[1]->", `b[1]`
         self.assert_(a[1] == b[1], "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = chunk(a, cparms=ca.cparms())
         #print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = chunk(a, cparms=ca.cparms())
         #print "b[1:8:3]->", `b[1:8:3]`
         assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
@@ -52,39 +52,47 @@ class getitemTest(unittest.TestCase):
 
     def test01a(self):
         """Testing `__getitem()__` method with only a start"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=100)
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
         sl = slice(1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01b(self):
         """Testing `__getitem()__` method with only a (negative) start"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=100)
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
         sl = slice(-1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01c(self):
         """Testing `__getitem()__` method with only a (start,)"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=100)
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
         #print "b[(1,)]->", `b[(1,)]`
         self.assert_(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
 
+    def test01d(self):
+        """Testing `__getitem()__` method with only a (large) start"""
+        a = np.arange(1e7)
+        b = ca.carray(a)
+        sl = -2   # second last element
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
     def test02a(self):
         """Testing `__getitem()__` method with ranges"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=100)
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
         sl = slice(1, 3)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02b(self):
         """Testing `__getitem()__` method with ranges (negative start)"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=100)
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
         sl = slice(-3)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -92,7 +100,7 @@ class getitemTest(unittest.TestCase):
     def test02c(self):
         """Testing `__getitem()__` method with ranges (negative stop)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(1, -3)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -100,7 +108,7 @@ class getitemTest(unittest.TestCase):
     def test02d(self):
         """Testing `__getitem()__` method with ranges (negative start, stop)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(-3, -1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -108,7 +116,7 @@ class getitemTest(unittest.TestCase):
     def test02e(self):
         """Testing `__getitem()__` method with start > stop"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(4, 3, 30)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -116,7 +124,7 @@ class getitemTest(unittest.TestCase):
     def test03a(self):
         """Testing `__getitem()__` method with ranges and steps (I)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(1, 80, 3)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -124,7 +132,7 @@ class getitemTest(unittest.TestCase):
     def test03b(self):
         """Testing `__getitem()__` method with ranges and steps (II)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(1, 80, 30)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -132,7 +140,7 @@ class getitemTest(unittest.TestCase):
     def test03c(self):
         """Testing `__getitem()__` method with ranges and steps (III)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(990, 998, 2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -140,7 +148,7 @@ class getitemTest(unittest.TestCase):
     def test03d(self):
         """Testing `__getitem()__` method with ranges and steps (IV)"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(4, 80, 3000)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -148,7 +156,7 @@ class getitemTest(unittest.TestCase):
     def test04a(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=1000)
+        b = ca.carray(a, chunklen=100)
         sl = slice(1, 8000)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -156,7 +164,7 @@ class getitemTest(unittest.TestCase):
     def test04b(self):
         """Testing `__getitem()__` method with no start"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=1000)
+        b = ca.carray(a, chunklen=100)
         sl = slice(None, 8000)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -164,7 +172,7 @@ class getitemTest(unittest.TestCase):
     def test04c(self):
         """Testing `__getitem()__` method with no stop"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=1000)
+        b = ca.carray(a, chunklen=100)
         sl = slice(8000, None)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -172,7 +180,7 @@ class getitemTest(unittest.TestCase):
     def test04d(self):
         """Testing `__getitem()__` method with no start and no stop"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=1000)
+        b = ca.carray(a, chunklen=100)
         sl = slice(None, None, 2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -180,7 +188,7 @@ class getitemTest(unittest.TestCase):
     def test05(self):
         """Testing `__getitem()__` method with negative steps"""
         a = np.arange(1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = slice(None, None, -3)
         #print "b[sl]->", `b[sl]`
         self.assertRaises(NotImplementedError, b.__getitem__, sl)
@@ -191,7 +199,7 @@ class setitemTest(unittest.TestCase):
     def test00(self):
         """Testing `__setitem()__` method with only one element"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         b[1] = 10.
         a[1] = 10.
         #print "b->", `b`
@@ -200,7 +208,7 @@ class setitemTest(unittest.TestCase):
     def test01(self):
         """Testing `__setitem()__` method with a range"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         b[10:100] = np.arange(1e2 - 10.)
         a[10:100] = np.arange(1e2 - 10.)
         #print "b->", `b`
@@ -209,7 +217,7 @@ class setitemTest(unittest.TestCase):
     def test02(self):
         """Testing `__setitem()__` method with broadcasting"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         b[10:100] = 10.
         a[10:100] = 10.
         #print "b->", `b`
@@ -218,7 +226,7 @@ class setitemTest(unittest.TestCase):
     def test03(self):
         """Testing `__setitem()__` method with the complete range"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         b[:] = np.arange(10., 1e2 + 10.)
         a[:] = np.arange(10., 1e2 + 10.)
         #print "b->", `b`
@@ -227,7 +235,7 @@ class setitemTest(unittest.TestCase):
     def test04a(self):
         """Testing `__setitem()__` method with start:stop:step"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=10)
+        b = ca.carray(a, chunklen=1)
         sl = slice(10, 100, 3)
         b[sl] = 10.
         a[sl] = 10.
@@ -237,7 +245,7 @@ class setitemTest(unittest.TestCase):
     def test04b(self):
         """Testing `__setitem()__` method with start:stop:step (II)"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=10)
+        b = ca.carray(a, chunklen=1)
         sl = slice(10, 11, 3)
         b[sl] = 10.
         a[sl] = 10.
@@ -247,7 +255,7 @@ class setitemTest(unittest.TestCase):
     def test04c(self):
         """Testing `__setitem()__` method with start:stop:step (III)"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=10)
+        b = ca.carray(a, chunklen=1)
         sl = slice(96, 100, 3)
         b[sl] = 10.
         a[sl] = 10.
@@ -257,7 +265,7 @@ class setitemTest(unittest.TestCase):
     def test04d(self):
         """Testing `__setitem()__` method with start:stop:step (IV)"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=10)
+        b = ca.carray(a, chunklen=1)
         sl = slice(2, 99, 30)
         b[sl] = 10.
         a[sl] = 10.
@@ -267,7 +275,7 @@ class setitemTest(unittest.TestCase):
     def test05(self):
         """Testing `__setitem()__` method with negative step"""
         a = np.arange(1e2)
-        b = ca.carray(a, chunksize=10)
+        b = ca.carray(a, chunklen=1)
         sl = slice(2, 99, -30)
         self.assertRaises(NotImplementedError, b.__setitem__, sl, 3.)
 
@@ -276,7 +284,7 @@ class appendTest(unittest.TestCase):
 
     def test00(self):
         """Testing `append()` method"""
-        a = np.arange(1e1)
+        a = np.arange(1e3)
         b = ca.carray(a)
         b.append(a)
         #print "b->", `b`
@@ -284,9 +292,9 @@ class appendTest(unittest.TestCase):
         assert_array_equal(c, b[:], "Arrays are not equal")
 
     def test01(self):
-        """Testing `append()` method (small chunksize)"""
-        a = np.arange(1e1)
-        b = ca.carray(a, chunksize=10)
+        """Testing `append()` method (small chunklen)"""
+        a = np.arange(1e3)
+        b = ca.carray(a, chunklen=1)
         b.append(a)
         #print "b->", `b`
         c = np.concatenate((a, a))
@@ -373,7 +381,7 @@ class IterTest(unittest.TestCase):
     def test00(self):
         """Testing `iter()` method"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter1->", sum(b)
         #print "sum iter2->", sum((v for v in b))
         self.assert_(sum(a) == sum(b), "Sums are not equal")
@@ -383,28 +391,28 @@ class IterTest(unittest.TestCase):
     def test01a(self):
         """Testing `iter()` method with a positive start"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(3))
         self.assert_(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
 
     def test01b(self):
         """Testing `iter()` method with a negative start"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(-3))
         self.assert_(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
 
     def test02a(self):
         """Testing `iter()` method with positive start, stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(3, 24))
         self.assert_(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
 
     def test02b(self):
         """Testing `iter()` method with negative start, stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(-24, -3))
         self.assert_(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
                      "Sums are not equal")
@@ -412,7 +420,7 @@ class IterTest(unittest.TestCase):
     def test02c(self):
         """Testing `iter()` method with positive start, negative stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(24, -3))
         self.assert_(sum(a[24:-3]) == sum(b.iter(24, -3)),
                      "Sums are not equal")
@@ -420,7 +428,7 @@ class IterTest(unittest.TestCase):
     def test03a(self):
         """Testing `iter()` method with only step"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(step=4))
         self.assert_(sum(a[::4]) == sum(b.iter(step=4)),
                      "Sums are not equal")
@@ -428,7 +436,7 @@ class IterTest(unittest.TestCase):
     def test03b(self):
         """Testing `iter()` method with start, stop, step"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         #print "sum iter->", sum(b.iter(3, 24, 4))
         self.assert_(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
                      "Sums are not equal")
@@ -436,7 +444,7 @@ class IterTest(unittest.TestCase):
     def test03c(self):
         """Testing `iter()` method with negative step"""
         a = np.arange(101)
-        b = ca.carray(a, chunksize=9)
+        b = ca.carray(a, chunklen=2)
         self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
 
 
@@ -581,7 +589,7 @@ class fancy_indexing_getitemTest(unittest.TestCase):
     def test05(self):
         """Testing `getif()` iterator (using bool in fancy indexing)"""
         a = np.arange(1, 110)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         wt = a[a<5]
         cwt = b[a<5]
         #print "numpy ->", a[a<5]
@@ -591,7 +599,7 @@ class fancy_indexing_getitemTest(unittest.TestCase):
     def test06(self):
         """Testing `getif()` iterator (using carray bool in fancy indexing)"""
         a = np.arange(1, 110)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         wt = a[(a<5)|(a>9)]
         cwt = b[ca.carray((a<5)|(a>9))]
         #print "numpy ->", a[(a<5)|(a>9)]
@@ -604,7 +612,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test00(self):
         """Testing fancy indexing with __setitem__ (small values)"""
         a = np.arange(1,111)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = [3, 1]
         b[sl] = (10, 20)
         a[sl] = (10, 20)
@@ -614,7 +622,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test01(self):
         """Testing fancy indexing with __setitem__ (large values)"""
         a = np.arange(1,1e3)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = [0, 300, 998]
         b[sl] = (5, 10, 20)
         a[sl] = (5, 10, 20)
@@ -624,7 +632,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test02(self):
         """Testing fancy indexing with __setitem__ (large list)"""
         a = np.arange(0,1000)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = np.random.randint(0, 1000, size=3*30)
         vals = np.random.randint(1, 1000, size=3*30)
         b[sl] = vals
@@ -635,7 +643,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test03(self):
         """Testing fancy indexing with __setitem__ (bool array)"""
         a = np.arange(1,1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = a > 5
         b[sl] = 3.
         a[sl] = 3.
@@ -645,7 +653,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test04(self):
         """Testing fancy indexing with __setitem__ (bool carray)"""
         a = np.arange(1,1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         bc = (a > 5) & (a < 40)
         sl = ca.carray(bc)
         b[sl] = 3.
@@ -656,7 +664,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
     def test05(self):
         """Testing fancy indexing with __setitem__ (bool, value not scalar)"""
         a = np.arange(1,1e2)
-        b = ca.carray(a, chunksize=100)
+        b = ca.carray(a, chunklen=10)
         sl = a < 5
         b[sl] = range(6, 10)
         a[sl] = range(6, 10)
