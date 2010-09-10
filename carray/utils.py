@@ -10,7 +10,6 @@
 """
 
 import sys, os, os.path, subprocess, math
-import itertools as it
 from time import time, clock
 import numpy as np
 import carray as ca
