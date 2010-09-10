@@ -555,8 +555,8 @@ cdef class carray:
     WARNING: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
     """
-    cdef int ret, itemsize, blocksize, blocklen
-    cdef int idxcache, posincache, posinlast
+    cdef int ret, itemsize, blocksize
+    cdef int idxcache, posinbytes, blocklen
     cdef npy_intp nchunk, nchunks, chunklen
     cdef chunk chunk_
 
@@ -564,17 +564,16 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     chunklen = self._chunklen
     nchunk = pos // chunklen
+    posinbytes = (pos % chunklen) * itemsize
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
-      posinlast = pos % chunklen
-      memcpy(dest, self.lastchunk + posinlast * itemsize, itemsize)
+      memcpy(dest, self.lastchunk + posinbytes, itemsize)
       return True
 
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
     blocklen = blocksize // itemsize
-    posincache = (pos % chunklen) * itemsize
 
     if itemsize > blocksize:
       # This request cannot be resolved here
@@ -592,13 +591,13 @@ cdef class carray:
     idxcache = (pos // blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
-      memcpy(dest, self.datacache + posincache, itemsize)
+      memcpy(dest, self.datacache + posinbytes, itemsize)
       return True
 
     # No luck. Read a complete block.
     chunk_._getitem(idxcache, idxcache+blocklen, self.datacache)
     # Copy the interesting bits to dest
-    memcpy(dest, self.datacache + posincache, itemsize)
+    memcpy(dest, self.datacache + posinbytes, itemsize)
     # Update the cache index
     self.idxcache = idxcache
     return True
