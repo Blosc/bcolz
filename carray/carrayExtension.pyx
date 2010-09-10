@@ -23,6 +23,7 @@ Public functions:
 
 import numpy as np
 import carray as ca
+from carray import utils
 
 _KB = 1024
 _MB = 1024*_KB
@@ -375,7 +376,7 @@ cdef class carray:
     if not isinstance(cparms, ca.cparms):
       raise ValueError, "`cparms` param must be an instance of `cparms` class"
 
-    array_ = ca.utils.to_ndarray(array, self.dtype)
+    array_ = utils.to_ndarray(array, self.dtype)
 
     # Only accept unidimensional arrays as input
     if array_.ndim != 1:
@@ -392,8 +393,7 @@ cdef class carray:
       expectedrows = len(array_)
     if chunklen is None:
       # Try a guess
-      chunksize = ca.utils.calc_chunksize(
-        (expectedrows * itemsize) / float(_MB))
+      chunksize = utils.calc_chunksize((expectedrows * itemsize) / float(_MB))
       # Chunksize must be a multiple of itemsize
       chunksize = (chunksize // itemsize) * itemsize
       # Protection against large itemsizes
@@ -456,7 +456,7 @@ cdef class carray:
     cdef ndarray remainder, array_
     cdef chunk chunk_
 
-    array_ = ca.utils.to_ndarray(array, self.dtype)
+    array_ = utils.to_ndarray(array, self.dtype)
     if array_.dtype != self._dtype:
       raise TypeError, "array dtype does not match with self"
 
@@ -744,7 +744,7 @@ cdef class carray:
         return
       elif np.issubsctype(key, np.int_):
         # An integer array
-        value = ca.utils.to_ndarray(value, self.dtype, arrlen=len(key))
+        value = utils.to_ndarray(value, self.dtype, arrlen=len(key))
         # This could be optimised, but it works like this
         for i, item in enumerate(key):
           self[item] = value[i]
@@ -764,7 +764,7 @@ cdef class carray:
     if vlen == 0:
       # If range is empty, return immediately
       return
-    value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -808,7 +808,7 @@ cdef class carray:
     cdef object cdata, boolb
 
     vlen = sum(boolarr)   # number of true values in bool array
-    value = ca.utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -977,8 +977,8 @@ cdef class carray:
 
   def __repr__(self):
     """Represent the carray as an string, with additional info."""
-    snbytes = ca.utils.human_readable_size(self._nbytes)
-    scbytes = ca.utils.human_readable_size(self._cbytes)
+    snbytes = utils.human_readable_size(self._nbytes)
+    scbytes = utils.human_readable_size(self._cbytes)
     cratio = self._nbytes / float(self._cbytes)
     fullrepr = """carray(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f
   cparms := %r

@@ -51,7 +51,7 @@ else:
 from carray.carrayExtension import (
     carray, blosc_version, blosc_set_num_threads)
 from carray.ctable import ctable
-from carray.utils import (
+from carray.functions import (
     detect_number_of_cores, set_num_threads, fromiter, cparms)
 from carray.version import __version__
 

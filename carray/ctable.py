@@ -20,6 +20,7 @@ import sys, math
 
 import numpy as np
 import carray as ca
+from carray import utils
 
 if ca.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
@@ -417,7 +418,7 @@ class ctable(object):
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.nrows)
         # Build a numpy container
-        n = ca.utils.get_len_of_range(start, stop, step)
+        n = utils.get_len_of_range(start, stop, step)
         ra = np.empty(shape=(n,), dtype=self.dtype)
         # Fill it
         for name in self.names:
@@ -430,7 +431,7 @@ class ctable(object):
         """Set a row or a range of rows."""
 
         # First, convert value into a structured array
-        value = ca.utils.to_ndarray(value, self.dtype)
+        value = utils.to_ndarray(value, self.dtype)
         # Then, modify the rows
         for name in self.names:
             self.cols[name][key] = value[name]
@@ -541,8 +542,8 @@ class ctable(object):
     def __repr__(self):
         """Represent the carray as an string, with additional info."""
         nbytes, cbytes, cratio = self.get_stats()
-        snbytes = ca.utils.human_readable_size(nbytes)
-        scbytes = ca.utils.human_readable_size(cbytes)
+        snbytes = utils.human_readable_size(nbytes)
+        scbytes = utils.human_readable_size(cbytes)
         fullrepr = """ctable(%s, %s)
   nbytes: %s; cbytes: %s; ratio: %.2f
 %s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
