@@ -204,7 +204,7 @@ cdef class chunk:
     self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
-  cdef _getitem(self, int start, int stop, char *dest):
+  cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef int ret, bsize, blen
 
@@ -400,7 +400,7 @@ cdef class carray:
       if chunksize < itemsize:
         chunksize = itemsize
     else:
-      if not isinstance(chunklen, (int, np.int_)) or chunklen < 1:
+      if not isinstance(chunklen, int) or chunklen < 1:
         raise ValueError, "chunklen must be a positive integer"
       chunksize = chunklen * itemsize
     chunklen = chunksize  // itemsize
@@ -546,11 +546,11 @@ cdef class carray:
     return self._cbytes
 
 
-  cdef getitem_cache(self, npy_intp pos, char *dest):
+  cdef int getitem_cache(self, npy_intp pos, char *dest):
     """Get a single item from self.  It can use an internal cache.
 
-    It returns true if asked `pos` can be copied to `dest`.  Else, this
-    returns false.
+    It returns 1 if asked `pos` can be copied to `dest`.  Else, this returns
+    0.
 
     WARNING: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
@@ -569,7 +569,7 @@ cdef class carray:
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
       memcpy(dest, self.lastchunk + posinbytes, itemsize)
-      return True
+      return 1
 
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
@@ -577,7 +577,7 @@ cdef class carray:
 
     if itemsize > blocksize:
       # This request cannot be resolved here
-      return False
+      return 0
 
     # Check whether the cache block has to be initialized
     if self.idxcache < 0:
@@ -592,7 +592,7 @@ cdef class carray:
     if idxcache == self.idxcache:
       # Hit!
       memcpy(dest, self.datacache + posinbytes, itemsize)
-      return True
+      return 1
 
     # No luck. Read a complete block.
     chunk_._getitem(idxcache, idxcache+blocklen, self.datacache)
@@ -600,7 +600,7 @@ cdef class carray:
     memcpy(dest, self.datacache + posinbytes, itemsize)
     # Update the cache index
     self.idxcache = idxcache
-    return True
+    return 1
 
 
   def __getitem__(self, object key):
@@ -616,7 +616,7 @@ cdef class carray:
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
-    if isinstance(key, (int, np.int_)):
+    if isinstance(key, int) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
         key += self.nrows
@@ -711,7 +711,7 @@ cdef class carray:
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
-    if isinstance(key, (int, np.int_)):
+    if isinstance(key, int) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
         key += self.nrows
@@ -798,7 +798,7 @@ cdef class carray:
     assert (nwrow == vlen)
 
 
-  cdef bool_update(self, boolarr, value):
+  cdef void bool_update(self, boolarr, value):
     """Update self in positions where `boolarr` is true with `value` array."""
     cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, nchunks, nrows
@@ -844,7 +844,7 @@ cdef class carray:
       nwrow += blen
 
     # Safety check
-    assert (nwrow == vlen, "nwrow: %d != vlen: %d" % (nwrow, vlen))
+    assert (nwrow == vlen)
 
 
   def __iter__(self):
