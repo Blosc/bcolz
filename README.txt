@@ -50,6 +50,14 @@ Start from `carray` package and continue reading the proposed links.
 Also, you may want to look at the bench/ directory for some examples
 of use.
 
+User's mail list
+----------------
+
+Feel free to send questions related with carray to:
+
+carray@googlegroups.com
+http://groups.google.com/group/carray
+
 License
 -------
 

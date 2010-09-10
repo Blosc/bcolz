@@ -68,6 +68,10 @@ http://github.com/FrancescAlted/carray/blob/master/USAGE.txt
 Home of Blosc compressor:
 http://blosc.pytables.org
 
+User's mail list:
+carray@googlegroups.com
+http://groups.google.com/group/carray
+
 Share your experience
 =====================
 
