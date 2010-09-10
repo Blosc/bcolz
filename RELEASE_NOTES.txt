@@ -21,7 +21,7 @@ Changes from 0.2 to 0.3
   object.
 
 - New algorithm for computing an optimal chunk size for carrays based on
-  the new `expectedrows` argument.
+  the new `expectedlen` argument.
 
 - Added `chunklen` property for `carray` that allows querying the chunk
   length (in rows) for the internal I/O buffer.

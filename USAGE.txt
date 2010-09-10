@@ -40,7 +40,7 @@ As you can see, the compressed size is much larger than the
 uncompressed one.  How this can be?  Well, it turns out that carray
 wears an I/O buffer for accelerating some internal operations, and
 this buffer is 4 KB for this case (but you can change its size by
-using the `expectedrows` and `chunklen` parameters in the `carray`
+using the `expectedlen` and `chunklen` parameters in the `carray`
 constructor).  So, for small arrays (typically those taking less than
 1 MB), there is little point in using a carray.
 
@@ -115,16 +115,16 @@ your compression levels::
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 Finally, if you are going to add a lot of rows to your carrays, be
-sure to use `expectedrows` parameter so that you inform the
+sure to use `expectedlen` parameter so that you inform the
 constructor about the expected length of your final carray::
 
-  >>> ca.carray(a, expectedrows=10).chunklen
+  >>> ca.carray(a, expectedlen=10).chunklen
   512
-  >>> ca.carray(a, expectedrows=10*1000).chunklen
+  >>> ca.carray(a, expectedlen=10*1000).chunklen
   4096
-  >>> ca.carray(a, expectedrows=10*1000*1000).chunklen
+  >>> ca.carray(a, expectedlen=10*1000*1000).chunklen
   16384
-  >>> ca.carray(a, expectedrows=10*1000*1000*1000).chunklen
+  >>> ca.carray(a, expectedlen=10*1000*1000*1000).chunklen
   131072
 
 

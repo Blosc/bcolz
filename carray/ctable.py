@@ -521,9 +521,9 @@ class ctable(object):
             # Perform the evaluation for this block
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
             if i == 0:
-                # Get a decent default for expectedrows
-                nrows = kwargs.pop('expectedrows', self.nrows)
-                result = ca.carray(res_block, expectedrows=nrows, **kwargs)
+                # Get a decent default for expectedlen
+                nrows = kwargs.pop('expectedlen', self.nrows)
+                result = ca.carray(res_block, expectedlen=nrows, **kwargs)
             else:
                 result.append(res_block)
 

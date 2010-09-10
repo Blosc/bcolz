@@ -350,14 +350,14 @@ cdef class carray:
 
 
   def __cinit__(self, object array, object cparms=None,
-                object expectedrows=None, object chunklen=None):
+                object expectedlen=None, object chunklen=None):
     """Initialize and compress data based on passed `array`.
 
     You can pass parameters to the compressor via `cparms`, which must be an
     instance of the `cparms` class.
 
     If you pass a guess on the expected number of rows of this carray in
-    `expectedrows` that will serve to decide the best `chunklen` used for
+    `expectedlen` that will serve to decide the best `chunklen` used for
     compression and memory I/O purposes.
 
     `chunklen` is be number of rows that fits on a chunk.  By specifying it
@@ -388,12 +388,12 @@ cdef class carray:
     self.itemsize = itemsize = dtype.itemsize
 
     # Compute the chunklen/chunksize
-    if expectedrows is None:
+    if expectedlen is None:
       # Try a guess
-      expectedrows = len(array_)
+      expectedlen = len(array_)
     if chunklen is None:
       # Try a guess
-      chunksize = utils.calc_chunksize((expectedrows * itemsize) / float(_MB))
+      chunksize = utils.calc_chunksize((expectedlen * itemsize) / float(_MB))
       # Chunksize must be a multiple of itemsize
       chunksize = (chunksize // itemsize) * itemsize
       # Protection against large itemsizes
@@ -521,12 +521,12 @@ cdef class carray:
 
     # Get defaults for some parameters
     cparms = kwargs.pop('cparms', self._cparms)
-    expectedrows = kwargs.pop('expectedrows', self.nrows)
+    expectedlen = kwargs.pop('expectedlen', self.nrows)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
                    cparms=cparms,
-                   expectedrows=expectedrows)
+                   expectedlen=expectedlen)
 
     # Now copy the carray chunk by chunk
     chunklen = self._chunklen
