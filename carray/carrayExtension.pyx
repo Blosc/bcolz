@@ -59,8 +59,7 @@ cdef extern from "blosc.h":
                      size_t nbytes, void *src, void *dest,
                      size_t destsize) nogil
   int blosc_decompress(void *src, void *dest, size_t destsize) nogil
-  int blosc_getitem(void *src, int start, int stop,
-                    void *dest, size_t destsize) nogil
+  int blosc_getitem(void *src, int start, int nitems, void *dest) nogil
   void blosc_free_resources()
   void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
                            size_t *cbytes, size_t *blocksize)
@@ -207,9 +206,10 @@ cdef class chunk:
 
   cdef _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
-    cdef int ret, bsize
+    cdef int ret, bsize, blen
 
-    bsize = (stop - start) * self.itemsize
+    blen = stop - start
+    bsize = blen * self.itemsize
     nrowsinblock = self.blocksize // self.itemsize
 
     # Fill dest with uncompressed data
@@ -217,7 +217,7 @@ cdef class chunk:
       if bsize == self.nbytes:
         ret = blosc_decompress(self.data, dest, bsize)
       else:
-        ret = blosc_getitem(self.data, start, stop, dest, bsize)
+        ret = blosc_getitem(self.data, start, blen, dest)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 

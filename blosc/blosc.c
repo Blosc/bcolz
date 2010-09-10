@@ -759,11 +759,10 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
 }
 
 
-/* Specific routine optimized for decompression a small chunk of a
-   block.  This does not use threads (it would affect negatively to
-   performance). */
-int blosc_getitem(const void *src, int start, int stop,
-                  void *dest, size_t destsize)
+/* Specific routine optimized for decompression a small number of
+   items out of a compressed chunk.  This does not use threads because
+   it would affect negatively to performance. */
+int blosc_getitem(const void *src, int start, int nitems, void *dest)
 {
   uint8_t *_src=NULL;               /* current pos for source buffer */
   uint8_t version, versionlz;       /* versions for compressed header */
@@ -778,6 +777,7 @@ int blosc_getitem(const void *src, int start, int stop,
   uint32_t typesize, blocksize, nbytes, ctbytes;
   uint32_t j, bsize, bsize2, leftoverblock;
   int32_t cbytes, startb, stopb;
+  int stop = start + nitems;
 
   _src = (uint8_t *)(src);
 
@@ -800,12 +800,6 @@ int blosc_getitem(const void *src, int start, int stop,
   nblocks = (leftover>0)? nblocks+1: nblocks;
   _src += sizeof(int32_t)*nblocks;
 
-  /* Check that we have enough space to decompress */
-  if ((stop-start)*typesize > destsize) {
-    printf("Not enough space to put results.");
-    return -1;
-  }
-
   /* Parameters needed by blosc_d */
   params.typesize = typesize;
   params.flags = flags;
@@ -826,8 +820,8 @@ int blosc_getitem(const void *src, int start, int stop,
     }
 
     /* Compute start & stop for each block */
-    startb = start*typesize - j*blocksize;
-    stopb = stop*typesize - j*blocksize;
+    startb = start * typesize - j * blocksize;
+    stopb = stop * typesize - j * blocksize;
     if ((startb >= (int)blocksize) || (stopb <= 0)) {
       continue;
     }
