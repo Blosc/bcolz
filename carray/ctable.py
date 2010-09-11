@@ -4,8 +4,6 @@
 #       Created: September 01, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: ctable.py  $
-#
 ########################################################################
 
 """The ctable module.
@@ -402,7 +400,7 @@ class ctable(object):
         elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
-                arr = self.eval(key)
+                arr = self.eval(key, depth=3)
                 if arr.dtype.type != np.bool_:
                     raise IndexError, \
                           "`key` %s does not represent a boolean expression" %\
@@ -438,7 +436,7 @@ class ctable(object):
         return
 
 
-    def _getvars(self, expression, depth=2):
+    def _getvars(self, expression, depth):
         """Get the variables in `expression`.
 
         `depth` specifies the depth of the frame in order to reach local
@@ -498,7 +496,8 @@ class ctable(object):
                 ca.min_numexpr_version)
 
         # Get variables and column names participating in expression
-        vars, colnames = self._getvars(expression)
+        depth = kwargs.pop('depth', 2)
+        vars, colnames = self._getvars(expression, depth=depth)
 
         # Compute the optimal block size (in elements)
         typesize = sum(self.cols[name].dtype.itemsize for name in colnames)
