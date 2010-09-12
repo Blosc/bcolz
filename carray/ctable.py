@@ -500,7 +500,16 @@ class ctable(object):
         vars, colnames = self._getvars(expression, depth=depth)
 
         # Compute the optimal block size (in elements)
-        typesize = sum(self.cols[name].dtype.itemsize for name in colnames)
+        typesize = 0
+        for name in vars.iterkeys():
+            var = vars[name]
+            if name in colnames:
+                typesize += self.cols[name].dtype.itemsize
+            elif hasattr(var, "dtype"):  # numpy arrays
+                typesize += var.dtype.itemsize
+            elif hasattr(var, "__len__"): # collections
+                arr = np.array(var[0])
+                typesize += arr.dtype.itemsize
         bsize = EVAL_BLOCK_SIZE // typesize
         # Evaluation seems more efficient if block size is a power of 2
         bsize = 2 ** (int(math.log(bsize, 2)))
