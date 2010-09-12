@@ -421,7 +421,7 @@ cdef class carray:
     # Compress data in chunks
     cbytes = 0
     nchunks = self._nbytes // self._chunksize
-    for i in xrange(nchunks):
+    for i from 0 <= i < nchunks:
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparms)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
@@ -489,7 +489,7 @@ cdef class carray:
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
       remainder = array[nbytesfirst // itemsize:]
-      for i in xrange(nchunks):
+      for i from 0 <= i < nchunks:
         chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparms)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
@@ -530,7 +530,7 @@ cdef class carray:
 
     # Now copy the carray chunk by chunk
     chunklen = self._chunklen
-    for i in xrange(0, self.nrows, chunklen):
+    for i from 0 <= i < self.nrows by chunklen:
       ccopy.append(self[i:i + chunklen])
 
     return ccopy
@@ -632,6 +632,7 @@ cdef class carray:
       nchunk = key // chunklen
       keychunk = key % chunklen
       return self.chunks[nchunk][keychunk]
+    # Slices
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
       if step and step <= 0 :
@@ -683,7 +684,7 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     if self.leftover > 0:
       nchunks += 1
-    for nchunk in xrange(nchunks):
+    for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
       if blen == 0:
@@ -774,7 +775,7 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     if self.leftover > 0:
       nchunks += 1
-    for nchunk in xrange(nchunks):
+    for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop, step)
       if blen == 0:
@@ -819,7 +820,7 @@ cdef class carray:
     if self.leftover > 0:
       nchunks += 1
     nrows = self._nbytes // self.itemsize
-    for nchunk in xrange(nchunks):
+    for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
       # Get boolean values for this chunk
