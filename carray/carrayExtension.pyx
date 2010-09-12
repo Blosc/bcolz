@@ -555,7 +555,7 @@ cdef class carray:
     WARNING: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
     """
-    cdef int ret, itemsize, blocksize
+    cdef int ret, itemsize, blocksize, offset
     cdef int idxcache, posinbytes, blocklen
     cdef npy_intp nchunk, nchunks, chunklen
     cdef chunk chunk_
@@ -564,10 +564,10 @@ cdef class carray:
     nchunks = self._nbytes // self._chunksize
     chunklen = self._chunklen
     nchunk = pos // chunklen
-    posinbytes = (pos % chunklen) * itemsize
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
+      posinbytes = (pos % chunklen) * itemsize
       memcpy(dest, self.lastchunk + posinbytes, itemsize)
       return 1
 
@@ -591,12 +591,15 @@ cdef class carray:
     idxcache = (pos // blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
+      posinbytes = (pos % blocklen) * itemsize
       memcpy(dest, self.datacache + posinbytes, itemsize)
       return 1
 
     # No luck. Read a complete block.
-    chunk_._getitem(idxcache, idxcache+blocklen, self.datacache)
+    offset = idxcache % chunklen
+    chunk_._getitem(offset, offset+blocklen, self.datacache)
     # Copy the interesting bits to dest
+    posinbytes = (pos % blocklen) * itemsize
     memcpy(dest, self.datacache + posinbytes, itemsize)
     # Update the cache index
     self.idxcache = idxcache
@@ -622,11 +625,11 @@ cdef class carray:
         key += self.nrows
       if key >= self.nrows:
         raise IndexError, "index out of range"
-      nchunk = key // chunklen
       arr1 = self.arr1
       if self.getitem_cache(key, arr1.data):
         return PyArray_GETITEM(arr1, arr1.data)
       # Fallback action
+      nchunk = key // chunklen
       keychunk = key % chunklen
       return self.chunks[nchunk][keychunk]
     elif isinstance(key, slice):
