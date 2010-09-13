@@ -96,7 +96,8 @@ And get more info about uncompressed size (nbytes), compressed
 its representation form::
 
   >>> b   # <==> print repr(b)
-  carray((10,), int64)  nbytes: 80; cbytes: 4096; ratio: 0.02
+  carray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02
+    cparms := cparms(clevel=5, shuffle=True)
   [0 1 2 3 4 5 6 7 8 9]
 
 As you can see, the compressed size is much larger than the
@@ -122,6 +123,88 @@ using `sys.getsizeof()`::
   >>> import sys
   >>> sys.getsizeof(b)
   2691754
+
+An interesting possibility is that you can create carrays from scratch
+via the `fromiter()` constructor::
+
+  >>> ca.fromiter((i*2. for i in xrange(1000*1000)), dtype="f4")
+  carray((1000000,), float32)  nbytes: 3.81 MB; cbytes: 543.63 KB; ratio: 7.19
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 2.0, 4.0, ..., 1999994.0, 1999996.0, 1999998.0]
+
+that means that you can create very large arrays without the need to
+create a NumPy array first (that could not fit in memory) --but you
+can achieve the same goal by using the `.append()` method discussed
+later on.
+
+Finally, you can get a copy of your created carrays by using the
+`copy()` method::
+
+  >>> b.copy()
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+
+and you can control parameters for the newly created copy::
+
+  >>> b.copy(cparms=ca.cparms(clevel=9))
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.04 MB; ratio: 73.52
+    cparms := cparms(clevel=9, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+
+Enlarging your carray
+---------------------
+
+One of the nicest features of carray objects is that they can be
+enlarged very efficiently.  This can be done via the `carray.append()`
+method.
+
+For example, if `b` is a carray with 10 million elements::
+
+  >>> b
+  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+
+it can be enlarged by 10 elements with::
+
+  >>> b.append(np.arange(10.))
+  10   # the number of rows appended
+  >>> b
+  carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
+
+We can check that appending is very fast::
+
+  In [5]: a = np.arange(1e7)
+
+  In [6]: b = ca.carray(a)
+
+  In [7]: time b.append(np.arange(1e7))
+  CPU times: user 0.11 s, sys: 0.03 s, total: 0.14 s
+  Wall time: 0.14 s
+  Out[8]: 10000000
+
+  In [9]: time np.concatenate((a, np.arange(1e7)))
+  CPU times: user 0.11 s, sys: 0.09 s, total: 0.20 s
+  Wall time: 0.22 s    # 1.6x slower than carray
+  Out[10]:
+  array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,
+           9.99999700e+06,   9.99999800e+06,   9.99999900e+06])
+
+This is specially true when appending small bits to large arrays::
+
+  In [15]: b = ca.carray(a)
+
+  In [16]: timeit b.append(np.arange(1e1))
+  100000 loops, best of 3: 3.17 µs per loop
+
+  In [17]: timeit np.concatenate((a, np.arange(1e1)))
+  10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
+
+Definitely, appending is one of the strongests points of carray
+objects, so do not be afraid to use it extensively.
 
 Compression level and shuffle filter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -163,7 +246,10 @@ Accessing carray data
 ---------------------
 
 The way to access carray data is very similar to the NumPy indexing
-scheme, that is, by specifying an index or slice::
+scheme, and in fact, supports all the indexing methods supported by
+NumPy.
+
+Specifying an index or slice::
 
   >>> a = np.arange(10)
   >>> b = ca.carray(a)
@@ -173,28 +259,124 @@ scheme, that is, by specifying an index or slice::
   9
   >>> b[2:4]
   array([2, 3])
-  >>> b[4:]
-  array([4, 5, 6, 7, 8, 9])
-  >>> b[4:-2]
-  array([4, 5, 6, 7])
-  >>> b[:]
-  array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-
-As you see, NumPy objects are returned as the result of an indexing
-operation.  You can even specify steps::
-
   >>> b[::2]
   array([0, 2, 4, 6, 8])
   >>> b[3:9:3]
   array([3, 6])
 
-although negative steps are not supported::
+As you see, NumPy objects are returned as the result of an indexing
+operation.  In fact, a handy way to get a NumPy array out of a carray
+object is asking for the complete range:
 
-  >>> b[3:9:-3]
-  Traceback (most recent call last):
-    File "<stdin>", line 1, in <module>
-      File "carrayExtension.pyx", line 395, in carray.carrayExtension.carray.__getitem__ (carray/carrayExtension.c:3327)
-      NotImplementedError: step in slice can only be positive
+  >>> b[:]
+  array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+
+Fancy indexing is supported too.  Boolean arrays::
+
+  >>> barr = np.array([True]*5+[False]*5)
+  >>> b[barr]
+  array([0, 1, 2, 3, 4])
+  >>> b[ca.carray(barr)]
+  array([0, 1, 2, 3, 4])
+
+List of indices::
+
+  >>> b[[2,3,0,2]]
+  array([2, 3, 0, 2])
+  >>> b[ca.carray([2,3,0,2])]
+  array([2, 3, 0, 2])
+
+Querying carrays
+----------------
+
+carrays can be queried in different ways.  The most easy, yet powerful
+way is using its iterator::
+
+  In [52]: a = np.arange(1e7)
+
+  In [53]: b = ca.carray(a)
+
+  In [54]: time sum(v for v in a if v < 10)
+  CPU times: user 8.02 s, sys: 0.00 s, total: 8.03 s
+  Wall time: 8.33 s
+  Out[55]: 45.0
+
+  In [56]: time sum(v for v in b if v < 10)
+  CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s
+  Wall time: 0.93 s   # 9x faster than NumPy
+  Out[57]: 45.0
+
+Also, you can quickly retrieve the indices of a boolean carray that
+have a true value::
+
+  In [68]: barr = ca.carray(a < 10)
+
+  In [69]: [i for i in barr.where()]
+  Out[69]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+And you can retrieve values where a boolean array is true::
+
+  In [70]: [i for i in b.getif(barr)]
+  Out[70]: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+
+The advantage of the carray iterators is that you can use them in
+generator contexts and hence, you don't need to waste memory for
+creating temporaries, which can be important when dealing with large
+arrays.
+
+Finally, all these iterators are very fast, so try express your
+problems in a way that you can use them extensively.
+
+Modifying carrays
+-----------------
+
+Although it is not a very efficient operation, carrays can be
+modifyied too: You can do it by speficifying scalar or slice indices::
+
+  >>> a = np.arange(10)
+  >>> b = ca.carray(a)
+  >>> b[1] = 10
+  >>> print b
+  [ 0 10  2  3  4  5  6  7  8  9]
+  >>> b[1:4] = 10
+  >>> print b
+  [ 0 10 10 10  4  5  6  7  8  9]
+  >>> b[1::3] = 10
+  >>> print b
+  [ 0 10 10 10 10  5  6 10  8  9]
+
+and fancy indexing is supported too::
+
+  >>> barr = np.array([True]*5+[False]*5)
+  >>> b[barr] = -5
+  >>> print b
+  [-5 -5 -5 -5 -5  5  6 10  8  9]
+  >>> b[[1,2,4,1]] = -10
+  >>> print b
+  [ -5 -10 -10  -5 -10   5   6  10   8   9]
+
+However, modifying a carray is expensive::
+
+  In [27]: a = np.arange(1e7)
+
+  In [28]: b = ca.carray(a)
+
+  In [29]: timeit a[2] = 3
+  10000000 loops, best of 3: 101 ns per loop
+
+  In [30]: timeit b[2] = 3
+  10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy
+
+although modifying values in lastest chunk is somewhat cheaper::
+
+  In [31]: timeit a[-1] = 3
+  10000000 loops, best of 3: 102 ns per loop
+
+  In [32]: timeit b[-1] = 3
+  10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
+
+So, in general, you should avoid abusing of this feature when using
+carrays.
 
 carray metadata
 ---------------
@@ -208,10 +390,6 @@ makes it to 'quack' like a NumPy array::
   dtype('float64')
   >>> b.shape
   (10000000,)
-
-The fact that a carray 'quacks' like a NumPy array is important
-because it can be used in some circumstances (but not always) where a
-NumPy is expected (see ``Operating with carrays`` section below).
 
 In addition, it implements the `cbytes` attribute that tells how many
 bytes in memory uses the carray object::
@@ -236,32 +414,6 @@ Finally, you can access the `chunklen` for this carray::
   >>> b.chunklen
   16384
 
-Enlarging your carray
----------------------
-
-One of the nicest features of carray objects is that they can be
-enlarged very efficiently.  This can be done via the `carray.append()`
-method.
-
-For example, if `b` is a carray with 10 million elements::
-
-  >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
-
-it can be enlarged by 10 elements with::
-
-  >>> b.append(np.arange(10.))
-  10   # the number of rows appended
-  >>> b
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722; ratio: 29.72
-  [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
-
-You may want to compare the `carray.append()` method of carrays to the
-`numpy.concatenate()` function in NumPy that serves similar purposes
-with the 'bench/concat.py' script.  In general, you will see that the
-`carray.append()` method is faster (specially with modern CPUs, that
-can accelerate the compression/decompression process a lot).
 
 
 Short Reference
@@ -331,62 +483,6 @@ fine-tune the length of its chunks more easily::
   >>> ca.carray(a, expectedlen=10*1000*1000*1000).chunklen
   131072
 
-carray iterators
-----------------
-
-It is good to know that carray implements very fast iterators::
-
-  In [3]: a = np.arange(1e6)
-
-  In [4]: time sum((v for v in a if v < 4))
-  CPU times: user 0.75 s, sys: 0.00 s, total: 0.75 s
-  Wall time: 0.77 s
-  Out[5]: 6.0
-
-  In [6]: b = ca.carray(a)
-
-  In [7]: time sum((v for v in b if v < 4))
-  CPU times: user 0.09 s, sys: 0.00 s, total: 0.09 s
-  Wall time: 0.10 s   # 7.7x faster than NumPy iterator
-  Out[8]: 6.0
-
-You can also specify start, stop and step values, as well as adding
-Python-space conditions::
-
-  In [9]: time sum((v for v in a[2::3] if v < 10))
-  CPU times: user 0.25 s, sys: 0.00 s, total: 0.25 s
-  Wall time: 0.25 s
-  Out[10]: 15.0
-
-  In [11]: time sum((v for v in b.iter(start=2, step=3) if v < 10))
-  CPU times: user 0.04 s, sys: 0.00 s, total: 0.04 s
-  Wall time: 0.04 s   # 6.3x faster than NumPy
-  Out[12]: 15.0
-
-You may notice that this iterator is still faster than expressing
-the condition in NumPy using fancy indexing::
-
-  In [15]: time sum(a[a>10])
-  CPU times: user 0.45 s, sys: 0.00 s, total: 0.45 s
-  Wall time: 0.45 s
-  Out[16]: 499999499945.0
-
-  In [17]: time sum((v for v in b if v > 10))
-  CPU times: user 0.13 s, sys: 0.00 s, total: 0.13 s
-  Wall time: 0.13 s
-  Out[18]: 499999499945.0
-
-but far more slower than using a NumPy `sum` ufunc::
-
-  In [20]: time a[a>10].sum()
-  CPU times: user 0.01 s, sys: 0.00 s, total: 0.01 s
-  Wall time: 0.01 s  # 13x faster than carray iterator
-  Out[21]: 499999499945.0
-
-But the advantage of the carray iterator is that you can use it in
-generator contexts and hence, you don't need to waste memory for
-creating temporaries, which can be important when dealing with large
-arrays.
 
 
 
