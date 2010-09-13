@@ -130,7 +130,8 @@ for arg in args:
         sys.argv.remove(arg)
 
 # Add -msse2 flag for optimizing shuffle in Blosc
-CFLAGS.append("-msse2")
+if os.name == 'posix':
+    CFLAGS.append("-msse2")
 
 # Include NumPy header dirs 
 inc_dirs.extend(get_numpy_include_dirs())
@@ -140,6 +141,12 @@ def_macros = [('NDEBUG', 1)]
 if os.name == 'nt':
     def_macros.append(('WIN32', 1))
 
+#setup information for C extension
+if os.name == 'nt':
+    pthread_win = ['blosc/win32/pthread.c']
+else:
+    pthread_win = []
+    
 
 classifiers = """\
 Development Status :: 1 - Alpha
@@ -181,7 +188,7 @@ than using a traditional ndarray object from NumPy.
                    define_macros=def_macros,
                    sources = [ "carray/carrayExtension.pyx",
                                "blosc/blosc.c", "blosc/blosclz.c",
-                               "blosc/shuffle.c" ],
+                               "blosc/shuffle.c" ] + pthread_win,
                    depends = [ "carray/definitions.pxd",
                                "blosc/blosc.h", "blosc/blosclz.h",
                                "blosc/shuffle.h" ],
