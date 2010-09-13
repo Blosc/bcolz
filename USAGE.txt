@@ -9,11 +9,22 @@ carray at glance
 ----------------
 
 carray is a Python package that provides containers for numerical data
-that can be compressed in-memory.
+that can be compressed in-memory.  It is highly based on NumPy, and
+uses it as the standard way to communicate with carray objects.
 
-carray is highly based on NumPy, and uses it as the standard way to
-communicate with carray objects.  However, carray objects bring
-several advantages over NumPy::
+The building blocks of carray objects are the so-called ``chunks``
+that are compressed as a whole, but they can be decompressed partially
+in order to improve the fetching of small parts of the array.
+
+This ``chunked`` nature of the carray objects, together with a buffer
+for performing I/O, makes appends very cheap and fetches reasonably
+fast.  However, modification of values is an expensive operation.
+
+The compresion/decompression process is carried out internally by
+Blosc, a high-performance compressor that is optimized for binary
+data.  That ensures maximum performance for I/O operation.
+
+carray objects bring several advantages over NumPy::
 
   * Data is compressed: they take less memory space.
 
@@ -23,12 +34,6 @@ several advantages over NumPy::
   * Numexpr-powered: so that you can operate with compressed data in a
     fast and convenient way.
 
-The compresion/decompression process is carried out internally by
-Blosc, a high-performance compressor that is optimized for binary data
-and that can bring data to the CPU usually faster than a ``memcpy``
-call, specially on modern CPUs.  That means that, when using these
-CPUs you will be able to perform computations beyond the bottleneck of
-the memory bus.
 
 carray limitations
 ------------------
@@ -87,19 +92,18 @@ You can have a peek at it by using its string form::
   [0, 1, 2... 7, 8, 9]
 
 And get more info about uncompressed size (nbytes), compressed
-(cbytes) and the compression ratio (ratio = nbytes/cbytes)::
+(cbytes) and the compression ratio (ratio = nbytes/cbytes), by using
+its representation form::
 
-  >>> b
+  >>> b   # <==> print repr(b)
   carray((10,), int64)  nbytes: 80; cbytes: 4096; ratio: 0.02
   [0 1 2 3 4 5 6 7 8 9]
 
 As you can see, the compressed size is much larger than the
 uncompressed one.  How this can be?  Well, it turns out that carray
-wears an I/O buffer for accelerating some internal operations, and
-this buffer is 4 KB for this case (but you can change its size by
-using the `expectedlen` and `chunklen` parameters in the `carray`
-constructor).  So, for small arrays (typically those taking less than
-1 MB), there is little point in using a carray.
+wears an I/O buffer for accelerating some internal operations.  So,
+for small arrays (typically those taking less than 1 MB), there is
+little point in using a carray.
 
 However, when creating carrays larger than 1 MB (its natural
 scenario), the size of the I/O buffer is generally negligible in
@@ -124,10 +128,13 @@ Compression level and shuffle filter
 
 carray uses Blosc as the internal compressor, and Blosc can be
 directed to use different compression levels and to use (or not) its
-internal shuffle filter.
+internal shuffle filter.  The shuffle filter is a way to improve
+compression when using items that have type sizes > 1 byte, although
+it might be counter-productive (very rarely) in some data
+distributions.
 
 By default carrays are compressed using Blosc with compression level 5
-and shuffle is active.  But depending on you needs, you can use other
+with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
   >>> ca.carray(a, ca.cparms(clevel=1))
@@ -149,39 +156,8 @@ but, as you can see, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
 fine-tuning the performance for an specific carray).
 
-You may want to use explictly the `chunklen` parameter to fine-tune
-your compression levels::
-
-  >>> ca.carray(a)
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-    cparms := cparms(clevel=5, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
-
-  >>> ca.carray(a).chunklen
-  16384   # 128 KB = 16384 * 8 is the default chunk size for this carray
-
-  >>> ca.carray(a, chunklen=512)
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48
-    cparms := cparms(clevel=5, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
-
-  >>> ca.carray(a, chunklen=8*1024)
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88
-    cparms := cparms(clevel=5, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
-
-Finally, if you are going to add a lot of rows to your carrays, be
-sure to use `expectedlen` parameter so that you inform the
-constructor about the expected length of your final carray::
-
-  >>> ca.carray(a, expectedlen=10).chunklen
-  512
-  >>> ca.carray(a, expectedlen=10*1000).chunklen
-  4096
-  >>> ca.carray(a, expectedlen=10*1000*1000).chunklen
-  16384
-  >>> ca.carray(a, expectedlen=10*1000*1000*1000).chunklen
-  131072
+See ``Optimization tips`` section for info on how you can change other
+internal parameters like the size of the chunk.
 
 Accessing carray data
 ---------------------
@@ -219,63 +195,6 @@ although negative steps are not supported::
     File "<stdin>", line 1, in <module>
       File "carrayExtension.pyx", line 395, in carray.carrayExtension.carray.__getitem__ (carray/carrayExtension.c:3327)
       NotImplementedError: step in slice can only be positive
-
-Using iterators
-~~~~~~~~~~~~~~~
-
-carray also has support for efficient iterators::
-
-  In [3]: a = np.arange(1e6)
-
-  In [4]: time sum((v for v in a if v < 4))
-  CPU times: user 6.51 s, sys: 0.00 s, total: 6.51 s
-  Wall time: 6.52 s
-  Out[5]: 6.0
-
-  In [6]: b = ca.carray(a)
-
-  In [7]: time sum((v for v in b if v < 4))
-  CPU times: user 0.73 s, sys: 0.04 s, total: 0.78 s
-  Wall time: 0.75 s  # 8.7x faster than ndarray
-  Out[8]: 6.0
-
-You can also specify start, stop and step values, as well as adding
-Python-space conditions::
-
-  In [9]: time sum((v for v in a[2::3] if v < 10))
-  CPU times: user 2.18 s, sys: 0.00 s, total: 2.18 s
-  Wall time: 2.19 s
-  Out[10]: 15.0
-
-  In [11]: time sum((v for v in b.iter(start=2, step=3) if v < 10))
-  CPU times: user 0.26 s, sys: 0.03 s, total: 0.30 s
-  Wall time: 0.30 s  # 7.3x faster than ndarray
-  Out[12]: 15.0
-
-You may notice that this iterator is still faster than expressing
-the condition in NumPy using fancy indexing::
-
-  In [3]: time sum(a[a>10])
-  CPU times: user 1.78 s, sys: 0.02 s, total: 1.80 s
-  Wall time: 1.80 s
-  Out[4]: 499999499945.0
-
-  In [5]: time sum((v for v in b if v > 10))
-  CPU times: user 1.17 s, sys: 0.04 s, total: 1.22 s
-  Wall time: 1.16 s   #  1.5x faster than fancy indexing
-  Out[6]: 499999499945.0
-
-but far more slower than using a NumPy `sum` ufunc::
-
-  In [7]: time a[a>10].sum()
-  CPU times: user 0.07 s, sys: 0.01 s, total: 0.08 s
-  Wall time: 0.08 s   # 15x faster than carray
-  Out[8]: 499999499945.0
-
-However, the advantage of the carray iterator is that you can use it
-in generator contexts and hence, you don't need to waste memory for
-creating temporaries, which can be important when dealing with large
-arrays.
 
 carray metadata
 ---------------
@@ -344,63 +263,9 @@ with the 'bench/concat.py' script.  In general, you will see that the
 `carray.append()` method is faster (specially with modern CPUs, that
 can accelerate the compression/decompression process a lot).
 
-Operating with carrays
-----------------------
-
-A carray is not only useful as a high-performance in-memory data
-container, but you can also use it to perform operations with them by
-using the `tables.Expr` class that comes with PyTables (>= 2.2).
-
-`tables.Expr` uses the Numexpr package under the covers, so operations
-are both memory-efficient and multi-threaded (i.e. they can use
-multiple cores, if available).  If we add the high-performance Blosc
-compressor (that is used by carray internally) into this equation,
-carray allows for an extremely efficient way to perform computations
-that saves both memory and time, specially on very large arrays.
-
-For example, let's create a carray::
-
-  >>> a = np.arange(1e7)
-  >>> b = ca.carray(a)
-  >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 3590458; ratio: 22.28
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
-
-Now, let's add 1 to it::
-
-  >>> import tables as tb
-  >>> expr = tb.Expr("b+1")
-  >>> cout = ca.carray(np.empty((0,), dtype='f8'))
-  >>> expr.setOutput(cout, append_mode=True)
-  >>> expr.eval()
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3599988; ratio: 22.22
-  [1.0, 2.0, 3.0... 8.0, 9.0, 10.0]   # returns cout, as can be seen in:
-  >>> cout
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 3599988; ratio: 22.22
-  [1.0, 2.0, 3.0... 8.0, 9.0, 10.0]  # same object than above
-
-where `cout` holds the results of the operation.  Initially we have
-created it as an empty carray, and we instructed the `expr` instance
-to add results to it (by using its `append()` mode under the hood).
-
-Of course, you can evaluate more complex expressions and mix carrays
-and NumPy arrays (as well as other PyTables objects) freely::
-
-  >>> expr = tb.Expr("a**2+b**3+sin(a*b)-cout")
-  >>> cout2 = ca.carray(np.empty((0,), dtype='f8'))
-  >>> expr.setOutput(cout2, append_mode=True)
-  >>> expr.eval()
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 40654959; ratio: 1.97
-  [-1.0, 0.84147098480789673, 8.2431975046920716... 9.9999920000020002e+20, 9.9999950000007007e+20, 9.9999980000000016e+20]
-
-In the expression above we have included a couple of carray instances
-(`b` and `cout`) with a pure NumPy array (`a`), and the result is a
-new carray (`cout2`).
-
 
 Short Reference
 ===============
-
 
 Utility functions
 -----------------
@@ -416,6 +281,112 @@ Utility functions
 * detect_number_of_cores()
     Detect the number of cores on a system.
 
+
+Optimization tips
+=================
+
+Changing explictly the length of chunks
+---------------------------------------
+
+You may want to use explictly the `chunklen` parameter to fine-tune
+your compression levels::
+
+  >>> a = np.arange(1e7)
+  >>> ca.carray(a)
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  >>> ca.carray(a).chunklen
+  16384   # 128 KB = 16384 * 8 is the default chunk size for this carray
+  >>> ca.carray(a, chunklen=512)
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  >>> ca.carray(a, chunklen=8*1024)
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88
+    cparms := cparms(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+
+As you can see, the length of the chunk affects very much compression
+levels and the performance of I/O to carrays too.
+
+In general, however, it is safer (and quicker!) to use the
+`expectedlen` parameter (see next section).
+
+Informing about the length of your carrays
+------------------------------------------
+
+If you are going to add a lot of rows to your carrays, be sure to use
+the `expectedlen` parameter in creating time to inform the constructor
+about the expected length of your final carray.  This allows carray to
+fine-tune the length of its chunks more easily::
+
+  >>> a = np.arange(1e7)
+  >>> ca.carray(a, expectedlen=10).chunklen
+  512
+  >>> ca.carray(a, expectedlen=10*1000).chunklen
+  4096
+  >>> ca.carray(a, expectedlen=10*1000*1000).chunklen
+  16384
+  >>> ca.carray(a, expectedlen=10*1000*1000*1000).chunklen
+  131072
+
+carray iterators
+----------------
+
+It is good to know that carray implements very fast iterators::
+
+  In [3]: a = np.arange(1e6)
+
+  In [4]: time sum((v for v in a if v < 4))
+  CPU times: user 0.75 s, sys: 0.00 s, total: 0.75 s
+  Wall time: 0.77 s
+  Out[5]: 6.0
+
+  In [6]: b = ca.carray(a)
+
+  In [7]: time sum((v for v in b if v < 4))
+  CPU times: user 0.09 s, sys: 0.00 s, total: 0.09 s
+  Wall time: 0.10 s   # 7.7x faster than NumPy iterator
+  Out[8]: 6.0
+
+You can also specify start, stop and step values, as well as adding
+Python-space conditions::
+
+  In [9]: time sum((v for v in a[2::3] if v < 10))
+  CPU times: user 0.25 s, sys: 0.00 s, total: 0.25 s
+  Wall time: 0.25 s
+  Out[10]: 15.0
+
+  In [11]: time sum((v for v in b.iter(start=2, step=3) if v < 10))
+  CPU times: user 0.04 s, sys: 0.00 s, total: 0.04 s
+  Wall time: 0.04 s   # 6.3x faster than NumPy
+  Out[12]: 15.0
+
+You may notice that this iterator is still faster than expressing
+the condition in NumPy using fancy indexing::
+
+  In [15]: time sum(a[a>10])
+  CPU times: user 0.45 s, sys: 0.00 s, total: 0.45 s
+  Wall time: 0.45 s
+  Out[16]: 499999499945.0
+
+  In [17]: time sum((v for v in b if v > 10))
+  CPU times: user 0.13 s, sys: 0.00 s, total: 0.13 s
+  Wall time: 0.13 s
+  Out[18]: 499999499945.0
+
+but far more slower than using a NumPy `sum` ufunc::
+
+  In [20]: time a[a>10].sum()
+  CPU times: user 0.01 s, sys: 0.00 s, total: 0.01 s
+  Wall time: 0.01 s  # 13x faster than carray iterator
+  Out[21]: 499999499945.0
+
+But the advantage of the carray iterator is that you can use it in
+generator contexts and hence, you don't need to waste memory for
+creating temporaries, which can be important when dealing with large
+arrays.
 
 
 

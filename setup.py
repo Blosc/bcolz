@@ -168,10 +168,6 @@ carray is a container for numerical data that can be compressed
 in-memory.  The compresion process is carried out internally by Blosc,
 a high-performance compressor that is optimized for binary data.
 
-Having data compressed in-memory can reduce the stress of the memory
-subsystem.  The net result is that carray operations can be faster
-than using a traditional ndarray object from NumPy.
-
 """,
       classifiers = filter(None, classifiers.split("\n")),
       author = 'Francesc Alted',
