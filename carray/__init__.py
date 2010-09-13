@@ -4,8 +4,6 @@
 #       Created: August 05, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: __init__.py  $
-#
 ########################################################################
 """
 carray: a compressed and enlargeable in-memory data container
@@ -18,8 +16,8 @@ a high-performance compressor that is optimized for binary data.
 Public variables
 ----------------
 
-* __version__
-* ncores
+* __version__ : the version of carray package
+* ncores : the number of detected cores
 
 Public functions
 ----------------
@@ -27,12 +25,14 @@ Public functions
 * blosc_set_num_threads
 * blosc_version
 * detect_number_of_cores
+* fromiter
 * set_num_threads
 
 Public classes
 --------------
 
 * carray
+* cparms
 * ctable
 
 """

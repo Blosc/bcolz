@@ -16,7 +16,17 @@ import carray as ca
 
 
 def detect_number_of_cores():
-    """Detect the number of cores on a system."""
+    """
+    detect_number_of_cores()
+
+    Detect the number of cores in this system.
+
+    Returns
+    -------
+    out : int
+        The number of cores in this system.
+
+    """
     # Linux, Unix and MacOS:
     if hasattr(os, "sysconf"):
         if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
@@ -35,11 +45,24 @@ def detect_number_of_cores():
 
 
 def set_num_threads(nthreads):
-    """Set the number of threads to be used during carray operation.
+    """
+    set_num_threads(nthreads)
+
+    Set the number of threads to be used during carray operation.
 
     This affects to both Blosc and Numexpr (if available).  If you want
     to change this number only for Blosc, use `blosc_set_number_threads`
     instead.
+
+    Parameters
+    ----------
+    nthreads : int
+        The number of threads to be used during carray operation.
+
+    See also
+    --------
+    blosc_set_number_threads
+
     """
     ca.blosc_set_num_threads(nthreads)
     if ca.numexpr_here:
@@ -47,15 +70,27 @@ def set_num_threads(nthreads):
 
 
 def fromiter(iterator, dtype, count=-1, **kwargs):
-    """Create a carray/ctable from `iterator` object.
+    """
+    fromiter(iterator, dtype, count=-1, **kwargs)
 
-    `dtype` specifies the type of the outcome object.
+    Create a carray/ctable from an `iterator` object.
 
-    `count` specifies the number of items to read from iterable. The
-    default is -1, which means all data is read.
+    Parameters
+    ----------
+    dtype : numpy.dtype instance
+        Specifies the type of the outcome object.
 
-    You can pass whatever additional arguments supported by
-    carray/ctable constructors in `kwargs`.
+    count : int
+        Specifies the number of items to read from iterable. The
+        default is -1, which means all data is read.
+
+    kwargs : list of parameters or dictionary
+        Any parameter supported by the carray/ctable constructors.
+
+    Returns
+    -------
+    out : a carray/ctable object
+
     """
 
     if count == -1:
@@ -88,17 +123,23 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
 
 
 class cparms(object):
-    """Class to host parameters for compression and other filters.
+    """
+    cparms(clevel=5, shuffle=True)
 
-    You can pass the `clevel` and `shuffle` params to the constructor.
-    If you do not pass them, the defaults are ``5`` and ``True``
-    respectively.
+    Class to host parameters for compression and other filters.
 
-    It offers these read-only attributes::
+    Parameters
+    ----------
+    clevel : int (0 <= clevel < 10)
+        The compression level.
 
-      * clevel: the compression level
+    shuffle : bool
+        Whether the shuffle filter is active or not.
 
-      * shuffle: whether the shuffle filter is active or not
+    Notes
+    -----
+    The shuffle filter may be automatically disable in case it is
+    non-sense to use it (e.g. itemsize == 1).
 
     """
 
@@ -113,7 +154,6 @@ class cparms(object):
         return self._shuffle
 
     def __init__(self, clevel=5, shuffle=True):
-        """Create an instance with `clevel` and `shuffle` params."""
         if not isinstance(clevel, int):
             raise ValueError, "`clevel` must an int."
         if not isinstance(shuffle, (bool, int)):
