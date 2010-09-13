@@ -80,7 +80,7 @@ class ctable(object):
     @property
     def shape(self):
         "The shape of this ctable."
-        return (self.nrows,)
+        return (self.len,)
 
     @property
     def nbytes(self):
@@ -123,7 +123,7 @@ class ctable(object):
         """The names of the columns (list)."""
         self.cols = {}
         """The carray columns (dict)."""
-        self.nrows = 0
+        self.len = 0
         """The number of rows (int)."""
 
         # Get the names of the cols
@@ -170,7 +170,7 @@ class ctable(object):
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `cols` must have the same length"
             clen = len(column)
-        self.nrows += clen
+        self.len += clen
 
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
@@ -223,7 +223,7 @@ class ctable(object):
             if clen >= 0 and clen != clen2:
                 raise ValueError, "all cols in `rows` must have the same length"
             clen = clen2
-        self.nrows += clen
+        self.len += clen
 
 
     def addcol(self, newcol, name=None, pos=None):
@@ -251,7 +251,7 @@ class ctable(object):
                 raise ValueError, "`name` must be a string"
         if name in self.names:
             raise ValueError, "'%s' column already exists" % name
-        if len(newcol) != self.nrows:
+        if len(newcol) != self.len:
             raise ValueError, "`newcol` must have the same length than ctable"
 
         if isinstance(newcol, np.ndarray):
@@ -312,7 +312,7 @@ class ctable(object):
 
     def __len__(self):
         """Return the length of self."""
-        return self.nrows
+        return self.len
 
 
     def __sizeof__(self):
@@ -414,7 +414,7 @@ class ctable(object):
         # From now on, will only deal with [start:stop:step] slices
 
         # Get the corrected values for start, stop, step
-        (start, stop, step) = slice(start, stop, step).indices(self.nrows)
+        (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step)
         ra = np.empty(shape=(n,), dtype=self.dtype)
@@ -516,7 +516,7 @@ class ctable(object):
 
         # Perform the evaluation in blocks
         vars_ = {}
-        for i in xrange(0, self.nrows, bsize):
+        for i in xrange(0, self.len, bsize):
             # Get buffers for columns
             for name in vars.iterkeys():
                 var = vars[name]
@@ -530,7 +530,7 @@ class ctable(object):
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
             if i == 0:
                 # Get a decent default for expectedlen
-                nrows = kwargs.pop('expectedlen', self.nrows)
+                nrows = kwargs.pop('expectedlen', self.len)
                 result = ca.carray(res_block, expectedlen=nrows, **kwargs)
             else:
                 result.append(res_block)
@@ -540,7 +540,7 @@ class ctable(object):
 
     def __str__(self):
         """Represent the ctable as an string."""
-        if self.nrows > 100:
+        if self.len > 100:
             return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
                    (self[0], self[1], self[2], self[-3], self[-2], self[-1])
         else:

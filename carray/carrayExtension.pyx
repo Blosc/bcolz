@@ -313,8 +313,8 @@ cdef class carray:
   cdef char *datacache
   cdef object arr1
 
-  property nrows:
-    "The number of rows (leading dimension) in this carray."
+  property len:
+    "The length (leading dimension) of this carray."
     def __get__(self):
       return self._nbytes // self.itemsize
 
@@ -326,7 +326,7 @@ cdef class carray:
   property shape:
     "The shape of this carray."
     def __get__(self):
-      return (self.nrows,)
+      return (self.len,)
 
   property cparms:
     "The compression parameters for this carray."
@@ -521,7 +521,7 @@ cdef class carray:
 
     # Get defaults for some parameters
     cparms = kwargs.pop('cparms', self._cparms)
-    expectedlen = kwargs.pop('expectedlen', self.nrows)
+    expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
@@ -530,7 +530,7 @@ cdef class carray:
 
     # Now copy the carray chunk by chunk
     chunklen = self._chunklen
-    for i from 0 <= i < self.nrows by chunklen:
+    for i from 0 <= i < self.len by chunklen:
       ccopy.append(self[i:i + chunklen])
 
     return ccopy
@@ -538,7 +538,7 @@ cdef class carray:
 
   def __len__(self):
     """Return the length of self."""
-    return self.nrows
+    return self.len
 
 
   def __sizeof__(self):
@@ -622,8 +622,8 @@ cdef class carray:
     if isinstance(key, int) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
-        key += self.nrows
-      if key >= self.nrows:
+        key += self.len
+      if key >= self.len:
         raise IndexError, "index out of range"
       arr1 = self.arr1
       if self.getitem_cache(key, arr1.data):
@@ -654,7 +654,7 @@ cdef class carray:
     elif hasattr(key, "dtype"):
       if key.dtype.type == np.bool_:
         # A boolean array
-        if len(key) != self.nrows:
+        if len(key) != self.len:
           raise ValueError, "boolean array length must match len(self)"
         return np.fromiter(self.getif(key), dtype=self.dtype)
       elif np.issubsctype(key, np.int_):
@@ -670,7 +670,7 @@ cdef class carray:
     # From now on, will only deal with [start:stop:step] slices
 
     # Get the corrected values for start, stop, step
-    (start, stop, step) = slice(start, stop, step).indices(self.nrows)
+    (start, stop, step) = slice(start, stop, step).indices(self.len)
 
     # Build a numpy container
     blen = get_len_of_range(start, stop, step)
@@ -718,8 +718,8 @@ cdef class carray:
     if isinstance(key, int) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
-        key += self.nrows
-      if key >= self.nrows:
+        key += self.len
+      if key >= self.len:
         raise IndexError, "index out of range"
       (start, stop, step) = key, key+1, 1
     # Slices
@@ -741,7 +741,7 @@ cdef class carray:
     elif hasattr(key, "dtype"):
       if key.dtype.type == np.bool_:
         # A boolean array
-        if len(key) != self.nrows:
+        if len(key) != self.len:
           raise ValueError, "boolean array length must match len(self)"
         self.bool_update(key, value)
         return
@@ -760,7 +760,7 @@ cdef class carray:
       raise NotImplementedError, "key not supported: %s" % repr(key)
 
     # Get the corrected values for start, stop, step
-    (start, stop, step) = slice(start, stop, step).indices(self.nrows)
+    (start, stop, step) = slice(start, stop, step).indices(self.len)
 
     # Build a numpy object out of value
     vlen = get_len_of_range(start, stop, step)
@@ -873,7 +873,7 @@ cdef class carray:
     if step <= 0:
       raise NotImplementedError, "step param can only be positive"
     self.start, self.stop, self.step = \
-        slice(start, stop, step).indices(self.nrows)
+        slice(start, stop, step).indices(self.len)
     self.sss_mode = True
     return iter(self)
 
@@ -898,7 +898,7 @@ cdef class carray:
       raise ValueError, "`boolarr` is not an array"
     if boolarr.dtype.type != np.bool_:
       raise ValueError, "`boolarr` is not an array of booleans"
-    if len(boolarr) != self.nrows:
+    if len(boolarr) != self.len:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.getif_mode = True
     self.getif_arr = boolarr
@@ -971,7 +971,7 @@ cdef class carray:
 
   def __str__(self):
     """Represent the carray as an string."""
-    if self.nrows > 100:
+    if self.len > 100:
       return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
                                                   self[-3], self[-2], self[-1])
     else:
