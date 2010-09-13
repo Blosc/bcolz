@@ -4,22 +4,8 @@
 #       Created: August 05, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: carrayExtension.pyx  $
-#
 ########################################################################
 
-"""The carray extension.
-
-Public classes (type extensions):
-
-    carray
-
-Public functions:
-
-    blosc_set_num_threads
-    blosc_version
-
-"""
 
 import numpy as np
 import carray as ca
@@ -80,28 +66,44 @@ import_array()
 
 # Some utilities
 def blosc_set_num_threads(nthreads):
-  """Set the number of threads that Blosc can use.
+  """
+  blosc_set_num_threads(nthreads)
 
-  Returns the previous setting for this number.
+  Set the number of threads that Blosc can use.
+
+  Parameters
+  ----------
+  nthreads : int
+      The desired number of threads to use.
+
+  Returns
+  -------
+  out : int
+      The previous setting for the number of threads.
+
   """
   return blosc_set_nthreads(nthreads)
 
 
 def blosc_version():
-  """Return the version of the Blosc library."""
+  """
+  blosc_version()
 
+  Return the version of the Blosc library.
+
+  """
   return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
 
 
 # This is the same than in utils.py, but works faster in extensions
 cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
-    """Get the length of a (start, stop, step) range."""
-    cdef npy_intp n
+  """Get the length of a (start, stop, step) range."""
+  cdef npy_intp n
 
-    n = 0
-    if start < stop:
-        n = ((stop - start - 1) // step + 1);
-    return n
+  n = 0
+  if start < stop:
+      n = ((stop - start - 1) // step + 1);
+  return n
 
 
 cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
@@ -139,22 +141,12 @@ cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
 
 cdef class chunk:
   """
+  carry(array, object cparms)
+
   Compressed in-memory container for a data chunk.
 
   This class is meant to be used only by the `carray` class.
 
-  Public methods
-  --------------
-
-  None
-
-  Special methods
-  ---------------
-
-  __getitem__(key)
-      Get the values specified in ``key``.
-  __setitem__(key, value)
-      Set the specified ``value`` in ``key``.
   """
 
   cdef object dtype
@@ -165,11 +157,6 @@ cdef class chunk:
   cdef char *data
 
   def __cinit__(self, ndarray array, object cparms):
-    """Initialize chunk and compress data based on numpy `array`.
-
-    You can pass parameters to the internal compressor in `cparms` that must
-    be an instance of the `cparms` class.
-    """
     cdef int i, itemsize
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
@@ -276,22 +263,32 @@ cdef class chunk:
 
 cdef class carray:
   """
+  carray(array, cparms=None, expectedlen=None, chunklen=None)
+
   A compressed and enlargeable in-memory data container.
 
-  This class is designed for public consumption.
+  `carray` exposes a series of methods for dealing with the compressed
+  container in a NumPy-like way.
 
-  Public methods
-  --------------
+  Parameters
+  ----------
+  array : an unidimensional NumPy-like object
+      This is taken as the input to create the carray.  It can be any Python
+      object that can be converted into a NumPy object.  The data type of
+      the resulting carray will be the same as this NumPy object.
 
-  * append(array)
+  cparms : instance of the `cparms` class, optional
+      Parameters to the internal Blosc compressor.
 
-  Special methods
-  ---------------
+  expectedlen : int, optional
+      A guess on the expected length of this carray.  This will serve to
+      decide the best `chunklen` used for compression and memory I/O
+      purposes.
 
-  * __getitem__(key)
-  * __setitem__(key, value)
-  * __len__()
-  * __sizeof__()
+  chunklen : int, optional
+      The number of items that fits on a chunk.  By specifying it you can
+      explicitely set the chunk size used for compression and memory I/O.
+      Only use it if you know what are you doing.
 
   """
 
@@ -351,19 +348,6 @@ cdef class carray:
 
   def __cinit__(self, object array, object cparms=None,
                 object expectedlen=None, object chunklen=None):
-    """Initialize and compress data based on passed `array`.
-
-    You can pass parameters to the compressor via `cparms`, which must be an
-    instance of the `cparms` class.
-
-    If you pass a guess on the expected number of rows of this carray in
-    `expectedlen` that will serve to decide the best `chunklen` used for
-    compression and memory I/O purposes.
-
-    `chunklen` is be number of rows that fits on a chunk.  By specifying it
-    you can explicitely set the chunk size used for compression and memory
-    I/O.  Only use it if you know what are you doing.
-    """
     cdef int i, itemsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
@@ -446,9 +430,21 @@ cdef class carray:
 
 
   def append(self, object array):
-    """Append a numpy `array` to this carray instance.
+    """
+    append(array)
 
-    Return the number of elements appended.
+    Append a numpy `array` to this carray instance.
+
+    Parameters
+    ----------
+    array : NumPy-like object
+        The array to be appended.  Must be compatible with shape and type of
+        the carray.
+
+    Returns
+    -------
+    out : the number of elements appended.
+
     """
     cdef int itemsize, chunksize, leftover, bsize
     cdef int nbytesfirst, chunklen
@@ -509,13 +505,26 @@ cdef class carray:
 
 
   def copy(self, **kwargs):
-    """Return a copy of self.
+    """
+    copy(**kwargs)
 
-    You can pass whatever additional arguments supported by the carray
-    constructor in `kwargs`.
+    Return a copy of this carray.
 
-    If `cparms` is passed, these settings will be used for the new carray.
-    If not, the settings in self will be used.
+    Parameters
+    ----------
+    kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns
+    -------
+    out : carray object
+        The copy of this carray.
+
+    Notes
+    -----
+    If `cparms` is passed, these settings will be used for the new carray.  If
+    not, the settings in this carray will be used.
+
     """
     cdef object chunklen
 
@@ -537,12 +546,10 @@ cdef class carray:
 
 
   def __len__(self):
-    """Return the length of self."""
     return self.len
 
 
   def __sizeof__(self):
-    """Return the number of bytes taken by self."""
     return self._cbytes
 
 
@@ -607,7 +614,6 @@ cdef class carray:
 
 
   def __getitem__(self, object key):
-    """__getitem__(self, key) -> values."""
     cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
@@ -700,7 +706,6 @@ cdef class carray:
 
 
   def __setitem__(self, object key, object value):
-    """__setitem__(self, key, value) -> None."""
     cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen, vlen
@@ -852,7 +857,6 @@ cdef class carray:
 
 
   def __iter__(self):
-    """Iterator for traversing the data in carray."""
 
     if not self.sss_mode:
       self.start = 0
@@ -868,7 +872,28 @@ cdef class carray:
 
 
   def iter(self, start=0, stop=None, step=1):
-    """Iterator with `start`, `stop` and `step` bounds."""
+    """
+    iter(start=0, stop=None, step=1)
+
+    Iterator with `start`, `stop` and `step` bounds.
+
+    Parameters
+    ----------
+    start : int
+        The starting item.
+
+    stop : int
+        The item after which the iterator stops.
+
+    step : int
+        The number of items incremented during each iteration.  Cannot be
+        negative.
+
+    Returns
+    -------
+    out : iterator
+
+    """
     # Check limits
     if step <= 0:
       raise NotImplementedError, "step param can only be positive"
@@ -879,7 +904,21 @@ cdef class carray:
 
 
   def where(self):
-    """Iterator that returns indices where carray is true."""
+    """
+    where()
+
+    Iterator that returns indices where this carray is true.  Only useful for
+    boolean carrays.
+
+    Returns
+    -------
+    out : iterator
+
+    See Also
+    --------
+    getif
+
+    """
     # Check self
     if self.dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
@@ -888,10 +927,23 @@ cdef class carray:
 
 
   def getif(self, boolarr):
-    """Iterator that returns values where `boolarr` is true.
+    """
+    getif(boolarr)
 
-    `boolarr` can either be a carray or a numpy array and must be of boolean
-    type.
+    Iterator that returns values of this carray where `boolarr` is true.
+
+    Parameters
+    ----------
+    boolarr : a carray or NumPy array of boolean type
+
+    Returns
+    -------
+    out : iterator
+
+    See Also
+    --------
+    where
+
     """
     # Check input
     if not hasattr(boolarr, "dtype"):
@@ -906,7 +958,6 @@ cdef class carray:
 
 
   def __next__(self):
-    """Return the next element in iterator."""
     cdef char *vbool
     cdef npy_intp start
 
@@ -970,7 +1021,6 @@ cdef class carray:
 
 
   def __str__(self):
-    """Represent the carray as an string."""
     if self.len > 100:
       return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
                                                   self[-3], self[-2], self[-1])
@@ -979,7 +1029,6 @@ cdef class carray:
 
 
   def __repr__(self):
-    """Represent the carray as an string, with additional info."""
     snbytes = utils.human_readable_size(self._nbytes)
     scbytes = utils.human_readable_size(self._cbytes)
     cratio = self._nbytes / float(self._cbytes)
