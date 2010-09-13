@@ -80,7 +80,7 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     dtype : numpy.dtype instance
         Specifies the type of the outcome object.
 
-    count : int
+    count : int, optional
         Specifies the number of items to read from iterable. The
         default is -1, which means all data is read.
 
@@ -90,6 +90,13 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     Returns
     -------
     out : a carray/ctable object
+
+    Notes
+    -----
+
+    Specify `count` to improve performance.  It allows `fromiter` to
+    avoid looping the iterator twice.  But even in this case the
+    memory required during `fromiter` operation will not double.
 
     """
 
@@ -106,14 +113,25 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
     chunklen = obj.chunklen
     nread, blen = 0, 0
     while nread < count:
-        if count == sys.maxint:
-            blen = -1
-        elif nread + chunklen > count:
+        if nread + chunklen > count:
             blen = count - nread
         else:
             blen = chunklen
-        chunkiter = it.islice(iterator, blen)
-        chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
+        if count != sys.maxint:
+            chunkiter = it.islice(iterator, blen)
+            chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
+        else:
+            # If we do not have a hint on the iterator length then
+            # create a couple of iterators and use the second one
+            # when the first is exhausted (ValueError is raised).
+            chunkiter, chunkiter2 = it.tee(it.islice(iterator, blen))
+            try:
+                chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
+                # Consume items so that item internal counter is updated
+                chunk2 = np.fromiter(chunkiter2, dtype=dtype, count=blen)
+            except ValueError:
+                # We are reaching the end, use second iterator now
+                chunk = np.fromiter(chunkiter2, dtype=dtype, count=-1)
         obj.append(chunk)
         nread += len(chunk)
         # Check the end of the iterator
