@@ -1,4 +1,63 @@
-=====================
+===================
+carray User's Guide
+===================
+
+Introduction
+============
+
+carray at glance
+----------------
+
+carray is a Python package that provides containers for numerical data
+that can be compressed in-memory.
+
+carray is highly based on NumPy, and uses it as the standard way to
+communicate with carray objects.  However, carray objects bring
+several advantages over NumPy::
+
+  * Data is compressed: they take less memory space.
+
+  * Efficent appends: you can append more data at the end of the
+    objects very quickly.
+
+  * Numexpr-powered: so that you can operate with compressed data in a
+    fast and convenient way.
+
+The compresion/decompression process is carried out internally by
+Blosc, a high-performance compressor that is optimized for binary data
+and that can bring data to the CPU usually faster than a ``memcpy``
+call, specially on modern CPUs.  That means that, when using these
+CPUs you will be able to perform computations beyond the bottleneck of
+the memory bus.
+
+carray limitations
+------------------
+
+At this time, carray objects can only be uni-dimensional.  Newer
+versions of the carray package might get rid of this limitation
+though.
+
+
+Installation
+============
+
+carray depends on NumPy (>= 1.4.1) and, optionally, Numexpr (>= 1.4).
+Also, if you are going to install from sources, you will need Cython
+(>= 0.13) and a C compiler (GCC or MSVC 2008 have been tested).
+
+Installing from sources
+-----------------------
+
+Go to the carray main directory and do the typical distutils dance:
+
+$ python setup.py install
+
+Installing from Windows binaries
+--------------------------------
+
+Just download the binary installer and run it.
+
+
 carray short tutorial
 =====================
 
@@ -7,7 +66,6 @@ and carray packages like this::
 
   >>> import numpy as np
   >>> import carray as ca
-
 
 Creating carrays
 ----------------
@@ -27,7 +85,6 @@ You can have a peek at it by using its string form::
 
   >>> print b
   [0, 1, 2... 7, 8, 9]
-
 
 And get more info about uncompressed size (nbytes), compressed
 (cbytes) and the compression ratio (ratio = nbytes/cbytes)::
@@ -61,7 +118,6 @@ using `sys.getsizeof()`::
   >>> import sys
   >>> sys.getsizeof(b)
   2691754
-
 
 Compression level and shuffle filter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -126,7 +182,6 @@ constructor about the expected length of your final carray::
   16384
   >>> ca.carray(a, expectedlen=10*1000*1000*1000).chunklen
   131072
-
 
 Accessing carray data
 ---------------------
@@ -222,7 +277,6 @@ in generator contexts and hence, you don't need to waste memory for
 creating temporaries, which can be important when dealing with large
 arrays.
 
-
 carray metadata
 ---------------
 
@@ -263,7 +317,6 @@ Finally, you can access the `chunklen` for this carray::
   >>> b.chunklen
   16384
 
-
 Enlarging your carray
 ---------------------
 
@@ -290,7 +343,6 @@ You may want to compare the `carray.append()` method of carrays to the
 with the 'bench/concat.py' script.  In general, you will see that the
 `carray.append()` method is faster (specially with modern CPUs, that
 can accelerate the compression/decompression process a lot).
-
 
 Operating with carrays
 ----------------------
@@ -346,6 +398,10 @@ In the expression above we have included a couple of carray instances
 new carray (`cout2`).
 
 
+Short Reference
+===============
+
+
 Utility functions
 -----------------
 
@@ -361,12 +417,6 @@ Utility functions
     Detect the number of cores on a system.
 
 
-carray limitations
-------------------
-
-At this time, carray objects can only be uni-dimensional and you cannot
-modify its contents directly.  Newer versions of the carray package
-might get rid of these limitations though.
 
 
 .. Local Variables:
