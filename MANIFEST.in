@@ -1,8 +1,9 @@
 include MANIFEST.in
-include README.txt ANNOUNCE.txt USAGE.txt RELEASE_NOTES.txt TODO.txt
+include *.txt
 include setup.py VERSION
 
 recursive-include carray *.py *.pyx *.pxd
 recursive-include blosc *.c *.h
+recursive-include blosc/win32 *.c *.h
 recursive-include bench *.py README.txt
 recursive-include LICENSES *
