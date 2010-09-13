@@ -4,8 +4,6 @@
 #       Created: September 1, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: test_ctable.py $
-#
 ########################################################################
 
 import sys

@@ -5,6 +5,7 @@
 #       Author:  Francesc Alted - faltet@pytables.org
 #
 ########################################################################
+
 """
 carray: a compressed and enlargeable in-memory data container
 =============================================================

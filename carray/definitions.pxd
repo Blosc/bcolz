@@ -4,8 +4,6 @@
 #       Created: August 05, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: definitions.pyd 1018 $
-#
 ########################################################################
 
 """Here are some definitions for some C headers dependencies.

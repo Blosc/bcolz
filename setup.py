@@ -5,8 +5,6 @@
 #       Created: August 05, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: setup.py  $
-#
 ########################################################################
 
 import sys, os

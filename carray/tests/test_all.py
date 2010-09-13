@@ -4,8 +4,6 @@
 #       Created: August 5, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
-#       $Id: test_all.py 4463 2010-06-04 15:17:09Z faltet $
-#
 ########################################################################
 
 """

@@ -254,6 +254,10 @@ class ctable(object):
         You should not specificy both `name` and `pos` arguments,
         unless they are compatible.
 
+        See also
+        --------
+        delcol
+
         """
 
         # Check params
@@ -301,6 +305,10 @@ class ctable(object):
         You must specify at least a `name` or a `pos`.  You should not
         specificy both `name` and `pos` arguments, unless they are
         compatible.
+
+        See also
+        --------
+        addcol
 
         """
         if name is None and pos is None:
@@ -381,34 +389,22 @@ class ctable(object):
         """
         x.__getitem__(y) <==> x[y]
 
-        Returns values based on `key`.  Many different actions are to
-        be carried out depending on the value of `key`.
+        Returns values based on `key`.  All the functionality of
+        ``ndarray.__getitem__()`` is supported (including fancy
+        indexing), plus a special support for expressions:
 
         Parameters
         ----------
-        key : int
-            The corresponding ctable row is returned as a NumPy record.
-
-        key : slice
-            The range of rows determined by it is returned as a NumPy
-            structured array.
-
         key : string
             The corresponding ctable column name will be returned.  If
-            not a colname, it will be interpreted as a string
-            ``expression`` returning boolean values, and the rows
-            where these values are true will be returned as a NumPy
+            not a column name, it will be interpret as a boolean
+            expression (computed via `self.eval`) and the rows where
+            these values are true will be returned as a NumPy
             structured array.
 
-        key : list of strings
-            The specified column names will be returned as a new
-            ctable object.
-
-        key : boolean carray/ndarray
-            Return a ctable object filled with rows where `key` is true.
-
-        key : list of ints, array of ints
-            Return a ctable object filled with rows in this list/array.
+        See also
+        --------
+        eval
 
         """
 
@@ -486,28 +482,6 @@ class ctable(object):
 
 
     def __setitem__(self, key, value):
-        """
-        x.__setitem__(i, y) <==> x[i]=y
-
-        Sets `value` in `key` positions.  Many different actions are
-        to be carried out depending on the value of `key`.
-
-        Parameters
-        ----------
-        key : int
-            The corresponding ctable row is returned as a NumPy record.
-
-        key : slice
-            The range of rows determined by it is returned as a NumPy
-            structured array.
-
-        key : boolean carray/ndarray
-            Set ctable rows with `value` where `key` is true.
-
-        key : list of ints, array of ints
-            Set ctable rows with `value` in rows in this list/array.
-
-        """
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
