@@ -443,7 +443,8 @@ cdef class carray:
 
     Returns
     -------
-    out : the number of elements appended.
+    out : int
+        The number of elements appended.
 
     """
     cdef int itemsize, chunksize, leftover, bsize
@@ -520,11 +521,6 @@ cdef class carray:
     out : carray object
         The copy of this carray.
 
-    Notes
-    -----
-    If `cparms` is passed, these settings will be used for the new carray.  If
-    not, the settings in this carray will be used.
-
     """
     cdef object chunklen
 
@@ -535,7 +531,8 @@ cdef class carray:
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
                    cparms=cparms,
-                   expectedlen=expectedlen)
+                   expectedlen=expectedlen,
+                   **kwargs)
 
     # Now copy the carray chunk by chunk
     chunklen = self._chunklen

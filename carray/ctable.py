@@ -6,14 +6,6 @@
 #
 ########################################################################
 
-"""The ctable module.
-
-Public classes:
-
-    ctable
-
-"""
-
 import sys, math
 
 import numpy as np
@@ -32,38 +24,33 @@ EVAL_BLOCK_SIZE = 3*1024*1024    # 3 MB represents a good average?
 
 class ctable(object):
     """
+    ctable(cols, names=None, **kwargs)
+
     This class represents a compressed, column-wise, in-memory table.
 
-    Instance variables
-    ------------------
+    Create a new ctable from `cols` with optional `names`.  The
+    columns are carray objects.
 
-    cols
-        The column carrays (dict).
+    Parameters
+    ----------
+    cols : tuple or list of carray/ndarray objects, or structured ndarray
+        The list of column data to build the ctable object.
+        This can also be a pure NumPy structured array.
 
-    dtype
-        The data type of this ctable (numpy dtype).
+    names : list of strings
+        The list of names for the columns.  If not passed, the names
+        will be chosen as 'f0' for the first column, 'f1' for the
+        second and so on so forth (NumPy convention).
 
-    names
-        The names of the columns (list).
+    kwargs : list of parameters or dictionary
+        Allows to pass additional arguments supported by carray
+        constructors in case new carrays need to be built.
 
-    nrows
-        The number of rows of this ctable (int).
-
-    shape
-        The shape of this ctable (tuple).
-
-    Public methods
-    --------------
-
-    * addcol(newcol[, name][, pos])
-    * delcol([name][, pos])
-    * append(rows)
-
-    Special methods
-    ---------------
-
-    * __getitem__(key)
-    * __setitem__(key, value)
+    Notes
+    -----
+    Columns passed as carrays are not be copied, so their settings
+    will stay the same, even if you pass additional arguments (cparms,
+    chunklen...).
 
     """
 
@@ -94,7 +81,19 @@ class ctable(object):
 
 
     def get_stats(self):
-        """Get some stats (nbytes, cbytes and ratio) about this carray."""
+        """
+        get_stats()
+
+        Get some stats (nbytes, cbytes and ratio) about this carray.
+
+        Returns
+        -------
+        out : a (nbytes, cbytes, ratio) tuple
+            nbytes is the number of uncompressed bytes in ctable.
+            cbytes is the number of compressed bytes.  ratio is the
+            compression ratio.
+
+        """
         nbytes, cbytes, ratio = 0, 0, 0.0
         names, cols = self.names, self.cols
         for name in names:
@@ -106,18 +105,6 @@ class ctable(object):
 
 
     def __init__(self, cols, names=None, **kwargs):
-        """Create a new ctable from `cols` with optional `names`.
-
-        `cols` can be a tuple/list of carrays or NumPy arrays.  It can
-        also be a NumPy structured array.
-
-        If `names` is passed, this will be taken as the list of names
-        for the columns.
-
-        If new carrays needs to be built, you can pass whatever
-        additional arguments supported by carray constructors in
-        `kwargs`.
-        """
 
         self.names = []
         """The names of the columns (list)."""
@@ -177,11 +164,22 @@ class ctable(object):
 
 
     def append(self, rows):
-        """Append `rows` to ctable.
+        """
+        append(rows)
 
-        `rows` can be a collection of scalar values, NumPy arrays or
-        carrays.  It also can be a NumPy record, a NumPy recarray, or
-        another ctable.
+        Append `rows` to this ctable.
+
+        Parameters
+        ----------
+        rows : list/tuple of scalar values, NumPy arrays or carrays
+            It also can be a NumPy record, a NumPy recarray, or
+            another ctable.
+
+        Returns
+        -------
+        out : int
+            The number of elements appended.
+
         """
 
         # Guess the kind of rows input
@@ -224,16 +222,38 @@ class ctable(object):
                 raise ValueError, "all cols in `rows` must have the same length"
             clen = clen2
         self.len += clen
+        return clen
 
 
-    def addcol(self, newcol, name=None, pos=None):
-        """Add a new `newcol` carray or ndarray as column.
+    def addcol(self, newcol, name=None, pos=None, **kwargs):
+        """
+        addcol(newcol, name=None, pos=None)
 
-        If `name` is specified, the column will have this name.  If
-        not, it will receive an automatic name.
+        Add a new `newcol` carray or ndarray as column.
 
-        If `pos` is specified, the column will be placed in this
-        position.  If not, it will be appended at the end.
+        Parameters
+        ----------
+        newcol : carray or ndarray
+            If a carray is passed, no conversion will be carried out.
+            If conversion to a carray has to be done, `kwargs` will
+            apply.
+
+        name : string, optional
+            The name for the new column.  If not passed, it will
+            receive an automatic name.
+
+        pos : int, optional
+            The column position.  If not passed, it will be appended
+            at the end.
+
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the carray constructor.
+
+        Notes
+        -----
+        You should not specificy both `name` and `pos` arguments,
+        unless they are compatible.
+
         """
 
         # Check params
@@ -255,7 +275,7 @@ class ctable(object):
             raise ValueError, "`newcol` must have the same length than ctable"
 
         if isinstance(newcol, np.ndarray):
-            newcol = ca.carray(newcol)
+            newcol = ca.carray(newcol, **kwargs)
 
         # Insert the column
         self.names.insert(pos, name)
@@ -263,12 +283,25 @@ class ctable(object):
 
 
     def delcol(self, name=None, pos=None):
-        """Remove a column.
+        """
+        delcol(name=None, pos=None)
 
-        If `name` is specified, the column with this name is removed.
-        If `pos` is specified, the column in this position is removed.
-        You must specify at least a `name` or a `pos`, and you should
-        not specify both at the same time.
+        Remove the column named `name` or in position `pos`.
+
+        Parameters
+        ----------
+        name: string, optional
+            The name of the column to remove.
+
+        pos: int, optional
+            The position of the column to remove.
+
+        Notes
+        -----
+        You must specify at least a `name` or a `pos`.  You should not
+        specificy both `name` and `pos` arguments, unless they are
+        compatible.
+
         """
         if name is None and pos is None:
             raise ValueError, "specify either a `name` or a `pos`"
@@ -293,10 +326,21 @@ class ctable(object):
 
 
     def copy(self, **kwargs):
-        """Return a copy of self.
+        """
+        copy(**kwargs)
 
-        You can pass whatever additional arguments supported by
-        carray/ctable constructors in `kwargs`.
+        Return a copy of this ctable.
+
+        Parameters
+        ----------
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the carray/ctable constructor.
+
+        Returns
+        -------
+        out : ctable object
+            The copy of this ctable.
+
         """
 
         # Remove possible unsupported args for columns
@@ -311,12 +355,10 @@ class ctable(object):
 
 
     def __len__(self):
-        """Return the length of self."""
         return self.len
 
 
     def __sizeof__(self):
-        """Return the number of bytes taken by self."""
         return self.cbytes
 
 
@@ -336,20 +378,38 @@ class ctable(object):
 
 
     def __getitem__(self, key):
-        """Get a row or a range of rows.  Also a column or range of columns.
+        """
+        x.__getitem__(y) <==> x[y]
 
-        If `key` argument is an integer, the corresponding ctable row
-        is returned as a NumPy record.  If `key` is a slice, the range
-        of rows determined by it is returned as a NumPy structured
-        array.
+        Returns values based on `key`.  Many different actions are to
+        be carried out depending on the value of `key`.
 
-        If `key` is a string, the corresponding ctable column name
-        will be returned.  If `key` is not a colname, it will be
-        interpreted as a boolean expression and the rows fulfilling it
-        will be returned as a NumPy structured array.
+        Parameters
+        ----------
+        key : int
+            The corresponding ctable row is returned as a NumPy record.
 
-        If `key` is a list of strings, the specified column names will
-        be returned as a new ctable object.
+        key : slice
+            The range of rows determined by it is returned as a NumPy
+            structured array.
+
+        key : string
+            The corresponding ctable column name will be returned.  If
+            not a colname, it will be interpreted as a string
+            ``expression`` returning boolean values, and the rows
+            where these values are true will be returned as a NumPy
+            structured array.
+
+        key : list of strings
+            The specified column names will be returned as a new
+            ctable object.
+
+        key : boolean carray/ndarray
+            Return a ctable object filled with rows where `key` is true.
+
+        key : list of ints, array of ints
+            Return a ctable object filled with rows in this list/array.
+
         """
 
         # First, check for integer
@@ -426,7 +486,28 @@ class ctable(object):
 
 
     def __setitem__(self, key, value):
-        """Set a row or a range of rows."""
+        """
+        x.__setitem__(i, y) <==> x[i]=y
+
+        Sets `value` in `key` positions.  Many different actions are
+        to be carried out depending on the value of `key`.
+
+        Parameters
+        ----------
+        key : int
+            The corresponding ctable row is returned as a NumPy record.
+
+        key : slice
+            The range of rows determined by it is returned as a NumPy
+            structured array.
+
+        key : boolean carray/ndarray
+            Set ctable rows with `value` where `key` is true.
+
+        key : list of ints, array of ints
+            Set ctable rows with `value` in rows in this list/array.
+
+        """
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
@@ -479,15 +560,28 @@ class ctable(object):
 
 
     def eval(self, expression, **kwargs):
-        """Evaluate the `expression` on columns and return the result.
+        """
+        eval(expression, **kwargs)
 
-        `expression` must be a string containing an expression
-        supported by Numexpr.  It may contain columns or other carrays
-        or NumPy arrays that can be found in the user space name.
+        Evaluate the `expression` on columns and return the result.
 
-        The output is a carray object containing the result of the
-        expression.  You taylor this carray by passing additional
-        arguments supported by carray constructor in `kwargs`.
+        Parameters
+        ----------
+        expression : string
+            Must be a string containing an expression supported by
+            Numexpr.  It may contain columns or other carrays or NumPy
+            arrays that can be found in the user space name.
+
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the carray constructor.
+
+        Returns
+        -------
+        out : carray object
+            The outcome of the expression.  You can taylor the
+            properties of this carray by passing additional arguments
+            supported by carray constructor in `kwargs`.
+
         """
 
         if not ca.numexpr_here:
@@ -539,7 +633,6 @@ class ctable(object):
 
 
     def __str__(self):
-        """Represent the ctable as an string."""
         if self.len > 100:
             return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
                    (self[0], self[1], self[2], self[-3], self[-2], self[-1])
@@ -548,7 +641,6 @@ class ctable(object):
 
 
     def __repr__(self):
-        """Represent the carray as an string, with additional info."""
         nbytes, cbytes, cratio = self.get_stats()
         snbytes = utils.human_readable_size(nbytes)
         scbytes = utils.human_readable_size(cbytes)
