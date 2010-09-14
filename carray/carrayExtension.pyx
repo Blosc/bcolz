@@ -22,7 +22,7 @@ SizeType = np.int64
 
 # numpy functions & objects
 from definitions cimport import_array, ndarray, \
-     malloc, free, memcpy, strdup, strcmp, \
+     malloc, free, memcpy, strdup, strcmp, bzero, \
      PyString_AsString, PyString_FromString, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
@@ -153,38 +153,75 @@ cdef class chunk:
   cdef object shape
   cdef object cparms
   cdef int itemsize, nbytes, cbytes, blocksize
+  cdef int iszero
   cdef ndarray arr1
   cdef char *data
 
+
+  cdef int check_zero(self, char *data, int nbytes):
+    """Check whether [data, data+nbytes] is zero or not."""
+    cdef int i, iszero, chunklen, leftover
+    cdef size_t *sdata
+
+    iszero = 1
+    sdata = <size_t *>data
+    chunklen = nbytes // sizeof(size_t)
+    leftover = nbytes % sizeof(size_t)
+    with nogil:
+      for i from 0 <= i < chunklen:
+        if sdata[i] != 0:
+          iszero = 0
+          break
+      else:
+        data += nbytes - leftover
+        for i from 0 <= i < leftover:
+          if data[i] != 0:
+            iszero = 0
+            break
+    return iszero
+
+
   def __cinit__(self, ndarray array, object cparms):
-    cdef int i, itemsize
+    cdef int itemsize, overhead
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
 
     dtype = array.dtype
     shape = array.shape
+    itemsize = dtype.itemsize
+    overhead = 128  # the (aprox) overhead of this instance in bytes
+    # Compute the total number of bytes in this array
+    nbytes = itemsize * array.size
     self.dtype = dtype
     self.shape = shape
     self.cparms = cparms
 
-    itemsize = dtype.itemsize
-    nbytes = itemsize
-    for i in self.shape:
-      nbytes *= i
-    self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
-    # Compress data
-    clevel = cparms.clevel
-    shuffle = cparms.shuffle
-    with nogil:
-      cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
-                              self.data, nbytes+BLOSC_MAX_OVERHEAD)
-    if cbytes <= 0:
-      raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
-    # Set size info for the instance
-    blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+    # Check whether incoming data is all zeros
+    self.iszero = self.check_zero(array.data, nbytes)
+    if self.iszero:
+      cbytes = 0
+      blocksize = 4*1024  # use 4 KB as a cache for blocks
+      # Make blocksize a multiple of itemsize
+      if blocksize % itemsize > 0:
+        blocksize = (blocksize // itemsize) * itemsize
+    else:
+      # Data is not zero, compress it
+      self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
+      # Compress data
+      clevel = cparms.clevel
+      shuffle = cparms.shuffle
+      with nogil:
+        cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
+                                self.data, nbytes+BLOSC_MAX_OVERHEAD)
+      if cbytes <= 0:
+        raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
+      # Set size info for the instance
+      blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+
+    # Fill instance data
     self.itemsize = itemsize
     self.nbytes = nbytes
-    self.cbytes = cbytes
+    self.cbytes = cbytes + overhead
     self.blocksize = blocksize
 
     # Cache a len-1 array for accelerating self[int] case
@@ -197,7 +234,11 @@ cdef class chunk:
 
     blen = stop - start
     bsize = blen * self.itemsize
-    nrowsinblock = self.blocksize // self.itemsize
+
+    if self.iszero:
+      # The chunk is made of zeros, so write them
+      bzero(dest, bsize)
+      return
 
     # Fill dest with uncompressed data
     with nogil:
@@ -397,14 +438,12 @@ cdef class carray:
     self.lastchunkarr = lastchunkarr
 
     # The number of bytes in incoming array
-    nbytes = itemsize
-    for i in array_.shape:
-      nbytes *= i
+    nbytes = itemsize * array_.size
     self._nbytes = nbytes
 
     # Compress data in chunks
     cbytes = 0
-    nchunks = self._nbytes // self._chunksize
+    nchunks = nbytes // chunksize
     for i from 0 <= i < nchunks:
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparms)
       chunks.append(chunk_)
@@ -415,9 +454,6 @@ cdef class carray:
       memcpy(self.lastchunk, remainder.data, leftover)
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
-
-    # Useful data for iterators and getters
-    self.nrowsinbuf = self._chunklen
 
     # Sentinels
     self.sss_mode = False
@@ -865,6 +901,11 @@ cdef class carray:
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
     self.getif_cached = -1
+    if self.getif_mode and isinstance(self.getif_arr, carray):
+      self.nrowsinbuf = self.getif_arr.chunklen
+    else:
+      self.nrowsinbuf = self._chunklen
+
     return self
 
 
@@ -956,7 +997,9 @@ cdef class carray:
 
   def __next__(self):
     cdef char *vbool
-    cdef npy_intp start
+    cdef npy_intp start, nchunk
+    cdef carray barr
+    cdef chunk chunk_
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -971,6 +1014,16 @@ cdef class carray:
         self._row = self.startb - self.step
         if self.getif_mode:
           # Read a chunk of the boolean array too
+          if isinstance(self.getif_arr, carray):
+            # Check for zero'ed chunks
+            barr = self.getif_arr
+            nchunk = self.nrowsread // self.nrowsinbuf
+            if nchunk < len(barr.chunks):
+              chunk_ = barr.chunks[nchunk]
+              if chunk_.iszero:
+                self.nrowsread += self.nrowsinbuf
+                self.nextelement += self.nrowsinbuf
+                continue
           self.getif_buf = self.getif_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
         else:

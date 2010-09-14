@@ -12,12 +12,13 @@ print "Creating inputs with %d elements..." % N
 
 cparms = ca.cparms(clevel)
 
-x = np.arange(N)
-y = np.arange(N)
-z = np.arange(N)
+#x = np.arange(N)
+x = np.zeros(N, dtype="f8")
+y = x.copy()
+z = x.copy()
 cx = ca.carray(x, cparms=cparms)
-cy = ca.carray(y, cparms=cparms)
-cz = ca.carray(z, cparms=cparms)
+cy = cx.copy()
+cz = cx.copy()
 ct = ca.ctable((cx, cy, cz), names=['x','y','z'])
 t = ct[:]
 

@@ -4,10 +4,10 @@ import numpy as np
 import carray as ca
 from time import time
 
-N = 1e7       # the number of elements in x
+N = 5e7       # the number of elements in x
 clevel = 5    # the compression level
-#sexpr = "(x-1) < 10."  # the expression to compute
-sexpr = "((x-1) % 1000) == 0."  # the expression to compute
+sexpr = "(x-1) < 10."  # the expression to compute
+#sexpr = "((x-1) % 1000) == 0."  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
 cparms = ca.cparms(clevel)
@@ -30,6 +30,11 @@ cbout = ct.eval(sexpr)
 print "Converting to numy arrays"
 bout = cbout[:]
 t = ct[:]
+
+t0 = time()
+cbool = ca.carray(bout, cparms=cparms)
+print "Time for converting boolean--> %.3f" % (time()-t0,)
+print "cbool-->", repr(cbool)
 
 print "Starting benchmark now..."
 # Retrieve from a ndarray

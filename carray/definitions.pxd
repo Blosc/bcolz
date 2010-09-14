@@ -26,6 +26,7 @@ cdef extern from "string.h":
   int strcmp(char *s1, char *s2)
   char *strdup(char *s)
   void *memcpy(void *dest, void *src, size_t n)
+  void bzero(void *s, size_t n)
 
 cdef extern from "time.h":
   ctypedef int time_t
