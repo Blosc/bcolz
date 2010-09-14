@@ -452,7 +452,7 @@ class ctable(object):
             else:
                 raise IndexError, \
                       "arrays used as indices must be integer (or boolean)"
-        # Column name
+        # Column name or expression
         elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate

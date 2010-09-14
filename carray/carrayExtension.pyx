@@ -1019,6 +1019,11 @@ cdef class carray:
           self.getif_buf = self.getif_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
         else:
+          # Skip chunks with zeros only if in where_mode
+          if self.where_mode and self.check_zeros(self):
+            self.nrowsread += self.nrowsinbuf
+            self.nextelement += self.nrowsinbuf
+            continue
           # Read a data chunk
           self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf

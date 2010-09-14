@@ -446,6 +446,15 @@ class IterTest(unittest.TestCase):
         self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
 
 
+    def test04(self):
+        """Testing `iter()` method with large zero arrays"""
+        a = np.zeros(1e4, dtype='f8')
+        b = ca.carray(a, chunklen=100)
+        c = ca.fromiter((v for v in b), dtype='f8')
+        #print "c ->", repr(c)
+        assert_array_equal(a, c[:], "iterator fails on zeros")
+
+
 class whereTest(unittest.TestCase):
 
     def test00(self):
