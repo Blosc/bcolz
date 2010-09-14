@@ -69,14 +69,17 @@ def set_num_threads(nthreads):
         ca.numexpr.set_num_threads(nthreads)
 
 
-def fromiter(iterator, dtype, count=-1, **kwargs):
+def fromiter(iterable, dtype, count=-1, **kwargs):
     """
-    fromiter(iterator, dtype, count=-1, **kwargs)
+    fromiter(iterable, dtype, count=-1, **kwargs)
 
-    Create a carray/ctable from an `iterator` object.
+    Create a carray/ctable from an `iterable` object.
 
     Parameters
     ----------
+    iterable : iterable object
+        An iterable object providing data for the carray.
+
     dtype : numpy.dtype instance
         Specifies the type of the outcome object.
 
@@ -93,20 +96,22 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
 
     Notes
     -----
-
     Specify `count` to improve performance.  It allows `fromiter` to
-    avoid looping the iterator twice.  But even in this case the
-    memory required during `fromiter` operation will not double.
+    avoid looping the iterable twice (which is slooow).
 
     """
 
     if count == -1:
-        # Try to guess the size of the iterator length
-        if hasattr(iterator, "__length_hint__"):
-            count = iterator.__length_hint__()
+        # Try to guess the size of the iterable length
+        if hasattr(iterable, "__length_hint__"):
+            count = iterable.__length_hint__()
         else:
             # No guess
             count = sys.maxint
+            # If we do not have a hint on the iterable length then
+            # create a couple of iterables and use the second when the
+            # first one is exhausted (ValueError will be raised).
+            iterable, iterable2 = it.tee(iterable)
 
     # First, create the container
     obj = ca.carray(np.array([], dtype=dtype), **kwargs)
@@ -117,24 +122,20 @@ def fromiter(iterator, dtype, count=-1, **kwargs):
             blen = count - nread
         else:
             blen = chunklen
+        chunkiter = it.islice(iterable, blen)
         if count != sys.maxint:
-            chunkiter = it.islice(iterator, blen)
             chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
         else:
-            # If we do not have a hint on the iterator length then
-            # create a couple of iterators and use the second one
-            # when the first is exhausted (ValueError is raised).
-            chunkiter, chunkiter2 = it.tee(it.islice(iterator, blen))
             try:
                 chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
-                # Consume items so that item internal counter is updated
-                chunk2 = np.fromiter(chunkiter2, dtype=dtype, count=blen)
             except ValueError:
-                # We are reaching the end, use second iterator now
-                chunk = np.fromiter(chunkiter2, dtype=dtype, count=-1)
+                # Positionate in second iterable
+                iter2 = it.islice(iterable2, nread, None, 1)
+                # We are reaching the end, use second iterable now
+                chunk = np.fromiter(iter2, dtype=dtype, count=-1)
         obj.append(chunk)
         nread += len(chunk)
-        # Check the end of the iterator
+        # Check the end of the iterable
         if len(chunk) < chunklen:
             break
     return obj

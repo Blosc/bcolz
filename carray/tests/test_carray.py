@@ -445,7 +445,6 @@ class IterTest(unittest.TestCase):
         b = ca.carray(a, chunklen=2)
         self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
 
-
     def test04(self):
         """Testing `iter()` method with large zero arrays"""
         a = np.zeros(1e4, dtype='f8')
