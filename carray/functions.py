@@ -101,10 +101,17 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
 
     """
 
+    # Check for a true iterable
+    if not hasattr(iterable, "next"):
+        iterable = iter(iterable)
+
+    # Try to guess the final length
+    expected = count
     if count == -1:
         # Try to guess the size of the iterable length
         if hasattr(iterable, "__length_hint__"):
             count = iterable.__length_hint__()
+            expected = count
         else:
             # No guess
             count = sys.maxint
@@ -112,9 +119,15 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
             # create a couple of iterables and use the second when the
             # first one is exhausted (ValueError will be raised).
             iterable, iterable2 = it.tee(iterable)
+            expected = 10*1000*1000   # 10 million elements
 
     # First, create the container
-    obj = ca.carray(np.array([], dtype=dtype), **kwargs)
+    expectedlen = kwargs.pop("expectedlen", expected)
+    obj = ca.carray(np.array([], dtype=dtype),
+                    expectedlen=expectedlen,
+                    **kwargs)
+
+    # Then fill it
     chunklen = obj.chunklen
     nread, blen = 0, 0
     while nread < count:
@@ -122,12 +135,11 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
             blen = count - nread
         else:
             blen = chunklen
-        chunkiter = it.islice(iterable, blen)
         if count != sys.maxint:
-            chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
+            chunk = np.fromiter(iterable, dtype=dtype, count=blen)
         else:
             try:
-                chunk = np.fromiter(chunkiter, dtype=dtype, count=blen)
+                chunk = np.fromiter(iterable, dtype=dtype, count=blen)
             except ValueError:
                 # Positionate in second iterable
                 iter2 = it.islice(iterable2, nread, None, 1)
