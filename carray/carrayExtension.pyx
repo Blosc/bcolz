@@ -21,7 +21,7 @@ SizeType = np.int64
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, ndarray, \
+from definitions cimport import_array, ndarray, dtype, \
      malloc, free, memcpy, strdup, strcmp, bzero, \
      PyString_AsString, PyString_FromString, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
@@ -173,23 +173,30 @@ cdef class chunk:
 
   """
 
-  cdef object dtype
+  # To save space, keep these variables under a minimum
+  cdef char typekind, iszero
   cdef int itemsize, blocksize
-  cdef int iszero, nbytes, cbytes
+  cdef int nbytes, cbytes
   cdef char *data
 
+  property dtype:
+    "The NumPy dtype for this chunk."
+    def __get__(self):
+      return np.dtype("%c%d" % (self.typekind, self.itemsize))
+
   def __cinit__(self, ndarray array, object cparms):
-    cdef int itemsize, overhead
+    cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
+    cdef dtype dtype_
 
-    dtype = array.dtype
-    shape = array.shape
-    itemsize = dtype.itemsize
-    overhead = 128  # the (aprox) overhead of this instance in bytes
+    dtype_ = array.dtype
+    self.itemsize = itemsize = dtype_.elsize
+    self.typekind = dtype_.kind
+    footprint = 128  # the (aprox) footprint of this instance in bytes
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
-    self.dtype = dtype
+    self.itemsize = itemsize
 
     # Check whether incoming data is all zeros
     self.iszero = check_zeros(array.data, nbytes)
@@ -214,9 +221,8 @@ cdef class chunk:
       blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
 
     # Fill instance data
-    self.itemsize = itemsize
     self.nbytes = nbytes
-    self.cbytes = cbytes + overhead
+    self.cbytes = cbytes + footprint
     self.blocksize = blocksize
 
 
