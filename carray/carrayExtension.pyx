@@ -136,6 +136,30 @@ cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
 
   return startb, stopb, blen
 
+
+cdef int check_zeros(char *data, int nbytes):
+  """Check whether [data, data+nbytes] is zero or not."""
+  cdef int i, iszero, chunklen, leftover
+  cdef size_t *sdata
+
+  iszero = 1
+  sdata = <size_t *>data
+  chunklen = nbytes // sizeof(size_t)
+  leftover = nbytes % sizeof(size_t)
+  with nogil:
+    for i from 0 <= i < chunklen:
+      if sdata[i] != 0:
+        iszero = 0
+        break
+    else:
+      data += nbytes - leftover
+      for i from 0 <= i < leftover:
+        if data[i] != 0:
+          iszero = 0
+          break
+  return iszero
+
+
 #-------------------------------------------------------------
 
 
@@ -157,30 +181,6 @@ cdef class chunk:
   cdef ndarray arr1
   cdef char *data
 
-
-  cdef int check_zero(self, char *data, int nbytes):
-    """Check whether [data, data+nbytes] is zero or not."""
-    cdef int i, iszero, chunklen, leftover
-    cdef size_t *sdata
-
-    iszero = 1
-    sdata = <size_t *>data
-    chunklen = nbytes // sizeof(size_t)
-    leftover = nbytes % sizeof(size_t)
-    with nogil:
-      for i from 0 <= i < chunklen:
-        if sdata[i] != 0:
-          iszero = 0
-          break
-      else:
-        data += nbytes - leftover
-        for i from 0 <= i < leftover:
-          if data[i] != 0:
-            iszero = 0
-            break
-    return iszero
-
-
   def __cinit__(self, ndarray array, object cparms):
     cdef int itemsize, overhead
     cdef size_t nbytes, cbytes, blocksize
@@ -197,7 +197,7 @@ cdef class chunk:
     self.cparms = cparms
 
     # Check whether incoming data is all zeros
-    self.iszero = self.check_zero(array.data, nbytes)
+    self.iszero = check_zeros(array.data, nbytes)
     if self.iszero:
       cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
@@ -998,8 +998,6 @@ cdef class carray:
   def __next__(self):
     cdef char *vbool
     cdef npy_intp start, nchunk
-    cdef carray barr
-    cdef chunk chunk_
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -1013,17 +1011,12 @@ cdef class carray:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
         if self.getif_mode:
-          # Read a chunk of the boolean array too
-          if isinstance(self.getif_arr, carray):
-            # Check for zero'ed chunks
-            barr = self.getif_arr
-            nchunk = self.nrowsread // self.nrowsinbuf
-            if nchunk < len(barr.chunks):
-              chunk_ = barr.chunks[nchunk]
-              if chunk_.iszero:
-                self.nrowsread += self.nrowsinbuf
-                self.nextelement += self.nrowsinbuf
-                continue
+          # Skip chunks with zeros (false values)
+          if self.check_zeros(self.getif_arr):
+            self.nrowsread += self.nrowsinbuf
+            self.nextelement += self.nrowsinbuf
+            continue
+          # Read a chunk of the boolean array
           self.getif_buf = self.getif_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
         else:
@@ -1068,6 +1061,28 @@ cdef class carray:
       self.iobuf = np.empty(0, dtype=self.dtype)
       self.getif_buf = np.empty(0, dtype=np.bool_)
       raise StopIteration        # end of iteration
+
+
+  cdef int check_zeros(self, object barr):
+    """Check for zeros.  Return 1 if all zeros, else return 0."""
+    cdef carray carr
+    cdef ndarray ndarr
+    cdef chunk chunk_
+
+    if isinstance(barr, carray):
+      # Check for zero'ed chunks in carrays
+      carr = barr
+      nchunk = self.nrowsread // self.nrowsinbuf
+      if nchunk < len(carr.chunks):
+        chunk_ = carr.chunks[nchunk]
+        if chunk_.iszero:
+          return 1
+    else:
+      # Check for zero'ed chunks in ndarrays
+      ndarr = barr
+      if check_zeros(ndarr.data + self.nrowsread, self.nrowsinbuf):
+        return 1
+    return 0
 
 
   def __str__(self):
