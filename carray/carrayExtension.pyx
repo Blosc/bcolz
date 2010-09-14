@@ -165,7 +165,7 @@ cdef int check_zeros(char *data, int nbytes):
 
 cdef class chunk:
   """
-  carry(array, object cparms)
+  carry(array, cparms)
 
   Compressed in-memory container for a data chunk.
 
@@ -174,11 +174,8 @@ cdef class chunk:
   """
 
   cdef object dtype
-  cdef object shape
-  cdef object cparms
-  cdef int itemsize, nbytes, cbytes, blocksize
-  cdef int iszero
-  cdef ndarray arr1
+  cdef int itemsize, blocksize
+  cdef int iszero, nbytes, cbytes
   cdef char *data
 
   def __cinit__(self, ndarray array, object cparms):
@@ -193,8 +190,6 @@ cdef class chunk:
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
     self.dtype = dtype
-    self.shape = shape
-    self.cparms = cparms
 
     # Check whether incoming data is all zeros
     self.iszero = check_zeros(array.data, nbytes)
@@ -223,9 +218,6 @@ cdef class chunk:
     self.nbytes = nbytes
     self.cbytes = cbytes + overhead
     self.blocksize = blocksize
-
-    # Cache a len-1 array for accelerating self[int] case
-    self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
   cdef void _getitem(self, int start, int stop, char *dest):
@@ -256,7 +248,7 @@ cdef class chunk:
 
     if isinstance(key, int):
       # Quickly return a single element
-      array = self.arr1
+      array = np.empty(shape=(1,), dtype=self.dtype)
       self._getitem(key, key+1, array.data)
       return PyArray_GETITEM(array, array.data)
     elif isinstance(key, slice):
@@ -265,7 +257,8 @@ cdef class chunk:
       raise IndexError, "key not supported:", key
 
     # Get the corrected values for start, stop, step
-    (start, stop, step) = slice(start, stop, step).indices(self.shape[0])
+    clen = self.nbytes // self.itemsize
+    (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a numpy container
     array = np.empty(shape=(stop-start,), dtype=self.dtype)
