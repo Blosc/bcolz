@@ -6,7 +6,7 @@ import carray as ca
 import itertools as it
 from time import time
 
-N = int(1e7)  # the number of elements in x
+N = int(5e6)  # the number of elements in x
 clevel = 2    # the compression level
 
 print "Creating inputs with %d elements..." % N
@@ -21,7 +21,7 @@ print "Starting benchmark now for creating arrays..."
 t0 = time()
 out = np.fromiter(x, dtype='f8', count=N)
 print "Time for array--> %.3f" % (time()-t0,)
-print "out-->", out
+print "out-->", len(out)
 
 #ca.set_num_threads(ca.ncores//2)
 
@@ -30,7 +30,7 @@ print "out-->", out
 t0 = time()
 cout = ca.fromiter(x, dtype='f8', count=N, cparms=ca.cparms(clevel))
 print "Time for carray--> %.3f" % (time()-t0,)
-print "cout-->", repr(cout)
+print "cout-->", len(cout)
 #assert_array_equal(out, cout, "Arrays are not equal")
 
 # Create a carray (with unknown size)
@@ -38,20 +38,20 @@ print "cout-->", repr(cout)
 t0 = time()
 cout = ca.fromiter(x, dtype='f8', count=-1, cparms=ca.cparms(clevel))
 print "Time for carray (count=-1)--> %.3f" % (time()-t0,)
-print "cout-->", repr(cout)
+print "cout-->", len(cout)
 #assert_array_equal(out, cout, "Arrays are not equal")
 
 # Retrieve from a structured ndarray
 gen = ((i,j,k) for i,j,k in it.izip(x,y,z))
 t0 = time()
-vals = np.fromiter(gen, dtype="f8,f8,f8", count=N)
+out = np.fromiter(gen, dtype="f8,f8,f8", count=N)
 print "Time for structured array--> %.3f" % (time()-t0,)
-print "vals-->", len(vals)
+print "out-->", len(out)
 
 # Retrieve from a ctable
 gen = ((i,j,k) for i,j,k in it.izip(x,y,z))
 t0 = time()
-cvals = ca.fromiter(gen, dtype="f8,f8,f8", count=N)
+cout = ca.fromiter(gen, dtype="f8,f8,f8", count=N)
 print "Time for ctable--> %.3f" % (time()-t0,)
-print "vals-->", len(cvals)
-assert vals == cvals
+print "out-->", len(cout)
+#assert_array_equal(out, cout[:], "Arrays are not equal")

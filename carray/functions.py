@@ -123,12 +123,22 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
 
     # First, create the container
     expectedlen = kwargs.pop("expectedlen", expected)
-    obj = ca.carray(np.array([], dtype=dtype),
-                    expectedlen=expectedlen,
-                    **kwargs)
+    dtype = np.dtype(dtype)
+    if dtype.kind == "V":
+        # A ctable
+        obj = ca.ctable(np.array([], dtype=dtype),
+                        expectedlen=expectedlen,
+                        **kwargs)
+        chunklen = sum(obj.cols[name].chunklen
+                       for name in obj.names) // len(obj.names)
+    else:
+        # A carray
+        obj = ca.carray(np.array([], dtype=dtype),
+                        expectedlen=expectedlen,
+                        **kwargs)
+        chunklen = obj.chunklen
 
     # Then fill it
-    chunklen = obj.chunklen
     nread, blen = 0, 0
     while nread < count:
         if nread + chunklen > count:
