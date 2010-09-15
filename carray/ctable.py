@@ -36,12 +36,10 @@ class ctable(object):
     cols : tuple or list of carray/ndarray objects, or structured ndarray
         The list of column data to build the ctable object.
         This can also be a pure NumPy structured array.
-
     names : list of strings
         The list of names for the columns.  If not passed, the names
         will be chosen as 'f0' for the first column, 'f1' for the
         second and so on so forth (NumPy convention).
-
     kwargs : list of parameters or dictionary
         Allows to pass additional arguments supported by carray
         constructors in case new carrays need to be built.
@@ -238,15 +236,12 @@ class ctable(object):
             If a carray is passed, no conversion will be carried out.
             If conversion to a carray has to be done, `kwargs` will
             apply.
-
         name : string, optional
             The name for the new column.  If not passed, it will
             receive an automatic name.
-
         pos : int, optional
             The column position.  If not passed, it will be appended
             at the end.
-
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -297,7 +292,6 @@ class ctable(object):
         ----------
         name: string, optional
             The name of the column to remove.
-
         pos: int, optional
             The position of the column to remove.
 
@@ -546,7 +540,6 @@ class ctable(object):
             Must be a string containing an expression supported by
             Numexpr.  It may contain columns or other carrays or NumPy
             arrays that can be found in the user space name.
-
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 

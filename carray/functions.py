@@ -79,14 +79,11 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
     ----------
     iterable : iterable object
         An iterable object providing data for the carray.
-
     dtype : numpy.dtype instance
         Specifies the type of the outcome object.
-
     count : int, optional
         Specifies the number of items to read from iterable. The
         default is -1, which means all data is read.
-
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray/ctable constructors.
 
@@ -173,7 +170,6 @@ class cparms(object):
     ----------
     clevel : int (0 <= clevel < 10)
         The compression level.
-
     shuffle : bool
         Whether the shuffle filter is active or not.
 

@@ -316,15 +316,12 @@ cdef class carray:
       This is taken as the input to create the carray.  It can be any Python
       object that can be converted into a NumPy object.  The data type of
       the resulting carray will be the same as this NumPy object.
-
   cparms : instance of the `cparms` class, optional
       Parameters to the internal Blosc compressor.
-
   expectedlen : int, optional
       A guess on the expected length of this carray.  This will serve to
       decide the best `chunklen` used for compression and memory I/O
       purposes.
-
   chunklen : int, optional
       The number of items that fits on a chunk.  By specifying it you can
       explicitely set the chunk size used for compression and memory I/O.
@@ -918,10 +915,8 @@ cdef class carray:
     ----------
     start : int
         The starting item.
-
     stop : int
         The item after which the iterator stops.
-
     step : int
         The number of items incremented during each iteration.  Cannot be
         negative.
