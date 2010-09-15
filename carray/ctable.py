@@ -213,6 +213,7 @@ class ctable(object):
                 column = column
             elif ratype:
                 column = rows[name]
+            # Append the values to column
             self.cols[name].append(column)
             if sclist:
                 clen2 = 1

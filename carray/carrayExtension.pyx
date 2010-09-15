@@ -520,7 +520,7 @@ cdef class carray:
       nchunks = nbytes // chunksize
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
-      remainder = array[nbytesfirst // itemsize:]
+      remainder = array_[nbytesfirst // itemsize:]
       for i from 0 <= i < nchunks:
         chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparms)
         chunks.append(chunk_)

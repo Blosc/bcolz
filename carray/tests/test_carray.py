@@ -714,6 +714,19 @@ class fromiterTest(unittest.TestCase):
         b = ca.fromiter(iter(a), dtype='f4')
         assert_array_equal(b[:], a, "fromiter does not work correctly")
 
+    def test04a(self):
+        """Testing fromiter method with large iterator"""
+        N = 10*1000
+        a = np.fromiter((i*2 for i in xrange(N)), dtype='f8')
+        b = ca.fromiter((i*2 for i in xrange(N)), dtype='f8')
+        assert_array_equal(b[:], a, "iterator with a hint fails")
+
+    def test04b(self):
+        """Testing fromiter method with large iterator with a hint"""
+        N = 10*1000
+        a = np.fromiter((i*2 for i in xrange(N)), dtype='f8', count=N)
+        b = ca.fromiter((i*2 for i in xrange(N)), dtype='f8', count=N)
+        assert_array_equal(b[:], a, "iterator with a hint fails")
 
 
 
