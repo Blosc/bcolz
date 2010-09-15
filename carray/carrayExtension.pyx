@@ -485,31 +485,31 @@ cdef class carray:
     cdef int itemsize, chunksize, leftover, bsize
     cdef int nbytesfirst, chunklen
     cdef npy_intp nbytes, cbytes
-    cdef ndarray remainder, array_
+    cdef ndarray remainder, arrcpy
     cdef chunk chunk_
 
-    array_ = utils.to_ndarray(array, self.dtype)
-    if array_.dtype != self._dtype:
+    arrcpy = utils.to_ndarray(array, self.dtype)
+    if arrcpy.dtype != self._dtype:
       raise TypeError, "array dtype does not match with self"
 
     itemsize = self.itemsize
     chunksize = self._chunksize
     chunks = self.chunks
     leftover = self.leftover
-    bsize = array_.size*itemsize
+    bsize = arrcpy.size*itemsize
     cbytes = 0
 
     # Check if array fits in existing buffer
     if (bsize + leftover) < chunksize:
       # Data fits in lastchunk buffer.  Just copy it
-      memcpy(self.lastchunk+leftover, array_.data, bsize)
+      memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       leftover += bsize
     else:
       # Data does not fit in buffer.  Break it in chunks.
 
       # First, fill the last buffer completely
       nbytesfirst = chunksize - leftover
-      memcpy(self.lastchunk+leftover, array_.data, nbytesfirst)
+      memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
       # Compress the last chunk and add it to the list
       chunk_ = chunk(self.lastchunkarr, self._cparms)
       chunks.append(chunk_)
@@ -520,7 +520,7 @@ cdef class carray:
       nchunks = nbytes // chunksize
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
-      remainder = array_[nbytesfirst // itemsize:]
+      remainder = arrcpy[nbytesfirst // itemsize:]
       for i from 0 <= i < nchunks:
         chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparms)
         chunks.append(chunk_)
@@ -537,7 +537,7 @@ cdef class carray:
     self._cbytes += cbytes
     self._nbytes += bsize
     # Return the number of elements added
-    return array_.size
+    return arrcpy.size
 
 
   def copy(self, **kwargs):
