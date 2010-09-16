@@ -11,15 +11,11 @@ import sys, math
 import numpy as np
 import carray as ca
 from carray import utils
+from carray.functions import EVAL_BLOCK_SIZE
 
 if ca.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
-# The size of the columns chunks to be used in `ctable.eval()`, in
-# bytes.  For optimal performance, set this so that it will not exceed
-# the size of your L2/L3 (whichever is larger) cache.
-#EVAL_BLOCK_SIZE = 16            # use this for testing purposes
-EVAL_BLOCK_SIZE = 3*1024*1024    # 3 MB represents a good average?
 
 
 class ctable(object):
@@ -537,9 +533,10 @@ class ctable(object):
         Parameters
         ----------
         expression : string
-            Must be a string containing an expression supported by
-            Numexpr.  It may contain columns or other carrays or NumPy
-            arrays that can be found in the user space name.
+            A string forming an expression, like '2*a+3*b'. The values
+            for 'a' and 'b' are variable names to be taken from the
+            calling function's frame.  These variables may be column
+            names in this table, scalars, carrays or NumPy arrays.
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -567,9 +564,9 @@ class ctable(object):
             var = vars[name]
             if name in colnames:
                 typesize += self.cols[name].dtype.itemsize
-            elif hasattr(var, "dtype"):  # numpy arrays
+            elif hasattr(var, "dtype"):  # numpy/carray arrays
                 typesize += var.dtype.itemsize
-            elif hasattr(var, "__len__"): # collections
+            elif hasattr(var, "__len__"): # sequences
                 arr = np.array(var[0])
                 typesize += arr.dtype.itemsize
         bsize = EVAL_BLOCK_SIZE // typesize
@@ -616,3 +613,11 @@ class ctable(object):
   nbytes: %s; cbytes: %s; ratio: %.2f
 %s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
         return fullrepr
+
+
+## Local Variables:
+## mode: python
+## py-indent-offset: 4
+## tab-width: 4
+## fill-column: 78
+## End:

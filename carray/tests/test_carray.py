@@ -729,6 +729,80 @@ class fromiterTest(unittest.TestCase):
         assert_array_equal(b[:], a, "iterator with a hint fails")
 
 
+class evalTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing eval() with only scalars and constants"""
+        a = 3
+        cr = ca.eval("2 * a")
+        #print "ca.eval ->", cr
+        self.assert_(cr == 6, "eval does not work correctly")
+
+    def test01(self):
+        """Testing eval() with only carrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        cr = ca.eval("c * d")
+        nr = a * b
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test02(self):
+        """Testing eval() with only ndarrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        cr = ca.eval("a * b")
+        nr = a * b
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test03(self):
+        """Testing eval() with a mix of carrays and ndarrays"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        cr = ca.eval("a * d")
+        nr = a * b
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test04(self):
+        """Testing eval() with a mix of carray, ndarray and scalars"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        cr = ca.eval("a + 2 * d - 3")
+        nr = a + 2 * b - 3
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test05(self):
+        """Testing eval() with a mix of carray, ndarray, scalars and lists"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), b.tolist()
+        cr = ca.eval("a + 2 * d - 3")
+        nr = a + 2 * b - 3
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test06(self):
+        """Testing eval() with only scalars and lists"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), b.tolist()
+        cr = ca.eval("d - 3")
+        nr = b - 3
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+class eval_smallTest(evalTest):
+    N = 100
+
+class eval_bigTest(evalTest):
+    N = 1e4
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -745,6 +819,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))
+    theSuite.addTest(unittest.makeSuite(eval_smallTest))
+    theSuite.addTest(unittest.makeSuite(eval_bigTest))
 
     return theSuite
 

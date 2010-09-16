@@ -507,6 +507,19 @@ class evalTest(unittest.TestCase):
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
+    def test06(self):
+        """Testing eval() with a mix of columns, numpy arrays and lists"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        a = np.arange(N)
+        b = np.arange(N).tolist()
+        ctr = t.eval("f0 + f1 - a + b")
+        rar = ra['f0'] + ra['f1'] - a + b
+        #print "ctable ->", ctr
+        #print "numpy  ->", rar
+        assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
 
 class eval_getitemTest(unittest.TestCase):
 

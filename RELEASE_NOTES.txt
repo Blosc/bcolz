@@ -12,6 +12,10 @@ Changes from 0.2 to 0.3
 - Added a new `ctable` class that implements a compressed, column-wise
   table.
 
+- Added a new `eval()` function to evaluate expressions including any
+  combination of carrays, ndarrays, sequences or scalars.  Requires
+  Numexpr being installed.
+
 - Added new `__len__()` and `__sizeof__()` special methods for both
   `carray` and `ctable` objects.
 
