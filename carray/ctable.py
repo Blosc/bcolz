@@ -11,10 +11,7 @@ import sys, math
 import numpy as np
 import carray as ca
 from carray import utils
-from carray.functions import EVAL_BLOCK_SIZE
-
-if ca.numexpr_here:
-    from numexpr.expressions import functions as numexpr_functions
+import itertools as it
 
 
 
@@ -361,17 +358,85 @@ class ctable(object):
         return self.cbytes
 
 
-    def _getif(self, boolarr):
+    def getif(self, expression, colnames=None):
+        """
+        getif(expression, colnames=None)
+
+        Iterate over rows where `expression` is true.
+
+        Parameters
+        ----------
+        expression : string or carray
+            A boolean Numexpr expression or a boolean carray.
+        colnames : list of strings
+            The list of column names that you want to get back in results.  If
+            None, all the columns are returned.
+
+        Returns
+        -------
+        out : iterable
+            This iterable returns rows as NumPy structured types (i.e. they
+            support being mapped either by position or by name).
+
+        """
+
+        # Check input
+        if type(expression) is str:
+            # That must be an expression
+            boolarr = self.eval(expression)
+        elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
+            boolarr = expression
+        else:
+            raise ValueError, "only boolean expressions or arrays are supported"
+
+        # Get iterators for selected columns
+        if colnames is None:
+            colnames = self.names
+        icols, dtypes = [], []
+        for name in colnames:
+            col = self.cols[name]
+            icols.append(col.getif(boolarr))
+            dtypes.append((name, col.dtype))
+        dtype = np.dtype(dtypes)
+        icols = tuple(icols)
+        iterable = it.izip(*icols)
+
+        # Generate rows mapped to a void NumPy dtype
+        count = sum(boolarr.getif(boolarr))
+        # The size of the internal buffer
+        chunklen = 256    # 256 should be enough for most cases
+        nread, blen, = 0, 0
+        while nread < count:
+            if nread + chunklen > count:
+                blen = count - nread
+            else:
+                blen = chunklen
+            # Important to create the chunk anew in order to avoid
+            # buffer overwrites in results during the iteration.
+            chunk = np.fromiter(iterable, dtype=dtype, count=blen)
+
+            # Yield rows from this chunk until exhausted
+            for n in xrange(blen):
+                yield chunk[n]
+
+            # Check the end of the iterable
+            nread += len(chunk)
+            if len(chunk) < chunklen:
+                break
+
+
+    def _getif(self, boolarr, colnames=None):
         """Return rows where `boolarr` is true as an structured array.
 
         This is called internally only, so we can assum that `boolarr`
         is a boolean array.
         """
 
-        cols = []
-        for name in self.names:
-            cols.append(self.cols[name][boolarr])
-        result = np.rec.fromarrays(cols, dtype=self.dtype).view(np.ndarray)
+        if colnames is None:
+            colnames = self.names
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
 
         return result
 
