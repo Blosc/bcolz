@@ -521,130 +521,6 @@ class evalTest(unittest.TestCase):
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
 
-class eval_getitemTest(unittest.TestCase):
-
-    def test00(self):
-        """Testing __getitem__ with an expression (all false values)"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        rt = t['f1 > f2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test01(self):
-        """Testing __getitem__ with an expression (all true values)"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        rt = t['f1 <= f2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i <= i*2.),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test02(self):
-        """Testing __getitem__ with an expression (true/false values)"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        rt = t['f1*4 >= f2*2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test03(self):
-        """Testing __getitem__ with an invalid expression"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        # In t['f1*4 >= ppp'], 'ppp' variable name should be found
-        self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
-
-    def test04a(self):
-        """Testing __getitem__ with an expression with columns and ndarrays"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        c2 = t['f2'][:]
-        rt = t['f1*4 >= c2*2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test04b(self):
-        """Testing __getitem__ with an expression with columns and carrays"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        c2 = t['f2']
-        rt = t['f1*4 >= c2*2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test05(self):
-        """Testing __getitem__ with an expression with overwritten vars"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        f1 = t['f2']
-        f2 = t['f1']
-        rt = t['f2*4 >= f1*2']
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-
-class bool_getitemTest(unittest.TestCase):
-
-    def test00(self):
-        """Testing __getitem__ with a boolean array (all false values)"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        barr = t.eval('f1 > f2')
-        rt = t[barr]
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test01(self):
-        """Testing __getitem__ with a boolean array (mixed values)"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        barr = t.eval('f1*4 >= f2*2')
-        rt = t[barr]
-        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
-                          dtype='i4,f8,i8')
-        #print "rt->", rt
-        #print "rar->", rar
-        assert_array_equal(rt, rar, "ctable values are not correct")
-
-    def test02(self):
-        """Testing __getitem__ with a short boolean array"""
-        N = 10
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
-        barr = np.zeros(len(t)-1, dtype=np.bool_)
-        self.assertRaises(ValueError, t.__getitem__, barr)
-
-
 class fancy_indexing_getitemTest(unittest.TestCase):
 
     def test00(self):
@@ -787,6 +663,263 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
 
+class eval_getitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __getitem__ with an expression (all false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1 > f2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing __getitem__ with an expression (all true values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1 <= f2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i <= i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing __getitem__ with an expression (true/false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = t['f1*4 >= f2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test03(self):
+        """Testing __getitem__ with an invalid expression"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        # In t['f1*4 >= ppp'], 'ppp' variable name should be found
+        self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
+
+    def test04a(self):
+        """Testing __getitem__ with an expression with columns and ndarrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        c2 = t['f2'][:]
+        rt = t['f1*4 >= c2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test04b(self):
+        """Testing __getitem__ with an expression with columns and carrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        c2 = t['f2']
+        rt = t['f1*4 >= c2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test05(self):
+        """Testing __getitem__ with an expression with overwritten vars"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        f1 = t['f2']
+        f2 = t['f1']
+        rt = t['f2*4 >= f1*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+
+class bool_getitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing __getitem__ with a boolean array (all false values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1 > f2')
+        rt = t[barr]
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test01(self):
+        """Testing __getitem__ with a boolean array (mixed values)"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1*4 >= f2*2')
+        rt = t[barr]
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test02(self):
+        """Testing __getitem__ with a short boolean array"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = np.zeros(len(t)-1, dtype=np.bool_)
+        self.assertRaises(ValueError, t.__getitem__, barr)
+
+
+class getifTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing getif() with a boolean array (all false values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1 > f2')
+        rt = [r['f0'] for r in t.getif(barr)]
+        rl = [i for i in xrange(N) if i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test00b(self):
+        """Testing getif() with a boolean array (all true values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('f1 <= f2')
+        rt = [r['f0'] for r in t.getif(barr)]
+        rl = [i for i in xrange(N) if i <= i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test00c(self):
+        """Testing getif() with a boolean array (mix values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        barr = t.eval('4+f1 > f2')
+        rt = [r['f0'] for r in t.getif(barr)]
+        rl = [i for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test01a(self):
+        """Testing getif() with an expression (all false values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r['f0'] for r in t.getif('f1 > f2')]
+        rl = [i for i in xrange(N) if i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test01b(self):
+        """Testing getif() with an expression (all true values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r['f0'] for r in t.getif('f1 <= f2')]
+        rl = [i for i in xrange(N) if i <= i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test01c(self):
+        """Testing getif() with an expression (all true values)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r['f0'] for r in t.getif('4+f1 > f2')]
+        rl = [i for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test02a(self):
+        """Testing getif() with an expression (with outcols)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r['f1'] for r in t.getif('4+f1 > f2', outcols=['f1'])]
+        rl = [i*2. for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test02b(self):
+        """Testing getif() with an expression (with outcols II)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [(r['f1'], r['f2']) for r in t.getif('4+f1 > f2',
+                                                 outcols=['f1','f2'])]
+        rl = [(i*2., i*3) for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test02c(self):
+        """Testing getif() with an expression (with outcols III)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [(r['f2'], r['f0']) for r in t.getif('4+f1 > f2',
+                                                 outcols=['f2','f0'])]
+        rl = [(i*3, i) for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "getif not working correctly")
+
+    def test02d(self):
+        """Testing getif() with an expression (with outcols IV)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        getif = t.getif('f1 > f2', outcols=['f3','f0'])
+        self.assertRaises(ValueError, getif.next)
+
+    def test03(self):
+        """Testing getif() with an expression (with __nrow__ in outcols)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [tuple(r) for r in t.getif('4+f1 > f2',
+                                        outcols=['__nrow__','f2','f0'])]
+        rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt, type(rt[0][0])
+        #print "rl->", rl, type(rl[0][0])
+        self.assert_(rt == rl, "getif not working correctly")
+
+
+class getif_smallTest(getifTest):
+    N = 10
+
+class getif_largeTest(getifTest):
+    N = 10*1000
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -804,6 +937,8 @@ def suite():
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))
         theSuite.addTest(unittest.makeSuite(bool_getitemTest))
+        theSuite.addTest(unittest.makeSuite(getif_smallTest))
+        theSuite.addTest(unittest.makeSuite(getif_largeTest))
 
     return theSuite
 

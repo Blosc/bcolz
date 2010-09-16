@@ -8,7 +8,7 @@ import numexpr as ne
 import carray as ca
 from time import time
 
-N = 1e7       # the number of elements in x
+N = 1e8       # the number of elements in x
 clevel = 5    # the compression level
 sexpr = "(x+1)<10"                    # small number of items
 #sexpr = "(x+1)<1000000"              # large number

@@ -358,9 +358,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def getif(self, expression, colnames=None):
+    def getif(self, expression, outcols=None):
         """
-        getif(expression, colnames=None)
+        getif(expression, outcols=None)
 
         Iterate over rows where `expression` is true.
 
@@ -368,9 +368,11 @@ class ctable(object):
         ----------
         expression : string or carray
             A boolean Numexpr expression or a boolean carray.
-        colnames : list of strings
+        outcols : list of strings
             The list of column names that you want to get back in results.  If
-            None, all the columns are returned.
+            None, all the columns are returned.  If the special name
+            '__nrow__' is present, the number of row will be included in
+            output.
 
         Returns
         -------
@@ -389,20 +391,30 @@ class ctable(object):
         else:
             raise ValueError, "only boolean expressions or arrays are supported"
 
+        # Check outcols
+        if outcols is None:
+            outcols = self.names
+        else:
+            if set(outcols) - set(self.names+['__nrow__']) != set():
+                raise ValueError, "not all outcols are real column names"
+
+        # Generate rows mapped to a void NumPy dtype
+        count = sum(boolarr.getif(boolarr))
+
         # Get iterators for selected columns
-        if colnames is None:
-            colnames = self.names
         icols, dtypes = [], []
-        for name in colnames:
-            col = self.cols[name]
-            icols.append(col.getif(boolarr))
-            dtypes.append((name, col.dtype))
+        for name in outcols:
+            if name == "__nrow__":
+                icols.append(boolarr.where())
+                dtypes.append((name, np.int_))
+            else:
+                col = self.cols[name]
+                icols.append(col.getif(boolarr))
+                dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         icols = tuple(icols)
         iterable = it.izip(*icols)
 
-        # Generate rows mapped to a void NumPy dtype
-        count = sum(boolarr.getif(boolarr))
         # The size of the internal buffer
         chunklen = 256    # 256 should be enough for most cases
         nread, blen, = 0, 0
