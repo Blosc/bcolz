@@ -447,7 +447,7 @@ class ctable(object):
         elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
-                arr = self.eval(key, depth=3)
+                arr = self.eval(key, depth=4)
                 if arr.dtype.type != np.bool_:
                     raise IndexError, \
                           "`key` %s does not represent a boolean expression" %\
@@ -482,48 +482,6 @@ class ctable(object):
         return
 
 
-    def _getvars(self, expression, depth):
-        """Get the variables in `expression`.
-
-        `depth` specifies the depth of the frame in order to reach local
-        or global variables.
-        """
-
-        cexpr = compile(expression, '<string>', 'eval')
-        exprvars = [ var for var in cexpr.co_names
-                     if var not in ['None', 'False', 'True']
-                     and var not in numexpr_functions ]
-
-        # Get the local and global variable mappings of the user frame
-        user_locals, user_globals = {}, {}
-        user_frame = sys._getframe(depth)
-        user_locals = user_frame.f_locals
-        user_globals = user_frame.f_globals
-
-        # Look for the required variables
-        reqvars = {}
-        colnames = []
-        for var in exprvars:
-            # Get the value.
-            if var in self.cols:
-                val = self.cols[var]
-                colnames.append(var)
-            elif var in user_locals:
-                val = user_locals[var]
-            elif var in user_globals:
-                val = user_globals[var]
-            else:
-                raise NameError("name ``%s`` is not found" % var)
-            # Check the value.
-            if hasattr(val, 'dtype') and val.dtype.str[1:] == 'u8':
-                raise NotImplementedError(
-                    "variable ``%s`` refers to "
-                    "a 64-bit unsigned integer object, that is "
-                    "not yet supported in expressions, sorry; " % var )
-            reqvars[var] = val
-        return reqvars, colnames
-
-
     def eval(self, expression, **kwargs):
         """
         eval(expression, **kwargs)
@@ -549,52 +507,10 @@ class ctable(object):
 
         """
 
-        if not ca.numexpr_here:
-            raise ImportError(
-                "You need numexpr %s or higher to use this method" % \
-                ca.min_numexpr_version)
-
-        # Get variables and column names participating in expression
-        depth = kwargs.pop('depth', 2)
-        vars, colnames = self._getvars(expression, depth=depth)
-
-        # Compute the optimal block size (in elements)
-        typesize = 0
-        for name in vars.iterkeys():
-            var = vars[name]
-            if name in colnames:
-                typesize += self.cols[name].dtype.itemsize
-            elif hasattr(var, "dtype"):  # numpy/carray arrays
-                typesize += var.dtype.itemsize
-            elif hasattr(var, "__len__"): # sequences
-                arr = np.array(var[0])
-                typesize += arr.dtype.itemsize
-        bsize = EVAL_BLOCK_SIZE // typesize
-        # Evaluation seems more efficient if block size is a power of 2
-        bsize = 2 ** (int(math.log(bsize, 2)))
-
-        # Perform the evaluation in blocks
-        vars_ = {}
-        for i in xrange(0, self.len, bsize):
-            # Get buffers for columns
-            for name in vars.iterkeys():
-                var = vars[name]
-                if name in colnames:
-                    vars_[name] = self.cols[name][i:i+bsize]
-                elif hasattr(var, "__len__") and len(var) > bsize:
-                    vars_[name] = var[i:i+bsize]
-                else:
-                    vars_[name] = var
-            # Perform the evaluation for this block
-            res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
-            if i == 0:
-                # Get a decent default for expectedlen
-                nrows = kwargs.pop('expectedlen', self.len)
-                result = ca.carray(res_block, expectedlen=nrows, **kwargs)
-            else:
-                result.append(res_block)
-
-        return result
+        # Get the desired frame depth
+        depth = kwargs.pop('depth', 3)
+        # Call top-level eval with cols as user_dict
+        return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
 
     def __str__(self):

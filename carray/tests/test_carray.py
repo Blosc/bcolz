@@ -819,8 +819,9 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))
-    theSuite.addTest(unittest.makeSuite(eval_smallTest))
-    theSuite.addTest(unittest.makeSuite(eval_bigTest))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(eval_smallTest))
+        theSuite.addTest(unittest.makeSuite(eval_bigTest))
 
     return theSuite
 

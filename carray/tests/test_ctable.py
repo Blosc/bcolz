@@ -567,6 +567,46 @@ class eval_getitemTest(unittest.TestCase):
         # In t['f1*4 >= ppp'], 'ppp' variable name should be found
         self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
 
+    def test04a(self):
+        """Testing __getitem__ with an expression with columns and ndarrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        c2 = t['f2'][:]
+        rt = t['f1*4 >= c2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test04b(self):
+        """Testing __getitem__ with an expression with columns and carrays"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        c2 = t['f2']
+        rt = t['f1*4 >= c2*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
+    def test05(self):
+        """Testing __getitem__ with an expression with overwritten vars"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        f1 = t['f2']
+        f2 = t['f1']
+        rt = t['f2*4 >= f1*2']
+        rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
+                          dtype='i4,f8,i8')
+        #print "rt->", rt
+        #print "rar->", rar
+        assert_array_equal(rt, rar, "ctable values are not correct")
+
 
 class bool_getitemTest(unittest.TestCase):
 

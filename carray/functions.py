@@ -171,7 +171,7 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
     return obj
 
 
-def _getvars(expression, depth):
+def _getvars(expression, user_dict, depth):
     """Get the variables in `expression`.
 
     `depth` specifies the depth of the frame in order to reach local
@@ -187,6 +187,7 @@ def _getvars(expression, depth):
     user_locals, user_globals = {}, {}
     user_frame = sys._getframe(depth)
     user_locals = user_frame.f_locals
+    user_locals.update(user_dict)
     user_globals = user_frame.f_globals
 
     # Look for the required variables
@@ -239,8 +240,9 @@ def eval(expression, **kwargs):
             ca.min_numexpr_version)
 
     # Get variables and column names participating in expression
+    user_dict = kwargs.pop('user_dict', {})
     depth = kwargs.pop('depth', 2)
-    vars = _getvars(expression, depth=depth)
+    vars = _getvars(expression, user_dict, depth)
 
     # Gather info about sizes and lengths
     typesize, vlen = 0, 1

@@ -1,5 +1,5 @@
 ============================
-Release notes for carray 0.2
+Release notes for carray 0.3
 ============================
 
 :Author: Francesc Alted i Abad
