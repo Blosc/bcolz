@@ -690,14 +690,28 @@ cdef class carray:
       if key.dtype.type == np.bool_:
         # A boolean array
         if len(key) != self.len:
-          raise ValueError, "boolean array length must match len(self)"
-        return np.fromiter(self.getif(key), dtype=self.dtype)
+          raise IndexError, "boolean array length must match len(self)"
+        if isinstance(key, carray):
+          count = sum(key.getif(key))
+        else:
+          count = -1
+        return np.fromiter(self.getif(key), dtype=self.dtype, count=count)
       elif np.issubsctype(key, np.int_):
         # An integer array
         return np.array([self[i] for i in key], dtype=self.dtype)
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
+    # An boolean expression (case of fancy indexing)
+    elif type(key) is str:
+      # Evaluate
+      result = ca.eval(key)
+      if result.dtype.type != np.bool_:
+        raise IndexError, "only boolean expressions supported"
+      if len(result) != self.len:
+        raise IndexError, "boolean expression outcome must match len(self)"
+      # Call __getitem__ again
+      return self[result]
     # All the rest not implemented
     else:
       raise NotImplementedError, "key not supported: %s" % repr(key)

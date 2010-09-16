@@ -797,6 +797,23 @@ class evalTest(unittest.TestCase):
         #print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
+    def test07(self):
+        """Testing eval() via expression on __getitem__"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), b.tolist()
+        cr = c["a + 2 * d - 3 > 0"]
+        nr = a[(a + 2 * b - 3) > 0]
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "getitem(expr) does not work correctly")
+
+    def _test08(self):
+        """Testing eval() via expression on __getitem__ (no bool expr)"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), b.tolist()
+        # This is not going to work because of different frame depth :-/
+        self.assertRaises(IndexError, c.__getitem__, "a*3")
+
 class eval_smallTest(evalTest):
     N = 100
 

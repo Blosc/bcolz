@@ -784,7 +784,7 @@ class bool_getitemTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         barr = np.zeros(len(t)-1, dtype=np.bool_)
-        self.assertRaises(ValueError, t.__getitem__, barr)
+        self.assertRaises(IndexError, t.__getitem__, barr)
 
 
 class getifTest(unittest.TestCase):
