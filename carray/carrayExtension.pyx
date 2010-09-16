@@ -796,7 +796,7 @@ cdef class carray:
       elif np.issubsctype(key, np.int_):
         # An integer array
         value = utils.to_ndarray(value, self.dtype, arrlen=len(key))
-        # This could be optimised, but it works like this
+        # XXX This could be optimised, but it works like this
         for i, item in enumerate(key):
           self[item] = value[i]
         return
