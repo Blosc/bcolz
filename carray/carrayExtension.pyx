@@ -1089,6 +1089,7 @@ cdef class carray:
 
   cdef int check_zeros(self, object barr):
     """Check for zeros.  Return 1 if all zeros, else return 0."""
+    cdef int bsize
     cdef carray carr
     cdef ndarray ndarr
     cdef chunk chunk_
@@ -1104,7 +1105,10 @@ cdef class carray:
     else:
       # Check for zero'ed chunks in ndarrays
       ndarr = barr
-      if check_zeros(ndarr.data + self.nrowsread, self.nrowsinbuf):
+      bsize = self.nrowsinbuf
+      if self.nrowsread + bsize > self.len:
+        bsize = self.len - self.nrowsread
+      if check_zeros(ndarr.data + self.nrowsread, bsize):
         return 1
     return 0
 
