@@ -6,7 +6,7 @@
 #
 ########################################################################
 
-"""Public functions.
+"""Top level functions and classes.
 """
 
 import sys, os
