@@ -398,7 +398,7 @@ class ctable(object):
             if set(outcols) - set(self.names+['__nrow__']) != set():
                 raise ValueError, "not all outcols are real column names"
 
-        # Generate rows mapped to a void NumPy dtype
+        # Get the length of the result
         count = sum(boolarr.getif(boolarr))
 
         # Get iterators for selected columns
@@ -412,9 +412,89 @@ class ctable(object):
                 icols.append(col.getif(boolarr))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
+        return self._iter(icols, dtype, count)
+
+
+    def _getif(self, boolarr, colnames=None):
+        """Return rows where `boolarr` is true as an structured array.
+
+        This is called internally only, so we can assum that `boolarr`
+        is a boolean array.
+        """
+
+        if colnames is None:
+            colnames = self.names
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+
+        return result
+
+
+    def __iter__(self):
+        return self.iter(0, self.len, 1)
+
+
+    def iter(self, start=0, stop=None, step=1, outcols=None):
+        """
+        iter(start=0, stop=None, step=1)
+
+        Iterator with `start`, `stop` and `step` bounds.
+
+        Parameters
+        ----------
+        start : int
+            The starting item.
+        stop : int
+            The item after which the iterator stops.
+        step : int
+            The number of items incremented during each iteration.  Cannot be
+            negative.
+        outcols : list of strings
+            The list of column names that you want to get back in results.  If
+            None, all the columns are returned.  If the special name
+            '__nrow__' is present, the number of row will be included in
+            output.
+
+        Returns
+        -------
+        out : iterator
+
+        """
+
+        # Check outcols
+        if outcols is None:
+            outcols = self.names
+        else:
+            if set(outcols) - set(self.names+['__nrow__']) != set():
+                raise ValueError, "not all outcols are real column names"
+
+        # Check limits
+        if step <= 0:
+            raise NotImplementedError, "step param can only be positive"
+        start, stop, step = slice(start, stop, step).indices(self.len)
+        count = utils.get_len_of_range(start, stop, step)
+
+        # Get iterators for selected columns
+        icols, dtypes = [], []
+        for name in outcols:
+            if name == "__nrow__":
+                #icols.append(iter(xrange(start, stop, step)))  # XXX
+                icols.append(xrange(start, stop, step))
+                dtypes.append((name, np.int_))
+            else:
+                col = self.cols[name]
+                icols.append(col.iter(start, stop, step))
+                dtypes.append((name, col.dtype))
+        dtype = np.dtype(dtypes)
+        return self._iter(icols, dtype, count)
+
+
+    def _iter(self, icols, dtype, count):
+        """Return `count` values in `icols` list of iterators with `dtype`."""
+
         icols = tuple(icols)
         iterable = it.izip(*icols)
-
         # The size of the internal buffer
         chunklen = 256    # 256 should be enough for most cases
         nread, blen, = 0, 0
@@ -435,22 +515,6 @@ class ctable(object):
             nread += len(chunk)
             if len(chunk) < chunklen:
                 break
-
-
-    def _getif(self, boolarr, colnames=None):
-        """Return rows where `boolarr` is true as an structured array.
-
-        This is called internally only, so we can assum that `boolarr`
-        is a boolean array.
-        """
-
-        if colnames is None:
-            colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
 
 
     def __getitem__(self, key):

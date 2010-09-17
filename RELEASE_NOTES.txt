@@ -82,6 +82,9 @@ Changes from 0.2 to 0.3
   in NumPy are supported, including fancy indexing.  The only exception
   are negative steps in ``ctable[start:stop:-step] = values``.
 
+- Added new `ctable.__iter__()`, `ctable.iter()` and `ctable.getif()`
+  iterators mimicking the functionality in carray object.
+
 
 Changes from 0.1 to 0.2
 =======================
