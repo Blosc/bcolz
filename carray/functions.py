@@ -187,14 +187,15 @@ def _getvars(expression, user_dict, depth):
     user_locals, user_globals = {}, {}
     user_frame = sys._getframe(depth)
     user_locals = user_frame.f_locals
-    user_locals.update(user_dict)
     user_globals = user_frame.f_globals
 
     # Look for the required variables
     reqvars = {}
     for var in exprvars:
         # Get the value.
-        if var in user_locals:
+        if var in user_dict:
+            val = user_dict[var]
+        elif var in user_locals:
             val = user_locals[var]
         elif var in user_globals:
             val = user_globals[var]
