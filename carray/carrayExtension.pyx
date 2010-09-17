@@ -331,7 +331,7 @@ cdef class carray:
 
   cdef int itemsize, _chunksize, _chunklen, leftover
   cdef int startb, stopb, nrowsinbuf, _row
-  cdef int sss_mode, where_mode, getif_mode
+  cdef int sss_mode, wheretrue_mode, getif_mode
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread, getif_cached
   cdef npy_intp _nbytes, _cbytes
@@ -453,7 +453,7 @@ cdef class carray:
 
     # Sentinels
     self.sss_mode = False
-    self.where_mode = False
+    self.wheretrue_mode = False
     self.getif_mode = False
     self.idxcache = -1       # cache not initialized
 
@@ -960,9 +960,9 @@ cdef class carray:
     return iter(self)
 
 
-  def where(self):
+  def wheretrue(self):
     """
-    where()
+    wheretrue()
 
     Iterator that returns indices where this carray is true.  Only useful for
     boolean carrays.
@@ -979,7 +979,7 @@ cdef class carray:
     # Check self
     if self.dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
-    self.where_mode = True
+    self.wheretrue_mode = True
     return iter(self)
 
 
@@ -999,7 +999,7 @@ cdef class carray:
 
     See Also
     --------
-    where
+    wheretrue
 
     """
     # Check input
@@ -1039,8 +1039,8 @@ cdef class carray:
           self.getif_buf = self.getif_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
         else:
-          # Skip chunks with zeros only if in where_mode
-          if self.where_mode and self.check_zeros(self):
+          # Skip chunks with zeros only if in wheretrue_mode
+          if self.wheretrue_mode and self.check_zeros(self):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
             continue
@@ -1056,7 +1056,7 @@ cdef class carray:
       self.nextelement = self._nrow + self.step
 
       # Return a value depending on the mode we are
-      if self.where_mode:
+      if self.wheretrue_mode:
         vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
           return self._nrow
@@ -1078,7 +1078,7 @@ cdef class carray:
     else:
       # Reset sentinels
       self.sss_mode = False
-      self.where_mode = False
+      self.wheretrue_mode = False
       self.getif_mode = False
       self.getif_arr = None
       # Reset buffers

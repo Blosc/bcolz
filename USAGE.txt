@@ -311,7 +311,7 @@ have a true value::
 
   In [68]: barr = ca.carray(a < 10)
 
-  In [69]: [i for i in barr.where()]
+  In [69]: [i for i in barr.wheretrue()]
   Out[69]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
 And you can retrieve values where a boolean array is true::

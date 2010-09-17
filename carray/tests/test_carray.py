@@ -457,34 +457,34 @@ class IterTest(unittest.TestCase):
 class whereTest(unittest.TestCase):
 
     def test00(self):
-        """Testing `where()` iterator (all true values)"""
+        """Testing `wheretrue()` iterator (all true values)"""
         a = np.arange(1, 11) > 0
         b = ca.carray(a)
         wt = a.nonzero()[0].tolist()
-        cwt = [i for i in b.where()]
+        cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.where()]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        #print "where ->", [i for i in b.wheretrue()]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
     def test01(self):
-        """Testing `where()` iterator (all false values)"""
+        """Testing `wheretrue()` iterator (all false values)"""
         a = np.arange(1, 11) < 0
         b = ca.carray(a)
         wt = a.nonzero()[0].tolist()
-        cwt = [i for i in b.where()]
+        cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.where()]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        #print "where ->", [i for i in b.wheretrue()]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
     def test03(self):
-        """Testing `where()` iterator (mix of true/false values)"""
+        """Testing `wheretrue()` iterator (mix of true/false values)"""
         a = np.arange(1, 11) > 5
         b = ca.carray(a)
         wt = a.nonzero()[0].tolist()
-        cwt = [i for i in b.where()]
+        cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.where()]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        #print "where ->", [i for i in b.wheretrue()]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
 
 class getifTest(unittest.TestCase):

@@ -37,8 +37,8 @@ print "Time for converting boolean--> %.3f" % (time()-t0,)
 print "cbool-->", repr(cbool)
 
 t0 = time()
-vals = [v for v in cbool.where()]
-print "Time for where()--> %.3f" % (time()-t0,)
+vals = [v for v in cbool.wheretrue()]
+print "Time for wheretrue()--> %.3f" % (time()-t0,)
 print "vals-->", len(vals)
 
 print "Starting benchmark now..."

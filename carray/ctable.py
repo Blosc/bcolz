@@ -405,7 +405,7 @@ class ctable(object):
         icols, dtypes = [], []
         for name in outcols:
             if name == "__nrow__":
-                icols.append(boolarr.where())
+                icols.append(boolarr.wheretrue())
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
