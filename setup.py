@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ########################################################################
 #
 #       License: BSD
@@ -133,20 +132,12 @@ for arg in args:
 if os.name == 'posix':
     CFLAGS.append("-msse2")
 
-# Include NumPy header dirs 
+# Include NumPy header dirs
 inc_dirs.extend(get_numpy_include_dirs())
 
+# Some macros
 def_macros = [('NDEBUG', 1)]
-# Define macros for Windows platform
-if os.name == 'nt':
-    def_macros.append(('WIN32', 1))
 
-#setup information for C extension
-if os.name == 'nt':
-    pthread_win = ['blosc/win32/pthread.c']
-else:
-    pthread_win = []
-    
 
 classifiers = """\
 Development Status :: 1 - Alpha
@@ -183,11 +174,9 @@ a high-performance compressor that is optimized for binary data.
                    include_dirs=inc_dirs,
                    define_macros=def_macros,
                    sources = [ "carray/carrayExtension.pyx",
-                               "blosc/blosc.c", "blosc/blosclz.c",
-                               "blosc/shuffle.c" ] + pthread_win,
+                               "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ],
                    depends = [ "carray/definitions.pxd",
-                               "blosc/blosc.h", "blosc/blosclz.h",
-                               "blosc/shuffle.h" ],
+                               "blosc/blosc.h", "blosc/blosclz.h", "blosc/shuffle.h" ],
                    library_dirs=lib_dirs,
                    libraries=libs,
                    extra_link_args=LFLAGS,
