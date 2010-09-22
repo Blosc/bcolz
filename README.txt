@@ -19,7 +19,7 @@ than using a traditional ndarray object from NumPy.
 Building
 --------
 
-Assuiming that you have NumPy, Cython and a C compiler installed, do:
+Assuming that you have NumPy, Cython and a C compiler installed, do:
 
 $ python setup.py build_ext --inplace
 
