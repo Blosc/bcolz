@@ -271,12 +271,23 @@ def eval(expression, **kwargs):
     # Perform the evaluation in blocks
     vars_ = {}
     expectedlen = bsize    # a default
+    # Get temporaries for vars
+    for name in vars.iterkeys():
+        var = vars[name]
+        if hasattr(var, "__len__") and len(var) > bsize:
+            vars_[name] = np.empty(bsize, dtype=var.dtype)
     for i in xrange(0, vlen, bsize):
-        # Get buffers for columns
+        # Get buffers for vars
         for name in vars.iterkeys():
             var = vars[name]
             if hasattr(var, "__len__") and len(var) > bsize:
-                vars_[name] = var[i:i+bsize]
+                if hasattr(var, "_getrange"):
+                    if i+bsize < vlen:
+                        var._getrange(i, bsize, vars_[name])
+                    else:
+                        vars_[name] = var[i:]
+                else:
+                    vars_[name] = var[i:i+bsize]
                 expectedlen = len(var)
             else:
                 vars_[name] = var

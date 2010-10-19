@@ -646,7 +646,6 @@ cdef class carray:
     cdef int startb, stopb, chunklen
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
-    cdef chunk chunk_
     cdef ndarray arr1
     cdef object start, stop, step
 
@@ -859,6 +858,44 @@ cdef class carray:
 
     # Safety check
     assert (nwrow == vlen)
+
+
+  # This is a private function that is specific for `eval`
+  def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
+    cdef int startb, stopb, chunklen
+    cdef npy_intp nwrow, stop, cblen
+    cdef npy_intp schunk, echunk, nchunk, nchunks
+    cdef chunk chunk_
+
+    # Check that we are inside limits
+    nrows = self._nbytes // self.itemsize
+    if (start + blen) > nrows:
+      blen = nrows - start
+
+    # Fill `out` from data in chunks
+    nwrow = 0
+    stop = start + blen
+    nchunks = self._nbytes // self._chunksize
+    chunklen = self._chunksize // self.itemsize
+    schunk = start // chunklen
+    echunk = (start+blen) // chunklen
+    for nchunk from schunk <= nchunk <= echunk:
+      # Compute start & stop for each block
+      startb = start % chunklen
+      stopb = chunklen
+      if start + stopb > stop:
+        stopb = stop % chunklen
+      cblen = stopb - startb
+      if cblen == 0:
+        continue
+      # Get the data chunk and assign it to result array
+      if nchunk == nchunks and self.leftover:
+        out[nwrow:nwrow+cblen] = self.lastchunkarr[startb:stopb]
+      else:
+        chunk_ = self.chunks[nchunk]
+        chunk_._getitem(startb, stopb, out.data+nwrow*self.itemsize)
+      nwrow += cblen
+      start += cblen
 
 
   cdef void bool_update(self, boolarr, value):
