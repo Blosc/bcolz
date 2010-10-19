@@ -883,8 +883,10 @@ cdef class carray:
       # Compute start & stop for each block
       startb = start % chunklen
       stopb = chunklen
-      if start + stopb > stop:
-        stopb = stop % chunklen
+      if (start + startb) + chunklen > stop:
+        # XXX I still have to explain why this expression works
+        # for chunklen > (start + blen)
+        stopb = (stop - start) + startb
       cblen = stopb - startb
       if cblen == 0:
         continue
