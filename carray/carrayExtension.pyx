@@ -22,7 +22,7 @@ SizeType = np.int64
 
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
-     malloc, free, memcpy, strdup, strcmp, bzero, \
+     malloc, free, memcpy, memset, strdup, strcmp, \
      PyString_AsString, PyString_FromString, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
@@ -235,7 +235,7 @@ cdef class chunk:
 
     if self.iszero:
       # The chunk is made of zeros, so write them
-      bzero(dest, bsize)
+      memset(dest, 0, bsize)
       return
 
     # Fill dest with uncompressed data
