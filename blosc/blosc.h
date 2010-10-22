@@ -6,6 +6,7 @@
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
 
+#include <limits.h>
 
 #ifndef BLOSC_H
 #define BLOSC_H
@@ -13,11 +14,11 @@
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
 #define BLOSC_VERSION_MINOR    1    /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  0    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_RELEASE  1    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.1.b2.dev"  /* string version.  Sync with above! */
-#define BLOSC_VERSION_REVISION "$Rev: 241 $"   /* revision version */
-#define BLOSC_VERSION_DATE     "2010-09-13"    /* date version */
+#define BLOSC_VERSION_STRING   "1.1.1"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_REVISION "$Rev: 285 $"   /* revision version */
+#define BLOSC_VERSION_DATE     "$Date:: 2010-10-01 #$"    /* date version */
 
 /* The *_VERS_FORMAT should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -26,24 +27,27 @@
 /* The combined blosc and blosclz formats */
 #define BLOSC_VERSION_CFORMAT (BLOSC_VERSION_FORMAT << 8) & (BLOSCLZ_VERSION_FORMAT)
 
-/* The maximum overhead during compression in bytes */
-#define BLOSC_MAX_OVERHEAD 16
+/* Minimum header length */
+#define BLOSC_MIN_HEADER_LENGTH 16
 
+/* The maximum overhead during compression in bytes.  This equals to
+   BLOSC_MIN_HEADER_LENGTH now, but can be higher in future
+   implementations */
+#define BLOSC_MAX_OVERHEAD BLOSC_MIN_HEADER_LENGTH
 
-/* Codes for internal flags */
+/* Maximum buffer size to be compressed */
+#define BLOSC_MAX_BUFFERSIZE INT_MAX   /* Signed 32-bit internal counters */
+
+/* Maximum typesize before considering buffer as a stream of bytes */
+#define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
+
+/* The maximum number of threads (for some static arrays) */
+#define BLOSC_MAX_THREADS 256
+
+/* Codes for internal flags (see blosc_cbuffer_metainfo) */
 #define BLOSC_DOSHUFFLE 0x1
 #define BLOSC_MEMCPYED  0x2
 
-
-
-/**
-  Initialize a pool of threads for compression/decompression.  If
-  `nthreads` is 1, then the serial version is chosen and a possible
-  previous existing pool is ended.  Returns the previous number of
-  threads.  If this is not called, `nthreads` is set to 1 internally.
-*/
-
-int blosc_set_nthreads(int nthreads);
 
 
 /**
@@ -114,6 +118,16 @@ int blosc_getitem(const void *src, int start, int nitems, void *dest);
 
 
 /**
+  Initialize a pool of threads for compression/decompression.  If
+  `nthreads` is 1, then the serial version is chosen and a possible
+  previous existing pool is ended.  Returns the previous number of
+  threads.  If this is not called, `nthreads` is set to 1 internally.
+*/
+
+int blosc_set_nthreads(int nthreads);
+
+
+/**
   Free possible memory temporaries and thread resources.  Use this
   when you are not going to use Blosc for a long while.
 */
@@ -125,7 +139,12 @@ void blosc_free_resources(void);
   Return information about a compressed buffer, namely the number of
   uncompressed bytes (`nbytes`) and compressed (`cbytes`).  It also
   returns the `blocksize` (which is used internally for doing the
-  compression by blocks).  This function should always succeed.
+  compression by blocks).
+
+  You only need to pass the first BLOSC_MIN_HEADER_LENGTH bytes of a
+  compressed buffer for this call to work.
+
+  This function should always succeed.
 */
 
 void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
@@ -136,7 +155,7 @@ void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
   Return information about a compressed buffer, namely the type size
   (`typesize`), as well as some internal `flags`.
 
-  The `flags` is a set of bits, where the currently used ones are::
+  The `flags` is a set of bits, where the currently used ones are:
     * bit 0: whether the shuffle filter has been applied or not
     * bit 1: whether the internal buffer is a pure memcpy or not
 
@@ -171,10 +190,8 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
 
 
 /**
-
   Force the use of a specific blocksize.  If 0, an automatic
   blocksize will be used (the default).
-
 */
 
 void blosc_set_blocksize(size_t blocksize);

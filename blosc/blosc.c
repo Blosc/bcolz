@@ -21,6 +21,8 @@
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
   #include "win32/stdint-windows.h"
+  #include <process.h>
+  #define getpid _getpid
 #else
   #include <stdint.h>
   #include <unistd.h>
@@ -29,6 +31,7 @@
 
 #if defined(_WIN32)
   #include "win32/pthread.h"
+  #include "win32/pthread.c"
 #else
   #include <pthread.h>
 #endif
@@ -38,20 +41,11 @@
 #define KB 1024
 #define MB (1024*KB)
 
-/* Maximum buffer size to be compressed */
-#define MAX_BUFFERSIZE INT32_MAX   /* Signed 32-bit internal counters */
-
 /* Minimum buffer size to be compressed */
 #define MIN_BUFFERSIZE 128       /* Cannot be smaller than 66 */
 
-/* Maximum typesize before considering buffer as a stream of bytes. */
-#define MAX_TYPESIZE 255         /* Cannot be larger than 255 */
-
 /* The maximum number of splits in a block for compression */
 #define MAX_SPLITS 16            /* Cannot be larger than 128 */
-
-/* The maximum number of threads (for some static arrays) */
-#define MAX_THREADS 256
 
 /* The size of L1 cache.  32 KB is quite common nowadays. */
 #define L1 (32*KB)
@@ -59,7 +53,8 @@
 
 /* Global variables for main logic */
 int32_t init_temps_done = 0;    /* temporaries for compr/decompr initialized? */
-size_t force_blocksize = 0;     /* should we force the use of a blocksize? */
+uint32_t force_blocksize = 0;   /* should we force the use of a blocksize? */
+int pid = 0;                    /* the PID for this process */
 
 /* Global variables for threads */
 int32_t nthreads = 1;            /* number of desired threads in pool */
@@ -68,8 +63,8 @@ int32_t end_threads = 0;         /* should exisiting threads end? */
 int32_t init_sentinels_done = 0; /* sentinels initialized? */
 int32_t giveup_code;             /* error code when give up */
 int32_t nblock;                  /* block counter */
-pthread_t threads[MAX_THREADS];  /* opaque structure for threads */
-int32_t tids[MAX_THREADS];       /* ID per each thread */
+pthread_t threads[BLOSC_MAX_THREADS];  /* opaque structure for threads */
+int32_t tids[BLOSC_MAX_THREADS];       /* ID per each thread */
 #if !defined(_WIN32)
 pthread_attr_t ct_attr;          /* creation time attributes for threads */
 #endif
@@ -92,8 +87,8 @@ pthread_cond_t count_threads_cv;
 
 /* Structure for parameters in (de-)compression threads */
 struct thread_data {
-  size_t typesize;
-  size_t blocksize;
+  uint32_t typesize;
+  uint32_t blocksize;
   int32_t compress;
   int32_t clevel;
   int32_t flags;
@@ -106,31 +101,83 @@ struct thread_data {
   uint32_t *bstarts;             /* start pointers for each block */
   uint8_t *src;
   uint8_t *dest;
-  uint8_t *tmp[MAX_THREADS];
-  uint8_t *tmp2[MAX_THREADS];
+  uint8_t *tmp[BLOSC_MAX_THREADS];
+  uint8_t *tmp2[BLOSC_MAX_THREADS];
 } params;
 
 
 /* Structure for parameters meant for keeping track of current temporaries */
 struct temp_data {
   int32_t nthreads;
-  size_t typesize;
-  size_t blocksize;
+  uint32_t typesize;
+  uint32_t blocksize;
 } current_temp;
 
 
+/* Macros for synchronization */
+int32_t rc = 0;
+
+/* Wait until all threads are initialized */
+#ifdef _POSIX_BARRIERS_MINE
+#define WAIT_INIT \
+  int32_t rc; \
+  rc = pthread_barrier_wait(&barr_init); \
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
+    printf("Could not wait on barrier (init)\n"); \
+    exit(-1); \
+  }
+#else
+#define WAIT_INIT \
+  pthread_mutex_lock(&count_threads_mutex); \
+  if (count_threads < nthreads) { \
+    count_threads++; \
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex); \
+  } \
+  else { \
+    pthread_cond_broadcast(&count_threads_cv); \
+  } \
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
+/* Wait for all threads to finish */
+#ifdef _POSIX_BARRIERS_MINE
+#define WAIT_FINISH \
+  rc = pthread_barrier_wait(&barr_finish); \
+  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) { \
+    printf("Could not wait on barrier (finish)\n"); \
+    exit(-1);                                       \
+  }
+#else
+#define WAIT_FINISH \
+  pthread_mutex_lock(&count_threads_mutex); \
+  if (count_threads > 0) { \
+    count_threads--; \
+    pthread_cond_wait(&count_threads_cv, &count_threads_mutex); \
+  } \
+  else { \
+    pthread_cond_broadcast(&count_threads_cv); \
+  } \
+  pthread_mutex_unlock(&count_threads_mutex);
+#endif
+
+
+/* A function for aligned malloc that is portable */
 uint8_t *my_malloc(size_t size)
 {
   void *block = NULL;
   int res = 0;
 
 #if defined(_WIN32)
-  block = _aligned_malloc(size, 16);
+  /* A (void *) cast needed for avoiding a warning with MINGW :-/ */
+  block	=   (void *)_aligned_malloc(size, 16);
 #elif defined __APPLE__
   /* Mac OS X guarantees 16-byte alignment in small allocs */
   block = malloc(size);
-#else
+#elif _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+  /* Platform does have an implementation of posix_memalign */
   res = posix_memalign(&block, 16, size);
+#else
+  block = malloc(size);
 #endif  /* _WIN32 */
 
   if (block == NULL || res != 0) {
@@ -142,6 +189,7 @@ uint8_t *my_malloc(size_t size)
 }
 
 
+/* Release memory booked by my_malloc */
 void my_free(void *block)
 {
 #if defined(_WIN32)
@@ -178,16 +226,16 @@ int32_t sw32(int32_t a)
 
 
 /* Shuffle & compress a single block */
-static int blosc_c(size_t blocksize, int32_t leftoverblock,
+static int blosc_c(uint32_t blocksize, int32_t leftoverblock,
                    uint32_t ntbytes, uint32_t maxbytes,
                    uint8_t *src, uint8_t *dest, uint8_t *tmp)
 {
-  size_t j, neblock, nsplits;
+  int32_t j, neblock, nsplits;
   int32_t cbytes;                   /* number of compressed bytes in split */
   int32_t ctbytes = 0;              /* number of compressed bytes in block */
   int32_t maxout;
+  uint32_t typesize = params.typesize;
   uint8_t *_tmp;
-  size_t typesize = params.typesize;
 
   if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     /* Shuffle this block (this makes sense only if typesize > 1) */
@@ -251,7 +299,7 @@ static int blosc_c(size_t blocksize, int32_t leftoverblock,
 
 
 /* Decompress & unshuffle a single block */
-static int blosc_d(size_t blocksize, int32_t leftoverblock,
+static int blosc_d(uint32_t blocksize, int32_t leftoverblock,
                    uint8_t *src, uint8_t *dest, uint8_t *tmp, uint8_t *tmp2)
 {
   int32_t j, neblock, nsplits;
@@ -260,7 +308,7 @@ static int blosc_d(size_t blocksize, int32_t leftoverblock,
   int32_t ctbytes = 0;           /* number of compressed bytes in block */
   int32_t ntbytes = 0;           /* number of uncompressed bytes in block */
   uint8_t *_tmp;
-  size_t typesize = params.typesize;
+  uint32_t typesize = params.typesize;
 
   if ((params.flags & BLOSC_DOSHUFFLE) && (typesize > 1)) {
     _tmp = tmp;
@@ -325,7 +373,7 @@ int serial_blosc(void)
   uint32_t j, bsize, leftoverblock;
   int32_t cbytes;
   int32_t compress = params.compress;
-  size_t blocksize = params.blocksize;
+  uint32_t blocksize = params.blocksize;
   int32_t ntbytes = params.ntbytes;
   int32_t flags = params.flags;
   uint32_t maxbytes = params.maxbytes;
@@ -390,44 +438,15 @@ int serial_blosc(void)
 int parallel_blosc(void)
 {
 
-  /* Synchronization point for all threads (wait for initialization) */
-#ifdef _POSIX_BARRIERS_MINE
-  int32_t rc;
-  rc = pthread_barrier_wait(&barr_init);
-  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-    printf("Could not wait on barrier (init)\n");
-    exit(-1);
+  /* Check whether we need to restart threads */
+  if (!init_threads_done || pid != getpid()) {
+    blosc_set_nthreads(nthreads);
   }
-#else
-  pthread_mutex_lock(&count_threads_mutex);
-  if (count_threads < nthreads) {
-    count_threads++;
-    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-  }
-  else {
-    pthread_cond_broadcast(&count_threads_cv);
-  }
-  pthread_mutex_unlock(&count_threads_mutex);
-#endif
 
+  /* Synchronization point for all threads (wait for initialization) */
+  WAIT_INIT;
   /* Synchronization point for all threads (wait for finalization) */
-#ifdef _POSIX_BARRIERS_MINE
-  rc = pthread_barrier_wait(&barr_finish);
-  if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-    printf("Could not wait on barrier (finish)\n");
-    exit(-1);
-  }
-#else
-  pthread_mutex_lock(&count_threads_mutex);
-  if (count_threads > 0) {
-    count_threads--;
-    pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-  }
-  else {
-    pthread_cond_broadcast(&count_threads_cv);
-  }
-  pthread_mutex_unlock(&count_threads_mutex);
-#endif
+  WAIT_FINISH;
 
   if (giveup_code > 0) {
     /* Return the total bytes (de-)compressed in threads */
@@ -444,12 +463,12 @@ int parallel_blosc(void)
 void create_temporaries(void)
 {
   int32_t tid;
-  size_t typesize = params.typesize;
-  size_t blocksize = params.blocksize;
+  uint32_t typesize = params.typesize;
+  uint32_t blocksize = params.blocksize;
   /* Extended blocksize for temporary destination.  Extended blocksize
    is only useful for compression in parallel mode, but it doesn't
    hurt serial mode either. */
-  size_t ebsize = blocksize + typesize*sizeof(int32_t);
+  uint32_t ebsize = blocksize + typesize*sizeof(int32_t);
 
   /* Create temporary area for each thread */
   for (tid = 0; tid < nthreads; tid++) {
@@ -508,9 +527,9 @@ int do_job(void) {
 }
 
 
-size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
+int32_t compute_blocksize(int32_t clevel, uint32_t typesize, int32_t nbytes)
 {
-  size_t blocksize;
+  uint32_t blocksize;
 
   blocksize = nbytes;           /* Start by a whole buffer as blocksize */
 
@@ -544,7 +563,7 @@ size_t compute_blocksize(int32_t clevel, size_t typesize, size_t nbytes)
   }
 
   /* Check that blocksize is not too large */
-  if (blocksize > nbytes) {
+  if (blocksize > (uint32_t)nbytes) {
     blocksize = nbytes;
   }
 
@@ -567,19 +586,20 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   uint32_t nblocks;            /* number of total blocks in buffer */
   uint32_t leftover;           /* extra bytes at end of buffer */
   uint32_t *bstarts;           /* start pointers for each block */
-  size_t blocksize;            /* length of the block in bytes */
+  uint32_t blocksize;          /* length of the block in bytes */
   uint32_t ntbytes = 0;        /* the number of compressed bytes */
   uint32_t *ntbytes_;          /* placeholder for bytes in output buffer */
-  size_t maxbytes = destsize;  /* maximum size for dest buffer */
+  uint32_t maxbytes = (uint32_t)destsize;  /* maximum size for dest buffer */
 
   /* Check buffer size limits */
-  if (nbytes > MAX_BUFFERSIZE) {
+  if (nbytes > BLOSC_MAX_BUFFERSIZE) {
     /* If buffer is too large, give up. */
-    printf("Input buffer size cannot exceed %d MB\n", MAX_BUFFERSIZE / MB);
+    fprintf(stderr, "Input buffer size cannot exceed %d MB\n",
+            BLOSC_MAX_BUFFERSIZE / MB);
     exit(1);
   }
   /* We can safely do this assignation now */
-  nbytes_ = nbytes;
+  nbytes_ = (uint32_t)nbytes;
 
   /* Compression level */
   if (clevel < 0 || clevel > 9) {
@@ -595,7 +615,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   }
 
   /* Get the blocksize */
-  blocksize = compute_blocksize(clevel, typesize, nbytes_);
+  blocksize = compute_blocksize(clevel, (uint32_t)typesize, nbytes_);
 
   /* Compute number of blocks in buffer */
   nblocks = nbytes_ / blocksize;
@@ -603,7 +623,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   nblocks = (leftover>0)? nblocks+1: nblocks;
 
   /* Check typesize limits */
-  if (typesize > MAX_TYPESIZE) {
+  if (typesize > BLOSC_MAX_TYPESIZE) {
     /* If typesize is too large, treat buffer as an 1-byte stream. */
     typesize = 1;
   }
@@ -622,7 +642,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   _dest += sizeof(int32_t)*3;
   bstarts = (uint32_t *)_dest;             /* starts for every block */
   _dest += sizeof(int32_t)*nblocks;        /* space for pointers to blocks */
-  ntbytes = _dest - (uint8_t *)dest;
+  ntbytes = (uint32_t)(_dest - (uint8_t *)dest);
 
   if (clevel == 0) {
     /* Compression level 0 means buffer to be memcpy'ed */
@@ -643,7 +663,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   params.compress = 1;
   params.clevel = clevel;
   params.flags = (int32_t)*flags;
-  params.typesize = typesize;
+  params.typesize = (uint32_t)typesize;
   params.blocksize = blocksize;
   params.ntbytes = ntbytes;
   params.nbytes = nbytes_;
@@ -892,11 +912,10 @@ void *t_blosc(void *tids)
   uint32_t leftover2;
   uint32_t tblock;               /* limit block on a thread */
   uint32_t nblock_;              /* private copy of nblock */
-  int32_t rc;
   uint32_t bsize, leftoverblock;
   /* Parameters for threads */
-  size_t blocksize;
-  size_t ebsize;
+  uint32_t blocksize;
+  uint32_t ebsize;
   int32_t compress;
   uint32_t maxbytes;
   uint32_t ntbytes;
@@ -913,24 +932,8 @@ void *t_blosc(void *tids)
 
     init_sentinels_done = 0;     /* sentinels have to be initialised yet */
 
-    /* Meeting point for all threads (wait for initialization) */
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_init);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-      printf("Could not wait on barrier (init)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads < nthreads) {
-      count_threads++;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
+    /* Synchronization point for all threads (wait for initialization) */
+    WAIT_INIT;
 
     /* Check if thread has been asked to return */
     if (end_threads) {
@@ -1071,23 +1074,7 @@ void *t_blosc(void *tids)
     }
 
     /* Meeting point for all threads (wait for finalization) */
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_finish);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-      printf("Could not wait on barrier (finish)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads > 0) {
-      count_threads--;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
+    WAIT_FINISH;
 
   }  /* closes while(1) */
 
@@ -1135,6 +1122,7 @@ int init_threads(void)
   }
 
   init_threads_done = 1;                 /* Initialization done! */
+  pid = (int)getpid();                   /* save the PID for this process */
 
   return(0);
 }
@@ -1143,40 +1131,28 @@ int init_threads(void)
 int blosc_set_nthreads(int nthreads_new)
 {
   int32_t nthreads_old = nthreads;
-  int32_t t, rc;
+  int32_t t;
   void *status;
 
-  if (nthreads_new > MAX_THREADS) {
-    fprintf(stderr, "Error.  nthreads cannot be larger than MAX_THREADS (%d)",
-            MAX_THREADS);
+  if (nthreads_new > BLOSC_MAX_THREADS) {
+    fprintf(stderr,
+            "Error.  nthreads cannot be larger than BLOSC_MAX_THREADS (%d)",
+            BLOSC_MAX_THREADS);
     return -1;
   }
   else if (nthreads_new <= 0) {
     fprintf(stderr, "Error.  nthreads must be a positive integer");
     return -1;
   }
-  else if (nthreads_new != nthreads) {
-    if (nthreads > 1 && init_threads_done) {
+
+  /* Only join threads if they are not initialized or if our PID is
+     different from that in pid var (probably means that we are a
+     subprocess, and thus threads are non-existent). */
+  if (nthreads > 1 && init_threads_done && pid == getpid()) {
       /* Tell all existing threads to finish */
       end_threads = 1;
-#ifdef _POSIX_BARRIERS_MINE
-      rc = pthread_barrier_wait(&barr_init);
-      if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-        printf("Could not wait on barrier (init)\n");
-        exit(-1);
-      }
-#else
-      pthread_mutex_lock(&count_threads_mutex);
-      if (count_threads < nthreads) {
-        count_threads++;
-        pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-      }
-      else {
-        pthread_cond_broadcast(&count_threads_cv);
-      }
-      pthread_mutex_unlock(&count_threads_mutex);
-#endif
-
+      /* Synchronization point for all threads (wait for initialization) */
+      WAIT_INIT;
       /* Join exiting threads */
       for (t=0; t<nthreads; t++) {
         rc = pthread_join(threads[t], &status);
@@ -1189,12 +1165,13 @@ int blosc_set_nthreads(int nthreads_new)
       init_threads_done = 0;
       end_threads = 0;
     }
-    nthreads = nthreads_new;
-    if (nthreads > 1) {
-      /* Launch a new pool of threads */
-      init_threads();
-    }
+
+  /* Launch a new pool of threads (if necessary) */
+  nthreads = nthreads_new;
+  if (nthreads > 1 && (!init_threads_done || pid != getpid())) {
+    init_threads();
   }
+
   return nthreads_old;
 }
 
@@ -1202,7 +1179,7 @@ int blosc_set_nthreads(int nthreads_new)
 /* Free possible memory temporaries and thread resources */
 void blosc_free_resources(void)
 {
-  int32_t t, rc;
+  int32_t t;
   void *status;
 
   /* Release temporaries */
@@ -1214,24 +1191,8 @@ void blosc_free_resources(void)
   if (nthreads > 1 && init_threads_done) {
     /* Tell all existing threads to finish */
     end_threads = 1;
-#ifdef _POSIX_BARRIERS_MINE
-    rc = pthread_barrier_wait(&barr_init);
-    if (rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD) {
-        printf("Could not wait on barrier (init)\n");
-      exit(-1);
-    }
-#else
-    pthread_mutex_lock(&count_threads_mutex);
-    if (count_threads < nthreads) {
-      count_threads++;
-      pthread_cond_wait(&count_threads_cv, &count_threads_mutex);
-    }
-    else {
-      pthread_cond_broadcast(&count_threads_cv);
-    }
-    pthread_mutex_unlock(&count_threads_mutex);
-#endif
-
+    /* Synchronization point for all threads (wait for initialization) */
+    WAIT_INIT;
     /* Join exiting threads */
     for (t=0; t<nthreads; t++) {
       rc = pthread_join(threads[t], &status);
@@ -1317,6 +1278,6 @@ void blosc_cbuffer_versions(const void *cbuffer, int *version,
    blocksize will be used (the default). */
 void blosc_set_blocksize(size_t size)
 {
-  force_blocksize = size;
+  force_blocksize = (uint32_t)size;
 }
 
