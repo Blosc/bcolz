@@ -23,11 +23,11 @@ Public variables
 Public functions
 ----------------
 
-* blosc_set_num_threads
+* blosc_set_nthreads
 * blosc_version
 * detect_number_of_cores
 * fromiter
-* set_num_threads
+* set_nthreads
 
 Public classes
 --------------
@@ -50,14 +50,14 @@ else:
         numexpr_here = True
 
 from carray.carrayExtension import (
-    carray, blosc_version, blosc_set_num_threads)
+    carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads)
 from carray.ctable import ctable
 from carray.toplevel import (
-    detect_number_of_cores, set_num_threads, fromiter, cparams, eval)
+    detect_number_of_cores, set_nthreads, fromiter, cparams, eval)
 from carray.version import __version__
 
 
 
 # Initialize Blosc
 ncores = detect_number_of_cores()
-blosc_set_num_threads(ncores)
+blosc_set_nthreads(ncores)

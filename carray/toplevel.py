@@ -55,15 +55,14 @@ def detect_number_of_cores():
     return 1 # Default
 
 
-def set_num_threads(nthreads):
+def set_nthreads(nthreads):
     """
-    set_num_threads(nthreads)
+    set_nthreads(nthreads)
 
     Set the number of threads to be used during carray operation.
 
-    This affects to both Blosc and Numexpr (if available).  If you want
-    to change this number only for Blosc, use `blosc_set_number_threads`
-    instead.
+    This affects to both Blosc and Numexpr (if available).  If you want to
+    change this number only for Blosc, use `blosc_set_nthreads` instead.
 
     Parameters
     ----------
@@ -72,10 +71,10 @@ def set_num_threads(nthreads):
 
     See also
     --------
-    blosc_set_number_threads
+    blosc_set_nthreads
 
     """
-    ca.blosc_set_num_threads(nthreads)
+    ca.blosc_set_nthreads(nthreads)
     if ca.numexpr_here:
         ca.numexpr.set_num_threads(nthreads)
 

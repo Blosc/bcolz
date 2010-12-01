@@ -10,15 +10,15 @@ carray at glance
 
 carray is a Python package that provides containers for numerical data
 that can be compressed in-memory.  It is highly based on NumPy, and
-uses it as the standard way to communicate with carray objects.
+uses it as the standard data container to communicate with carray
+objects.
 
 The building blocks of carray objects are the so-called ``chunks``
 that are compressed as a whole, but they can be decompressed partially
-in order to improve the fetching of small parts of the array.
-
-This ``chunked`` nature of the carray objects, together with a buffer
-for performing I/O, makes appends very cheap and fetches reasonably
-fast.  However, modification of values is an expensive operation.
+in order to improve the fetching of small parts of the array.  This
+``chunked`` nature of the carray objects, together with a buffer for
+performing I/O, makes appends very cheap and fetches reasonably fast.
+However, modification of values is an expensive operation.
 
 The compresion/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
@@ -31,7 +31,7 @@ carray objects bring several advantages over NumPy::
   * Efficent appends: you can append more data at the end of the
     objects very quickly.
 
-  * Numexpr-powered: so that you can operate with compressed data in a
+  * Numexpr-powered: you can operate with compressed data in a
     fast and convenient way.
 
 
@@ -55,6 +55,9 @@ Installing from sources
 
 Go to the carray main directory and do the typical distutils dance:
 
+$ python setup.py build_ext -i
+$ export PYTHONPATH=.   # set PYTHONPATH=.  on Windows
+$ python carray/tests/test_all.py
 $ python setup.py install
 
 Installing from Windows binaries
@@ -175,36 +178,30 @@ it can be enlarged by 10 elements with::
     cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
 
-We can check that appending is very fast::
+Let's check how fast appending can be::
 
-  In [5]: a = np.arange(1e7)
-
-  In [6]: b = ca.carray(a)
-
-  In [7]: time b.append(np.arange(1e7))
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> %time b.append(np.arange(1e7))
   CPU times: user 0.11 s, sys: 0.03 s, total: 0.14 s
   Wall time: 0.14 s
-  Out[8]: 10000000
-
-  In [9]: time np.concatenate((a, np.arange(1e7)))
+  10000000
+  >>> %time np.concatenate((a, np.arange(1e7)))
   CPU times: user 0.11 s, sys: 0.09 s, total: 0.20 s
   Wall time: 0.22 s    # 1.6x slower than carray
-  Out[10]:
   array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,
            9.99999700e+06,   9.99999800e+06,   9.99999900e+06])
 
 This is specially true when appending small bits to large arrays::
 
-  In [15]: b = ca.carray(a)
-
-  In [16]: timeit b.append(np.arange(1e1))
+  >>> b = ca.carray(a)
+  >>> %timeit b.append(np.arange(1e1))
   100000 loops, best of 3: 3.17 µs per loop
-
-  In [17]: timeit np.concatenate((a, np.arange(1e1)))
+  >>> %timeit np.concatenate((a, np.arange(1e1)))
   10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
 
 Definitely, appending is one of the strongests points of carray
-objects, so do not be afraid to use it extensively.
+objects, so do not be afraid to use that feature extensively.
 
 Compression level and shuffle filter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -213,7 +210,7 @@ carray uses Blosc as the internal compressor, and Blosc can be
 directed to use different compression levels and to use (or not) its
 internal shuffle filter.  The shuffle filter is a way to improve
 compression when using items that have type sizes > 1 byte, although
-it might be counter-productive (very rarely) in some data
+it might be counter-productive (very rarely) for some data
 distributions.
 
 By default carrays are compressed using Blosc with compression level 5
@@ -221,18 +218,20 @@ with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
   >>> ca.carray(a, ca.cparams(clevel=1))
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 10279111; ratio: 7.78
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
-
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
+    cparams := cparams(clevel=1, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> ca.carray(a, ca.cparams(clevel=9))
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 1088152; ratio: 73.52
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60
+    cparams := cparams(clevel=9, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
   >>> ca.carray(a, ca.cparams(shuffle=False))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
+    cparams := cparams(clevel=5, shuffle=False)
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 but, as you can see, the compression ratio is much worse in this case.
@@ -264,9 +263,9 @@ Specifying an index or slice::
   >>> b[3:9:3]
   array([3, 6])
 
-As you see, NumPy objects are returned as the result of an indexing
-operation.  In fact, a handy way to get a NumPy array out of a carray
-object is asking for the complete range:
+As you can see, NumPy objects are returned as the result of an
+indexing operation.  In fact, a handy way to get a NumPy array out of
+a carray object is asking for the complete range:
 
   >>> b[:]
   array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -292,39 +291,35 @@ Querying carrays
 carrays can be queried in different ways.  The most easy, yet powerful
 way is using its iterator::
 
-  In [52]: a = np.arange(1e7)
-
-  In [53]: b = ca.carray(a)
-
-  In [54]: time sum(v for v in a if v < 10)
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> %time sum(v for v in a if v < 10)
   CPU times: user 8.02 s, sys: 0.00 s, total: 8.03 s
   Wall time: 8.33 s
-  Out[55]: 45.0
-
-  In [56]: time sum(v for v in b if v < 10)
+  45.0
+  >>> %time sum(v for v in b if v < 10)
   CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s
   Wall time: 0.93 s   # 9x faster than NumPy
-  Out[57]: 45.0
+  45.0
 
 Also, you can quickly retrieve the indices of a boolean carray that
 have a true value::
 
-  In [68]: barr = ca.carray(a < 10)
+  >>> barr = ca.carray(a < 10)
+  >>> [i for i in barr.wheretrue()]
+  [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-  In [69]: [i for i in barr.wheretrue()]
-  Out[69]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+And get the values where a boolean array is true::
 
-And you can retrieve values where a boolean array is true::
-
-  In [70]: [i for i in b.getif(barr)]
-  Out[70]: [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+  >>> [i for i in b.getif(barr)]
+  [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 
 The advantage of the carray iterators is that you can use them in
 generator contexts and hence, you don't need to waste memory for
 creating temporaries, which can be important when dealing with large
 arrays.
 
-Finally, all these iterators are very fast, so try express your
+Finally, all these iterators are very fast, so try to express your
 problems in a way that you can use them extensively.
 
 Modifying carrays
@@ -357,22 +352,19 @@ and fancy indexing is supported too::
 
 However, modifying a carray is expensive::
 
-  In [27]: a = np.arange(1e7)
-
-  In [28]: b = ca.carray(a)
-
-  In [29]: timeit a[2] = 3
+  >>> a = np.arange(1e7)
+  >>> b = ca.carray(a)
+  >>> %timeit a[2] = 3
   10000000 loops, best of 3: 101 ns per loop
-
-  In [30]: timeit b[2] = 3
+  >>> %timeit b[2] = 3
   10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy
 
-although modifying values in lastest chunk is somewhat cheaper::
+although modifying values in lastest chunk is somewhat more cheaper::
 
-  In [31]: timeit a[-1] = 3
+  >>> %timeit a[-1] = 3
   10000000 loops, best of 3: 102 ns per loop
 
-  In [32]: timeit b[-1] = 3
+  >>> %timeit b[-1] = 3
   10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
 
 So, in general, you should avoid abusing of this feature when using
@@ -409,7 +401,8 @@ which is the same than the original NumPy array::
   >>> a.size*a.dtype.itemsize
   80000000
 
-Finally, you can access the `chunklen` for this carray::
+Finally, you can access the `chunklen` (the length for each chunk) for
+this carray::
 
   >>> b.chunklen
   16384
@@ -421,6 +414,11 @@ Short Reference
 
 Utility functions
 -----------------
+
+* set_nthreads(nthreads)
+    Set the number of threads to be used during carray operation.
+
+    This affects to both Blosc and Numexpr (if available).
 
 * blosc_set_num_threads(nthreads)
     Set the number of threads that Blosc can use.
@@ -470,8 +468,8 @@ Informing about the length of your carrays
 
 If you are going to add a lot of rows to your carrays, be sure to use
 the `expectedlen` parameter in creating time to inform the constructor
-about the expected length of your final carray.  This allows carray to
-fine-tune the length of its chunks more easily::
+about the expected length of your final carray; this allows carray to
+fine-tune the length of its chunks more easily.  For example::
 
   >>> a = np.arange(1e7)
   >>> ca.carray(a, expectedlen=10).chunklen

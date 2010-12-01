@@ -65,9 +65,9 @@ import_array()
 #-------------------------------------------------------------
 
 # Some utilities
-def blosc_set_num_threads(nthreads):
+def _blosc_set_nthreads(nthreads):
   """
-  blosc_set_num_threads(nthreads)
+  blosc_set_nthreads(nthreads)
 
   Set the number of threads that Blosc can use.
 
