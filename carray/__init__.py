@@ -33,7 +33,7 @@ Public classes
 --------------
 
 * carray
-* cparms
+* cparams
 * ctable
 
 """
@@ -53,7 +53,7 @@ from carray.carrayExtension import (
     carray, blosc_version, blosc_set_num_threads)
 from carray.ctable import ctable
 from carray.toplevel import (
-    detect_number_of_cores, set_num_threads, fromiter, cparms, eval)
+    detect_number_of_cores, set_num_threads, fromiter, cparams, eval)
 from carray.version import __version__
 
 

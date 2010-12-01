@@ -165,7 +165,7 @@ cdef int check_zeros(char *data, int nbytes):
 
 cdef class chunk:
   """
-  carry(array, cparms)
+  chunk(array, cparams)
 
   Compressed in-memory container for a data chunk.
 
@@ -184,7 +184,7 @@ cdef class chunk:
     def __get__(self):
       return np.dtype("%c%d" % (self.typekind, self.itemsize))
 
-  def __cinit__(self, ndarray array, object cparms):
+  def __cinit__(self, ndarray array, object cparams):
     cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
@@ -210,8 +210,8 @@ cdef class chunk:
       # Data is not zero, compress it
       self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       # Compress data
-      clevel = cparms.clevel
-      shuffle = cparms.shuffle
+      clevel = cparams.clevel
+      shuffle = cparams.shuffle
       with nogil:
         cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
                                 self.data, nbytes+BLOSC_MAX_OVERHEAD)
@@ -303,7 +303,7 @@ cdef class chunk:
 
 cdef class carray:
   """
-  carray(array, cparms=None, expectedlen=None, chunklen=None)
+  carray(array, cparams=None, expectedlen=None, chunklen=None)
 
   A compressed and enlargeable in-memory data container.
 
@@ -316,7 +316,7 @@ cdef class carray:
       This is taken as the input to create the carray.  It can be any Python
       object that can be converted into a NumPy object.  The data type of
       the resulting carray will be the same as this NumPy object.
-  cparms : instance of the `cparms` class, optional
+  cparams : instance of the `cparams` class, optional
       Parameters to the internal Blosc compressor.
   expectedlen : int, optional
       A guess on the expected length of this carray.  This will serve to
@@ -336,7 +336,7 @@ cdef class carray:
   cdef npy_intp _nrow, nrowsread, getif_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
-  cdef object _cparms
+  cdef object _cparams
   cdef object lastchunkarr
   cdef object _dtype, chunks
   cdef object getif_arr
@@ -362,10 +362,10 @@ cdef class carray:
     def __get__(self):
       return (self.len,)
 
-  property cparms:
+  property cparams:
     "The compression parameters for this carray."
     def __get__(self):
-      return self._cparms
+      return self._cparams
 
   property nbytes:
     "The original (uncompressed) size of this carray (in bytes)."
@@ -383,19 +383,19 @@ cdef class carray:
       return self._chunklen
 
 
-  def __cinit__(self, object array, object cparms=None,
+  def __cinit__(self, object array, object cparams=None,
                 object expectedlen=None, object chunklen=None):
     cdef int i, itemsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
 
-    # Check defaults for cparms
-    if cparms is None:
-      cparms = ca.cparms()
+    # Check defaults for cparams
+    if cparams is None:
+      cparams = ca.cparams()
 
-    if not isinstance(cparms, ca.cparms):
-      raise ValueError, "`cparms` param must be an instance of `cparms` class"
+    if not isinstance(cparams, ca.cparams):
+      raise ValueError, "`cparams` param must be an instance of `cparams` class"
 
     array_ = utils.to_ndarray(array, self.dtype)
 
@@ -403,7 +403,7 @@ cdef class carray:
     if array_.ndim != 1:
       raise ValueError, "`array` can only be unidimensional"
 
-    self._cparms = cparms
+    self._cparams = cparams
     self._dtype = dtype = array_.dtype
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
@@ -441,7 +441,7 @@ cdef class carray:
     cbytes = 0
     nchunks = nbytes // chunksize
     for i from 0 <= i < nchunks:
-      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparms)
+      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparams)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % chunksize
@@ -508,7 +508,7 @@ cdef class carray:
       nbytesfirst = chunksize - leftover
       memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
       # Compress the last chunk and add it to the list
-      chunk_ = chunk(self.lastchunkarr, self._cparms)
+      chunk_ = chunk(self.lastchunkarr, self._cparams)
       chunks.append(chunk_)
       cbytes = chunk_.cbytes
 
@@ -519,7 +519,7 @@ cdef class carray:
       # Get a new view skipping the elements that have been already copied
       remainder = arrcpy[nbytesfirst // itemsize:]
       for i from 0 <= i < nchunks:
-        chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparms)
+        chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparams)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
@@ -557,12 +557,12 @@ cdef class carray:
     cdef object chunklen
 
     # Get defaults for some parameters
-    cparms = kwargs.pop('cparms', self._cparms)
+    cparams = kwargs.pop('cparams', self._cparams)
     expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty carray
     ccopy = carray(np.empty(0, dtype=self.dtype),
-                   cparms=cparms,
+                   cparams=cparams,
                    expectedlen=expectedlen,
                    **kwargs)
 
@@ -850,7 +850,7 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._cparms)
+        chunk_ = chunk(cdata, self._cparams)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -939,7 +939,7 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[boolb] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._cparms)
+        chunk_ = chunk(cdata, self._cparams)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -1165,9 +1165,9 @@ cdef class carray:
     scbytes = utils.human_readable_size(self._cbytes)
     cratio = self._nbytes / float(self._cbytes)
     fullrepr = """carray(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f
-  cparms := %r
+  cparams := %r
 %s""" % (self.shape, self.dtype, snbytes, scbytes, cratio,
-         self.cparms, str(self))
+         self.cparams, str(self))
     return fullrepr
 
 

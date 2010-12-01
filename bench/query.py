@@ -18,17 +18,17 @@ sexpr = "(2*x*x*x+.3*y**2+z+1)<10"    # small number
 
 print "Creating inputs..."
 
-cparms = ca.cparms(clevel)
+cparams = ca.cparams(clevel)
 
 x = np.arange(N)
-cx = ca.carray(x, cparms=cparms)
+cx = ca.carray(x, cparams=cparams)
 if 'y' not in sexpr:
     t = ca.ctable((cx,), names=['x'])
 else:
     y = np.arange(N)
     z = np.arange(N)
-    cy = ca.carray(y, cparms=cparms)
-    cz = ca.carray(z, cparms=cparms)
+    cy = ca.carray(y, cparams=cparams)
+    cz = ca.carray(z, cparams=cparams)
     t = ca.ctable((cx, cy, cz), names=['x','y','z'])
 nt = t[:]
 
@@ -54,7 +54,7 @@ print "Time for carray --> %.3f" % (time()-t0,)
 #ca.set_num_threads(ca.ncores//2)
 
 t0 = time()
-#cout = t[t.eval(sexpr, cparms=cparms)]
+#cout = t[t.eval(sexpr, cparams=cparams)]
 cout = [r for r in t.getif(sexpr)]
 #cout = [r['x'] for r in t.getif(sexpr)]
 #cout = [r['y'] for r in t.getif(sexpr, colnames=['x', 'y'])]

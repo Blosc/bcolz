@@ -10,19 +10,19 @@ sexpr = "(x-1) < 10."  # the expression to compute
 #sexpr = "((x-1) % 1000) == 0."  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
 
-cparms = ca.cparms(clevel)
+cparams = ca.cparams(clevel)
 
 print "Creating inputs..."
 
 x = np.arange(N)
-cx = ca.carray(x, cparms=cparms)
+cx = ca.carray(x, cparams=cparams)
 if 'y' not in sexpr:
     ct = ca.ctable((cx,), names=['x'])
 else:
     y = np.arange(N)
     z = np.arange(N)
-    cy = ca.carray(y, cparms=cparms)
-    cz = ca.carray(z, cparms=cparms)
+    cy = ca.carray(y, cparams=cparams)
+    cz = ca.carray(z, cparams=cparams)
     ct = ca.ctable((cx, cy, cz), names=['x','y','z'])
 
 print "Evaluating...", sexpr
@@ -32,7 +32,7 @@ bout = cbout[:]
 t = ct[:]
 
 t0 = time()
-cbool = ca.carray(bout, cparms=cparms)
+cbool = ca.carray(bout, cparams=cparams)
 print "Time for converting boolean--> %.3f" % (time()-t0,)
 print "cbool-->", repr(cbool)
 

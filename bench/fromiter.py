@@ -28,7 +28,7 @@ print "out-->", len(out)
 # Create a carray
 #x = (i for i in xrange(N))    # true iterable
 t0 = time()
-cout = ca.fromiter(x, dtype='f8', count=N, cparms=ca.cparms(clevel))
+cout = ca.fromiter(x, dtype='f8', count=N, cparams=ca.cparams(clevel))
 print "Time for carray--> %.3f" % (time()-t0,)
 print "cout-->", len(cout)
 assert_array_equal(out, cout, "Arrays are not equal")
@@ -36,7 +36,7 @@ assert_array_equal(out, cout, "Arrays are not equal")
 # Create a carray (with unknown size)
 #x = (i for i in xrange(N))    # true iterable
 t0 = time()
-cout = ca.fromiter(x, dtype='f8', count=-1, cparms=ca.cparms(clevel))
+cout = ca.fromiter(x, dtype='f8', count=-1, cparams=ca.cparams(clevel))
 print "Time for carray (count=-1)--> %.3f" % (time()-t0,)
 print "cout-->", len(cout)
 assert_array_equal(out, cout, "Arrays are not equal")

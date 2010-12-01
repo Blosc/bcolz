@@ -304,9 +304,9 @@ def eval(expression, **kwargs):
     return result
 
 
-class cparms(object):
+class cparams(object):
     """
-    cparms(clevel=5, shuffle=True)
+    cparams(clevel=5, shuffle=True)
 
     Class to host parameters for compression and other filters.
 

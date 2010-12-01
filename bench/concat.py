@@ -31,7 +31,7 @@ def concat(data):
     return alldata
 
 def append(data, clevel):
-    alldata = ca.carray(data[0], cparms=ca.cparms(clevel))
+    alldata = ca.carray(data[0], cparams=ca.cparams(clevel))
     for carr in data[1:]:
         alldata.append(carr)
 

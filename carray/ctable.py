@@ -40,7 +40,7 @@ class ctable(object):
     Notes
     -----
     Columns passed as carrays are not be copied, so their settings
-    will stay the same, even if you pass additional arguments (cparms,
+    will stay the same, even if you pass additional arguments (cparams,
     chunklen...).
 
     """
@@ -344,7 +344,7 @@ class ctable(object):
         # Copy the columns
         cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
         # Remove unsupported params for ctable constructor
-        kwargs.pop('cparms', None)
+        kwargs.pop('cparams', None)
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
