@@ -211,6 +211,7 @@ def _getvars(expression, user_dict, depth):
     return reqvars
 
 
+#@profile
 def eval(expression, **kwargs):
     """
     eval(expression, **kwargs)

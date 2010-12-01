@@ -8,16 +8,18 @@ import numexpr as ne
 import carray as ca
 from time import time
 
-N = 1e7       # the number of elements in x
-clevel = 5    # the compression level
+N = 1e8       # the number of elements in x
+clevel = 9    # the compression level
 sexpr = "(x+1)<0"  # the expression to compute
 #sexpr = "(2*x**3+.3*y**2+z+1)<0"  # the expression to compute
+#sexpr = "((.25*x + .75)*x - 1.5)*x - 2"  # a computer-friendly polynomial
 
 print "Creating inputs..."
 
 cparms = ca.cparms(clevel)
 
 x = np.arange(N)
+#x = np.linspace(0,100,N)
 cx = ca.carray(x, cparms=cparms)
 if 'y' not in sexpr:
     t = ca.ctable((cx,), names=['x'])
