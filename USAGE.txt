@@ -97,7 +97,7 @@ its representation form::
 
   >>> b   # <==> print repr(b)
   carray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0 1 2 3 4 5 6 7 8 9]
 
 As you can see, the compressed size is much larger than the
@@ -114,7 +114,7 @@ comparison::
   >>> b = ca.carray(np.arange(1e7))
   >>> b
 carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-  cparms := cparms(clevel=5, shuffle=True)
+  cparams := cparams(clevel=5, shuffle=True)
 [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 You can always get a hint on how much space it takes your carray by
@@ -129,7 +129,7 @@ via the `fromiter()` constructor::
 
   >>> ca.fromiter((i*2. for i in xrange(1000*1000)), dtype="f4")
   carray((1000000,), float32)  nbytes: 3.81 MB; cbytes: 543.63 KB; ratio: 7.19
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 2.0, 4.0, ..., 1999994.0, 1999996.0, 1999998.0]
 
 that means that you can create very large arrays without the need to
@@ -142,14 +142,14 @@ Finally, you can get a copy of your created carrays by using the
 
   >>> b.copy()
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 and you can control parameters for the newly created copy::
 
-  >>> b.copy(cparms=ca.cparms(clevel=9))
+  >>> b.copy(cparams=ca.cparams(clevel=9))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.04 MB; ratio: 73.52
-    cparms := cparms(clevel=9, shuffle=True)
+    cparams := cparams(clevel=9, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 Enlarging your carray
@@ -163,7 +163,7 @@ For example, if `b` is a carray with 10 million elements::
 
   >>> b
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 it can be enlarged by 10 elements with::
@@ -172,7 +172,7 @@ it can be enlarged by 10 elements with::
   10   # the number of rows appended
   >>> b
   carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
 
 We can check that appending is very fast::
@@ -220,18 +220,18 @@ By default carrays are compressed using Blosc with compression level 5
 with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
-  >>> ca.carray(a, ca.cparms(clevel=1))
+  >>> ca.carray(a, ca.cparams(clevel=1))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 10279111; ratio: 7.78
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
-  >>> ca.carray(a, ca.cparms(clevel=9))
+  >>> ca.carray(a, ca.cparams(clevel=9))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 1088152; ratio: 73.52
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
-  >>> ca.carray(a, ca.cparms(shuffle=False))
+  >>> ca.carray(a, ca.cparams(shuffle=False))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
@@ -446,17 +446,17 @@ your compression levels::
   >>> a = np.arange(1e7)
   >>> ca.carray(a)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> ca.carray(a).chunklen
   16384   # 128 KB = 16384 * 8 is the default chunk size for this carray
   >>> ca.carray(a, chunklen=512)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> ca.carray(a, chunklen=8*1024)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88
-    cparms := cparms(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 As you can see, the length of the chunk affects very much compression
