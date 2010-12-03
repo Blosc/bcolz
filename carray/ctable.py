@@ -399,7 +399,7 @@ class ctable(object):
                 raise ValueError, "not all outcols are real column names"
 
         # Get the length of the result
-        count = sum(boolarr.getif(boolarr))
+        count = sum(boolarr)
 
         # Get iterators for selected columns
         icols, dtypes = [], []

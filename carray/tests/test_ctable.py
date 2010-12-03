@@ -906,7 +906,7 @@ class getifTest(unittest.TestCase):
         self.assert_(rt == rl, "getif not working correctly")
 
     def test01c(self):
-        """Testing getif() with an expression (all true values)"""
+        """Testing getif() with an expression (mix values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
