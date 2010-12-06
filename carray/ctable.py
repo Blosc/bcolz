@@ -273,6 +273,8 @@ class ctable(object):
         # Insert the column
         self.names.insert(pos, name)
         self.cols[name] = newcol
+        # Update _arr1
+        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
     def delcol(self, name=None, pos=None):
@@ -319,6 +321,8 @@ class ctable(object):
         # Remove the column
         self.names.pop(pos)
         del self.cols[name]
+        # Update _arr1
+        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
 
     def copy(self, **kwargs):
