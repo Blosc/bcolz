@@ -678,11 +678,10 @@ class ctable(object):
         nbytes, cbytes, cratio = self.get_stats()
         snbytes = utils.human_readable_size(nbytes)
         scbytes = utils.human_readable_size(cbytes)
-        fullrepr = """ctable(%s, %s)
-  nbytes: %s; cbytes: %s; ratio: %.2f
+        fullrepr = """ctable(%s, %s) nbytes: %s; cbytes: %s; ratio: %.2f
   cparams := %r
-%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, self.cparams,
-         str(self))
+%s""" % (self.shape, self.dtype.str, snbytes, scbytes, cratio,
+         self.cparams, str(self))
         return fullrepr
 
 
