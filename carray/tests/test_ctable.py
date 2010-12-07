@@ -71,7 +71,7 @@ class createTest(unittest.TestCase):
 class add_del_colTest(unittest.TestCase):
 
     def test00(self):
-        """Testing appending a new column (carray flavor)"""
+        """Testing adding a new column (carray flavor)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
@@ -82,8 +82,8 @@ class add_del_colTest(unittest.TestCase):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-    def test01(self):
-        """Testing appending a new column (numpy flavor)"""
+    def test01a(self):
+        """Testing adding a new column (numpy flavor)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
@@ -94,8 +94,17 @@ class add_del_colTest(unittest.TestCase):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test01b(self):
+        """Testing cparams when adding a new column (numpy flavor)"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, cparams=ca.cparams(1))
+        c = np.arange(N, dtype='i8')*3
+        t.addcol(c, 'f2')
+        self.assert_(t['f2'].cparams.clevel == 1, "Incorrect clevel")
+
     def test02(self):
-        """Testing appending a new column (default naming)"""
+        """Testing adding a new column (default naming)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
@@ -384,6 +393,8 @@ class copyTest(unittest.TestCase):
         t = ca.ctable(ra)
         t2 = t.copy(cparams=ca.cparams(clevel=9))
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
+        self.assert_(t.cparams.clevel == ca.cparams().clevel)
+        self.assert_(t2.cparams.clevel == 9)
         self.assert_(t['f1'].cbytes > t2['f1'].cbytes, "clevel not changed")
 
     def test02(self):
@@ -392,6 +403,8 @@ class copyTest(unittest.TestCase):
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
         t2 = t.copy(cparams=ca.cparams(clevel=1))
+        self.assert_(t.cparams.clevel == ca.cparams().clevel)
+        self.assert_(t2.cparams.clevel == 1)
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 

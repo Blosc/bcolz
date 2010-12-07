@@ -70,6 +70,11 @@ class ctable(object):
         "The compressed size of this carray (in bytes)."
         return self.get_stats()[1]
 
+    @property
+    def cparams(self):
+        "The compression parameters for this carray."
+        return self._cparams
+
 
     def get_stats(self):
         """
@@ -131,6 +136,9 @@ class ctable(object):
             raise ValueError, "`cols` input is not supported"
         if not (calist or nalist or ratype):
             raise ValueError, "`cols` input is not supported"
+
+        # The compression parameters
+        self._cparams = kwargs.get('cparams', ca.cparams())
 
         # Populate the columns
         clen = -1
@@ -268,6 +276,8 @@ class ctable(object):
             raise ValueError, "`newcol` must have the same length than ctable"
 
         if isinstance(newcol, np.ndarray):
+            if 'cparams' not in kwargs:
+                kwargs['cparams'] = self.cparams
             newcol = ca.carray(newcol, **kwargs)
 
         # Insert the column
@@ -347,8 +357,6 @@ class ctable(object):
         names = kwargs.pop('names', self.names)
         # Copy the columns
         cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
-        # Remove unsupported params for ctable constructor
-        kwargs.pop('cparams', None)
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
@@ -672,7 +680,9 @@ class ctable(object):
         scbytes = utils.human_readable_size(cbytes)
         fullrepr = """ctable(%s, %s)
   nbytes: %s; cbytes: %s; ratio: %.2f
-%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, str(self))
+  cparams := %r
+%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio, self.cparams,
+         str(self))
         return fullrepr
 
 
