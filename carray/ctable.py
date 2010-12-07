@@ -174,11 +174,6 @@ class ctable(object):
             It also can be a NumPy record, a NumPy recarray, or
             another ctable.
 
-        Returns
-        -------
-        out : int
-            The number of elements appended.
-
         """
 
         # Guess the kind of rows input
@@ -222,7 +217,6 @@ class ctable(object):
                 raise ValueError, "all cols in `rows` must have the same length"
             clen = clen2
         self.len += clen
-        return clen
 
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):
