@@ -623,6 +623,9 @@ class ctable(object):
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
+        if type(key) is bytes:
+            # Convert key into a boolean array
+            key = self.eval(key)
         # Then, modify the rows
         for name in self.names:
             self.cols[name][key] = value[name]
