@@ -2,7 +2,7 @@ carray: a compressed and enlargeable in-memory data container
 =============================================================
 
 carray is a container for numerical data that can be compressed
-in-memory.  The compresion process is carried out internally by Blosc,
+in-memory.  The compression process is carried out internally by Blosc,
 a high-performance compressor that is optimized for binary data.
 
 Rational

@@ -21,7 +21,7 @@ in order to improve the fetching of small parts of the array.  This
 performing I/O, makes appends very cheap and fetches reasonably fast
 (however, modification of values is an expensive operation).
 
-The compresion/decompression process is carried out internally by
+The compression/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
 data.  That ensures maximum performance for I/O operation.
 
@@ -29,7 +29,7 @@ carray objects bring several advantages over NumPy::
 
   * Data is compressed: they take less memory space.
 
-  * Efficent appends: you can append more data at the end of the
+  * Efficient appends: you can append more data at the end of the
     objects very quickly.
 
   * Numexpr-powered: you can operate with compressed data in a
@@ -208,7 +208,7 @@ This is specially true when appending small bits to large arrays::
   >>> %timeit np.concatenate((a, np.arange(1e1)))
   10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
 
-Definitely, appending is one of the strongests points of carray
+Definitely, appending is one of the strongest points of carray
 objects, so do not be afraid to use that feature extensively.
 
 Compression level and shuffle filter
@@ -334,7 +334,7 @@ Modifying carrays
 -----------------
 
 Although it is not a very efficient operation, carrays can be
-modifyied too: You can do it by speficifying scalar or slice indices::
+modified too: You can do it by specifying scalar or slice indices::
 
   >>> a = np.arange(10)
   >>> b = ca.carray(a)
@@ -367,7 +367,7 @@ However, modifying a carray is expensive::
   >>> %timeit b[2] = 3
   10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy
 
-although modifying values in lastest chunk is somewhat more cheaper::
+although modifying values in latest chunk is somewhat more cheaper::
 
   >>> %timeit a[-1] = 3
   10000000 loops, best of 3: 102 ns per loop
@@ -557,7 +557,7 @@ And in combination with fancy indexing too::
          (6, 36.0)],
         dtype=[('f0', '<i4'), ('f1', '<f8')])
 
-As you may have noticed, fancy indexing in combination with contions
+As you may have noticed, fancy indexing in combination with conditions
 is a very powerful feature.
 
 Adding and deleting columns
@@ -686,10 +686,10 @@ Utility functions
 Optimization tips
 -----------------
 
-Changing explictly the length of chunks
-=======================================
+Changing explicitly the length of chunks
+========================================
 
-You may want to use explictly the `chunklen` parameter to fine-tune
+You may want to use explicitly the `chunklen` parameter to fine-tune
 your compression levels::
 
   >>> a = np.arange(1e7)
