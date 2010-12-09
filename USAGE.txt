@@ -39,7 +39,6 @@ carray objects bring several advantages over NumPy::
     for much better performance when working with wide tables, as well
     as for adding and deleting columns.
 
-
 carray limitations
 ==================
 
@@ -80,7 +79,7 @@ and carray packages like this::
   >>> import numpy as np
   >>> import carray as ca
 
-Tutorial on ctable objects
+Tutorial on carray objects
 ==========================
 
 Creating carrays
@@ -124,9 +123,9 @@ comparison::
   >>> a = np.arange(1e7)
   >>> b = ca.carray(np.arange(1e7))
   >>> b
-carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-  cparams := cparams(clevel=5, shuffle=True)
-[0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+    cparams := cparams(clevel=5, shuffle=True)
+  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 You can always get a hint on how much space it takes your carray by
 using `sys.getsizeof()`::
@@ -180,7 +179,6 @@ For example, if `b` is a carray with 10 million elements::
 it can be enlarged by 10 elements with::
 
   >>> b.append(np.arange(10.))
-  10   # the number of rows appended
   >>> b
   carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
     cparams := cparams(clevel=5, shuffle=True)
@@ -193,7 +191,6 @@ Let's check how fast appending can be::
   >>> %time b.append(np.arange(1e7))
   CPU times: user 0.11 s, sys: 0.03 s, total: 0.14 s
   Wall time: 0.14 s
-  10000000
   >>> %time np.concatenate((a, np.arange(1e7)))
   CPU times: user 0.11 s, sys: 0.09 s, total: 0.20 s
   Wall time: 0.22 s    # 1.6x slower than carray
@@ -242,7 +239,7 @@ comes with Blosc::
     cparams := cparams(clevel=5, shuffle=False)
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
-but, as you can see, the compression ratio is much worse in this case.
+but, as can be seen, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
 fine-tuning the performance for an specific carray).
 
@@ -271,9 +268,11 @@ Specifying an index or slice::
   >>> b[3:9:3]
   array([3, 6])
 
-As you can see, NumPy objects are returned as the result of an
-indexing operation.  In fact, a handy way to get a NumPy array out of
-a carray object is asking for the complete range:
+Note that NumPy objects are returned as the result of an indexing
+operation.  This is on purpose because normally NumPy objects are more
+featured and flexible (specially if they are small).  In fact, a handy
+way to get a NumPy array out of a carray object is asking for the
+complete range:
 
   >>> b[:]
   array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -371,7 +370,6 @@ although modifying values in latest chunk is somewhat more cheaper::
 
   >>> %timeit a[-1] = 3
   10000000 loops, best of 3: 102 ns per loop
-
   >>> %timeit b[-1] = 3
   10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
 
@@ -708,8 +706,8 @@ your compression levels::
     cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
-As you can see, the length of the chunk affects very much compression
-levels and the performance of I/O to carrays too.
+You see, the length of the chunk affects very much compression levels
+and the performance of I/O to carrays too.
 
 In general, however, it is safer (and quicker!) to use the
 `expectedlen` parameter (see next section).
