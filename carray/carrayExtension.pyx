@@ -533,8 +533,6 @@ cdef class carray:
     self.leftover = leftover
     self._cbytes += cbytes
     self._nbytes += bsize
-    # Return the number of elements added
-    return arrcpy.size
 
 
   def copy(self, **kwargs):
