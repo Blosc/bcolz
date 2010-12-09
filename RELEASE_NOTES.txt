@@ -41,14 +41,14 @@ Changes from 0.2 to 0.3
 - New idiom ``carray[boolarr]`` that returns the values where `boolarr`
   is true.
 
+- New idiom ``ctable[boolarr]`` that returns the rows where `boolarr` is
+  true.
+
 - Added a new `eval()` method for `ctable` that is able to evaluate
   expressions with columns.  It needs numexpr to be installed.
 
 - New idiom ``ctable[boolexpr]`` that returns the rows fullfilling the
   boolean expression.  Needs numexpr.
-
-- New idiom ``ctable[boolarr]`` that returns the rows where `boolarr` is
-  true.
 
 - Added fancy indexing (as a list of integers) support to `carray` and
   `ctable`.
