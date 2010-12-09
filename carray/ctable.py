@@ -625,6 +625,7 @@ class ctable(object):
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
+        # Check if key is a condition actually
         if type(key) is bytes:
             # Convert key into a boolean array
             #key = self.eval(key)

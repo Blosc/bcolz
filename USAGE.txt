@@ -561,8 +561,30 @@ Now, remove the already existing 'f1' column::
 Iterating over ctable data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-...
+You can make use of the `iter()` method in order to easily iterate
+over the values of a ctable.  `iter()` has support for start, stop and
+step parameters::
 
+  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
+  >>> ct = ca.ctable(t)
+  >>> [row for row in ct.iter(1,10,3)]
+  [(1, 1.0), (4, 16.0), (7, 49.0)]
+
+Also, you can select specific fields to be read via the `outcols`
+parameter::
+
+  >>> [row for row in ct.iter(1,10,3, outcols=['f0'])]
+  [(1,), (4,), (7,)]
+  >>> [row for row in ct.iter(1,10,3, outcols=['__nrow__', 'f0'])]
+  [(1, 1), (4, 4), (7, 7)]
+
+Please note the use of the special '__nrow__' label for referring to
+the current row.
+
+Iterating over output of conditions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+...
 
 Short Reference
 ===============
