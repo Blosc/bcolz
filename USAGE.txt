@@ -1,12 +1,13 @@
-===================
-carray User's Guide
-===================
+============================================================
+                     carray User's Guide
+============================================================
 
+------------
 Introduction
-============
+------------
 
 carray at glance
-----------------
+================
 
 carray is a Python package that provides containers for numerical data
 that can be compressed in-memory.  It is highly based on NumPy, and
@@ -40,22 +41,22 @@ carray objects bring several advantages over NumPy::
 
 
 carray limitations
-------------------
+==================
 
 At this time, carray objects can only be uni-dimensional.  Newer
 versions of the carray package might get rid of this limitation
 though.
 
-
+------------
 Installation
-============
+------------
 
 carray depends on NumPy (>= 1.4.1) and, optionally, Numexpr (>= 1.4).
 Also, if you are going to install from sources, you will need Cython
 (>= 0.13) and a C compiler (GCC or MSVC 2008 have been tested).
 
 Installing from sources
------------------------
+=======================
 
 Go to the carray main directory and do the typical distutils dance:
 
@@ -65,19 +66,22 @@ $ python carray/tests/test_all.py
 $ python setup.py install
 
 Installing from Windows binaries
---------------------------------
+================================
 
 Just download the binary installer and run it.
 
-
-carray short tutorial
-=====================
+---------
+Tutorials
+---------
 
 During all this tutorial, it is supposed that you are importing NumPy
 and carray packages like this::
 
   >>> import numpy as np
   >>> import carray as ca
+
+Tutorial on ctable objects
+==========================
 
 Creating carrays
 ----------------
@@ -208,7 +212,7 @@ Definitely, appending is one of the strongests points of carray
 objects, so do not be afraid to use that feature extensively.
 
 Compression level and shuffle filter
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------------------
 
 carray uses Blosc as the internal compressor, and Blosc can be
 directed to use different compression levels and to use (or not) its
@@ -374,6 +378,31 @@ although modifying values in lastest chunk is somewhat more cheaper::
 So, in general, you should avoid abusing of this feature when using
 carrays.
 
+Operating with carrays
+----------------------
+
+carrays can be operated pretty easily if you have the Numexpr package
+installed::
+
+  >>> a = np.arange(1e7)
+  >>> x = ca.carray(a)
+  >>> y = ca.eval(".5x**3+2.1*x**2")
+  >>> y
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01
+    cparams := cparams(clevel=5, shuffle=True)
+  [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
+
+Note how the output of `eval()` is also a carray object.  You can pass
+other parameters of the carray constructor too.  Let's force maximum
+compression for the output::
+
+  >>> y = ca.eval(".5*x**3+2.1*x**2", cparams=ca.cparams(9))
+  >>> y
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14
+    cparams := cparams(clevel=9, shuffle=True)
+  [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
+
+
 carray metadata
 ---------------
 
@@ -418,13 +447,14 @@ this carray::
   16384
 
 
-Table objects (ctable)
-----------------------
+Tutorial on ctable objects
+==========================
 
-carray comes with a handy object that arranges data by column (and not
-by row, as in NumPy's structured arrays).  This allows for much better
-performance for walking tabular data by column and also for adding and
-deleting columns.  A small tutorial for its use follows.
+The carray package comes with a handy object that arranges data by
+column (and not by row, as in NumPy's structured arrays).  This allows
+for much better performance for walking tabular data by column and
+also for adding and deleting columns.  A small tutorial for its use
+follows.
 
 Creating a ctable
 -----------------
@@ -473,7 +503,7 @@ case.  You can solve this by passing the final length with the
 Okay, the compression ratio is the same now.
 
 Accessing and setting rows
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 The ctable object supports the most common indexing operations in
 NumPy::
@@ -531,7 +561,7 @@ As you may have noticed, fancy indexing in combination with contions
 is a very powerful feature.
 
 Adding and deleting columns
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Adding and deleting columns is easy and, due to the column-wise data
 arrangement, very efficient.  Let's add a new column on an existing
@@ -559,7 +589,7 @@ Now, remove the already existing 'f1' column::
    (99997, 0.99997999979999797), (99998, 0.99998999989999904), (99999, 1.0)]
 
 Iterating over ctable data
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 You can make use of the `iter()` method in order to easily iterate
 over the values of a ctable.  `iter()` has support for start, stop and
@@ -581,16 +611,60 @@ parameter::
 Please note the use of the special '__nrow__' label for referring to
 the current row.
 
-Iterating over output of conditions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Iterating over output of conditions along columns
+-------------------------------------------------
 
-...
+One of the most powerful capabilities of the ctable is the ability to
+iterate over the rows whose fields fulfill some conditions (without
+the need to put the results in a NumPy container, as described in the
+"Accessing and setting rows" section above).  This can be very useful
+for performing operations on very large ctables without consuming lots
+of memory.
 
+Here it is an example of use::
+
+  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
+  >>> ct = ca.ctable(t)
+  >>> [row for row in ct.where("(f0>0) & (f1<10)")]
+  [(1, 1.0), (2, 4.0), (3, 9.0)]
+  >>> sum([row[1] for row in ct.where("(f1>10)")])
+  333328333349986.0
+
+And by using the `outcols` parameter, you can specify the fields that
+you want to be returned::
+
+  >>> [row for row in ct.where("(f0>0) & (f1<10)", ["f1"])]
+  [(1.0,), (4.0,), (9.0,)]
+
+You can even specify the row number fulfilling the condition::
+
+  >>> [row for row in ct.where("(f0>0) & (f1<10)", ["f1", "__nrow__"])]
+  [(1.0, 1), (4.0, 2), (9.0, 3)]
+
+Performing operations on ctable columns
+---------------------------------------
+
+The ctable object also wears an `eval()` method that is handy for
+carrying out operations among columns::
+
+  >>> ct.eval("cos((2+f0)/sqrt(2*f1))")
+  carray((100000,), float64)  nbytes: 781.25 KB; cbytes: 388.64 KB; ratio: 2.01
+    cparams := cparams(clevel=5, shuffle=True)
+  [nan, -0.523133894289, 0.155943694765, ...,
+   0.76023540947, 0.760235409562, 0.760235409654]
+
+Here, one can see an exception in ctable methods behaviour: the
+resulting output is a ctable, and not a NumPy structured array.  This
+is so because the output of `eval()` is of the same length than the
+ctable, and thus it can be pretty large, so compression maybe of help
+to reduce its memory needs.
+
+---------------
 Short Reference
-===============
+---------------
 
 Utility functions
------------------
+=================
 
 * set_nthreads(nthreads)
     Set the number of threads to be used during carray operation.
@@ -608,12 +682,12 @@ Utility functions
 * detect_number_of_cores()
     Detect the number of cores on a system.
 
-
+-----------------
 Optimization tips
-=================
+-----------------
 
 Changing explictly the length of chunks
----------------------------------------
+=======================================
 
 You may want to use explictly the `chunklen` parameter to fine-tune
 your compression levels::
@@ -641,7 +715,7 @@ In general, however, it is safer (and quicker!) to use the
 `expectedlen` parameter (see next section).
 
 Informing about the length of your carrays
-------------------------------------------
+==========================================
 
 If you are going to add a lot of rows to your carrays, be sure to use
 the `expectedlen` parameter in creating time to inform the constructor
