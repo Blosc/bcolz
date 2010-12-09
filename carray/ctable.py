@@ -505,7 +505,7 @@ class ctable(object):
         iterable = it.izip(*icols)
         # The size of the internal buffer
         chunklen = 256    # 256 should be enough for most cases
-        nread, blen, = 0, 0
+        nread, blen = 0, 0
         while nread < count:
             if nread + chunklen > count:
                 blen = count - nread

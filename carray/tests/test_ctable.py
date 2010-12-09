@@ -1038,6 +1038,19 @@ class whereTest(unittest.TestCase):
         #print "rl->", rl, type(rl[0][0])
         self.assert_(rt == rl, "where not working correctly")
 
+    def test04(self):
+        """Testing where() after an iter()"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        tmp = [r for r in t.iter(1,10,3)]
+        rt = [tuple(r) for r in t.where('4+f1 > f2',
+                                        outcols=['__nrow__','f2','f0'])]
+        rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
+        #print "rt->", rt, type(rt[0][0])
+        #print "rl->", rl, type(rl[0][0])
+        self.assert_(rt == rl, "where not working correctly")
+
 
 class where_smallTest(whereTest):
     N = 10

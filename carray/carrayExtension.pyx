@@ -996,6 +996,8 @@ cdef class carray:
     self.start, self.stop, self.step = \
         slice(start, stop, step).indices(self.len)
     self.sss_mode = True
+    self.wheretrue_mode = False
+    self.where_mode = False
     return iter(self)
 
 
@@ -1019,6 +1021,8 @@ cdef class carray:
     if self.dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
     self.wheretrue_mode = True
+    self.where_mode = False
+    self.sss_mode = False
     return iter(self)
 
 
@@ -1050,6 +1054,10 @@ cdef class carray:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
     self.where_mode = True
     self.where_arr = boolarr
+    # Don't know why exactly I should put the wheretrue and sss modes to false
+    # here, but I must.
+    self.wheretrue_mode = False
+    self.sss_mode = False
     return iter(self)
 
 
