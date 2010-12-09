@@ -364,9 +364,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def getif(self, expression, outcols=None):
+    def where(self, expression, outcols=None):
         """
-        getif(expression, outcols=None)
+        where(expression, outcols=None)
 
         Iterate over rows where `expression` is true.
 
@@ -417,13 +417,13 @@ class ctable(object):
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.getif(boolarr))
+                icols.append(col.where(boolarr))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype, count)
 
 
-    def _getif(self, boolarr, colnames=None):
+    def _where(self, boolarr, colnames=None):
         """Return rows where `boolarr` is true as an structured array.
 
         This is called internally only, so we can assum that `boolarr`
@@ -585,7 +585,7 @@ class ctable(object):
         # A boolean array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
-                return self._getif(key)
+                return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
                 return np.array([self[i] for i in key], dtype=self.dtype)
@@ -601,7 +601,7 @@ class ctable(object):
                     raise IndexError, \
                           "`key` %s does not represent a boolean expression" %\
                           key
-                return self._getif(arr)
+                return self._where(arr)
             return self.cols[key]
         # All the rest not implemented
         else:
@@ -631,7 +631,7 @@ class ctable(object):
             #key = self.eval(key)
             # The method below is faster (specially for large ctables)
             rowval = 0
-            for nrow in self.getif(key, outcols=["__nrow__"]):
+            for nrow in self.where(key, outcols=["__nrow__"]):
                 nrow = nrow[0]
                 if len(value) == 1:
                     for name in self.names:

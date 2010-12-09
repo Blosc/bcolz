@@ -331,16 +331,16 @@ cdef class carray:
 
   cdef int itemsize, _chunksize, _chunklen, leftover
   cdef int startb, stopb, nrowsinbuf, _row
-  cdef int sss_mode, wheretrue_mode, getif_mode
+  cdef int sss_mode, wheretrue_mode, where_mode
   cdef npy_intp start, stop, step, nextelement
-  cdef npy_intp _nrow, nrowsread, getif_cached
+  cdef npy_intp _nrow, nrowsread, where_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
   cdef object _cparams
   cdef object lastchunkarr
   cdef object _dtype, chunks
-  cdef object getif_arr
-  cdef ndarray iobuf, getif_buf
+  cdef object where_arr
+  cdef ndarray iobuf, where_buf
   # For block cache
   cdef int blocksize, idxcache
   cdef ndarray blockcache
@@ -454,7 +454,7 @@ cdef class carray:
     # Sentinels
     self.sss_mode = False
     self.wheretrue_mode = False
-    self.getif_mode = False
+    self.where_mode = False
     self.idxcache = -1       # cache not initialized
 
     # Cache a len-1 array for accelerating self[int] case
@@ -691,10 +691,10 @@ cdef class carray:
         if len(key) != self.len:
           raise IndexError, "boolean array length must match len(self)"
         if isinstance(key, carray):
-          count = sum(key.getif(key))
+          count = sum(key.where(key))
         else:
           count = -1
-        return np.fromiter(self.getif(key), dtype=self.dtype, count=count)
+        return np.fromiter(self.where(key), dtype=self.dtype, count=count)
       elif np.issubsctype(key, np.int_):
         # An integer array
         return np.array([self[i] for i in key], dtype=self.dtype)
@@ -960,9 +960,9 @@ cdef class carray:
     self.nrowsread = self.start
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
-    self.getif_cached = -1
-    if self.getif_mode and isinstance(self.getif_arr, carray):
-      self.nrowsinbuf = self.getif_arr.chunklen
+    self.where_cached = -1
+    if self.where_mode and isinstance(self.where_arr, carray):
+      self.nrowsinbuf = self.where_arr.chunklen
     else:
       self.nrowsinbuf = self._chunklen
 
@@ -1012,7 +1012,7 @@ cdef class carray:
 
     See Also
     --------
-    getif
+    where
 
     """
     # Check self
@@ -1022,9 +1022,9 @@ cdef class carray:
     return iter(self)
 
 
-  def getif(self, boolarr):
+  def where(self, boolarr):
     """
-    getif(boolarr)
+    where(boolarr)
 
     Iterator that returns values of this carray where `boolarr` is true.
 
@@ -1048,8 +1048,8 @@ cdef class carray:
       raise ValueError, "`boolarr` is not an array of booleans"
     if len(boolarr) != self.len:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
-    self.getif_mode = True
-    self.getif_arr = boolarr
+    self.where_mode = True
+    self.where_arr = boolarr
     return iter(self)
 
 
@@ -1068,14 +1068,14 @@ cdef class carray:
         if self.stopb > self.nrowsinbuf:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
-        if self.getif_mode:
+        if self.where_mode:
           # Skip chunks with zeros (false values)
-          if self.check_zeros(self.getif_arr):
+          if self.check_zeros(self.where_arr):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
             continue
           # Read a chunk of the boolean array
-          self.getif_buf = self.getif_arr[
+          self.where_buf = self.where_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
         else:
           # Skip chunks with zeros only if in wheretrue_mode
@@ -1099,14 +1099,14 @@ cdef class carray:
         vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
           return self._nrow
-      elif self.getif_mode:
-        vbool = <char *>(self.getif_buf.data + self._row)
+      elif self.where_mode:
+        vbool = <char *>(self.where_buf.data + self._row)
         if vbool[0]:
           # Check whether I/O buffer is already cached or not
           start = self.nrowsread - self.nrowsinbuf
-          if start != self.getif_cached:
+          if start != self.where_cached:
             self.iobuf = self[start:start+self.nrowsinbuf]
-            self.getif_cached = start
+            self.where_cached = start
           # Return the current value in I/O buffer
           return PyArray_GETITEM(
             self.iobuf, self.iobuf.data + self._row * self.itemsize)
@@ -1118,11 +1118,11 @@ cdef class carray:
       # Reset sentinels
       self.sss_mode = False
       self.wheretrue_mode = False
-      self.getif_mode = False
-      self.getif_arr = None
+      self.where_mode = False
+      self.where_arr = None
       # Reset buffers
       self.iobuf = np.empty(0, dtype=self.dtype)
-      self.getif_buf = np.empty(0, dtype=np.bool_)
+      self.where_buf = np.empty(0, dtype=np.bool_)
       raise StopIteration        # end of iteration
 
 

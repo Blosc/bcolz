@@ -454,7 +454,7 @@ class IterTest(unittest.TestCase):
         assert_array_equal(a, c[:], "iterator fails on zeros")
 
 
-class whereTest(unittest.TestCase):
+class wheretrueTest(unittest.TestCase):
 
     def test00(self):
         """Testing `wheretrue()` iterator (all true values)"""
@@ -487,67 +487,67 @@ class whereTest(unittest.TestCase):
         self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
 
-class getifTest(unittest.TestCase):
+class whereTest(unittest.TestCase):
 
     def test00(self):
-        """Testing `getif()` iterator (all true values)"""
+        """Testing `where()` iterator (all true values)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v>0]
-        cwt = [v for v in b.getif(a>0)]
+        cwt = [v for v in b.where(a>0)]
         #print "numpy ->", [v for v in a if v>0]
-        #print "getif ->", [v for v in b.getif(a>0)]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where(a>0)]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
     def test01(self):
-        """Testing `getif()` iterator (all false values)"""
+        """Testing `where()` iterator (all false values)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v<0]
-        cwt = [v for v in b.getif(a<0)]
+        cwt = [v for v in b.where(a<0)]
         #print "numpy ->", [v for v in a if v<0]
-        #print "getif ->", [v for v in b.getif(a<0)]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where(a<0)]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
     def test02a(self):
-        """Testing `getif()` iterator (mix of true/false values, I)"""
+        """Testing `where()` iterator (mix of true/false values, I)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v<=5]
-        cwt = [v for v in b.getif(a<=5)]
+        cwt = [v for v in b.where(a<=5)]
         #print "numpy ->", [v for v in a if v<=5]
-        #print "getif ->", [v for v in b.getif(a<=5)]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where(a<=5)]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
     def test02b(self):
-        """Testing `getif()` iterator (mix of true/false values, II)"""
+        """Testing `where()` iterator (mix of true/false values, II)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v<=5 and v>2]
-        cwt = [v for v in b.getif((a<=5) & (a>2))]
+        cwt = [v for v in b.where((a<=5) & (a>2))]
         #print "numpy ->", [v for v in a if v<=5 and v>2]
-        #print "getif ->", [v for v in b.getif((a<=5) & (a>2))]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where((a<=5) & (a>2))]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
     def test02c(self):
-        """Testing `getif()` iterator (mix of true/false values, III)"""
+        """Testing `where()` iterator (mix of true/false values, III)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v<=5 or v>8]
-        cwt = [v for v in b.getif((a<=5) | (a>8))]
+        cwt = [v for v in b.where((a<=5) | (a>8))]
         #print "numpy ->", [v for v in a if v<=5 or v>8]
-        #print "getif ->", [v for v in b.getif((a<=5) | (a>8))]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where((a<=5) | (a>8))]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
     def test03(self):
-        """Testing `getif()` iterator (using a boolean carray)"""
+        """Testing `where()` iterator (using a boolean carray)"""
         a = np.arange(1, 11)
         b = ca.carray(a)
         wt = [v for v in a if v<=5]
-        cwt = [v for v in b.getif(ca.carray(a<=5))]
+        cwt = [v for v in b.where(ca.carray(a<=5))]
         #print "numpy ->", [v for v in a if v<=5]
-        #print "getif ->", [v for v in b.getif(ca.carray(a<=5))]
-        self.assert_(wt == cwt, "getif() does not work correctly")
+        #print "where ->", [v for v in b.where(ca.carray(a<=5))]
+        self.assert_(wt == cwt, "where() does not work correctly")
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):
@@ -593,24 +593,24 @@ class fancy_indexing_getitemTest(unittest.TestCase):
         self.assertRaises(IndexError, b.__getitem__, idx)
 
     def test05(self):
-        """Testing `getif()` iterator (using bool in fancy indexing)"""
+        """Testing `where()` iterator (using bool in fancy indexing)"""
         a = np.arange(1, 110)
         b = ca.carray(a, chunklen=10)
         wt = a[a<5]
         cwt = b[a<5]
         #print "numpy ->", a[a<5]
-        #print "getif ->", b[a<5]
-        assert_array_equal(wt, cwt, "getif() does not work correctly")
+        #print "where ->", b[a<5]
+        assert_array_equal(wt, cwt, "where() does not work correctly")
 
     def test06(self):
-        """Testing `getif()` iterator (using carray bool in fancy indexing)"""
+        """Testing `where()` iterator (using carray bool in fancy indexing)"""
         a = np.arange(1, 110)
         b = ca.carray(a, chunklen=10)
         wt = a[(a<5)|(a>9)]
         cwt = b[ca.carray((a<5)|(a>9))]
         #print "numpy ->", a[(a<5)|(a>9)]
-        #print "getif ->", b[ca.carray((a<5)|(a>9))]
-        assert_array_equal(wt, cwt, "getif() does not work correctly")
+        #print "where ->", b[ca.carray((a<5)|(a>9))]
+        assert_array_equal(wt, cwt, "where() does not work correctly")
 
 
 class fancy_indexing_setitemTest(unittest.TestCase):
@@ -851,8 +851,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(miscTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(IterTest))
+    theSuite.addTest(unittest.makeSuite(wheretrueTest))
     theSuite.addTest(unittest.makeSuite(whereTest))
-    theSuite.addTest(unittest.makeSuite(getifTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))

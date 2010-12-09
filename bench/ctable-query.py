@@ -44,7 +44,7 @@ tc = ca.ctable(t,  cparams=ca.cparams(0))
 
 t0 = time()
 #cout = tc.eval(sexpr, cparams=cparams)
-cout = [row for row in tc.getif(squery, ['f0','f2'])]
+cout = [row for row in tc.where(squery, ['f0','f2'])]
 print "Time for ctable (uncompressed) --> %.3f" % (time()-t0,),
 print "-- size (MB):", tc.cbytes / 2**20
 
@@ -53,7 +53,7 @@ tc = ca.ctable(t, cparams=ca.cparams(clevel))
 
 t0 = time()
 #cout = tc.eval(sexpr, cparams=cparams)
-cout = [row for row in tc.getif(squery, ['f0','f2'])]
+cout = [row for row in tc.where(squery, ['f0','f2'])]
 print "Time for ctable (compressed) --> %.3f" % (time()-t0,),
 print " -- size (MB):", tc.cbytes / 2**20
 

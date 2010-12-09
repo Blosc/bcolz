@@ -315,7 +315,7 @@ have a true value::
 
 And get the values where a boolean array is true::
 
-  >>> [i for i in b.getif(barr)]
+  >>> [i for i in b.where(barr)]
   [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
 
 The advantage of the carray iterators is that you can use them in

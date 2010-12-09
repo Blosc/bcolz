@@ -32,21 +32,23 @@ Changes from 0.2 to 0.3
 
 - Added a new `append(rows)` method to `ctable` class.
 
-- Added a new `where()` iterator for `carray` that mimics the
-  `nonzero()` method in NumPy.
+- Added a new `wheretrue()` iterator for `carray` that returns the
+  indices for true values (only valid for boolean arrays).
 
-- Added a new `getif(boolarr)` iterator for `carray` that returns values
-  only on those places where `boolarr` is true.  Also, calling
-  ``carray[boolarr]`` is the same than `carray.getif(boolarr)`.
+- Added a new `where(boolarr)` iterator for `carray` that returns the
+  values where `boolarr` is true.
+
+- New idiom ``carray[boolarr]`` that returns the values where `boolarr`
+  is true.
 
 - Added a new `eval()` method for `ctable` that is able to evaluate
   expressions with columns.  It needs numexpr to be installed.
 
-- Idiom ``ctable[boolexpr]`` is recognized now and returns the rows
-  fullfilling the boolean expression.  Needs numexpr.
+- New idiom ``ctable[boolexpr]`` that returns the rows fullfilling the
+  boolean expression.  Needs numexpr.
 
-- Idiom ``ctable[boolarr]`` is recognized now and returns the rows where
-  the boolean array is true.
+- New idiom ``ctable[boolarr]`` that returns the rows where `boolarr` is
+  true.
 
 - Added fancy indexing (as a list of integers) support to `carray` and
   `ctable`.
@@ -82,7 +84,7 @@ Changes from 0.2 to 0.3
   in NumPy are supported, including fancy indexing.  The only exception
   are negative steps in ``ctable[start:stop:-step] = values``.
 
-- Added new `ctable.__iter__()`, `ctable.iter()` and `ctable.getif()`
+- Added new `ctable.__iter__()`, `ctable.iter()` and `ctable.where()`
   iterators mimicking the functionality in carray object.
 
 

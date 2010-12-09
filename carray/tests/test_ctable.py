@@ -911,138 +911,138 @@ class bool_getitemTest(unittest.TestCase):
         self.assertRaises(IndexError, t.__getitem__, barr)
 
 
-class getifTest(unittest.TestCase):
+class whereTest(unittest.TestCase):
 
     def test00a(self):
-        """Testing getif() with a boolean array (all false values)"""
+        """Testing where() with a boolean array (all false values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         barr = t.eval('f1 > f2')
-        rt = [r['f0'] for r in t.getif(barr)]
+        rt = [r['f0'] for r in t.where(barr)]
         rl = [i for i in xrange(N) if i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test00b(self):
-        """Testing getif() with a boolean array (all true values)"""
+        """Testing where() with a boolean array (all true values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         barr = t.eval('f1 <= f2')
-        rt = [r['f0'] for r in t.getif(barr)]
+        rt = [r['f0'] for r in t.where(barr)]
         rl = [i for i in xrange(N) if i <= i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test00c(self):
-        """Testing getif() with a boolean array (mix values)"""
+        """Testing where() with a boolean array (mix values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         barr = t.eval('4+f1 > f2')
-        rt = [r['f0'] for r in t.getif(barr)]
+        rt = [r['f0'] for r in t.where(barr)]
         rl = [i for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test01a(self):
-        """Testing getif() with an expression (all false values)"""
+        """Testing where() with an expression (all false values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [r['f0'] for r in t.getif('f1 > f2')]
+        rt = [r['f0'] for r in t.where('f1 > f2')]
         rl = [i for i in xrange(N) if i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test01b(self):
-        """Testing getif() with an expression (all true values)"""
+        """Testing where() with an expression (all true values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [r['f0'] for r in t.getif('f1 <= f2')]
+        rt = [r['f0'] for r in t.where('f1 <= f2')]
         rl = [i for i in xrange(N) if i <= i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test01c(self):
-        """Testing getif() with an expression (mix values)"""
+        """Testing where() with an expression (mix values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [r['f0'] for r in t.getif('4+f1 > f2')]
+        rt = [r['f0'] for r in t.where('4+f1 > f2')]
         rl = [i for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test02a(self):
-        """Testing getif() with an expression (with outcols)"""
+        """Testing where() with an expression (with outcols)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [r['f1'] for r in t.getif('4+f1 > f2', outcols=['f1'])]
+        rt = [r['f1'] for r in t.where('4+f1 > f2', outcols=['f1'])]
         rl = [i*2. for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test02b(self):
-        """Testing getif() with an expression (with outcols II)"""
+        """Testing where() with an expression (with outcols II)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [(r['f1'], r['f2']) for r in t.getif('4+f1 > f2',
+        rt = [(r['f1'], r['f2']) for r in t.where('4+f1 > f2',
                                                  outcols=['f1','f2'])]
         rl = [(i*2., i*3) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     def test02c(self):
-        """Testing getif() with an expression (with outcols III)"""
+        """Testing where() with an expression (with outcols III)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [(r['f2'], r['f0']) for r in t.getif('4+f1 > f2',
+        rt = [(r['f2'], r['f0']) for r in t.where('4+f1 > f2',
                                                  outcols=['f2','f0'])]
         rl = [(i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
     # This does not work anymore because of the nesting of ctable._iter
     def _test02d(self):
-        """Testing getif() with an expression (with outcols IV)"""
+        """Testing where() with an expression (with outcols IV)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        getif = t.getif('f1 > f2', outcols=['f3','f0'])
-        self.assertRaises(ValueError, getif.next)
+        where = t.where('f1 > f2', outcols=['f3','f0'])
+        self.assertRaises(ValueError, where.next)
 
     def test03(self):
-        """Testing getif() with an expression (with __nrow__ in outcols)"""
+        """Testing where() with an expression (with __nrow__ in outcols)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [tuple(r) for r in t.getif('4+f1 > f2',
+        rt = [tuple(r) for r in t.where('4+f1 > f2',
                                         outcols=['__nrow__','f2','f0'])]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt, type(rt[0][0])
         #print "rl->", rl, type(rl[0][0])
-        self.assert_(rt == rl, "getif not working correctly")
+        self.assert_(rt == rl, "where not working correctly")
 
 
-class getif_smallTest(getifTest):
+class where_smallTest(whereTest):
     N = 10
 
-class getif_largeTest(getifTest):
+class where_largeTest(whereTest):
     N = 10*1000
 
 
@@ -1063,8 +1063,8 @@ def suite():
         theSuite.addTest(unittest.makeSuite(evalTest))
         theSuite.addTest(unittest.makeSuite(eval_getitemTest))
         theSuite.addTest(unittest.makeSuite(bool_getitemTest))
-        theSuite.addTest(unittest.makeSuite(getif_smallTest))
-        theSuite.addTest(unittest.makeSuite(getif_largeTest))
+        theSuite.addTest(unittest.makeSuite(where_smallTest))
+        theSuite.addTest(unittest.makeSuite(where_largeTest))
 
     return theSuite
 

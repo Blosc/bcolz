@@ -55,9 +55,9 @@ print "Time for carray --> %.3f" % (time()-t0,)
 
 t0 = time()
 #cout = t[t.eval(sexpr, cparams=cparams)]
-cout = [r for r in t.getif(sexpr)]
-#cout = [r['x'] for r in t.getif(sexpr)]
-#cout = [r['y'] for r in t.getif(sexpr, colnames=['x', 'y'])]
+cout = [r for r in t.where(sexpr)]
+#cout = [r['x'] for r in t.where(sexpr)]
+#cout = [r['y'] for r in t.where(sexpr, colnames=['x', 'y'])]
 print "Time for ctable--> %.3f" % (time()-t0,)
 print "cout-->", len(cout), cout[:10]
 
