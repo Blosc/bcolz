@@ -401,6 +401,8 @@ class ctable(object):
         if outcols is None:
             outcols = self.names
         else:
+            if type(outcols) not in (list, tuple):
+                raise ValueError, "only list/tuple is supported for outcols"
             if set(outcols) - set(self.names+['__nrow__']) != set():
                 raise ValueError, "not all outcols are real column names"
 
@@ -625,7 +627,19 @@ class ctable(object):
         value = utils.to_ndarray(value, self.dtype)
         if type(key) is bytes:
             # Convert key into a boolean array
-            key = self.eval(key)
+            #key = self.eval(key)
+            # The method below is faster (specially for large ctables)
+            rowval = 0
+            for nrow in self.getif(key, outcols=["__nrow__"]):
+                nrow = nrow[0]
+                if len(value) == 1:
+                    for name in self.names:
+                        self.cols[name][nrow] = value[name]
+                else:
+                    for name in self.names:
+                        self.cols[name][nrow] = value[name][rowval]
+                    rowval += 1
+            return
         # Then, modify the rows
         for name in self.names:
             self.cols[name][key] = value[name]

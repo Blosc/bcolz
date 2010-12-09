@@ -714,6 +714,20 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test04d(self):
+        """Testing fancy indexing (setitem) with a condition (diff values)"""
+        N = 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunklen=10)
+        sl = "(f0>0) & (f1 < 10)"
+        sl2 = (ra['f0'] > 0) & (ra['f1'] < 10)
+        l = len(np.where(sl2)[0])
+        t[sl] = [(-i, -i*2., -i*3) for i in xrange(l)]
+        ra[sl2] = [(-i, -i*2., -i*3) for i in xrange(l)]
+        #print "t[%s] -> %r" % (sl, t)
+        #print "ra[%s] -> %r" % (sl2, ra)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
 
 class iterTest(unittest.TestCase):
 
