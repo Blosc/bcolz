@@ -132,6 +132,9 @@ class ctable(object):
             nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
         elif isinstance(cols, np.ndarray):
             ratype = hasattr(cols.dtype, "names")
+            if ratype:
+                if len(cols.shape) != 1:
+                    raise ValueError, "only unidimensional shapes supported"
         else:
             raise ValueError, "`cols` input is not supported"
         if not (calist or nalist or ratype):
