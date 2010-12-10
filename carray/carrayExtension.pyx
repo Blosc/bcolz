@@ -319,11 +319,11 @@ cdef class carray:
   cparams : instance of the `cparams` class, optional
       Parameters to the internal Blosc compressor.
   expectedlen : int, optional
-      A guess on the expected length of this carray.  This will serve to
+      A guess on the expected length of this object.  This will serve to
       decide the best `chunklen` used for compression and memory I/O
       purposes.
   chunklen : int, optional
-      The number of items that fits on a chunk.  By specifying it you can
+      The number of items that fits into a chunk.  By specifying it you can
       explicitely set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
@@ -348,37 +348,37 @@ cdef class carray:
   cdef object arr1
 
   property len:
-    "The length (leading dimension) of this carray."
+    "The length (leading dimension) of this object."
     def __get__(self):
       return self._nbytes // self.itemsize
 
   property dtype:
-    "The dtype of this carray."
+    "The dtype of this object."
     def __get__(self):
       return self._dtype
 
   property shape:
-    "The shape of this carray."
+    "The shape of this object."
     def __get__(self):
       return (self.len,)
 
   property cparams:
-    "The compression parameters for this carray."
+    "The compression parameters for this object."
     def __get__(self):
       return self._cparams
 
   property nbytes:
-    "The original (uncompressed) size of this carray (in bytes)."
+    "The original (uncompressed) size of this object (in bytes)."
     def __get__(self):
       return self._nbytes
 
   property cbytes:
-    "The compressed size of this carray (in bytes)."
+    "The compressed size of this object (in bytes)."
     def __get__(self):
       return self._cbytes
 
   property chunklen:
-    "The chunklen of this carray (in rows)."
+    "The chunklen of this object (in rows)."
     def __get__(self):
       return self._chunklen
 
@@ -465,7 +465,7 @@ cdef class carray:
     """
     append(array)
 
-    Append a numpy `array` to this carray instance.
+    Append a numpy `array` to this instance.
 
     Parameters
     ----------
@@ -539,7 +539,7 @@ cdef class carray:
     """
     copy(**kwargs)
 
-    Return a copy of this carray.
+    Return a copy of this object.
 
     Parameters
     ----------
@@ -549,7 +549,7 @@ cdef class carray:
     Returns
     -------
     out : carray object
-        The copy of this carray.
+        The copy of this object.
 
     """
     cdef object chunklen
@@ -1002,7 +1002,7 @@ cdef class carray:
     """
     wheretrue()
 
-    Iterator that returns indices where this carray is true.  Only useful for
+    Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
 
     Returns
@@ -1026,7 +1026,7 @@ cdef class carray:
     """
     where(boolarr)
 
-    Iterator that returns values of this carray where `boolarr` is true.
+    Iterator that returns values of this object where `boolarr` is true.
 
     Parameters
     ----------
@@ -1036,7 +1036,7 @@ cdef class carray:
     -------
     out : iterator
 
-    See Also
+    See also
     --------
     wheretrue
 

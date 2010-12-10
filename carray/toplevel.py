@@ -30,12 +30,7 @@ def detect_number_of_cores():
     """
     detect_number_of_cores()
 
-    Detect the number of cores in this system.
-
-    Returns
-    -------
-    out : int
-        The number of cores in this system.
+    Return the number of cores in this system.
 
     """
     # Linux, Unix and MacOS:

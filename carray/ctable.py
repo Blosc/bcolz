@@ -62,25 +62,25 @@ class ctable(object):
 
     @property
     def nbytes(self):
-        "The original (uncompressed) size of this carray (in bytes)."
-        return self.get_stats()[0]
+        "The original (uncompressed) size of this object (in bytes)."
+        return self._get_stats()[0]
 
     @property
     def cbytes(self):
-        "The compressed size of this carray (in bytes)."
-        return self.get_stats()[1]
+        "The compressed size of this object (in bytes)."
+        return self._get_stats()[1]
 
     @property
     def cparams(self):
-        "The compression parameters for this carray."
+        "The compression parameters for this object."
         return self._cparams
 
 
-    def get_stats(self):
+    def _get_stats(self):
         """
-        get_stats()
+        _get_stats()
 
-        Get some stats (nbytes, cbytes and ratio) about this carray.
+        Get some stats (nbytes, cbytes and ratio) about this object.
 
         Returns
         -------
@@ -105,7 +105,7 @@ class ctable(object):
         self.names = []
         """The names of the columns (list)."""
         self.cols = {}
-        """The carray columns (dict)."""
+        """The ctable columns (dict)."""
         self.len = 0
         """The number of rows (int)."""
 
@@ -224,7 +224,7 @@ class ctable(object):
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):
         """
-        addcol(newcol, name=None, pos=None)
+        addcol(newcol, name=None, pos=None, **kwargs)
 
         Add a new `newcol` carray or ndarray as column.
 
@@ -448,7 +448,7 @@ class ctable(object):
 
     def iter(self, start=0, stop=None, step=1, outcols=None):
         """
-        iter(start=0, stop=None, step=1)
+        iter(start=0, stop=None, step=1, outcols=None)
 
         Iterator with `start`, `stop` and `step` bounds.
 
@@ -469,7 +469,7 @@ class ctable(object):
 
         Returns
         -------
-        out : iterator
+        out : iterable
 
         """
 
@@ -690,7 +690,7 @@ class ctable(object):
 
 
     def __repr__(self):
-        nbytes, cbytes, cratio = self.get_stats()
+        nbytes, cbytes, cratio = self._get_stats()
         snbytes = utils.human_readable_size(nbytes)
         scbytes = utils.human_readable_size(cbytes)
         fullrepr = """ctable(%s, %s) nbytes: %s; cbytes: %s; ratio: %.2f
