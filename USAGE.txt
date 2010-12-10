@@ -621,12 +621,12 @@ of memory.
 
 Here it is an example of use::
 
-  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
+  >>> t = np.fromiter(((i,i*i) for i in xrange(1000*1000)), dtype="i4,f8")
   >>> ct = ca.ctable(t)
   >>> [row for row in ct.where("(f0>0) & (f1<10)")]
   [(1, 1.0), (2, 4.0), (3, 9.0)]
   >>> sum([row[1] for row in ct.where("(f1>10)")])
-  333328333349986.0
+  3.3333283333312755e+17
 
 And by using the `outcols` parameter, you can specify the fields that
 you want to be returned::
@@ -645,11 +645,11 @@ Performing operations on ctable columns
 The ctable object also wears an `eval()` method that is handy for
 carrying out operations among columns::
 
-  >>> ct.eval("cos((2+f0)/sqrt(2*f1))")
-  carray((100000,), float64)  nbytes: 781.25 KB; cbytes: 388.64 KB; ratio: 2.01
+  >>> ct.eval("cos((3+f0)/sqrt(2*f1))")
+  carray((1000000,), float64)  nbytes: 7.63 MB; cbytes: 2.21 MB; ratio: 3.45
     cparams := cparams(clevel=5, shuffle=True)
-  [nan, -0.523133894289, 0.155943694765, ...,
-   0.76023540947, 0.760235409562, 0.760235409654]
+  [nan, -0.951363128126, -0.195699435691, ...,
+   0.760243218982, 0.760243218983, 0.760243218984]
 
 Here, one can see an exception in ctable methods behaviour: the
 resulting output is a ctable, and not a NumPy structured array.  This
