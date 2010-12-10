@@ -993,9 +993,8 @@ cdef class carray:
       raise NotImplementedError, "step param can only be positive"
     self.start, self.stop, self.step = \
         slice(start, stop, step).indices(self.len)
+    self.reset_sentinels()
     self.sss_mode = True
-    self.wheretrue_mode = False
-    self.where_mode = False
     return iter(self)
 
 
@@ -1018,9 +1017,8 @@ cdef class carray:
     # Check self
     if self.dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
+    self.reset_sentinels()
     self.wheretrue_mode = True
-    self.where_mode = False
-    self.sss_mode = False
     return iter(self)
 
 
@@ -1050,12 +1048,9 @@ cdef class carray:
       raise ValueError, "`boolarr` is not an array of booleans"
     if len(boolarr) != self.len:
       raise ValueError, "`boolarr` must be of the same length than ``self``"
+    self.reset_sentinels()
     self.where_mode = True
     self.where_arr = boolarr
-    # Don't know why exactly I should put the wheretrue and sss modes to false
-    # here, but I must.
-    self.wheretrue_mode = False
-    self.sss_mode = False
     return iter(self)
 
 
@@ -1121,15 +1116,18 @@ cdef class carray:
         return PyArray_GETITEM(
           self.iobuf, self.iobuf.data + self._row * self.itemsize)
     else:
-      # Reset sentinels
-      self.sss_mode = False
-      self.wheretrue_mode = False
-      self.where_mode = False
-      self.where_arr = None
-      # Reset buffers
+      # Release buffers
       self.iobuf = np.empty(0, dtype=self.dtype)
       self.where_buf = np.empty(0, dtype=np.bool_)
       raise StopIteration        # end of iteration
+
+
+  cdef reset_sentinels(self):
+    """Reset sentinels for iterator."""
+    self.sss_mode = False
+    self.wheretrue_mode = False
+    self.where_mode = False
+    self.where_arr = None
 
 
   cdef int check_zeros(self, object barr):
