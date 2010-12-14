@@ -358,7 +358,7 @@ ctable methods
       not specificy both `name` and `pos` arguments, unless they
       are compatible.
 
-    See also
+    See also:
       :py:func:`addcol`
 
 
