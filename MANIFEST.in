@@ -1,6 +1,9 @@
 include MANIFEST.in
 include *.txt
-include setup.py VERSION
+include setup.py
+include VERSION
+include pavement.py
+include paver-minilib.zip
 
 recursive-include carray *.py *.pyx *.pxd
 recursive-include blosc *.c *.h
