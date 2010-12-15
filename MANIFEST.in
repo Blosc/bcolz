@@ -1,12 +1,12 @@
 include MANIFEST.in
 include *.txt
-include setup.py
 include VERSION
 include pavement.py
+include setup.py
 include paver-minilib.zip
 
-recursive-include carray *.py *.pyx *.pxd
+recursive-include carray *.py *.pyx *.pxd *.c
 recursive-include blosc *.c *.h
 recursive-include blosc/win32 *.c *.h
-recursive-include bench *.py README.txt
+recursive-include bench *.py
 recursive-include LICENSES *
