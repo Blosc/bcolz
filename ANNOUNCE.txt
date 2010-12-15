@@ -60,10 +60,10 @@ Visit the main carray site repository at:
 http://github.com/FrancescAlted/carray
 
 You can download a source package from:
-http://github.com/FrancescAlted/carray/downloads
+http://carray.pytables.org/downloads
 
-Short tutorial:
-http://github.com/FrancescAlted/carray/blob/master/USAGE.txt
+Manual:
+http://carray.pytables.org/manual
 
 Home of Blosc compressor:
 http://blosc.pytables.org

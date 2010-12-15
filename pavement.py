@@ -81,7 +81,9 @@ numexpr_here = False
 try:
     import numexpr
 except ImportError:
-    print_warning("Numexpr not detected.  Disabling support for it.")
+    print_warning(
+        "Numexpr is not installed.  For enhanced carray functionality, "
+        "please consider installing it.")
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
@@ -89,7 +91,7 @@ else:
                 % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__} )
     else:
         print_warning(
-            "Numexpr %s detected, but version is not >= %s.  "
+            "Numexpr %s installed, but version is not >= %s.  "
             "Disabling support for it." % (
             numexpr.__version__, min_numexpr_version))
 
@@ -141,7 +143,8 @@ def cythonize():
              sh("cython " + fn)
 
 @task
-@needs('generate_setup', 'minilib', 'cythonize', 'setuptools.command.sdist')
+@needs('generate_setup', 'minilib', 'cythonize', 'html', 'pdf',
+       'setuptools.command.sdist')
 def sdist():
     """Generate a source distribution for the package."""
     pass
@@ -155,6 +158,34 @@ def build():
 @needs(['cythonize', 'setuptools.command.build_ext'])
 def build_ext():
      pass
+
+@task
+@needs('paver.doctools.html')
+def html(options):
+    """Build the docs in HTML format."""
+    destdir = path("doc/html")
+    destdir.rmtree()
+    builtdocs = path("doc") / options.builddir / "html"
+    builtdocs.move(destdir)
+
+@task
+def pdf(options):
+    """Build the docs in PDF format."""
+    dest = path("doc") / "carray-manual.pdf"
+    sh("cd doc; make latexpdf")
+    builtdocs = path("doc") / options.builddir / "latex" / "carray.pdf"
+    builtdocs.move(dest)
+
+
+# Options for Paver tasks
+options(
+
+    sphinx = Bunch(
+        docroot = "doc",
+        builddir = "_build"
+    ),
+
+)
 
 
 classifiers = """\

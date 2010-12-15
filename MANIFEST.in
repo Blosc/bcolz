@@ -8,5 +8,7 @@ include paver-minilib.zip
 recursive-include carray *.py *.pyx *.pxd *.c
 recursive-include blosc *.c *.h
 recursive-include blosc/win32 *.c *.h
-recursive-include bench *.py
+recursive-include bench *.py *.txt
+recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
+recursive-exclude doc/_build *
 recursive-include LICENSES *
