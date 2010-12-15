@@ -132,22 +132,24 @@ if os.name == 'posix':
 @task
 def cythonize():
     for fn in glob.glob('carray/*.pyx'):
-         p = path(fn)
-         modname = p.splitext()[0].basename()
-         dest = p.splitext()[0] + '.c'
-         if newer(p.abspath(), dest.abspath()):
+         dest = fn.split('.')[0] + '.c'
+         if newer(fn, dest):
              if not cython:
                  exit_with_error(
                      "Need Cython >= %s to generate extensions."
                      % min_cython_version)
-             info('cythoning %s to %s'%(p, dest.basename()))
-             sh("cython " + p.abspath())
+             sh("cython " + fn)
 
 @task
 @needs('generate_setup', 'minilib', 'cythonize', 'setuptools.command.sdist')
 def sdist():
     """Generate a source distribution for the package."""
     pass
+
+@task
+@needs(['cythonize', 'setuptools.command.build'])
+def build():
+     pass
 
 @task
 @needs(['cythonize', 'setuptools.command.build_ext'])

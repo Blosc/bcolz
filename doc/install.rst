@@ -3,8 +3,8 @@ Installation
 ------------
 
 carray depends on NumPy (>= 1.4.1) and, optionally, Numexpr (>= 1.4).
-Also, if you are going to install from sources, you will need Cython
-(>= 0.13) and a C compiler (GCC or MSVC 2008 have been tested).
+Also, if you are going to install from sources, and a C compiler (both
+GCC and MSVC 2008 have been tested).
 
 Installing from sources
 =======================
