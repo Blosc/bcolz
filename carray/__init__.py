@@ -55,7 +55,7 @@ from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads, fromiter, cparams, eval)
 from carray.version import __version__
-
+from carray.tests import test
 
 
 # Initialize Blosc

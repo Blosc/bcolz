@@ -56,22 +56,12 @@ def print_versions():
     print("-=" * 38)
 
 
-def test(verbose=False, heavy=False):
+def test():
     """
     Run all the tests in the test suite.
-
-    If `verbose` is set, the test suite will emit messages with full
-    verbosity (not recommended unless you are looking into a certain
-    problem).
     """
     print_versions()
-
-    # What a context this is!
-    oldverbose, common.verbose = common.verbose, verbose
-    try:
-        unittest.TextTestRunner().run(suite())
-    finally:
-        common.verbose = oldverbose
+    unittest.TextTestRunner().run(suite())
 
 
 if __name__ == '__main__':

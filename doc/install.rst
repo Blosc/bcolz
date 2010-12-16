@@ -33,3 +33,13 @@ Go to the carray main directory and do the typical distutils dance::
   $ export PYTHONPATH=.   # set PYTHONPATH=.  on Windows
   $ python carray/tests/test_all.py
   $ python setup.py install
+
+
+Testing the installation
+========================
+
+You can test the installation with::
+
+  $ python -c "import carray; carray.test()"
+
+

@@ -97,6 +97,11 @@ Utility functions
       :py:func:`blosc_set_nthreads`
 
 
+.. py:function:: test()
+
+    Run all the tests in the test suite.
+
+
 The carray class
 ================
 
