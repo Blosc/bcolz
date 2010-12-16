@@ -552,7 +552,7 @@ class ctable(object):
         """
 
         # First, check for integer
-        if isinstance(key, int):
+        if isinstance(key, (int, long)):
             # Get a copy of the len-1 array
             ra = self._arr1.copy()
             # Fill it

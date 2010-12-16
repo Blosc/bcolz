@@ -252,7 +252,7 @@ cdef class chunk:
     """__getitem__(self, key) -> values."""
     cdef ndarray array
 
-    if isinstance(key, int):
+    if isinstance(key, (int, long)):
       # Quickly return a single element
       array = np.empty(shape=(1,), dtype=self.dtype)
       self._getitem(key, key+1, array.data)
@@ -654,7 +654,7 @@ cdef class carray:
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
-    if isinstance(key, int) or isinstance(key, np.int_):
+    if isinstance(key, (int, long)) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
         key += self.len
@@ -764,7 +764,7 @@ cdef class carray:
 
     # Check for integer
     # isinstance(key, int) is not enough in Cython (?)
-    if isinstance(key, int) or isinstance(key, np.int_):
+    if isinstance(key, (int, long)) or isinstance(key, np.int_):
       if key < 0:
         # To support negative values
         key += self.len

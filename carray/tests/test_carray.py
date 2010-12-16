@@ -7,12 +7,15 @@
 ########################################################################
 
 import sys
+import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
 from carray.carrayExtension import chunk
 import unittest
+
+is_64bit = (struct.calcsize("P") == 8)
 
 
 class chunkTest(unittest.TestCase):
@@ -858,8 +861,8 @@ class largeCarrayTest(unittest.TestCase):
         self.assert_(cn[1] == 1)
         cn[int(2e9)] = 2
         self.assert_(cn[int(2e9)] == 2)
-        cn[int(3e9)] = 3
-        self.assert_(cn[int(3e9)] == 3)
+        cn[long(3e9)] = 3
+        self.assert_(cn[long(3e9)] == 3)
         cn[-1] = 4
         self.assert_(cn[-1] == 4)
 
@@ -886,7 +889,7 @@ def suite():
         theSuite.addTest(unittest.makeSuite(eval_smallTest))
         theSuite.addTest(unittest.makeSuite(eval_bigTest))
     # Only for 64-bit systems
-    if sys.maxint > 2**32:
+    if is_64bit:
         theSuite.addTest(unittest.makeSuite(largeCarrayTest))
 
     return theSuite

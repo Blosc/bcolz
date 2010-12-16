@@ -56,7 +56,7 @@ if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
     exit_with_error("You need Python 2.6 or greater to install carray!")
 
 # The minimum version of Cython required for generating extensions
-min_cython_version = '0.13'
+min_cython_version = '0.14'
 # The minimum version of NumPy required
 min_numpy_version = '1.4.1'
 # The minimum version of Numexpr (optional)
@@ -225,7 +225,7 @@ a high-performance compressor that is optimized for binary data.""",
                extra_link_args=LFLAGS,
                extra_compile_args=CFLAGS ),
     ],
-    packages = ['carray'],
+    packages = ['carray', 'carray.tests'],
     include_package_data = True,
 
 )
