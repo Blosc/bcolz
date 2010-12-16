@@ -330,8 +330,9 @@ cdef class carray:
   """
 
   cdef int itemsize, _chunksize, _chunklen, leftover
-  cdef int startb, stopb, nrowsinbuf, _row
+  cdef int nrowsinbuf, _row
   cdef int sss_mode, wheretrue_mode, where_mode
+  cdef npy_intp startb, stopb
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread, where_cached
   cdef npy_intp _nbytes, _cbytes
@@ -350,7 +351,8 @@ cdef class carray:
   property len:
     "The length (leading dimension) of this object."
     def __get__(self):
-      return self._nbytes // self.itemsize
+      # Important to do the cast in order to get a npy_intp result
+      return self._nbytes // <npy_intp>self.itemsize
 
   property dtype:
     "The dtype of this object."
@@ -439,7 +441,7 @@ cdef class carray:
 
     # Compress data in chunks
     cbytes = 0
-    nchunks = nbytes // chunksize
+    nchunks = nbytes // <npy_intp>chunksize
     for i from 0 <= i < nchunks:
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparams)
       chunks.append(chunk_)
@@ -514,7 +516,7 @@ cdef class carray:
 
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
-      nchunks = nbytes // chunksize
+      nchunks = nbytes // <npy_intp>chunksize
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
       remainder = arrcpy[nbytesfirst // itemsize:]
@@ -595,9 +597,9 @@ cdef class carray:
     cdef chunk chunk_
 
     itemsize = self.itemsize
-    nchunks = self._nbytes // self._chunksize
+    nchunks = self._nbytes // <npy_intp>self._chunksize
     chunklen = self._chunklen
-    nchunk = pos // chunklen
+    nchunk = pos // <npy_intp>chunklen
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
@@ -622,7 +624,7 @@ cdef class carray:
         self._cbytes += self.blocksize
 
     # Check if data is cached
-    idxcache = (pos // blocklen) * blocklen
+    idxcache = (pos // <npy_intp>blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
       posinbytes = (pos % blocklen) * itemsize
@@ -641,7 +643,8 @@ cdef class carray:
 
 
   def __getitem__(self, object key):
-    cdef int startb, stopb, chunklen
+    cdef int chunklen
+    cdef npy_intp startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen
     cdef ndarray arr1
@@ -661,8 +664,8 @@ cdef class carray:
       if self.getitem_cache(key, arr1.data):
         return PyArray_GETITEM(arr1, arr1.data)
       # Fallback action
-      nchunk = key // chunklen
-      keychunk = key % chunklen
+      nchunk = key // <npy_intp>chunklen
+      keychunk = key % <npy_intp>chunklen
       return self.chunks[nchunk][keychunk]
     # Slices
     elif isinstance(key, slice):
@@ -727,7 +730,7 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    nchunks = self._nbytes // self._chunksize
+    nchunks = self._nbytes // <npy_intp>self._chunksize
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -746,7 +749,8 @@ cdef class carray:
 
 
   def __setitem__(self, object key, object value):
-    cdef int startb, stopb, chunklen
+    cdef int chunklen
+    cdef npy_intp startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks
     cdef npy_intp nwrow, blen, vlen
     cdef chunk chunk_
@@ -828,7 +832,7 @@ cdef class carray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = self._nbytes // self._chunksize
+    nchunks = self._nbytes // <npy_intp>self._chunksize
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -860,23 +864,24 @@ cdef class carray:
 
   # This is a private function that is specific for `eval`
   def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
-    cdef int startb, stopb, chunklen
+    cdef int chunklen
+    cdef npy_intp startb, stopb
     cdef npy_intp nwrow, stop, cblen
     cdef npy_intp schunk, echunk, nchunk, nchunks
     cdef chunk chunk_
 
     # Check that we are inside limits
-    nrows = self._nbytes // self.itemsize
+    nrows = self._nbytes // <npy_intp>self.itemsize
     if (start + blen) > nrows:
       blen = nrows - start
 
     # Fill `out` from data in chunks
     nwrow = 0
     stop = start + blen
-    nchunks = self._nbytes // self._chunksize
+    nchunks = self._nbytes // <npy_intp>self._chunksize
     chunklen = self._chunksize // self.itemsize
-    schunk = start // chunklen
-    echunk = (start+blen) // chunklen
+    schunk = start // <npy_intp>chunklen
+    echunk = (start+blen) // <npy_intp>chunklen
     for nchunk from schunk <= nchunk <= echunk:
       # Compute start & stop for each block
       startb = start % chunklen
@@ -900,7 +905,8 @@ cdef class carray:
 
   cdef void bool_update(self, boolarr, value):
     """Update self in positions where `boolarr` is true with `value` array."""
-    cdef int startb, stopb, chunklen
+    cdef int chunklen
+    cdef npy_intp startb, stopb
     cdef npy_intp nchunk, nchunks, nrows
     cdef npy_intp nwrow, blen, vlen, n
     cdef chunk chunk_
@@ -912,10 +918,10 @@ cdef class carray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = self._nbytes // self._chunksize
+    nchunks = self._nbytes // <npy_intp>self._chunksize
     if self.leftover > 0:
       nchunks += 1
-    nrows = self._nbytes // self.itemsize
+    nrows = self._nbytes // <npy_intp>self.itemsize
     for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
@@ -951,7 +957,7 @@ cdef class carray:
 
     if not self.sss_mode:
       self.start = 0
-      self.stop = self._nbytes // self.itemsize
+      self.stop = self._nbytes // <npy_intp>self.itemsize
       self.step = 1
     # Initialize some internal values
     self.startb = 0
@@ -1140,7 +1146,7 @@ cdef class carray:
     if isinstance(barr, carray):
       # Check for zero'ed chunks in carrays
       carr = barr
-      nchunk = self.nrowsread // self.nrowsinbuf
+      nchunk = self.nrowsread // <npy_intp>self.nrowsinbuf
       if nchunk < len(carr.chunks):
         chunk_ = carr.chunks[nchunk]
         if chunk_.iszero:

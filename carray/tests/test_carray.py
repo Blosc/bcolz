@@ -841,6 +841,32 @@ class eval_bigTest(evalTest):
     N = 1e4
 
 
+class largeCarrayTest(unittest.TestCase):
+
+    def test00(self):
+        """Creating and working with an extremely large carray (> 2**32)."""
+
+        # Check length
+        n = np.zeros(1e6, dtype="i1")
+        cn = ca.carray(np.zeros(0, dtype="i1"), expectedlen=5e9)
+        for i in xrange(5000):
+            cn.append(n)
+        self.assert_(len(cn) == int(5e9))
+
+        # Now check some accesses
+        cn[1] = 1
+        self.assert_(cn[1] == 1)
+        cn[int(2e9)] = 2
+        self.assert_(cn[int(2e9)] == 2)
+        cn[int(3e9)] = 3
+        self.assert_(cn[int(3e9)] == 3)
+        cn[-1] = 4
+        self.assert_(cn[-1] == 4)
+
+        # The iterator below takes too much (~ 100s)
+        #self.assert_(sum(cn) == 10)
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -859,6 +885,9 @@ def suite():
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_smallTest))
         theSuite.addTest(unittest.makeSuite(eval_bigTest))
+    # Only for 64-bit systems
+    if sys.maxint > 2**32:
+        theSuite.addTest(unittest.makeSuite(largeCarrayTest))
 
     return theSuite
 
