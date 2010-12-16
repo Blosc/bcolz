@@ -93,7 +93,6 @@ Changes from 0.1 to 0.2
 
 - Added a couple of iterators for carray: `__iter__()` and `iter(start,
   stop, step)`.  The difference is that the later does accept slices.
-  See ``Using iterators`` in USAGE.txt.
 
 - Added a `__len__()` method.
 
