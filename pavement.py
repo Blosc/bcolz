@@ -112,7 +112,8 @@ inc_dirs = ['carray', 'blosc']
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
 inc_dirs.extend(get_numpy_include_dirs())
-cython_files = glob.glob('carray/*.c')
+cython_pyxfiles = glob.glob('carray/*.pyx')
+cython_cfiles = [fn.split('.')[0] + '.c' for fn in cython_pyxfiles]
 blosc_files = glob.glob('blosc/*.c')
 
 # Handle --lflags=[FLAGS] --cflags=[FLAGS]
@@ -217,7 +218,7 @@ a high-performance compressor that is optimized for binary data.""",
     ext_modules = [
     Extension( "carray.carrayExtension",
                include_dirs=inc_dirs,
-               sources = cython_files + blosc_files,
+               sources = cython_cfiles + blosc_files,
                depends = ["carray/definitions.pxd"] + blosc_files,
                library_dirs=lib_dirs,
                libraries=libs,
