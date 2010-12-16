@@ -677,6 +677,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04a(self):
         """Testing fancy indexing (setitem) with a condition (all false)"""
+        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -690,6 +691,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04b(self):
         """Testing fancy indexing (setitem) with a condition (all true)"""
+        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -703,6 +705,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04c(self):
         """Testing fancy indexing (setitem) with a condition (mixed values)"""
+        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -716,6 +719,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04d(self):
         """Testing fancy indexing (setitem) with a condition (diff values)"""
+        if not ca.numexpr_here: return
         N = 100
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)

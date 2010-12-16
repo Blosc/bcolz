@@ -43,9 +43,9 @@ $ python setup.py install
 Documentation
 -------------
 
-Please refer to USAGE.txt.  In case you want an accurate description
-of the complete API, you will have to browse it from docstrings.
-Start from `carray` package and continue reading the proposed links.
+Please refer to the doc/ directory.  The HTML manual is in doc/html/,
+and the PDF version is in doc/carray-manual.pdf.  Of course, you can
+always access docstrings from the console (i.e. help(carray.ctable)).
 
 Also, you may want to look at the bench/ directory for some examples
 of use.

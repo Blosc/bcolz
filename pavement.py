@@ -1,19 +1,19 @@
 ########################################################################
 #
 #       License: BSD
-#       Created: August 05, 2010
+#       Created: December 14, 2010
 #       Author:  Francesc Alted - faltet@pytables.org
 #
 ########################################################################
 
-import sys, os
-
-from distutils.core import Extension
-from distutils.core import setup
-from Cython.Distutils import build_ext
-from numpy.distutils.misc_util import get_numpy_include_dirs
+import sys, os, glob
 import textwrap
+import subprocess
 
+from paver.easy import *
+from paver.setuputils import setup, install_distutils_tasks
+from distutils.core import Extension
+from distutils.dep_util import newer
 
 # Some functions for showing errors and warnings.
 def _print_admonition(kind, head, body):
@@ -60,36 +60,30 @@ min_cython_version = '0.13'
 # The minimum version of NumPy required
 min_numpy_version = '1.4.1'
 # The minimum version of Numexpr (optional)
-min_numexpr_version = '1.4'
+min_numexpr_version = '1.4.1'
 
 # Check for Cython
 cython = False
 try:
     from Cython.Compiler.Main import Version
-    cython = True
-except:
-    exit_with_error(
-        "You need %(pkgname)s %(pkgver)s or greater to run carray!"
-        % {'pkgname': 'Cython', 'pkgver': min_cython_version} )
-
-if cython:
     if Version.version < min_cython_version:
-        exit_with_error(
-            "At least Cython %s is needed so as to generate extensions!"
-            % (min_cython_version) )
+        cython = False
     else:
-        print ( "* Found %(pkgname)s %(pkgver)s package installed."
-                % {'pkgname': 'Cython', 'pkgver': Version.version} )
-
+        cython = True
+except:
+    pass
 
 # Check for NumPy
 check_import('numpy', min_numpy_version)
 
 # Check for Numexpr
+numexpr_here = False
 try:
     import numexpr
 except ImportError:
-    pass
+    print_warning(
+        "Numexpr is not installed.  For enhanced carray functionality, "
+        "please consider installing it.")
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
@@ -97,12 +91,11 @@ else:
                 % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__} )
     else:
         print_warning(
-            "Numexpr %s detected, but version is not >= %s.  "
+            "Numexpr %s installed, but version is not >= %s.  "
             "Disabling support for it." % (
             numexpr.__version__, min_numexpr_version))
 
 ########### End of version checks ##########
-
 
 # carray version
 VERSION = open('VERSION').read().strip()
@@ -116,7 +109,11 @@ LFLAGS = os.environ.get('LFLAGS', '').split()
 lib_dirs = []
 libs = []
 inc_dirs = ['carray', 'blosc']
-optional_libs = []   # for linking with zlib or LZO (if I ever implemented that!)
+# Include NumPy header dirs
+from numpy.distutils.misc_util import get_numpy_include_dirs
+inc_dirs.extend(get_numpy_include_dirs())
+cython_files = glob.glob('carray/*.c')
+blosc_files = glob.glob('blosc/*.c')
 
 # Handle --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
@@ -132,11 +129,63 @@ for arg in args:
 if os.name == 'posix':
     CFLAGS.append("-msse2")
 
-# Include NumPy header dirs
-inc_dirs.extend(get_numpy_include_dirs())
 
-# Some macros
-def_macros = [('NDEBUG', 1)]
+# Paver tasks
+@task
+def cythonize():
+    for fn in glob.glob('carray/*.pyx'):
+         dest = fn.split('.')[0] + '.c'
+         if newer(fn, dest):
+             if not cython:
+                 exit_with_error(
+                     "Need Cython >= %s to generate extensions."
+                     % min_cython_version)
+             sh("cython " + fn)
+
+@task
+@needs('generate_setup', 'minilib', 'cythonize', 'html', 'pdf',
+       'setuptools.command.sdist')
+def sdist():
+    """Generate a source distribution for the package."""
+    pass
+
+@task
+@needs(['cythonize', 'setuptools.command.build'])
+def build():
+     pass
+
+@task
+@needs(['cythonize', 'setuptools.command.build_ext'])
+def build_ext():
+     pass
+
+@task
+@needs('paver.doctools.html')
+def html(options):
+    """Build the docs in HTML format."""
+    destdir = path("doc/html")
+    destdir.rmtree()
+    builtdocs = path("doc") / options.builddir / "html"
+    builtdocs.move(destdir)
+
+@task
+def pdf(options):
+    """Build the docs in PDF format."""
+    dest = path("doc") / "carray-manual.pdf"
+    sh("cd doc; make latexpdf")
+    builtdocs = path("doc") / options.builddir / "latex" / "carray.pdf"
+    builtdocs.move(dest)
+
+
+# Options for Paver tasks
+options(
+
+    sphinx = Bunch(
+        docroot = "doc",
+        builddir = "_build"
+    ),
+
+)
 
 
 classifiers = """\
@@ -150,39 +199,33 @@ Topic :: Software Development :: Libraries :: Python Modules
 Operating System :: Microsoft :: Windows
 Operating System :: Unix
 """
-setup(name = "carray",
-      version = VERSION,
-      description = 'Compressed in-memory array',
-      long_description = """\
 
+# Package options
+setup(
+    name = 'carray',
+    version = VERSION,
+    description = "An in-memory data container.",
+    long_description = """\
 carray is a container for numerical data that can be compressed
-in-memory.  The compresion process is carried out internally by Blosc,
-a high-performance compressor that is optimized for binary data.
-
-""",
-      classifiers = filter(None, classifiers.split("\n")),
-      author = 'Francesc Alted',
-      author_email = 'faltet@pytables.org',
-      maintainer = 'Francesc Alted',
-      maintainer_email = 'faltet@pytables.org',
-      url = 'http://github.com/FrancescAlted/carray',
-      license = 'http://www.opensource.org/licenses/bsd-license.php',
-      download_url = 'http://github.com/downloads/FrancescAlted/carray/carray-%s.tar.gz' % VERSION,
-      platforms = ['any'],
-      ext_modules = [
-        Extension( "carray.carrayExtension",
-                   include_dirs=inc_dirs,
-                   define_macros=def_macros,
-                   sources = [ "carray/carrayExtension.pyx",
-                               "blosc/blosc.c", "blosc/blosclz.c", "blosc/shuffle.c" ],
-                   depends = [ "carray/definitions.pxd",
-                               "blosc/blosc.h", "blosc/blosclz.h", "blosc/shuffle.h" ],
-                   library_dirs=lib_dirs,
-                   libraries=libs,
-                   extra_link_args=LFLAGS,
-                   extra_compile_args=CFLAGS ),
-        ],
-      cmdclass = {'build_ext': build_ext},
-      packages = ['carray', 'carray.tests'],
+in-memory.  The compression process is carried out internally by Blosc,
+a high-performance compressor that is optimized for binary data.""",
+    classifiers = filter(None, classifiers.split("\n")),
+    author = 'Francesc Alted',
+    author_email = 'faltet@pytables.org',
+    url = "https://github.com/FrancescAlted/carray",
+    platforms = ['any'],
+    ext_modules = [
+    Extension( "carray.carrayExtension",
+               include_dirs=inc_dirs,
+               sources = cython_files + blosc_files,
+               depends = ["carray/definitions.pxd"] + blosc_files,
+               library_dirs=lib_dirs,
+               libraries=libs,
+               extra_link_args=LFLAGS,
+               extra_compile_args=CFLAGS ),
+    ],
+    packages = ['carray'],
+    include_package_data = True,
 
 )
+

@@ -1,5 +1,5 @@
 =====================
-Announcing carray 0.2
+Announcing carray 0.3
 =====================
 
 What it is
@@ -16,42 +16,7 @@ than using a traditional ndarray object from NumPy.
 What's new
 ==========
 
-Two new `__iter__()` and `iter(start, stop, step)` iterators that allows
-to perform potentially complex operations much faster than using
-plain ndarrays.  For example::
-
-  In [3]: a = np.arange(1e6)
-
-  In [4]: time sum((v for v in a if v < 4))
-  CPU times: user 6.51 s, sys: 0.00 s, total: 6.51 s
-  Wall time: 6.52 s
-  Out[5]: 6.0
-
-  In [6]: b = ca.carray(a)
-
-  In [7]: time sum((v for v in b if v < 4))
-  CPU times: user 0.73 s, sys: 0.04 s, total: 0.78 s
-  Wall time: 0.75 s  # 8.7x faster than ndarray
-  Out[8]: 6.0
-
-The `iter(start, stop, step)` iterator allows to select slices specified
-by the `start`, `stop` and `step` parameters.  Example::
-
-  In [9]: time sum((v for v in a[2::3] if v < 10))
-  CPU times: user 2.18 s, sys: 0.00 s, total: 2.18 s
-  Wall time: 2.19 s
-  Out[10]: 15.0
-
-  In [11]: time sum((v for v in b.iter(start=2, step=3) if v < 10))
-  CPU times: user 0.26 s, sys: 0.03 s, total: 0.30 s
-  Wall time: 0.30 s  # 7.3x faster than ndarray
-  Out[12]: 15.0
-
-The main advantage of these iterators is that you can use them in
-generators and hence, you don't need to waste memory for creating
-temporaries, which can be important when dealing with large arrays.
-
-For more info, see new ``Using iterators`` section in USAGE.txt.
+*Add blurb here*
 
 Resources
 =========
@@ -60,10 +25,10 @@ Visit the main carray site repository at:
 http://github.com/FrancescAlted/carray
 
 You can download a source package from:
-http://github.com/FrancescAlted/carray/downloads
+http://carray.pytables.org/downloads
 
-Short tutorial:
-http://github.com/FrancescAlted/carray/blob/master/USAGE.txt
+Manual:
+http://carray.pytables.org/manual
 
 Home of Blosc compressor:
 http://blosc.pytables.org
