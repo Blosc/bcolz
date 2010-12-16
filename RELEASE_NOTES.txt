@@ -1,6 +1,6 @@
-============================
-Release notes for carray 0.3
-============================
+========================
+Release notes for carray
+========================
 
 :Author: Francesc Alted i Abad
 :Contact: faltet@pytables.org
