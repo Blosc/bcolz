@@ -74,9 +74,9 @@ def set_nthreads(nthreads):
         ca.numexpr.set_num_threads(nthreads)
 
 
-def fromiter(iterable, dtype, count=-1, **kwargs):
+def fromiter(iterable, dtype, count, **kwargs):
     """
-    fromiter(iterable, dtype, count=-1, **kwargs)
+    fromiter(iterable, dtype, count, **kwargs)
 
     Create a carray/ctable from an `iterable` object.
 
@@ -86,9 +86,10 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
         An iterable object providing data for the carray.
     dtype : numpy.dtype instance
         Specifies the type of the outcome object.
-    count : int, optional
-        Specifies the number of items to read from iterable. The
-        default is -1, which means all data is read.
+    count : int
+        The number of items to read from iterable. If set to -1, means that
+        the iterable will be used until exhaustion (not recommended, see note
+        below).
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray/ctable constructors.
 
@@ -98,9 +99,9 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
 
     Notes
     -----
-    Specify `count` to both improve performance and to save memory.  It allows
-    `fromiter` to avoid looping the iterable twice (which is slooow).  It
-    avoids memory leaks to happen too (which can be important for large
+    Please specify `count` to both improve performance and to save memory.  It
+    allows `fromiter` to avoid looping the iterable twice (which is slooow).
+    It avoids memory leaks to happen too (which can be important for large
     iterables).
 
     """

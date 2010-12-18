@@ -452,7 +452,7 @@ class IterTest(unittest.TestCase):
         """Testing `iter()` method with large zero arrays"""
         a = np.zeros(1e4, dtype='f8')
         b = ca.carray(a, chunklen=100)
-        c = ca.fromiter((v for v in b), dtype='f8')
+        c = ca.fromiter((v for v in b), dtype='f8', count=len(a))
         #print "c ->", repr(c)
         assert_array_equal(a, c[:], "iterator fails on zeros")
 
@@ -686,14 +686,14 @@ class fromiterTest(unittest.TestCase):
     def test00(self):
         """Testing fromiter (short iter)"""
         a = np.arange(1,111)
-        b = ca.fromiter(iter(a), dtype='i4')
+        b = ca.fromiter(iter(a), dtype='i4', count=len(a))
         assert_array_equal(b[:], a, "fromiter does not work correctly")
 
     def test01a(self):
         """Testing fromiter (long iter)"""
         N = 1e4
         a = (i for i in xrange(int(N)))
-        b = ca.fromiter(a, dtype='f8')
+        b = ca.fromiter(a, dtype='f8', count=int(N))
         c = np.arange(N)
         assert_array_equal(b[:], c, "fromiter does not work correctly")
 
@@ -701,27 +701,27 @@ class fromiterTest(unittest.TestCase):
         """Testing fromiter (long iter, chunk is multiple of iter length)"""
         N = 1e4
         a = (i for i in xrange(int(N)))
-        b = ca.fromiter(a, dtype='f8', chunklen=1000)
+        b = ca.fromiter(a, dtype='f8', chunklen=1000, count=int(N))
         c = np.arange(N)
         assert_array_equal(b[:], c, "fromiter does not work correctly")
 
     def test02(self):
         """Testing fromiter (empty iter)"""
         a = np.array([], dtype="f8")
-        b = ca.fromiter(iter(a), dtype='f8')
+        b = ca.fromiter(iter(a), dtype='f8', count=-1)
         assert_array_equal(b[:], a, "fromiter does not work correctly")
 
     def test03(self):
         """Testing fromiter (dtype conversion)"""
         a = np.arange(101, dtype="f8")
-        b = ca.fromiter(iter(a), dtype='f4')
+        b = ca.fromiter(iter(a), dtype='f4', count=len(a))
         assert_array_equal(b[:], a, "fromiter does not work correctly")
 
     def test04a(self):
         """Testing fromiter method with large iterator"""
         N = 10*1000
         a = np.fromiter((i*2 for i in xrange(N)), dtype='f8')
-        b = ca.fromiter((i*2 for i in xrange(N)), dtype='f8')
+        b = ca.fromiter((i*2 for i in xrange(N)), dtype='f8', count=len(a))
         assert_array_equal(b[:], a, "iterator with a hint fails")
 
     def test04b(self):

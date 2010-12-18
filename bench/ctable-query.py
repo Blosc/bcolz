@@ -114,7 +114,7 @@ def test_ctable(clevel):
     tc = ca.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
                      dtype="f8,"*NC,
                      cparams=ca.cparams(clevel),
-                     expectedlen=NR)
+                     count=int(NR))
     print "Time (creation, clevel=%d) --> %.3f" % (clevel, time()-t0,)
     after_create()
 

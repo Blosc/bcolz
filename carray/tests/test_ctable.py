@@ -51,7 +51,7 @@ class createTest(unittest.TestCase):
         """Testing ctable creation from large iterator"""
         N = 10*1000
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8', count=N)
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
