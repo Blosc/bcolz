@@ -22,7 +22,7 @@ SizeType = np.int64
 
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
-     malloc, free, memcpy, memset, strdup, strcmp, \
+     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
      PyString_AsString, PyString_FromString, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
@@ -189,11 +189,12 @@ cdef class chunk:
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
     cdef dtype dtype_
+    cdef char *dest
 
     dtype_ = array.dtype
     self.itemsize = itemsize = dtype_.elsize
     self.typekind = dtype_.kind
-    footprint = 128  # the (aprox) footprint of this instance in bytes
+    footprint = 256+64  # the (aprox) footprint of this instance in bytes
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
     self.itemsize = itemsize
@@ -208,15 +209,22 @@ cdef class chunk:
         blocksize = (blocksize // itemsize) * itemsize
     else:
       # Data is not zero, compress it
-      self.data = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
+      dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       # Compress data
       clevel = cparams.clevel
       shuffle = cparams.shuffle
       with nogil:
         cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
-                                self.data, nbytes+BLOSC_MAX_OVERHEAD)
+                                dest, nbytes+BLOSC_MAX_OVERHEAD)
       if cbytes <= 0:
         raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
+      # Free the unused data
+      # self.data = <char *>realloc(dest, cbytes)
+      # I think the next is safer (and the speed is barely the same)
+      # Copy the compressed data on a new taylored buffer
+      self.data = <char *>malloc(cbytes)
+      memcpy(self.data, dest, cbytes)
+      free(dest)
       # Set size info for the instance
       blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
 

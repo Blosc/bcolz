@@ -17,6 +17,7 @@ cdef extern from "stdlib.h":
   ctypedef long size_t
   ctypedef long uintptr_t
   void *malloc(size_t size)
+  void *realloc(void *ptr, size_t size)
   void free(void *ptr)
 
 cdef extern from "string.h":
