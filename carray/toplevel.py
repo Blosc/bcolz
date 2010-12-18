@@ -98,8 +98,10 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
 
     Notes
     -----
-    Specify `count` to improve performance.  It allows `fromiter` to
-    avoid looping the iterable twice (which is slooow).
+    Specify `count` to both improve performance and to save memory.  It allows
+    `fromiter` to avoid looping the iterable twice (which is slooow).  It
+    avoids memory leaks to happen too (which can be important for large
+    iterables).
 
     """
 
@@ -121,7 +123,7 @@ def fromiter(iterable, dtype, count=-1, **kwargs):
             # create a couple of iterables and use the second when the
             # first one is exhausted (ValueError will be raised).
             iterable, iterable2 = it.tee(iterable)
-            expected = 10*1000*1000   # 10 million elements
+            expected = 1000*1000   # 1 million elements
 
     # First, create the container
     expectedlen = kwargs.pop("expectedlen", expected)

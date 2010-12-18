@@ -80,8 +80,10 @@ Utility functions
       out : a carray/ctable object
 
     Notes:
-      Specify `count` to improve performance.  It allows `fromiter` to
-      avoid looping the iterable twice (which is slooow).
+      Specify `count` to both improve performance and to save memory.
+      It allows `fromiter` to avoid looping the iterable twice (which
+      is slooow).  It avoids memory leaks to happen too (which can be
+      important for large iterables).
 
 .. py:function:: set_nthreads(nthreads)
 
