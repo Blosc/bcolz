@@ -61,7 +61,7 @@ Utility functions
         properties of this carray by passing additional arguments
         supported by carray constructor in `kwargs`.
 
-.. py:function:: fromiter(iterable, dtype, count=-1, **kwargs)
+.. py:function:: fromiter(iterable, dtype, count, **kwargs)
 
     Create a carray/ctable from an `iterable` object.
 
@@ -70,7 +70,7 @@ Utility functions
         An iterable object providing data for the carray.
       dtype : numpy.dtype instance
         Specifies the type of the outcome object.
-      count : int, optional
+      count : int
         The number of items to read from iterable. If set to -1, means
         that the iterable will be used until exhaustion (not
         recommended, see note below).
