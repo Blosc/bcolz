@@ -577,9 +577,43 @@ cdef class carray:
     # Now copy the carray chunk by chunk
     chunklen = self._chunklen
     for i from 0 <= i < self.len by chunklen:
-      ccopy.append(self[i:i + chunklen])
+      ccopy.append(self[i:i+chunklen])
 
     return ccopy
+
+
+  def sum(self, dtype=None):
+    """
+    sum(dtype=None)
+
+    Return the sum of the array elements.
+
+    Parameters
+    ----------
+    dtype : NumPy dtype
+        The desired type of the output.  If ``None``, the dtype of `self` is
+        used.
+
+    Return value
+    ------------
+    out : NumPy scalar with `dtype`
+
+    """
+    cdef object result
+    cdef npy_intp nchunk, nchunks
+
+    # Get a container for the result
+    if dtype is None:
+      dtype = self.dtype
+    result = np.zeros(1, dtype=dtype)[0]
+
+    nchunks = self._nbytes // <npy_intp>self._chunksize
+    for nchunk from 0 <= nchunk < nchunks:
+      result += self.chunks[nchunk][:].sum()
+    if self.leftover:
+      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum()
+
+    return result
 
 
   def __len__(self):

@@ -844,6 +844,20 @@ class eval_bigTest(evalTest):
     N = 1e4
 
 
+class computeMethodsTest(unittest.TestCase):
+
+    def test00(self):
+        """Checking sum()."""
+        a = np.arange(1e5)
+        sa = a.sum()
+        ac = ca.carray(a)
+        sac = ac.sum()
+        #print "numpy sum-->", sa
+        #print "carray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
+
+
 class largeCarrayTest(unittest.TestCase):
 
     def test00(self):
@@ -885,6 +899,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))
+    theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_smallTest))
         theSuite.addTest(unittest.makeSuite(eval_bigTest))

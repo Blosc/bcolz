@@ -21,6 +21,9 @@ Changes from 0.2 to 0.3
 - Added new `__len__()` and `__sizeof__()` special methods for both
   `carray` and `ctable` objects.
 
+- New `sum()` method for `carray` that computes the sum of the array
+  elements.
+
 - Added new `nbytes` and `cbytes` properties for `carray` and `ctable`
   objects.  The former accounts for the size of the original
   (non-compressed) object, and the later for the actual compressed

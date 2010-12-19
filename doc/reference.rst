@@ -211,6 +211,18 @@ carray methods
       out : iterator
 
 
+.. py:method:: sum(dtype=None)
+
+    Return the sum of the array elements.
+
+    Parameters:
+      dtype : NumPy dtype
+        The desired type of the output.  If ``None``, the dtype of `self` is
+        used.
+
+    Return value:
+      out : NumPy scalar with `dtype`
+
 .. py:method:: where(boolarr)
 
     Iterator that returns values of this object where `boolarr` is true.
