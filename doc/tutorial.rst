@@ -537,9 +537,9 @@ namedtuple, and return just nude tuples::
 Also, you can select specific fields to be read via the `outcols`
 parameter::
 
-  >>> [row for row in ct.iter(1,10,3, outcols=['f0'])]
+  >>> [row for row in ct.iter(1,10,3, outcols='f0')]
   [row(f0=1), row(f0=4), row(f0=7)]
-  >>> [(nrow__, f0) for nrow__, f0 in ct.iter(1,10,3, outcols=['nrow__', 'f0'])]
+  >>> [(nr,f0) for nr,f0 in ct.iter(1,10,3, outcols='nrow__,f0')]
   [(1, 1), (4, 4), (7, 7)]
 
 Please note the use of the special 'nrow__' label for referring to
@@ -567,13 +567,13 @@ Here it is an example of use::
 And by using the `outcols` parameter, you can specify the fields that
 you want to be returned::
 
-  >>> [row for row in ct.where("(f0>0) & (f1<10)", ["f1"])]
+  >>> [row for row in ct.where("(f0>0) & (f1<10)", "f1")]
   [row(f1=1.0), row(f1=4.0), row(f1=9.0)]
 
 
 You can even specify the row number fulfilling the condition::
 
-  >>> [(f1,nrow) for f1, nrow in ct.where("(f0>0) & (f1<10)", ["f1", "nrow__"])]
+  >>> [(f1,nr) for f1,nr in ct.where("(f0>0) & (f1<10)", "f1,nrow__")]
   [(1.0, 1), (4.0, 2), (9.0, 3)]
 
 Performing operations on ctable columns

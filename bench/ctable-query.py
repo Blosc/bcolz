@@ -119,7 +119,7 @@ def test_ctable(clevel):
     after_create()
 
     t0 = time()
-    out = np.fromiter((row for row in tc.where(squery, ['f0','f2'])),
+    out = np.fromiter((row for row in tc.where(squery, 'f0,f2')),
                       dtype="f8,f8")
     print "Time for (query, clevel=%d) --> %.3f" % (clevel, time()-t0,),
     print "-- size (MB):", tc.cbytes / 2**20

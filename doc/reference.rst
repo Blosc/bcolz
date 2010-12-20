@@ -262,10 +262,11 @@ The ctable class
       cols : tuple or list of carray/ndarray objects, or structured ndarray
         The list of column data to build the ctable object.
         This can also be a pure NumPy structured array.
-      names : list of strings
-        The list of names for the columns.  If not passed, the names
-        will be chosen as 'f0' for the first column, 'f1' for the
-        second and so on so forth (NumPy convention).
+      names : list of strings or string
+        The list of names for the columns.  Alternatively, it can be
+        specified as a string such as 'f0 f1' or 'f0, f1'.  If not
+        passed, the names will be chosen as 'f0' for the first column,
+        'f1' for the second and so on so forth (NumPy convention).
       kwargs : list of parameters or dictionary
         Allows to pass additional arguments supported by carray
         constructors in case new carrays need to be built.
@@ -414,11 +415,12 @@ ctable methods
       step : int
         The number of items incremented during each iteration.  Cannot be
         negative.
-      outcols : list of strings
-        The list of column names that you want to get back in results.  If
-        None, all the columns are returned.  If the special name
-        'nrow__' is present, the number of row will be included in
-        output.
+      outcols : list of strings or string
+        The list of column names that you want to get back in results.
+        Alternatively, it can be specified as a string such as 'f0 f1'
+        or 'f0, f1'.  If None, all the columns are returned.  If the
+        special name 'nrow__' is present, the number of row will be
+        included in output.
 
     Returns:
       out : iterable
@@ -430,11 +432,12 @@ ctable methods
     Parameters:
       expression : string or carray
         A boolean Numexpr expression or a boolean carray.
-      outcols : list of strings
-        The list of column names that you want to get back in results.  If
-        None, all the columns are returned.  If the special name
-        'nrow__' is present, the number of row will be included in
-        output.
+      outcols : list of strings or string
+        The list of column names that you want to get back in results.
+        Alternatively, it can be specified as a string such as 'f0 f1'
+        or 'f0, f1'.  If None, all the columns are returned.  If the
+        special name 'nrow__' is present, the number of row will be
+        included in output.
 
     Returns:
       out : iterable

@@ -773,7 +773,7 @@ class iterTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=4)
-        cl = [tuple(r) for r in t.iter(outcols=['f2', 'nrow__', 'f0'])]
+        cl = [tuple(r) for r in t.iter(outcols='f2, nrow__, f0')]
         nl = [(r['f2'], i, r['f0']) for i, r in enumerate(ra)]
         #print "cl ->", cl
         #print "nl ->", nl
@@ -784,7 +784,7 @@ class iterTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=4)
-        cl = [r for r in t.iter(1,9,3, ['f2', 'nrow__', 'f0'])]
+        cl = [r for r in t.iter(1,9,3, 'f2, nrow__ f0')]
         nl = [(r['f2'], r['f0'], r['f0']) for r in ra[1:9:3]]
         #print "cl ->", cl
         #print "nl ->", nl
@@ -991,7 +991,7 @@ class whereTest(unittest.TestCase):
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [r.f1 for r in t.where('4+f1 > f2', outcols=['f1'])]
+        rt = [r.f1 for r in t.where('4+f1 > f2', outcols='f1')]
         rl = [i*2. for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
@@ -1013,7 +1013,7 @@ class whereTest(unittest.TestCase):
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        rt = [(f2, f0) for f0,f2 in t.where('4+f1 > f2', outcols=['f0','f2'])]
+        rt = [(f2, f0) for f0,f2 in t.where('4+f1 > f2', outcols='f0,f2')]
         rl = [(i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
@@ -1025,7 +1025,7 @@ class whereTest(unittest.TestCase):
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        where = t.where('f1 > f2', outcols=['f3','f0'])
+        where = t.where('f1 > f2', outcols='f3,  f0')
         self.assertRaises(ValueError, where.next)
 
     def test03(self):
