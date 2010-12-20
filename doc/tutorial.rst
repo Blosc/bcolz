@@ -519,17 +519,30 @@ step parameters::
   >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
   >>> ct = ca.ctable(t)
   >>> [row for row in ct.iter(1,10,3)]
+  [row(f0=1, f1=1.0), row(f0=4, f1=16.0), row(f0=7, f1=49.0)]
+
+Note how the data is returned as `namedtuple` objects of type
+``row``.  This allows you to iterate the fields more easily by using
+field names::
+
+  >>> [(f0,f1) for f0,f1 in ct.iter(1,10,3)]
+  [(1, 1.0), (4, 16.0), (7, 49.0)]
+
+You can also use the ``[:]`` accessor to get rid of the ``row``
+namedtuple, and return just nude tuples::
+
+  >>> [row[:] for row in ct.iter(1,10,3)]
   [(1, 1.0), (4, 16.0), (7, 49.0)]
 
 Also, you can select specific fields to be read via the `outcols`
 parameter::
 
   >>> [row for row in ct.iter(1,10,3, outcols=['f0'])]
-  [(1,), (4,), (7,)]
-  >>> [row for row in ct.iter(1,10,3, outcols=['__nrow__', 'f0'])]
+  [row(f0=1), row(f0=4), row(f0=7)]
+  >>> [(nrow__, f0) for nrow__, f0 in ct.iter(1,10,3, outcols=['nrow__', 'f0'])]
   [(1, 1), (4, 4), (7, 7)]
 
-Please note the use of the special '__nrow__' label for referring to
+Please note the use of the special 'nrow__' label for referring to
 the current row.
 
 Iterating over output of conditions along columns
@@ -547,19 +560,20 @@ Here it is an example of use::
   >>> t = np.fromiter(((i,i*i) for i in xrange(1000*1000)), dtype="i4,f8")
   >>> ct = ca.ctable(t)
   >>> [row for row in ct.where("(f0>0) & (f1<10)")]
-  [(1, 1.0), (2, 4.0), (3, 9.0)]
-  >>> sum([row[1] for row in ct.where("(f1>10)")])
+  [row(f0=1, f1=1.0), row(f0=2, f1=4.0), row(f0=3, f1=9.0)]
+  >>> sum([row.f1 for row in ct.where("(f1>10)")])
   3.3333283333312755e+17
 
 And by using the `outcols` parameter, you can specify the fields that
 you want to be returned::
 
   >>> [row for row in ct.where("(f0>0) & (f1<10)", ["f1"])]
-  [(1.0,), (4.0,), (9.0,)]
+  [row(f1=1.0), row(f1=4.0), row(f1=9.0)]
+
 
 You can even specify the row number fulfilling the condition::
 
-  >>> [row for row in ct.where("(f0>0) & (f1<10)", ["f1", "__nrow__"])]
+  >>> [(f1,nrow) for f1, nrow in ct.where("(f0>0) & (f1<10)", ["f1", "nrow__"])]
   [(1.0, 1), (4.0, 2), (9.0, 3)]
 
 Performing operations on ctable columns
@@ -569,7 +583,7 @@ The ctable object also wears an `eval()` method that is handy for
 carrying out operations among columns::
 
   >>> ct.eval("cos((3+f0)/sqrt(2*f1))")
-  carray((1000000,), float64)  nbytes: 7.63 MB; cbytes: 2.21 MB; ratio: 3.45
+  carray((1000000,), float64)  nbytes: 7.63 MB; cbytes: 2.23 MB; ratio: 3.42
     cparams := cparams(clevel=5, shuffle=True)
   [nan, -0.951363128126, -0.195699435691, ...,
    0.760243218982, 0.760243218983, 0.760243218984]

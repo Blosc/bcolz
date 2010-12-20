@@ -417,7 +417,7 @@ ctable methods
       outcols : list of strings
         The list of column names that you want to get back in results.  If
         None, all the columns are returned.  If the special name
-        '__nrow__' is present, the number of row will be included in
+        'nrow__' is present, the number of row will be included in
         output.
 
     Returns:
@@ -433,7 +433,7 @@ ctable methods
       outcols : list of strings
         The list of column names that you want to get back in results.  If
         None, all the columns are returned.  If the special name
-        '__nrow__' is present, the number of row will be included in
+        'nrow__' is present, the number of row will be included in
         output.
 
     Returns:

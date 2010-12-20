@@ -12,7 +12,7 @@ import numpy as np
 import carray as ca
 from carray import utils
 import itertools as it
-
+from collections import namedtuple
 
 
 class ctable(object):
@@ -380,7 +380,7 @@ class ctable(object):
         outcols : list of strings
             The list of column names that you want to get back in results.  If
             None, all the columns are returned.  If the special name
-            '__nrow__' is present, the number of row will be included in
+            'nrow__' is present, the number of row will be included in
             output.
 
         Returns
@@ -406,7 +406,7 @@ class ctable(object):
         else:
             if type(outcols) not in (list, tuple):
                 raise ValueError, "only list/tuple is supported for outcols"
-            if set(outcols) - set(self.names+['__nrow__']) != set():
+            if set(outcols) - set(self.names+['nrow__']) != set():
                 raise ValueError, "not all outcols are real column names"
 
         # Get the length of the result
@@ -415,7 +415,7 @@ class ctable(object):
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
-            if name == "__nrow__":
+            if name == "nrow__":
                 icols.append(boolarr.wheretrue())
                 dtypes.append((name, np.int_))
             else:
@@ -464,7 +464,7 @@ class ctable(object):
         outcols : list of strings
             The list of column names that you want to get back in results.  If
             None, all the columns are returned.  If the special name
-            '__nrow__' is present, the number of row will be included in
+            'nrow__' is present, the number of row will be included in
             output.
 
         Returns
@@ -477,7 +477,7 @@ class ctable(object):
         if outcols is None:
             outcols = self.names
         else:
-            if set(outcols) - set(self.names+['__nrow__']) != set():
+            if set(outcols) - set(self.names+['nrow__']) != set():
                 raise ValueError, "not all outcols are real column names"
 
         # Check limits
@@ -489,7 +489,7 @@ class ctable(object):
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
-            if name == "__nrow__":
+            if name == "nrow__":
                 #icols.append(iter(xrange(start, stop, step)))  # XXX
                 icols.append(xrange(start, stop, step))
                 dtypes.append((name, np.int_))
@@ -505,27 +505,9 @@ class ctable(object):
         """Return `count` values in `icols` list of iterators with `dtype`."""
 
         icols = tuple(icols)
-        iterable = it.izip(*icols)
-        # The size of the internal buffer
-        chunklen = 256    # 256 should be enough for most cases
-        nread, blen = 0, 0
-        while nread < count:
-            if nread + chunklen > count:
-                blen = count - nread
-            else:
-                blen = chunklen
-            # Important to create the chunk anew in order to avoid
-            # buffer overwrites in results during the iteration.
-            chunk = np.fromiter(iterable, dtype=dtype, count=blen)
-
-            # Yield rows from this chunk until exhausted
-            for n in xrange(blen):
-                yield chunk[n]
-
-            # Check the end of the iterable
-            nread += len(chunk)
-            if len(chunk) < chunklen:
-                break
+        namedt = namedtuple('row', dtype.names)
+        iterable = it.imap(namedt, *icols)
+        return iterable
 
 
     def __getitem__(self, key):
@@ -634,7 +616,7 @@ class ctable(object):
             #key = self.eval(key)
             # The method below is faster (specially for large ctables)
             rowval = 0
-            for nrow in self.where(key, outcols=["__nrow__"]):
+            for nrow in self.where(key, outcols=["nrow__"]):
                 nrow = nrow[0]
                 if len(value) == 1:
                     for name in self.names:
