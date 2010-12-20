@@ -864,31 +864,53 @@ class arangeTest(unittest.TestCase):
         """Checking arange() with only a `stop`."""
         a = np.arange(self.N)
         ac = ca.arange(self.N)
-        assert(np.all(a == ac))
+        self.assert_(np.all(a == ac))
 
     def test01(self):
         """Checking arange() with a `start` and `stop`."""
         a = np.arange(3, self.N)
         ac = ca.arange(3, self.N)
-        assert(np.all(a == ac))
+        self.assert_(np.all(a == ac))
 
     def test02(self):
         """Checking arange() with a `start`, `stop` and `step`."""
         a = np.arange(3, self.N, 4)
         ac = ca.arange(3, self.N, 4)
-        assert(np.all(a == ac))
+        self.assert_(np.all(a == ac))
 
     def test03(self):
         """Checking arange() with a `dtype`."""
         a = np.arange(self.N, dtype="i1")
         ac = ca.arange(self.N, dtype="i1")
-        assert(np.all(a == ac))
+        self.assert_(np.all(a == ac))
 
 class arange_smallTest(arangeTest):
     N = 10
 
 class arange_bigTest(arangeTest):
     N = 1e4
+
+
+class constructorTest(unittest.TestCase):
+
+    def test00a(self):
+        """Checking carray constructor with a `dtype`."""
+        N = 10
+        a = np.arange(N)
+        ac = ca.carray(a, dtype='f4')
+        self.assert_(ac.dtype == np.dtype('f4'))
+        a = a.astype('f4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test00b(self):
+        """Checking carray constructor with a `dtype` with an empty input."""
+        a = np.array([], dtype='i4')
+        ac = ca.carray([], dtype='f4')
+        self.assert_(ac.dtype == np.dtype('f4'))
+        a = a.astype('f4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
 
 
 class largeCarrayTest(unittest.TestCase):
@@ -934,6 +956,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fromiterTest))
     theSuite.addTest(unittest.makeSuite(arange_smallTest))
     theSuite.addTest(unittest.makeSuite(arange_bigTest))
+    theSuite.addTest(unittest.makeSuite(constructorTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_smallTest))

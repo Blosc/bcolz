@@ -311,7 +311,7 @@ cdef class chunk:
 
 cdef class carray:
   """
-  carray(array, cparams=None, expectedlen=None, chunklen=None)
+  carray(array, cparams=None, dtype=None, expectedlen=None, chunklen=None)
 
   A compressed and enlargeable in-memory data container.
 
@@ -326,6 +326,8 @@ cdef class carray:
       the resulting carray will be the same as this NumPy object.
   cparams : instance of the `cparams` class, optional
       Parameters to the internal Blosc compressor.
+  dtype : NumPy dtype
+      Force this `dtype` for the carray (rather than the `array` one).
   expectedlen : int, optional
       A guess on the expected length of this object.  This will serve to
       decide the best `chunklen` used for compression and memory I/O
@@ -394,6 +396,7 @@ cdef class carray:
 
 
   def __cinit__(self, object array, object cparams=None,
+                object dtype=None,
                 object expectedlen=None, object chunklen=None):
     cdef int i, itemsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
@@ -407,7 +410,7 @@ cdef class carray:
     if not isinstance(cparams, ca.cparams):
       raise ValueError, "`cparams` param must be an instance of `cparams` class"
 
-    array_ = utils.to_ndarray(array, self.dtype)
+    array_ = utils.to_ndarray(array, dtype)
 
     # Only accept unidimensional arrays as input
     if array_.ndim != 1:

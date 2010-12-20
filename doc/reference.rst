@@ -160,6 +160,8 @@ The carray class
       the resulting carray will be the same as this NumPy object.
     cparams : instance of the `cparams` class, optional
       Parameters to the internal Blosc compressor.
+    dtype : NumPy dtype
+      Force this `dtype` for the carray (rather than the `array` one).
     expectedlen : int, optional
       A guess on the expected length of this carray.  This will serve to
       decide the best `chunklen` used for compression and memory I/O

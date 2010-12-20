@@ -97,7 +97,7 @@ def get_len_of_range(start, stop, step):
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
-    if type(array) != np.ndarray:
+    if type(array) != np.ndarray or array.dtype != dtype:
         try:
             array = np.asarray(array, dtype=dtype)
         except ValueError:
