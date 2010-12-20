@@ -194,13 +194,15 @@ cdef class chunk:
     dtype_ = array.dtype
     self.itemsize = itemsize = dtype_.elsize
     self.typekind = dtype_.kind
-    footprint = 256+64  # the (aprox) footprint of this instance in bytes
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
     self.itemsize = itemsize
 
     # Check whether incoming data is all zeros
-    self.iszero = check_zeros(array.data, nbytes)
+    if array.strides[0] == 0:
+      self.iszero = 1
+    else:
+      self.iszero = check_zeros(array.data, nbytes)
     if self.iszero:
       cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
@@ -230,6 +232,7 @@ cdef class chunk:
 
     # Fill instance data
     self.nbytes = nbytes
+    footprint = 256+64  # the (aprox) footprint of this instance in bytes
     self.cbytes = cbytes + footprint
     self.blocksize = blocksize
 
@@ -492,9 +495,9 @@ cdef class carray:
         The number of elements appended.
 
     """
-    cdef int itemsize, chunksize, leftover, bsize
+    cdef int itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen
-    cdef npy_intp nbytes, cbytes
+    cdef npy_intp nbytes, cbytes, bsize
     cdef ndarray remainder, arrcpy
     cdef chunk chunk_
 
@@ -512,18 +515,27 @@ cdef class carray:
     # Check if array fits in existing buffer
     if (bsize + leftover) < chunksize:
       # Data fits in lastchunk buffer.  Just copy it
-      memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
+      if arrcpy.strides[0] > 0:
+        memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
+      else:
+        memset(self.lastchunk+leftover, 0, bsize)
       leftover += bsize
     else:
       # Data does not fit in buffer.  Break it in chunks.
 
-      # First, fill the last buffer completely
-      nbytesfirst = chunksize - leftover
-      memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
-      # Compress the last chunk and add it to the list
-      chunk_ = chunk(self.lastchunkarr, self._cparams)
-      chunks.append(chunk_)
-      cbytes = chunk_.cbytes
+      # First, fill the last buffer completely (if needed)
+      if leftover:
+        nbytesfirst = chunksize - leftover
+        if arrcpy.strides[0] > 0:
+          memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
+        else:
+          memset(self.lastchunk+leftover, 0, nbytesfirst)
+        # Compress the last chunk and add it to the list
+        chunk_ = chunk(self.lastchunkarr, self._cparams)
+        chunks.append(chunk_)
+        cbytes = chunk_.cbytes
+      else:
+        nbytesfirst = 0
 
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
@@ -539,7 +551,10 @@ cdef class carray:
       # Finally, deal with the leftover
       leftover = nbytes % chunksize
       if leftover:
-        remainder = remainder[nchunks*chunklen:]
+        if arrcpy.strides[0] > 0:
+          remainder = remainder[nchunks*chunklen:]
+        else:
+          remainder = remainder[nchunks*chunklen:].copy()
         memcpy(self.lastchunk, remainder.data, leftover)
 
     # Update some counters

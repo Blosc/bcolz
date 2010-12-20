@@ -97,6 +97,12 @@ def get_len_of_range(start, stop, step):
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
+    # Arrays with a 0 stride are special
+    if type(array) == np.ndarray and array.strides == (0,):
+        if array.dtype != dtype:
+            array = np.ndarray(array.shape, dtype, array, strides=(0,))
+        return array
+
     if type(array) != np.ndarray or array.dtype != dtype:
         try:
             array = np.asarray(array, dtype=dtype)

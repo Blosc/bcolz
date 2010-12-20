@@ -12,8 +12,11 @@ Changes from 0.2 to 0.3
 - Added a new `ctable` class that implements a compressed, column-wise
   table.
 
-- New `arange` constructor for quickly build carray objects without the
-  need of using the `fromiter()` function.
+- New `arange` constructor for quickly building carray objects (this
+  method is much faster than using `fromiter()`).
+
+- New `zeros` constructor for quickly building zeroed carray objects.
+  This is way faster than its NumPy counterpart.
 
 - New `test()` function that runs the complete test suite.
 

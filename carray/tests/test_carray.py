@@ -912,6 +912,22 @@ class constructorTest(unittest.TestCase):
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
 
+    def test01a(self):
+        """Checking zeros() constructor."""
+        N = 10
+        a = np.zeros(N)
+        ac = ca.zeros(N)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test01b(self):
+        """Checking zeros() constructor, with a `dtype`."""
+        N = 1e4
+        a = np.zeros(N, dtype='i4')
+        ac = ca.zeros(N, dtype='i4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
 
 class largeCarrayTest(unittest.TestCase):
 

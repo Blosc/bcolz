@@ -168,6 +168,53 @@ def fromiter(iterable, dtype, count, **kwargs):
     return obj
 
 
+def zeros(shape, dtype=np.float, **kwargs):
+    """
+    zeros(shape, dtype=float, **kwargs)
+
+    Return a new carray object of given shape and type, filled with zeros.
+
+    Parameters
+    ----------
+    shape : int
+        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+    dtype : data-type, optional
+        The desired data-type for the array, e.g., `numpy.int8`.  Default is
+        `numpy.float64`.
+    kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns
+    -------
+    out : carray
+        Array of zeros with the given shape and dtype.
+
+    """
+
+    dtype = np.dtype(dtype)
+    try:
+        stop = int(shape)
+    except:
+        raise ValueError, "shape must be an integer (or float)."
+
+    # Create the container
+    expectedlen = kwargs.pop("expectedlen", stop)
+    if dtype.kind == "V":
+        raise ValueError, "zeros does not support ctables yet."
+    else:
+        obj = ca.carray(np.array([], dtype=dtype),
+                        expectedlen=expectedlen,
+                        **kwargs)
+        chunklen = obj.chunklen
+
+    # Then fill it.  Making strides=(0,) below is a trick to create the array
+    # fast and without memory consumption!
+    chunk = np.ndarray(stop, dtype=dtype, buffer=np.zeros(1, dtype=dtype),
+                       strides=(0,))
+    obj.append(chunk)
+    return obj
+
+
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     """
     arange([start,] stop[, step,], dtype=None, **kwargs)
@@ -194,6 +241,8 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     dtype : dtype
         The type of the output array.  If `dtype` is not given, infer the data
         type from the other input arguments.
+    kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
 
     Returns
     -------
