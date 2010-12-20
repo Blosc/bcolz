@@ -12,6 +12,9 @@ Changes from 0.2 to 0.3
 - Added a new `ctable` class that implements a compressed, column-wise
   table.
 
+- New `arange` constructor for quickly build carray objects without the
+  need of using the `fromiter()` function.
+
 - New `test()` function that runs the complete test suite.
 
 - Added a new `eval()` function to evaluate expressions including any

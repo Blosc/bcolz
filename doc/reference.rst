@@ -19,39 +19,54 @@ First-level classes
       The shuffle filter may be automatically disable in case it is
       non-sense to use it (e.g. itemsize == 1).
 
+First level constructors
+========================
 
-Utility functions
-=================
+.. py:function:: arange([start,] stop[, step,], dtype=None, **kwargs)
 
-.. py:function:: blosc_set_nthreads(nthreads)
+    Return evenly spaced values within a given interval.
 
-    Set the number of threads that Blosc can use.
+    Values are generated within the half-open interval ``[start,
+    stop)`` (in other words, the interval including `start` but
+    excluding `stop`).  For integer arguments the function is
+    equivalent to the Python built-in `range
+    <http://docs.python.org/lib/built-in-funcs.html>`_ function, but
+    returns a carray rather than a list.
 
     Parameters:
-      nthreads : int
-        The desired number of threads to use.
+      start : number, optional
+        Start of interval.  The interval includes this value.  The default
+        start value is 0.
+      stop : number
+        End of interval.  The interval does not include this value.
+      step : number, optional
+        Spacing between values.  For any output `out`, this is the
+        distance between two adjacent values, ``out[i+1] - out[i]``.
+        The default step size is 1.  If `step` is specified, `start`
+        must also be given.
+      dtype : dtype
+        The type of the output array.  If `dtype` is not given, infer
+        the data type from the other input arguments.
 
     Returns:
-      out : int
-        The previous setting for the number of threads.
+      out : carray
+        Array of evenly spaced values.
 
-.. py:function:: blosc_version()
-
-    Return the version of the Blosc library.
-
-.. py:function:: detect_number_of_cores()
-
-    Return the number of cores on a system.
+        For floating point arguments, the length of the result is
+        ``ceil((stop - start)/step)``.  Because of floating point overflow,
+        this rule may result in the last element of `out` being greater
+        than `stop`.
 
 .. py:function:: eval(expression, **kwargs)
 
-    Evaluate a Numexpr `expression` and return the result.
+    Evaluate an `expression` and return the result as a carray object.
 
     Parameters:
       expression : string
-        A string forming an expression, like '2*a+3*b'. The values for 'a' and
-        'b' are variable names to be taken from the calling function's frame.
-        These variables may be scalars, carrays or NumPy arrays.
+        A string forming an expression, like '2*a+3*b'. The values for
+        'a' and 'b' are variable names to be taken from the calling
+        function's frame.  These variables may be scalars, carrays or
+        NumPy arrays.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -85,6 +100,29 @@ Utility functions
       memory.  It allows `fromiter` to avoid looping the iterable
       twice (which is slooow).  It avoids memory leaks to happen too
       (which can be important for large iterables).
+
+Utility functions
+=================
+
+.. py:function:: blosc_set_nthreads(nthreads)
+
+    Set the number of threads that Blosc can use.
+
+    Parameters:
+      nthreads : int
+        The desired number of threads to use.
+
+    Returns:
+      out : int
+        The previous setting for the number of threads.
+
+.. py:function:: blosc_version()
+
+    Return the version of the Blosc library.
+
+.. py:function:: detect_number_of_cores()
+
+    Return the number of cores on a system.
 
 .. py:function:: set_nthreads(nthreads)
 

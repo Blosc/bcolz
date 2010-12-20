@@ -168,6 +168,85 @@ def fromiter(iterable, dtype, count, **kwargs):
     return obj
 
 
+def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
+    """
+    arange([start,] stop[, step,], dtype=None, **kwargs)
+
+    Return evenly spaced values within a given interval.
+
+    Values are generated within the half-open interval ``[start, stop)``
+    (in other words, the interval including `start` but excluding `stop`).
+    For integer arguments the function is equivalent to the Python built-in
+    `range <http://docs.python.org/lib/built-in-funcs.html>`_ function,
+    but returns a carray rather than a list.
+
+    Parameters
+    ----------
+    start : number, optional
+        Start of interval.  The interval includes this value.  The default
+        start value is 0.
+    stop : number
+        End of interval.  The interval does not include this value.
+    step : number, optional
+        Spacing between values.  For any output `out`, this is the distance
+        between two adjacent values, ``out[i+1] - out[i]``.  The default
+        step size is 1.  If `step` is specified, `start` must also be given.
+    dtype : dtype
+        The type of the output array.  If `dtype` is not given, infer the data
+        type from the other input arguments.
+
+    Returns
+    -------
+    out : carray
+        Array of evenly spaced values.
+
+        For floating point arguments, the length of the result is
+        ``ceil((stop - start)/step)``.  Because of floating point overflow,
+        this rule may result in the last element of `out` being greater
+        than `stop`.
+
+    """
+
+    # Check start, stop, step values
+    if (start, stop) == (None, None):
+        raise ValueError, "You must pass a `stop` value at least."
+    elif stop is None:
+        start, stop = 0, start
+    elif start is None:
+        start, stop = 0, stop
+    if step is None:
+        step = 1
+
+    # First, guess the dtype
+    if dtype is None:
+        if type(stop) in (int, long):
+            dtype = np.dtype(np.int_)
+    dtype = np.dtype(dtype)
+    stop = int(stop)
+    # Then, create the container
+    expectedlen = kwargs.pop("expectedlen", stop)
+    if dtype.kind == "V":
+        raise ValueError, "arange does not support ctables yet."
+    else:
+        obj = ca.carray(np.array([], dtype=dtype),
+                        expectedlen=expectedlen,
+                        **kwargs)
+        chunklen = obj.chunklen
+
+    # Then fill it
+    incr = chunklen * step        # the increment for each chunk
+    incr += step - (incr % step)  # make it match step boundary
+    bstart, bstop = start, start + incr
+    while bstart < stop:
+        if bstop > stop:
+            bstop = stop
+        chunk = np.arange(bstart, bstop, step, dtype=dtype)
+        obj.append(chunk)
+        bstart = bstop
+        bstop += incr
+    return obj
+
+
 def _getvars(expression, user_dict, depth):
     """Get the variables in `expression`.
 
@@ -208,12 +287,11 @@ def _getvars(expression, user_dict, depth):
     return reqvars
 
 
-#@profile
 def eval(expression, **kwargs):
     """
     eval(expression, **kwargs)
 
-    Evaluate a Numexpr `expression` and return the result.
+    Evaluate an `expression` and return the result as a carray object.
 
     Parameters
     ----------

@@ -858,6 +858,39 @@ class computeMethodsTest(unittest.TestCase):
         self.assert_(sa == sac, "sum() is not working correctly.")
 
 
+class arangeTest(unittest.TestCase):
+
+    def test00(self):
+        """Checking arange() with only a `stop`."""
+        a = np.arange(self.N)
+        ac = ca.arange(self.N)
+        assert(np.all(a == ac))
+
+    def test01(self):
+        """Checking arange() with a `start` and `stop`."""
+        a = np.arange(3, self.N)
+        ac = ca.arange(3, self.N)
+        assert(np.all(a == ac))
+
+    def test02(self):
+        """Checking arange() with a `start`, `stop` and `step`."""
+        a = np.arange(3, self.N, 4)
+        ac = ca.arange(3, self.N, 4)
+        assert(np.all(a == ac))
+
+    def test03(self):
+        """Checking arange() with a `dtype`."""
+        a = np.arange(self.N, dtype="i1")
+        ac = ca.arange(self.N, dtype="i1")
+        assert(np.all(a == ac))
+
+class arange_smallTest(arangeTest):
+    N = 10
+
+class arange_bigTest(arangeTest):
+    N = 1e4
+
+
 class largeCarrayTest(unittest.TestCase):
 
     def test00(self):
@@ -899,6 +932,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(fromiterTest))
+    theSuite.addTest(unittest.makeSuite(arange_smallTest))
+    theSuite.addTest(unittest.makeSuite(arange_bigTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_smallTest))
