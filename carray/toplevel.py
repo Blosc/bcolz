@@ -217,13 +217,14 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     if step is None:
         step = 1
 
-    # First, guess the dtype
+    # Guess the dtype
     if dtype is None:
         if type(stop) in (int, long):
             dtype = np.dtype(np.int_)
     dtype = np.dtype(dtype)
     stop = int(stop)
-    # Then, create the container
+
+    # Create the container
     expectedlen = kwargs.pop("expectedlen", stop)
     if dtype.kind == "V":
         raise ValueError, "arange does not support ctables yet."
