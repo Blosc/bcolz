@@ -312,6 +312,49 @@ class appendTest(unittest.TestCase):
         assert_array_equal(d, b[:], "Arrays are not equal")
 
 
+class trimTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `trim()` method"""
+        b = ca.arange(1e3)
+        b.trim(3)
+        a = np.arange(1e3-3)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01(self):
+        """Testing `trim()` method (small chunklen)"""
+        b = ca.arange(1e2, chunklen=2)
+        b.trim(5)
+        a = np.arange(1e2-5)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test02(self):
+        """Testing `trim()` method (large trim)"""
+        a = np.arange(2)
+        b = ca.arange(1e4)
+        b.trim(1e4-2)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test03(self):
+        """Testing `trim()` method (complete trim)"""
+        a = np.arange(0.)
+        b = ca.arange(1e4)
+        b.trim(1e4)
+        #print "b->", `b`
+        self.assert_(len(a) == len(b), "Lengths are not equal")
+
+    def test04(self):
+        """Testing `trim()` method (trimming more than available items)"""
+        a = np.arange(0.)
+        b = ca.arange(1e4)
+        b.trim(1e4+1)
+        #print "b->", `b`
+        self.assert_(len(a) == len(b), "Lengths are not equal")
+
+
 class miscTest(unittest.TestCase):
 
     def test00(self):
@@ -1038,6 +1081,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(trimTest))
     theSuite.addTest(unittest.makeSuite(miscTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(IterTest))

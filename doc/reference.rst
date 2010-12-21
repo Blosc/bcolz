@@ -279,10 +279,6 @@ carray methods
         The array to be appended.  Must be compatible with shape and type of
         the carray.
 
-    Returns:
-      out : int
-        The number of elements appended.
-
 
 .. py:method:: copy(**kwargs)
 
@@ -325,6 +321,18 @@ carray methods
 
     Return value:
       out : NumPy scalar with `dtype`
+
+.. py:method:: trim(nitems)
+
+    Remove the trailing `nitems` from this instance.
+
+    Parameters
+    ----------
+    nitems : int
+        The number of trailing items to be trimmed.
+
+    See also:
+      :py:func:`append`
 
 .. py:method:: where(boolarr)
 
@@ -413,7 +421,7 @@ ctable variables
 
 .. py:attribute:: shape
 
-    The shpe of this object.
+    The shape of this object.
 
 
 ctable methods
@@ -527,6 +535,17 @@ ctable methods
 
     Returns:
       out : iterable
+
+.. py:method:: trim(nitems)
+
+    Remove the trailing `nitems` from this instance.
+
+    Parameters:
+      nitems : int
+        The number of trailing items to be trimmed.
+
+    See also:
+      :py:func:`append`
 
 .. py:method:: where(expression, outcols=None)
 

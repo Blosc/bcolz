@@ -509,11 +509,6 @@ cdef class carray:
         The array to be appended.  Must be compatible with shape and type of
         the carray.
 
-    Returns
-    -------
-    out : int
-        The number of elements appended.
-
     """
     cdef int itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen, start, stop
@@ -587,6 +582,65 @@ cdef class carray:
     self.leftover = leftover
     self._cbytes += cbytes
     self._nbytes += bsize
+
+
+  def trim(self, object nitems):
+    """
+    trim(nitems)
+
+    Remove the trailing `nitems` from this instance.
+
+    Parameters
+    ----------
+    nitems : int
+        The number of trailing items to be trimmed.
+
+    """
+    cdef int itemsize, leftover, leftover2
+    cdef npy_intp cbytes, bsize, nchunk2
+    cdef chunk chunk_
+
+    if not isinstance(nitems, (int, long, float)):
+      raise TypeError, "`nitems` must be an integer"
+
+    # Check that we don't run out of space
+    if nitems > self.len:
+      nitems = self.len
+
+    itemsize = self.itemsize
+    chunks = self.chunks
+    leftover = self.leftover
+    bsize = nitems * itemsize
+    cbytes = 0
+
+
+    # Check if items belong in last chunk
+    if (leftover - bsize) > 0:
+      # Just update leftover counter
+      leftover -= bsize
+    else:
+      # nitems larger than last chunk
+      nchunk = (self.len - nitems) // self._chunklen
+      leftover2 = (self.len - nitems) % self._chunklen
+      leftover = leftover2 * itemsize
+
+      # Remove complete chunks
+      nchunk2 = self._nbytes // <npy_intp>self._chunksize
+      while nchunk2 > nchunk+1:
+        chunk_ = chunks.pop()
+        cbytes += chunk_.cbytes
+        nchunk2 -= 1
+
+      # Finally, deal with the leftover
+      if leftover:
+        chunk_ = chunks.pop()
+        cbytes += chunk_.cbytes
+        self.lastchunkarr[:leftover2] = chunk_[:leftover2]
+
+    # Update some counters
+    self.leftover = leftover
+    self._cbytes -= cbytes
+    self._nbytes -= bsize
 
 
   def copy(self, **kwargs):

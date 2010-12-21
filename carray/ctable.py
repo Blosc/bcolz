@@ -227,6 +227,31 @@ class ctable(object):
         self.len += clen
 
 
+    def trim(self, nitems):
+        """
+        trim(nitems)
+
+        Remove the trailing `nitems` from this instance.
+
+        Parameters
+        ----------
+        nitems : int
+            The number of trailing items to be trimmed.
+
+        """
+
+        if not isinstance(nitems, (int, long, float)):
+            raise TypeError, "`nitems` must be an integer"
+
+        # Check that we don't run out of space
+        if nitems > self.len:
+            nitems = self.len
+
+        for name in self.names:
+            self.cols[name].trim(nitems)
+        self.len -= nitems
+
+
     def addcol(self, newcol, name=None, pos=None, **kwargs):
         """
         addcol(newcol, name=None, pos=None, **kwargs)

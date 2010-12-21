@@ -24,6 +24,9 @@ Changes from 0.2 to 0.3
 - New `fill()` constructor for quickly building carray objects with a
   filling value.  This is very fast too.
 
+- New `trim()` method for `carray` and `ctable` objects for trimming
+  items.
+
 - New `test()` function that runs the complete test suite.
 
 - Added a new `eval()` function to evaluate expressions including any
