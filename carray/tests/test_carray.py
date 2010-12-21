@@ -948,6 +948,31 @@ class constructorTest(unittest.TestCase):
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
 
+    def test02a(self):
+        """Checking fill() constructor."""
+        N = 10
+        a = np.ones(N)
+        ac = ca.ones(N)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test02b(self):
+        """Checking fill() constructor, with a `dtype`."""
+        N = 1e4
+        a = np.ones(N, dtype='i4')
+        ac = ca.ones(N, dtype='i4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test02c(self):
+        """Checking fill() constructor, with a string type"""
+        N = 10
+        a = np.ones(N, dtype='S3')
+        ac = ca.ones(N, dtype='S3')
+        #print "a-->", a, ac
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
     def test03a(self):
         """Checking fill() constructor."""
         N = 10

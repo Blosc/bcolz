@@ -126,6 +126,23 @@ First level constructors
       twice (which is slooow).  It avoids memory leaks to happen too
       (which can be important for large iterables).
 
+.. py:function:: ones(shape, dtype=float, **kwargs)
+
+    Return a new carray object of given shape and type, filled with ones.
+
+    Parameters:
+      shape : int
+        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+      dtype : data-type, optional
+        The desired data-type for the array, e.g., `numpy.int8`.  Default is
+        `numpy.float64`.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns:
+      out : carray
+        Array of ones with the given shape and dtype.
+
 .. py:function:: zeros(shape, dtype=float, **kwargs)
 
     Return a new carray object of given shape and type, filled with zeros.

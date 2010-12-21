@@ -18,6 +18,9 @@ Changes from 0.2 to 0.3
 - New `zeros()` constructor for quickly building zeroed carray objects.
   This is way faster than its NumPy counterpart.
 
+- New `ones()` constructor for quickly building 1's carray objects.
+  Very fast.
+
 - New `fill()` constructor for quickly building carray objects with a
   filling value.  This is very fast too.
 
