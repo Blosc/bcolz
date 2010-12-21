@@ -14,6 +14,11 @@ constructor::
   >>> a = np.arange(10)
   >>> b = ca.carray(a)
 
+Or, you can also create it by using one of its multiple constructors
+(see :ref:`first-level-constructors` for the complete list)::
+
+  >>> c = ca.arange(10)
+
 Now, `b` is a carray object.  Just check this::
 
   >>> type(b)
@@ -43,47 +48,38 @@ However, when creating carrays larger than 1 MB (its natural
 scenario), the size of the I/O buffer is generally negligible in
 comparison::
 
-  >>> a = np.arange(1e7)
-  >>> b = ca.carray(np.arange(1e7))
+  >>> b = ca.arange(1e8)
   >>> b
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
     cparams := cparams(clevel=5, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
-You can always get a hint on how much space it takes your carray by
-using `sys.getsizeof()`::
+The carray consumes less tha 24 MB, while the original data would have
+taken more than 760 MB; that's a huge gain.  You can always get a hint
+on how much space it takes your carray by using `sys.getsizeof()`::
 
   >>> import sys
   >>> sys.getsizeof(b)
-  2691754
+  24520482
 
-An interesting possibility is that you can create carrays from scratch
-via the `fromiter()` constructor::
-
-  >>> ca.fromiter((i*2. for i in xrange(1000*1000)), dtype="f4")
-  carray((1000000,), float32)  nbytes: 3.81 MB; cbytes: 543.63 KB; ratio: 7.19
-    cparams := cparams(clevel=5, shuffle=True)
-  [0.0, 2.0, 4.0, ..., 1999994.0, 1999996.0, 1999998.0]
-
-that means that you can create very large arrays without the need to
-create a NumPy array first (that could not fit in memory) --but you
-can achieve the same goal by using the `.append()` method discussed
-later on.
+That moral here is that you can create very large arrays without the
+need to create a NumPy array first (that could not fit in memory).
 
 Finally, you can get a copy of your created carrays by using the
 `copy()` method::
 
-  >>> b.copy()
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
+  >>> c = b.copy()
+  >>> c
+  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
     cparams := cparams(clevel=5, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
 and you can control parameters for the newly created copy::
 
   >>> b.copy(cparams=ca.cparams(clevel=9))
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.04 MB; ratio: 73.52
+  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78
     cparams := cparams(clevel=9, shuffle=True)
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
 Enlarging your carray
 ---------------------
@@ -110,13 +106,13 @@ it can be enlarged by 10 elements with::
 Let's check how fast appending can be::
 
   >>> a = np.arange(1e7)
-  >>> b = ca.carray(a)
-  >>> %time b.append(np.arange(1e7))
-  CPU times: user 0.11 s, sys: 0.03 s, total: 0.14 s
-  Wall time: 0.14 s
-  >>> %time np.concatenate((a, np.arange(1e7)))
-  CPU times: user 0.11 s, sys: 0.09 s, total: 0.20 s
-  Wall time: 0.22 s    # 1.6x slower than carray
+  >>> b = ca.arange(1e7)
+  >>> %time b.append(a)
+  CPU times: user 0.06 s, sys: 0.00 s, total: 0.06 s
+  Wall time: 0.06 s
+  >>> %time np.concatenate((a, a))
+  CPU times: user 0.08 s, sys: 0.04 s, total: 0.12 s
+  Wall time: 0.12 s  # 2x slower than carray
   array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,
            9.99999700e+06,   9.99999800e+06,   9.99999900e+06])
 
@@ -128,7 +124,42 @@ This is specially true when appending small bits to large arrays::
   >>> %timeit np.concatenate((a, np.arange(1e1)))
   10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
 
-Definitely, appending is one of the strongest points of carray
+You can also enlarge your arrays by using the `resize()` method::
+
+  >>> b = ca.arange(10)
+  >>> b.resize(20)
+  >>> b
+  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+    cparams := cparams(clevel=5, shuffle=True)
+  [0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]
+
+Note how the append values are filled with zeros.  This is because the
+default value for filling is 0.  But you can choose another different
+value too::
+
+  >>> b = ca.arange(10, dflt=1)
+  >>> b.resize(20)
+  >>> b
+  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+    cparams := cparams(clevel=5, shuffle=True)
+  [0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]
+
+And you can trim carrays too::
+
+  >>> b = ca.arange(10)
+  >>> b.resize(5)
+  >>> b
+  carray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01
+    cparams := cparams(clevel=5, shuffle=True)
+  [0 1 2 3 4]
+
+You can even set the size to 0:
+
+  >>> b.resize(0)
+  >>> len(b)
+  0
+
+Definitely, resizing is one of the strongest points of carray
 objects, so do not be afraid to use that feature extensively.
 
 Compression level and shuffle filter
@@ -200,7 +231,8 @@ complete range::
   >>> b[:]
   array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
 
-Fancy indexing is supported too.  Boolean arrays::
+Fancy indexing is supported too.  For example, indexing with boolean
+arrays gives::
 
   >>> barr = np.array([True]*5+[False]*5)
   >>> b[barr]
@@ -208,7 +240,7 @@ Fancy indexing is supported too.  Boolean arrays::
   >>> b[ca.carray(barr)]
   array([0, 1, 2, 3, 4])
 
-List of indices::
+Or, with a list of indices::
 
   >>> b[[2,3,0,2]]
   array([2, 3, 0, 2])
@@ -249,14 +281,14 @@ generator contexts and hence, you don't need to waste memory for
 creating temporaries, which can be important when dealing with large
 arrays.
 
-Finally, all these iterators are very fast, so try to express your
-problems in a way that you can use them extensively.
+Finally, we have seen that all these iterators are very fast, so try
+to express your problems in a way that you can use them extensively.
 
 Modifying carrays
 -----------------
 
-Although it is not a very efficient operation, carrays can be
-modified too: You can do it by specifying scalar or slice indices::
+Although it is not a very efficient operation, carrays can be modified
+too.  You can do it by specifying scalar or slice indices::
 
   >>> a = np.arange(10)
   >>> b = ca.carray(a)
@@ -270,7 +302,7 @@ modified too: You can do it by specifying scalar or slice indices::
   >>> print b
   [ 0 10 10 10 10  5  6 10  8  9]
 
-and fancy indexing is supported too::
+Modifying using fancy indexing is supported too::
 
   >>> barr = np.array([True]*5+[False]*5)
   >>> b[barr] = -5
@@ -280,7 +312,7 @@ and fancy indexing is supported too::
   >>> print b
   [ -5 -10 -10  -5 -10   5   6  10   8   9]
 
-However, modifying a carray is expensive::
+However, you must be aware that modifying a carray is expensive::
 
   >>> a = np.arange(1e7)
   >>> b = ca.carray(a)
@@ -305,8 +337,7 @@ Operating with carrays
 carrays can be operated pretty easily if you have the Numexpr package
 installed::
 
-  >>> a = np.arange(1e7)
-  >>> x = ca.carray(a)
+  >>> x = ca.arange(1e7)
   >>> y = ca.eval(".5x**3+2.1*x**2")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01
@@ -361,12 +392,20 @@ the `cparams` read-only attribute::
   >>> b.cparams
   cparams(clevel=5, shuffle=True)
 
+Also, you can check which is default value (remember, used when
+`resize` -ing the carray)::
+
+  >>> b.dflt
+  0.0
+
 Finally, you can access the `chunklen` (the length for each chunk) for
 this carray::
 
   >>> b.chunklen
   16384
 
+For a complete list of public attributes of carray, see section on
+:ref:`carray-attributes`.
 
 Tutorial on ctable objects
 ==========================

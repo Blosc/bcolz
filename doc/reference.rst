@@ -21,6 +21,8 @@ First level classes
 
 Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 
+.. _first-level-constructors:
+
 First level constructors
 ========================
 
@@ -223,7 +225,7 @@ The carray class
     dtype : NumPy dtype
       Force this `dtype` for the carray (rather than the `array` one).
     dflt : Python or NumPy scalar
-      The value to be used for enlarging the carray.  If None, the default is
+      The value to be used when enlarging the carray.  If None, the default is
       filling with zeros.
     expectedlen : int, optional
       A guess on the expected length of this carray.  This will serve to
@@ -234,9 +236,10 @@ The carray class
       explicitely set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
+.. _carray-attributes:
 
-carray variables
-----------------
+carray attributes
+-----------------
 
 .. py:attribute:: cbytes
 
@@ -249,6 +252,10 @@ carray variables
 .. py:attribute:: cparams
 
     The compression parameters for this object.
+
+.. py:attribute:: dflt
+
+    The value to be used when enlarging the carray.
 
 .. py:attribute:: dtype
 
@@ -399,8 +406,8 @@ The ctable class
       (cparams, chunklen...).
 
 
-ctable variables
-----------------
+ctable attributes
+-----------------
 
 .. py:attribute:: cbytes
 

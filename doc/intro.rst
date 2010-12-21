@@ -24,7 +24,7 @@ data.  That ensures maximum performance for I/O operation.
 carray and ctable objects
 -------------------------
 
-The main objects in the carray package are::
+The main objects in the carray package are:
 
   * `carray`: container for homogeneous data
   * `ctable`: container for heterogeneous data
@@ -57,7 +57,7 @@ better job with homogeneous data (columns) than with heterogenous data
 carray main features
 --------------------
 
-carray objects bring several advantages over plain NumPy objects::
+carray objects bring several advantages over plain NumPy objects:
 
   * Data is compressed: they take less memory space.
 
@@ -77,7 +77,7 @@ carray objects bring several advantages over plain NumPy objects::
 carray limitations
 ------------------
 
-carray also comes with drawbacks::
+carray also comes with drawbacks:
 
   * Lack of support for the complete NumPy functionality.  Although
     Numexpr will let you to perform a wide-range of operations on

@@ -335,7 +335,7 @@ cdef class carray:
   dtype : NumPy dtype
       Force this `dtype` for the carray (rather than the `array` one).
   dflt : Python or NumPy scalar
-      The value to be used for enlarging the carray.  If None, the default is
+      The value to be used when enlarging the carray.  If None, the default is
       filling with zeros.
   expectedlen : int, optional
       A guess on the expected length of this object.  This will serve to
@@ -365,37 +365,6 @@ cdef class carray:
   cdef ndarray blockcache
   cdef char *datacache
 
-  property len:
-    "The length (leading dimension) of this object."
-    def __get__(self):
-      # Important to do the cast in order to get a npy_intp result
-      return self._nbytes // <npy_intp>self.itemsize
-
-  property dtype:
-    "The dtype of this object."
-    def __get__(self):
-      return self._dtype
-
-  property dflt:
-    "The default value of this object."
-    def __get__(self):
-      return self._dflt
-
-  property shape:
-    "The shape of this object."
-    def __get__(self):
-      return (self.len,)
-
-  property cparams:
-    "The compression parameters for this object."
-    def __get__(self):
-      return self._cparams
-
-  property nbytes:
-    "The original (uncompressed) size of this object (in bytes)."
-    def __get__(self):
-      return self._nbytes
-
   property cbytes:
     "The compressed size of this object (in bytes)."
     def __get__(self):
@@ -405,6 +374,37 @@ cdef class carray:
     "The chunklen of this object (in rows)."
     def __get__(self):
       return self._chunklen
+
+  property cparams:
+    "The compression parameters for this object."
+    def __get__(self):
+      return self._cparams
+
+  property dflt:
+    "The default value of this object."
+    def __get__(self):
+      return self._dflt
+
+  property dtype:
+    "The dtype of this object."
+    def __get__(self):
+      return self._dtype
+
+  property len:
+    "The length (leading dimension) of this object."
+    def __get__(self):
+      # Important to do the cast in order to get a npy_intp result
+      return self._nbytes // <npy_intp>self.itemsize
+
+  property nbytes:
+    "The original (uncompressed) size of this object (in bytes)."
+    def __get__(self):
+      return self._nbytes
+
+  property shape:
+    "The shape of this object."
+    def __get__(self):
+      return (self.len,)
 
 
   def __cinit__(self, object array, object cparams=None,
