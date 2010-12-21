@@ -593,7 +593,8 @@ cdef class carray:
     Parameters
     ----------
     nitems : int
-        The number of trailing items to be trimmed.
+        The number of trailing items to be trimmed.  If negative, the object
+        is enlarged instead.
 
     """
     cdef int itemsize, leftover, leftover2
@@ -605,7 +606,11 @@ cdef class carray:
 
     # Check that we don't run out of space
     if nitems > self.len:
-      nitems = self.len
+      raise ValueError, "`nitems` must be less than total length"
+    # A negative number of items means that we want to grow the object
+    if nitems <= 0:
+      self.resize(self.len - nitems)
+      return
 
     itemsize = self.itemsize
     chunks = self.chunks
@@ -641,6 +646,39 @@ cdef class carray:
     self.leftover = leftover
     self._cbytes -= cbytes
     self._nbytes -= bsize
+
+
+  def resize(self, object nitems):
+    """
+    resize(nitems)
+
+    Resize the instance to have `nitems`.
+
+    Parameters
+    ----------
+    nitems : int
+        The final length of the object.  If `nitems` is larger than the actual
+        length, new items will appended using `self.dflt` as filling values.
+
+    """
+    cdef object chunk
+
+    if not isinstance(nitems, (int, long, float)):
+      raise TypeError, "`nitems` must be an integer"
+
+    if nitems == self.len:
+      return
+    elif nitems < 0:
+      raise ValueError, "`nitems` cannot be negative"
+
+    if nitems > self.len:
+      # Create a 0-strided array and append it to self
+      chunk = np.ndarray(nitems-self.len, dtype=self.dtype,
+                         buffer=self._dflt_, strides=(0,))
+      self.append(chunk)
+    else:
+      # Just trim the excess of items
+      self.trim(self.len-nitems)
 
 
   def copy(self, **kwargs):

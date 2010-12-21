@@ -239,17 +239,28 @@ class ctable(object):
             The number of trailing items to be trimmed.
 
         """
-
-        if not isinstance(nitems, (int, long, float)):
-            raise TypeError, "`nitems` must be an integer"
-
-        # Check that we don't run out of space
-        if nitems > self.len:
-            nitems = self.len
-
         for name in self.names:
             self.cols[name].trim(nitems)
         self.len -= nitems
+
+
+    def resize(self, nitems):
+        """
+        resize(nitems)
+
+        Resize the instance to have `nitems`.
+
+        Parameters
+        ----------
+        nitems : int
+            The final length of the instance.  If `nitems` is larger than the
+            actual length, new items will appended using `self.dflt` as
+            filling values.
+
+        """
+        for name in self.names:
+            self.cols[name].resize(nitems)
+        self.len = nitems
 
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):

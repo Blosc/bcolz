@@ -310,6 +310,17 @@ carray methods
       out : iterator
 
 
+.. py:method:: resize(nitems)
+
+    Resize the instance to have `nitems`.
+
+    Parameters:
+      nitems : int
+        The final length of the object.  If `nitems` is larger than
+        the actual length, new items will appended using `self.dflt`
+        as filling values.
+
+
 .. py:method:: sum(dtype=None)
 
     Return the sum of the array elements.
@@ -535,6 +546,17 @@ ctable methods
 
     Returns:
       out : iterable
+
+.. py:method:: resize(nitems)
+
+    Resize the instance to have `nitems`.
+
+    Parameters:
+      nitems : int
+        The final length of the instance.  If `nitems` is larger than the
+        actual length, new items will appended using `self.dflt` as
+        filling values.
+
 
 .. py:method:: trim(nitems)
 

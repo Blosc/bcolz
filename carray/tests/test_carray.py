@@ -350,10 +350,77 @@ class trimTest(unittest.TestCase):
         """Testing `trim()` method (trimming more than available items)"""
         a = np.arange(0.)
         b = ca.arange(1e4)
-        b.trim(1e4+1)
         #print "b->", `b`
-        self.assert_(len(a) == len(b), "Lengths are not equal")
+        self.assertRaises(ValueError, b.trim, 1e4+1)
 
+    def test05(self):
+        """Testing `trim()` method (trimming zero items)"""
+        a = np.arange(1e1)
+        b = ca.arange(1e1)
+        b.trim(0)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test06(self):
+        """Testing `trim()` method (negative number of items)"""
+        a = np.arange(2e1)
+        b = ca.arange(1e1)
+        b.trim(-10)
+        a[10:] = 0
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+
+class resizeTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing `resize()` method (decrease)"""
+        b = ca.arange(self.N)
+        b.resize(self.N-3)
+        a = np.arange(self.N-3)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `resize()` method (increase)"""
+        b = ca.arange(self.N)
+        b.resize(self.N+3)
+        a = np.arange(self.N+3)
+        a[self.N:] = 0
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01a(self):
+        """Testing `resize()` method (decrease, large variation)"""
+        b = ca.arange(self.N)
+        b.resize(3)
+        a = np.arange(3)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01b(self):
+        """Testing `resize()` method (increase, large variation)"""
+        b = ca.arange(self.N, dflt=1)
+        b.resize(self.N*3)
+        a = np.arange(self.N*3)
+        a[self.N:] = 1
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test02(self):
+        """Testing `resize()` method (zero size)"""
+        b = ca.arange(self.N)
+        b.resize(0)
+        a = np.arange(0)
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+
+class resize_smallTest(resizeTest):
+    N = 10
+
+class resize_largeTest(resizeTest):
+    N = 10000
 
 class miscTest(unittest.TestCase):
 
@@ -1082,6 +1149,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(trimTest))
+    theSuite.addTest(unittest.makeSuite(resize_smallTest))
+    theSuite.addTest(unittest.makeSuite(resize_largeTest))
     theSuite.addTest(unittest.makeSuite(miscTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(IterTest))

@@ -389,12 +389,33 @@ class trimTest(unittest.TestCase):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test02(self):
-        """Testing trim() with a complete trim."""
+        """Testing trim() with a complete trim"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(0)), dtype='i4,f8')
         t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
         t.trim(N)
         self.assert_(len(ra) == len(t), "Lengths are not equal")
+
+
+class resizeTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing resize() (decreasing)"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N-2)), dtype='i4,f8')
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t.resize(N-2)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01(self):
+        """Testing resize() (increasing)"""
+        N = 100
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+4)), dtype='i4,f8')
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t.resize(N+4)
+        ra['f0'][N:] = np.zeros(4)
+        ra['f1'][N:] = np.zeros(4)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
 
 
 class copyTest(unittest.TestCase):
@@ -1096,6 +1117,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(trimTest))
+    theSuite.addTest(unittest.makeSuite(resizeTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
