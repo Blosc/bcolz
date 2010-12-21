@@ -2,6 +2,25 @@
 Library Reference
 -----------------
 
+First level classes
+===================
+
+.. py:class:: cparams(clevel=5, shuffle=True)
+
+    Class to host parameters for compression and other filters.
+
+    Parameters:
+      clevel : int (0 <= clevel < 10)
+        The compression level.
+      shuffle : bool
+        Whether the shuffle filter is active or not.
+
+    Notes:
+      The shuffle filter may be automatically disable in case it is
+      non-sense to use it (e.g. itemsize == 1).
+
+Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
+
 First level constructors
 ========================
 
@@ -61,6 +80,27 @@ First level constructors
         properties of this carray by passing additional arguments
         supported by carray constructor in `kwargs`.
 
+.. py:function:: fill(shape, dflt=None, dtype=float, **kwargs)
+
+    Return a new carray object of given shape and type, filled with `dflt`.
+
+    Parameters:
+      shape : int
+        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+      dflt : Python or NumPy scalar
+        The value to be used during the filling process.  If None, values are
+        filled with zeros.  Also, the resulting carray will have this value as
+        its `dflt` value.
+      dtype : data-type, optional
+        The desired data-type for the array, e.g., `numpy.int8`.  Default is
+        `numpy.float64`.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns:
+      out : carray
+        Array filled with `dflt` values with the given shape and dtype.
+
 .. py:function:: fromiter(iterable, dtype, count, **kwargs)
 
     Create a carray/ctable from an `iterable` object.
@@ -103,23 +143,6 @@ First level constructors
       out : carray
         Array of zeros with the given shape and dtype.
 
-
-First level classes
-===================
-
-.. py:class:: cparams(clevel=5, shuffle=True)
-
-    Class to host parameters for compression and other filters.
-
-    Parameters:
-      clevel : int (0 <= clevel < 10)
-        The compression level.
-      shuffle : bool
-        Whether the shuffle filter is active or not.
-
-    Notes:
-      The shuffle filter may be automatically disable in case it is
-      non-sense to use it (e.g. itemsize == 1).
 
 Utility functions
 =================
@@ -166,7 +189,7 @@ Utility functions
 The carray class
 ================
 
-.. py:class:: carray(array, cparams=None, dtype=None, expectedlen=None, chunklen=None)
+.. py:class:: carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None)
 
   A compressed and enlargeable in-memory data container.
 
@@ -182,6 +205,9 @@ The carray class
       Parameters to the internal Blosc compressor.
     dtype : NumPy dtype
       Force this `dtype` for the carray (rather than the `array` one).
+    dflt : Python or NumPy scalar
+      The value to be used for enlarging the carray.  If None, the default is
+      filling with zeros.
     expectedlen : int, optional
       A guess on the expected length of this carray.  This will serve to
       decide the best `chunklen` used for compression and memory I/O

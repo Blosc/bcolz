@@ -53,7 +53,8 @@ from carray.carrayExtension import (
     carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads)
 from carray.ctable import ctable
 from carray.toplevel import (
-    detect_number_of_cores, set_nthreads, fromiter, arange, zeros,
+    detect_number_of_cores, set_nthreads, fromiter,
+    arange, zeros, fill,
     cparams, eval)
 from carray.version import __version__
 from carray.tests import test

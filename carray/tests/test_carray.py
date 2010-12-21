@@ -479,6 +479,16 @@ class wheretrueTest(unittest.TestCase):
         #print "where ->", [i for i in b.wheretrue()]
         self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
+    def test02(self):
+        """Testing `wheretrue()` iterator (all false values, large array)"""
+        a = np.arange(1, 1e5) < 0
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()
+        cwt = [i for i in b.wheretrue()]
+        #print "numpy ->", a.nonzero()[0].tolist()
+        #print "where ->", [i for i in b.wheretrue()]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+
     def test03(self):
         """Testing `wheretrue()` iterator (mix of true/false values)"""
         a = np.arange(1, 11) > 5
@@ -925,6 +935,7 @@ class constructorTest(unittest.TestCase):
         N = 1e4
         a = np.zeros(N, dtype='i4')
         ac = ca.zeros(N, dtype='i4')
+        #print "dtypes-->", a.dtype, ac.dtype
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
 
@@ -936,6 +947,32 @@ class constructorTest(unittest.TestCase):
         #print "ac-->", `ac`
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
+
+    def test03a(self):
+        """Checking fill() constructor."""
+        N = 10
+        a = np.ones(N)
+        ac = ca.fill(N, 1)
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test03b(self):
+        """Checking fill() constructor, with a `dtype`."""
+        N = 1e4
+        a = np.ones(N, dtype='i4')*3
+        ac = ca.fill(N, 3, dtype='i4')
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
+    def test03c(self):
+        """Checking fill() constructor, with a string type"""
+        N = 10
+        a = np.ones(N, dtype='S3')
+        ac = ca.fill(N, "1", dtype='S3')
+        #print "a-->", a, ac
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
 
 
 class largeCarrayTest(unittest.TestCase):

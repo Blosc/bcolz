@@ -168,6 +168,59 @@ def fromiter(iterable, dtype, count, **kwargs):
     return obj
 
 
+def fill(shape, dflt=None, dtype=np.float, **kwargs):
+    """
+    fill(shape, dtype=float, dflt=None, **kwargs)
+
+    Return a new carray object of given shape and type, filled with `dflt`.
+
+    Parameters
+    ----------
+    shape : int
+        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+    dflt : Python or NumPy scalar
+        The value to be used during the filling process.  If None, values are
+        filled with zeros.  Also, the resulting carray will have this value as
+        its `dflt` value.
+    dtype : data-type, optional
+        The desired data-type for the array, e.g., `numpy.int8`.  Default is
+        `numpy.float64`.
+    kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns
+    -------
+    out : carray
+        Array filled with `dflt` values with the given shape and dtype.
+
+    """
+
+    dtype = np.dtype(dtype)
+    try:
+        stop = int(shape)
+    except:
+        raise ValueError, "shape must be an integer (or float)."
+
+    # Create the container
+    expectedlen = kwargs.pop("expectedlen", stop)
+    if dtype.kind == "V":
+        raise ValueError, "zeros does not support ctables yet."
+    else:
+        obj = ca.carray([], dtype=dtype, dflt=dflt,
+                        expectedlen=expectedlen,
+                        **kwargs)
+        chunklen = obj.chunklen
+
+    # Then fill it
+    # We need an array for the defaults so as to keep the string length info
+    dflt = np.array(obj.dflt, dtype=dtype)
+    # Making strides=(0,) below is a trick to create the array fast and
+    # without memory consumption!
+    chunk = np.ndarray(stop, dtype=dtype, buffer=dflt, strides=(0,))
+    obj.append(chunk)
+    return obj
+
+
 def zeros(shape, dtype=np.float, **kwargs):
     """
     zeros(shape, dtype=float, **kwargs)
@@ -190,29 +243,11 @@ def zeros(shape, dtype=np.float, **kwargs):
         Array of zeros with the given shape and dtype.
 
     """
-
     dtype = np.dtype(dtype)
-    try:
-        stop = int(shape)
-    except:
-        raise ValueError, "shape must be an integer (or float)."
-
-    # Create the container
-    expectedlen = kwargs.pop("expectedlen", stop)
-    if dtype.kind == "V":
-        raise ValueError, "zeros does not support ctables yet."
+    if dtype.kind == "S":
+        return fill(shape=shape, dflt='', dtype=dtype, **kwargs)
     else:
-        obj = ca.carray(np.array([], dtype=dtype),
-                        expectedlen=expectedlen,
-                        **kwargs)
-        chunklen = obj.chunklen
-
-    # Then fill it.  Making strides=(0,) below is a trick to create the array
-    # fast and without memory consumption!
-    chunk = np.ndarray(stop, dtype=dtype, buffer=np.zeros(1, dtype=dtype),
-                       strides=(0,))
-    obj.append(chunk)
-    return obj
+        return fill(shape=shape, dflt=0., dtype=dtype, **kwargs)
 
 
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):

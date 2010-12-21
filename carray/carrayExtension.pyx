@@ -174,10 +174,11 @@ cdef class chunk:
   """
 
   # To save space, keep these variables under a minimum
-  cdef char typekind, iszero
+  cdef char typekind, isconstant
   cdef int itemsize, blocksize
   cdef int nbytes, cbytes
   cdef char *data
+  cdef object constant
 
   property dtype:
     "The NumPy dtype for this chunk."
@@ -198,19 +199,18 @@ cdef class chunk:
     nbytes = itemsize * array.size
     self.itemsize = itemsize
 
-    # Check whether incoming data is all zeros
-    if array.strides[0] == 0:
-      self.iszero = 1
-    else:
-      self.iszero = check_zeros(array.data, nbytes)
-    if self.iszero:
+    # Check whether incoming data is constant
+    if array.strides[0] == 0 or check_zeros(array.data, nbytes):
+      self.isconstant = 1
+      self.constant = array[0]
+    if self.isconstant:
       cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
       # Make blocksize a multiple of itemsize
       if blocksize % itemsize > 0:
         blocksize = (blocksize // itemsize) * itemsize
     else:
-      # Data is not zero, compress it
+      # Data is not constant, compress it
       dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       # Compress data
       clevel = cparams.clevel
@@ -240,13 +240,16 @@ cdef class chunk:
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef int ret, bsize, blen
+    cdef ndarray constants
 
     blen = stop - start
     bsize = blen * self.itemsize
 
-    if self.iszero:
-      # The chunk is made of zeros, so write them
-      memset(dest, 0, bsize)
+    if self.isconstant:
+      # The chunk is made of constants
+      constants = np.ndarray(shape=(blen,), dtype=self.dtype,
+                             buffer=self.constant, strides=(0,)).copy()
+      memcpy(dest, constants.data, bsize)
       return
 
     # Fill dest with uncompressed data
@@ -314,7 +317,7 @@ cdef class chunk:
 
 cdef class carray:
   """
-  carray(array, cparams=None, dtype=None, expectedlen=None, chunklen=None)
+  carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None)
 
   A compressed and enlargeable in-memory data container.
 
@@ -331,6 +334,9 @@ cdef class carray:
       Parameters to the internal Blosc compressor.
   dtype : NumPy dtype
       Force this `dtype` for the carray (rather than the `array` one).
+  dflt : Python or NumPy scalar
+      The value to be used for enlarging the carray.  If None, the default is
+      filling with zeros.
   expectedlen : int, optional
       A guess on the expected length of this object.  This will serve to
       decide the best `chunklen` used for compression and memory I/O
@@ -350,16 +356,14 @@ cdef class carray:
   cdef npy_intp _nrow, nrowsread, where_cached
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
-  cdef object _cparams
-  cdef object lastchunkarr
+  cdef object lastchunkarr, where_arr, arr1
+  cdef object _cparams, _dflt
   cdef object _dtype, chunks
-  cdef object where_arr
-  cdef ndarray iobuf, where_buf
+  cdef ndarray iobuf, where_buf, _dflt_
   # For block cache
   cdef int blocksize, idxcache
   cdef ndarray blockcache
   cdef char *datacache
-  cdef object arr1
 
   property len:
     "The length (leading dimension) of this object."
@@ -371,6 +375,11 @@ cdef class carray:
     "The dtype of this object."
     def __get__(self):
       return self._dtype
+
+  property dflt:
+    "The default value of this object."
+    def __get__(self):
+      return self._dflt
 
   property shape:
     "The shape of this object."
@@ -399,7 +408,7 @@ cdef class carray:
 
 
   def __cinit__(self, object array, object cparams=None,
-                object dtype=None,
+                object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None):
     cdef int i, itemsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
@@ -414,13 +423,24 @@ cdef class carray:
       raise ValueError, "`cparams` param must be an instance of `cparams` class"
 
     array_ = utils.to_ndarray(array, dtype)
+    self._dtype = dtype = array_.dtype
+
+    # Check defaults for dflt
+    if dflt is None:
+      if dtype.kind == 'S':
+        dflt = np.array([''], dtype=dtype)
+      else:
+        dflt = np.array([0], dtype=dtype)
+    else:
+      dflt = np.array([dflt], dtype=dtype)
+    self._dflt_ = dflt
+    self._dflt = dflt[0]
 
     # Only accept unidimensional arrays as input
     if array_.ndim != 1:
       raise ValueError, "`array` can only be unidimensional"
 
     self._cparams = cparams
-    self._dtype = dtype = array_.dtype
     self.chunks = chunks = []
     self.itemsize = itemsize = dtype.itemsize
 
@@ -496,9 +516,9 @@ cdef class carray:
 
     """
     cdef int itemsize, chunksize, leftover
-    cdef int nbytesfirst, chunklen
+    cdef int nbytesfirst, chunklen, start, stop
     cdef npy_intp nbytes, cbytes, bsize
-    cdef ndarray remainder, arrcpy
+    cdef ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
     arrcpy = utils.to_ndarray(array, self.dtype)
@@ -518,7 +538,10 @@ cdef class carray:
       if arrcpy.strides[0] > 0:
         memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       else:
-        memset(self.lastchunk+leftover, 0, bsize)
+        dflts = np.ndarray(bsize // itemsize, self.dtype,
+                           buffer=self._dflt_, strides=(0,))
+        start, stop = leftover // itemsize, (leftover+bsize) // itemsize
+        self.lastchunkarr[start:stop] = dflts
       leftover += bsize
     else:
       # Data does not fit in buffer.  Break it in chunks.
@@ -529,7 +552,10 @@ cdef class carray:
         if arrcpy.strides[0] > 0:
           memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
         else:
-          memset(self.lastchunk+leftover, 0, nbytesfirst)
+          dflts = np.ndarray(nbytesfirst // itemsize, self.dtype,
+                             buffer=self._dflt_, strides=(0,))
+          start, stop = leftover // itemsize, (leftover+nbytesfirst) // itemsize
+          self.lastchunkarr[start:stop] = dflts
         # Compress the last chunk and add it to the list
         chunk_ = chunk(self.lastchunkarr, self._cparams)
         chunks.append(chunk_)
@@ -1209,7 +1235,7 @@ cdef class carray:
       nchunk = self.nrowsread // <npy_intp>self.nrowsinbuf
       if nchunk < len(carr.chunks):
         chunk_ = carr.chunks[nchunk]
-        if chunk_.iszero:
+        if chunk_.isconstant and chunk_.constant in (0, ''):
           return 1
     else:
       # Check for zero'ed chunks in ndarrays
