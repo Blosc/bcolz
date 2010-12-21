@@ -2,23 +2,6 @@
 Library Reference
 -----------------
 
-First-level classes
-===================
-
-.. py:class:: cparams(clevel=5, shuffle=True)
-
-    Class to host parameters for compression and other filters.
-
-    Parameters:
-      clevel : int (0 <= clevel < 10)
-        The compression level.
-      shuffle : bool
-        Whether the shuffle filter is active or not.
-
-    Notes:
-      The shuffle filter may be automatically disable in case it is
-      non-sense to use it (e.g. itemsize == 1).
-
 First level constructors
 ========================
 
@@ -120,6 +103,23 @@ First level constructors
       out : carray
         Array of zeros with the given shape and dtype.
 
+
+First level classes
+===================
+
+.. py:class:: cparams(clevel=5, shuffle=True)
+
+    Class to host parameters for compression and other filters.
+
+    Parameters:
+      clevel : int (0 <= clevel < 10)
+        The compression level.
+      shuffle : bool
+        Whether the shuffle filter is active or not.
+
+    Notes:
+      The shuffle filter may be automatically disable in case it is
+      non-sense to use it (e.g. itemsize == 1).
 
 Utility functions
 =================

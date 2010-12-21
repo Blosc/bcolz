@@ -928,6 +928,15 @@ class constructorTest(unittest.TestCase):
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
 
+    def test01c(self):
+        """Checking zeros() constructor, with a string type."""
+        N = 1e4
+        a = np.zeros(N, dtype='S5')
+        ac = ca.zeros(N, dtype='S5')
+        #print "ac-->", `ac`
+        self.assert_(a.dtype == ac.dtype)
+        self.assert_(np.all(a == ac))
+
 
 class largeCarrayTest(unittest.TestCase):
 
