@@ -867,6 +867,11 @@ class computeMethodsTest(unittest.TestCase):
         self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
         self.assert_(sa == sac, "sum() is not working correctly.")
 
+    def test01(self):
+        """Checking sum() with strings (TypeError)."""
+        ac = ca.zeros(10, 'S3')
+        self.assertRaises(TypeError, ac.sum)
+
 
 class arangeTest(unittest.TestCase):
 

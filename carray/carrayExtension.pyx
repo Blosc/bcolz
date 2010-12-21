@@ -643,17 +643,25 @@ cdef class carray:
     out : NumPy scalar with `dtype`
 
     """
+    cdef chunk chunk_
     cdef object result
     cdef npy_intp nchunk, nchunks
 
-    # Get a container for the result
     if dtype is None:
       dtype = self.dtype
+    if dtype.kind == 'S':
+      raise TypeError, "cannot perform reduce with flexible type"
+
+    # Get a container for the result
     result = np.zeros(1, dtype=dtype)[0]
 
     nchunks = self._nbytes // <npy_intp>self._chunksize
     for nchunk from 0 <= nchunk < nchunks:
-      result += self.chunks[nchunk][:].sum()
+      chunk_ = self.chunks[nchunk]
+      if chunk_.isconstant:
+        result += chunk_.constant * self._chunklen
+      else:
+        result += chunk_[:].sum()
     if self.leftover:
       result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum()
 
