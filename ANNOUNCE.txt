@@ -25,7 +25,6 @@ up to 2x faster than using a plain structured array, and up to 20x
 faster than using SQLite (using the ":memory:" backend and indexing).
 See 'bench/ctable-query.py' for details.
 
-
 What it is
 ==========
 
@@ -53,7 +52,6 @@ Below, a carray with 1 trillion of rows has been created and summed-up
   CPU times: user 10.48 s, sys: 0.00 s, total: 10.48 s
   Wall time: 10.48 s
   1000000000000.0
-
 
 Resources
 =========

@@ -214,6 +214,8 @@ a high-performance compressor that is optimized for binary data.""",
     author = 'Francesc Alted',
     author_email = 'faltet@pytables.org',
     url = "https://github.com/FrancescAlted/carray",
+    license = 'http://www.opensource.org/licenses/bsd-license.php',
+    download_url = "http://carray.pytables.org/download/carray-%s/carray-%s.tar.gz" % (VERSION, VERSION),
     platforms = ['any'],
     ext_modules = [
     Extension( "carray.carrayExtension",
