@@ -35,16 +35,16 @@ What it is
 ==========
 
 carray is a container for numerical data that can be compressed
-in-memory.  The compresion process is carried out internally by Blosc,
-a high-performance compressor that is optimized for binary data.
-
-Having data compressed in-memory can reduce the stress of the memory
-subsystem.  The net result is that carray operations may be faster than
-using a traditional ndarray object from NumPy.
+in-memory.  The compresion process is carried out internally by Blosc, a
+high-performance compressor that is optimized for binary data.  Having
+data compressed in-memory can reduce the stress of the memory subsystem.
+The net result is that carray operations may be faster than using a
+traditional ndarray object from NumPy.
 
 carray also supports fully 64-bit addressing (both in UNIX and Windows).
-Below, a carray with 1 trillion of rows has been created (7.3 TB total),
-filled with zeros, modified some positions, and finally, summed-up::
+Below, a carray with one trillion (10^12) of rows is created (for a
+total size of 7.3 TB), filled with zeros, modified some positions, and
+finally, summed-up::
 
   >>> %time b = ca.zeros(1e12)
   CPU times: user 54.76 s, sys: 0.03 s, total: 54.79 s
