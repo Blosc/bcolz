@@ -59,9 +59,11 @@ filled with zeros, modified some positions, and finally, summed-up::
   Wall time: 10.15 s
   15.0
 
-[Please note that this is provided as an extreme example only.  Do not
-try to run this at home unless you have more than 3 GB of RAM available,
-or you will get into trouble.]
+['%time' is a magic function provided by the IPyhton shell]
+
+Please note that the example above is provided for demonstration
+purposes only.  Do not try to run this at home unless you have more than
+3 GB of RAM available, or you will get into trouble.
 
 
 Resources

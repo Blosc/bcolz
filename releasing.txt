@@ -1,7 +1,6 @@
 Instrucctions for releasing a new version of carray
 ===================================================
 
-
 - Make sure that ``ANNOUNCE.txt`` and ``RELEASE-NOTES.txt``
   do contain the most relevant notes for the release.
 
