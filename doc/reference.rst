@@ -78,7 +78,7 @@ First level constructors
 
     Returns:
       out : carray object
-        The outcome of the expression.  You can taylor the
+        The outcome of the expression.  You can tailor the
         properties of this carray by passing additional arguments
         supported by carray constructor in `kwargs`.
 
@@ -233,7 +233,7 @@ The carray class
       purposes.
     chunklen : int, optional
       The number of items that fits on a chunk.  By specifying it you can
-      explicitely set the chunk size used for compression and memory I/O.
+      explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
 .. _carray-attributes:
@@ -464,7 +464,7 @@ ctable methods
         Any parameter supported by the carray constructor.
 
     Notes:
-      You should not specificy both `name` and `pos` arguments,
+      You should not specify both `name` and `pos` arguments,
       unless they are compatible.
 
     See also:
@@ -505,7 +505,7 @@ ctable methods
 
     Notes:
       You must specify at least a `name` or a `pos`.  You should
-      not specificy both `name` and `pos` arguments, unless they
+      not specify both `name` and `pos` arguments, unless they
       are compatible.
 
     See also:
@@ -527,7 +527,7 @@ ctable methods
 
     Returns:
       out : carray object
-        The outcome of the expression.  You can taylor the
+        The outcome of the expression.  You can tailor the
         properties of this carray by passing additional arguments
         supported by carray constructor in `kwargs`.
 

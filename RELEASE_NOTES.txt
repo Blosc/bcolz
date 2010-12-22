@@ -70,7 +70,7 @@ Changes from 0.2 to 0.3
 - Added a new `eval()` method for `ctable` that is able to evaluate
   expressions with columns.  It needs numexpr to be installed.
 
-- New idiom ``ctable[boolexpr]`` that returns the rows fullfilling the
+- New idiom ``ctable[boolexpr]`` that returns the rows fulfilling the
   boolean expression.  Needs numexpr.
 
 - Added fancy indexing (as a list of integers) support to `carray` and

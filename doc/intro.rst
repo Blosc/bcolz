@@ -51,7 +51,7 @@ tends to expose more similarity in elements that are contiguous in
 columns rather than those in the same row, so compressors generally do
 a much better job when data is aligned column-wise.  This is specially
 true with Blosc because its special ``shuffle`` filter does a much
-better job with homogeneous data (columns) than with heterogenous data
+better job with homogeneous data (columns) than with heterogeneous data
 (rows).
 
 carray main features

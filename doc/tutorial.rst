@@ -54,7 +54,7 @@ comparison::
     cparams := cparams(clevel=5, shuffle=True)
   [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
-The carray consumes less tha 24 MB, while the original data would have
+The carray consumes less than 24 MB, while the original data would have
 taken more than 760 MB; that's a huge gain.  You can always get a hint
 on how much space it takes your carray by using `sys.getsizeof()`::
 
@@ -413,52 +413,50 @@ Tutorial on ctable objects
 The carray package comes with a handy object that arranges data by
 column (and not by row, as in NumPy's structured arrays).  This allows
 for much better performance for walking tabular data by column and
-also for adding and deleting columns.  A small tutorial for its use
-follows.
+also for adding and deleting columns.
 
 Creating a ctable
 -----------------
 
-You can build ctable objects in many different ways, but the easiest
-one is using a structured array as data source::
+You can build ctable objects in many different ways, but perhaps the
+easiest one is using the `fromiter` constructor::
 
-  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
-  >>> ct = ca.ctable(t)
+  >>> N = 100*1000
+  >>> ct = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> ct
-  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 279.89 KB; ratio: 4.19
+  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14
     cparams := cparams(clevel=5, shuffle=True)
-  [(0, 0.0), (1, 1.0), (2, 4.0), ..., (99997, 9999400009.0),
-   (99998, 9999600004.0), (99999, 9999800001.0)]
+  [(0, 0.0), (1, 1.0), (2, 4.0), ...,
+   (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
-But in case you don't want to waste memory space for the intermediate
-NumPy object, here it is the canonical way, a loop::
+You can also build an empty ctable first and the append data::
 
   >>> ct = ca.ctable(np.empty(0, dtype="i4,f8"))
-  >>> for i in xrange(100*1000):
+  >>> for i in xrange(N):
   ...:    ct.append((i, i**2))
   ...:
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 355.48 KB; ratio: 3.30
     cparams := cparams(clevel=5, shuffle=True)
-  [(0, 0.0), (1, 1.0), (2, 4.0), ..., (99997, 9999400009.0),
-   (99998, 9999600004.0), (99999, 9999800001.0)]
+  [(0, 0.0), (1, 1.0), (2, 4.0), ...,
+   (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
 However, we can see how the latter approach does not compress as well.
 Why?  Well, carray has machinery for computing 'optimal' chunksizes
-depending on the number of entries.  For the first case carray can
+depending on the number of entries.  For the first case, carray can
 figure out the number of entries in final array, but not for the loop
 case.  You can solve this by passing the final length with the
 `expectedlen` argument to the ctable constructor::
 
-  >>> ct = ca.ctable(np.empty(0, dtype="i4,f8"), expectedlen=100*1000)
-  >>> for i in xrange(100*1000):
+  >>> ct = ca.ctable(np.empty(0, dtype="i4,f8"), expectedlen=N)
+  >>> for i in xrange(N):
   ...:    ct.append((i, i**2))
   ...:
   >>> ct
-  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 279.89 KB; ratio: 4.19
+  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14
     cparams := cparams(clevel=5, shuffle=True)
-  [(0, 0.0), (1, 1.0), (2, 4.0), ..., (99997, 9999400009.0),
-   (99998, 9999600004.0), (99999, 9999800001.0)]
+  [(0, 0.0), (1, 1.0), (2, 4.0), ...,
+   (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
 Okay, the compression ratio is the same now.
 
@@ -476,9 +474,9 @@ NumPy::
   array([(1, 1.0), (2, 4.0), (3, 9.0), (4, 16.0), (5, 25.0)],
         dtype=[('f0', '<i4'), ('f1', '<f8')])
 
-The first thing to have in mind is that, similarly to carray objects,
-the result of an indexing operation is a native NumPy object (in the
-case above a scalar and a structured array).
+The first thing to have in mind is that, similarly to `carray`
+objects, the result of an indexing operation is a native NumPy object
+(in the case above a scalar and a structured array).
 
 Fancy indexing is also supported::
 
@@ -527,8 +525,8 @@ Adding and deleting columns is easy and, due to the column-wise data
 arrangement, very efficient.  Let's add a new column on an existing
 ctable::
 
-  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
-  >>> ct = ca.ctable(t)
+  >>> N = 100*1000
+  >>> ct = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> new_col = np.linspace(0, 1, 100*1000)
   >>> ct.addcol(new_col)
   >>> ct
@@ -548,6 +546,9 @@ Now, remove the already existing 'f1' column::
   [(0, 0.0), (1, 1.000010000100001e-05), (2, 2.000020000200002e-05), ...,
    (99997, 0.99997999979999797), (99998, 0.99998999989999904), (99999, 1.0)]
 
+As said, adding and deleting columns is very cheap, so don't be afraid
+of using them extensively.
+
 Iterating over ctable data
 --------------------------
 
@@ -555,8 +556,8 @@ You can make use of the `iter()` method in order to easily iterate
 over the values of a ctable.  `iter()` has support for start, stop and
 step parameters::
 
-  >>> t = np.fromiter(((i,i*i) for i in xrange(100*1000)), dtype="i4,f8")
-  >>> ct = ca.ctable(t)
+  >>> N = 100*1000
+  >>> t = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> [row for row in ct.iter(1,10,3)]
   [row(f0=1, f1=1.0), row(f0=4, f1=16.0), row(f0=7, f1=49.0)]
 
@@ -568,7 +569,7 @@ field names::
   [(1, 1.0), (4, 16.0), (7, 49.0)]
 
 You can also use the ``[:]`` accessor to get rid of the ``row``
-namedtuple, and return just nude tuples::
+namedtuple, and return just bare tuples::
 
   >>> [row[:] for row in ct.iter(1,10,3)]
   [(1, 1.0), (4, 16.0), (7, 49.0)]
@@ -596,8 +597,8 @@ of memory.
 
 Here it is an example of use::
 
-  >>> t = np.fromiter(((i,i*i) for i in xrange(1000*1000)), dtype="i4,f8")
-  >>> ct = ca.ctable(t)
+  >>> N = 100*1000
+  >>> t = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> [row for row in ct.where("(f0>0) & (f1<10)")]
   [row(f0=1, f1=1.0), row(f0=2, f1=4.0), row(f0=3, f1=9.0)]
   >>> sum([row.f1 for row in ct.where("(f1>10)")])

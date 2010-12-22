@@ -223,7 +223,7 @@ cdef class chunk:
       # Free the unused data
       # self.data = <char *>realloc(dest, cbytes)
       # I think the next is safer (and the speed is barely the same)
-      # Copy the compressed data on a new taylored buffer
+      # Copy the compressed data on a new tailored buffer
       self.data = <char *>malloc(cbytes)
       memcpy(self.data, dest, cbytes)
       free(dest)

@@ -702,7 +702,7 @@ class ctable(object):
         Returns
         -------
         out : carray object
-            The outcome of the expression.  You can taylor the
+            The outcome of the expression.  You can tailor the
             properties of this carray by passing additional arguments
             supported by carray constructor in `kwargs`.
 
