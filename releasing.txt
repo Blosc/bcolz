@@ -22,7 +22,7 @@ Instrucctions for releasing a new version of carray
   + Put the resulting .exe in the same directory than the tarball and docs
 
 - Upload the next packages in the download area
-  + $ scp carray*.tar.gz carray-manual* carray*.exe xano.pytables.com:/tmp
+  + $ scp carray-$VERSION.tar.gz carray-manual* xano.pytables.com:/tmp
   + Logar-in in xano as user carray
   + Go to download area:
     $ cd ~/srv/www/carray.org/download
@@ -30,21 +30,25 @@ Instrucctions for releasing a new version of carray
     $ export VERSION="x.y.z"    # x.y.z is the version to release
     $ mkdir carray-$VERSION
     $ cd carray-$VERSION
-    $ cp /tmp/carray*.tar.gz /tmp/carray-manual* /tmp/carray*.exe .
+    $ cp /tmp/carray-$VERSION.tar.gz /tmp/carray-manual* /tmp/carray*.exe .
   + Compute and save the MD5 of new files:
     $ cfv -C -t md5 -f carray-$VERSION.md5 *
   + Point the 'stable' the symbolic link to the new version
+    $ cd ..
     $ rm stable; ln -s carray-$VERSION stable
+    Check that the new packages are accessible at:
+    http://carray.pytables.org/download/carray-$VERSION/
+
 - Update on-line HTML manual
   $ cd ~/srv/www/carray.org/docs
   $ tar xvfz ../download/carray-$VERSION/carray-manual-$VERSION-html.tar.gz
   $ mv carray-$VERSION/doc/html manual-$VERSION
-  $ chmod -R 755 manual-$VERSION
   $ rmdir carray-$VERSION/doc ; rmdir carray-$VERSION
   $ rm manual; ln -sf manual-$VERSION manual
-  Check that the manual is accessible at http://carray.pytables.org/docs/manual/
+  Check that the manual is accessible at:
+    http://carray.pytables.org/docs/manual/
 - Add the 'RELEASE_NOTES' to::
-    https://github.com/FrancescAlted/carray/wiki/Release_$VERSION
+    https://github.com/FrancescAlted/carray/wiki/Release-$VERSION
 
 - Announcing
   + Register the new package in PyPI::

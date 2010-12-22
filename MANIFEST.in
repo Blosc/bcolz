@@ -10,5 +10,5 @@ recursive-include blosc *.c *.h
 recursive-include blosc/win32 *.c *.h
 recursive-include bench *.py *.txt
 recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
-recursive-exclude doc/_build *
+recursive-exclude doc/_build
 recursive-include LICENSES *

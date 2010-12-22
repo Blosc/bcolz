@@ -28,6 +28,9 @@ See 'bench/ctable-query.py' for details.
 
 Finally, binaries for Windows (both 32-bit and 64-bit) are provided.
 
+For more detailed info, see the release notes in:
+https://github.com/FrancescAlted/carray/wiki/Release-0.3
+
 What it is
 ==========
 
@@ -65,7 +68,6 @@ Please note that the example above is provided for demonstration
 purposes only.  Do not try to run this at home unless you have more than
 3 GB of RAM available, or you will get into trouble.
 
-
 Resources
 =========
 
@@ -73,7 +75,7 @@ Visit the main carray site repository at:
 http://github.com/FrancescAlted/carray
 
 You can download a source package from:
-http://carray.pytables.org/downloads
+http://carray.pytables.org/download
 
 Manual:
 http://carray.pytables.org/manual
