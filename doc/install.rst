@@ -24,8 +24,8 @@ Installing from Windows binaries
 Just download the binary installer and run it.
 
 
-Installing from sources
-=======================
+Installing from tarball sources
+===============================
 
 Go to the carray main directory and do the typical distutils dance::
 

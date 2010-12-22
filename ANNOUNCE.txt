@@ -5,25 +5,28 @@ Announcing carray 0.3
 What's new
 ==========
 
-The most outstanding feature in this version is the introduction of a
-`ctable` object.  A `ctable` is similar to a structured array in NumPy,
-but instead of storing the data row-wise, it uses a column-wise
-arrangement.  This allows for much better performance for very wide
-tables, which is one of the scenarios where a `ctable` makes more sense.
-Of course, as `ctable` is based on `carray` objects, it inherits all its
-niceties (like on-the-flight compression and fast iterators).
+A lot of stuff.  The most outstanding feature in this version is the
+introduction of a `ctable` object.  A `ctable` is similar to a
+structured array in NumPy, but instead of storing the data row-wise, it
+uses a column-wise arrangement.  This allows for much better performance
+for very wide tables, which is one of the scenarios where a `ctable`
+makes more sense.  Of course, as `ctable` is based on `carray` objects,
+it inherits all its niceties (like on-the-flight compression and fast
+iterators).
 
 Also, the `carray` object itself has received many improvements, like
 new constructors (arange(), fromiter(), zeros(), ones(), fill()),
 iterators (where(), wheretrue()) or resize mehtods (resize(), trim()).
 Most of these also work with the new `ctable`.
 
-Finally, Numexpr is supported now (but it is optional) in order to carry
+Besides, Numexpr is supported now (but it is optional) in order to carry
 out stunningly fast queries on `ctable` objects.  For example, doing a
 query on a table with one million rows and one thousand columns can be
 up to 2x faster than using a plain structured array, and up to 20x
 faster than using SQLite (using the ":memory:" backend and indexing).
 See 'bench/ctable-query.py' for details.
+
+Finally, binaries for Windows (both 32-bit and 64-bit) are provided.
 
 What it is
 ==========
@@ -37,21 +40,29 @@ subsystem.  The net result is that carray operations may be faster than
 using a traditional ndarray object from NumPy.
 
 carray also supports fully 64-bit addressing (both in UNIX and Windows).
-Below, a carray with 1 trillion of rows has been created and summed-up
-(please note that this is an extreme example only!)::
+Below, a carray with 1 trillion of rows has been created (7.3 TB total),
+filled with zeros, modified some positions, and finally, summed-up::
 
-  >>> %time b = ca.ones(1e12)
+  >>> %time b = ca.zeros(1e12)
   CPU times: user 54.76 s, sys: 0.03 s, total: 54.79 s
   Wall time: 55.23 s
+  >>> %time b[[1, 1e9, 1e10, 1e11, 1e12-1]] = (1,2,3,4,5)
+  CPU times: user 2.08 s, sys: 0.00 s, total: 2.08 s
+  Wall time: 2.09 s
   >>> b
   carray((1000000000000,), float64)
-    nbytes: 7450.58 GB; cbytes: 2.27 GB; ratio: 3275.39
+    nbytes: 7450.58 GB; cbytes: 2.27 GB; ratio: 3275.35
     cparams := cparams(clevel=5, shuffle=True)
-  [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]
+  [0.0, 1.0, 0.0, ..., 0.0, 0.0, 5.0]
   >>> %time b.sum()
-  CPU times: user 10.48 s, sys: 0.00 s, total: 10.48 s
-  Wall time: 10.48 s
-  1000000000000.0
+  CPU times: user 10.08 s, sys: 0.00 s, total: 10.08 s
+  Wall time: 10.15 s
+  15.0
+
+[Please note that this is provided as an extreme example only.  Do not
+try to run this at home unless you have more than 3 GB of RAM available,
+or you will get into trouble.]
+
 
 Resources
 =========
