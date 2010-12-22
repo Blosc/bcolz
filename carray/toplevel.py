@@ -23,7 +23,7 @@ if ca.numexpr_here:
 # bytes.  For optimal performance, set this so that it will not exceed
 # the size of your L2/L3 (whichever is larger) cache.
 #EVAL_BLOCK_SIZE = 16            # use this for testing purposes
-EVAL_BLOCK_SIZE = 3*1024*1024    # 3 MB represents a good average?
+EVAL_BLOCK_SIZE = 1024*1024    # 1 MB should represent a good average
 
 
 def detect_number_of_cores():
@@ -454,7 +454,14 @@ def eval(expression, **kwargs):
         return ca.numexpr.evaluate(expression, local_dict=vars)
 
     # Compute the optimal block size (in elements)
-    bsize = EVAL_BLOCK_SIZE // typesize
+    # The next is based on experiments with bench/ctable-query.py
+    if vlen < 100*1000:
+        bsize = EVAL_BLOCK_SIZE // 8
+    elif vlen < 1000*1000:
+        bsize = EVAL_BLOCK_SIZE // 4
+    elif vlen < 10*1000*1000:
+        bsize = EVAL_BLOCK_SIZE // 2
+    bsize = bsize // typesize
     # Evaluation seems more efficient if block size is a power of 2
     bsize = 2 ** (int(math.log(bsize, 2)))
 
@@ -465,7 +472,11 @@ def eval(expression, **kwargs):
     for name in vars.iterkeys():
         var = vars[name]
         if hasattr(var, "__len__") and len(var) > bsize:
-            vars_[name] = np.empty(bsize, dtype=var.dtype)
+            if hasattr(var, "dtype"):
+                dtype = var.dtype
+            else:
+                dtype = np.array([var[0]]).dtype
+            vars_[name] = np.empty(bsize, dtype=dtype)
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
         for name in vars.iterkeys():
