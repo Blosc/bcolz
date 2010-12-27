@@ -461,6 +461,8 @@ def eval(expression, **kwargs):
         bsize = EVAL_BLOCK_SIZE // 4
     elif vlen < 10*1000*1000:
         bsize = EVAL_BLOCK_SIZE // 2
+    else:
+        bsize = EVAL_BLOCK_SIZE
     bsize = bsize // typesize
     # Evaluation seems more efficient if block size is a power of 2
     bsize = 2 ** (int(math.log(bsize, 2)))

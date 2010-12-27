@@ -6,6 +6,11 @@ Release notes for carray
 :Contact: faltet@pytables.org
 
 
+Changes from 0.3 to 0.4
+=======================
+
+- (None yet)
+
 Changes from 0.2 to 0.3
 =======================
 

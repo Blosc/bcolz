@@ -9,138 +9,101 @@ import getopt
 
 import sqlite3
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
-import numexpr as ne
 import carray as ca
 from time import time
 
 NR = 1e6      # the number of rows
-NC = 100      # the number of columns
+NC = 1000     # the number of columns
 mv = 1e10     # the mean value for entries (sig digits = 17 - log10(mv))
 clevel = 3    # the compression level
 show = False  # show statistics
 # The query for a ctable
-squery = "(f1>.9) & ((f2>.3) & (f2<.4))"  # the ctable query
+squery = "(f2>.9) & ((f8>.3) & (f8<.4))"  # the ctable query
 # The query for a recarray
-nquery = "(t['f1']>.9) & ((t['f2']>.3) & (t['f2']<.4))"  # for a recarray
-
+nquery = "(t['f2']>.9) & ((t['f8']>.3) & (t['f8']<.4))"  # for a recarray
+# A time reference
 tref = 0
 
-def show_stats(explain, tref):
-    "Show the used memory (only works for Linux 2.6.x)."
-    # Build the command to obtain memory info
-    cmd = "cat /proc/%s/status" % os.getpid()
-    sout = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
-    for line in sout:
-        if line.startswith("VmSize:"):
-            vmsize = int(line.split()[1]) // 1024
-        elif line.startswith("VmRSS:"):
-            vmrss = int(line.split()[1]) // 1024
-        elif line.startswith("VmData:"):
-            vmdata = int(line.split()[1]) // 1024
-        elif line.startswith("VmStk:"):
-            vmstk = int(line.split()[1])
-        elif line.startswith("VmExe:"):
-            vmexe = int(line.split()[1])
-        elif line.startswith("VmLib:"):
-            vmlib = int(line.split()[1]) // 1024
-    sout.close()
-    print "Memory usage: ******* %s *******" % explain
-    print "VmSize: %7s MB\tVmRSS: %7s MB" % (vmsize, vmrss)
-    print "VmData: %7s MB\tVmStk: %7s KB" % (vmdata, vmstk)
-    print "VmExe:  %7s KB\tVmLib: %7s MB" % (vmexe, vmlib)
-    tnow = time()
-    #print "WallClock time:", round(tnow - tref, 3)
-    return tnow
 
+def show_rss(explain):
+    "Show the used time and RSS memory (only works for Linux 2.6.x)."
+    global tref
+    # Build the command to obtain memory info
+    newtref = time()
+    print "Time (%20s) --> %.3f" % (explain, newtref-tref),
+    tref = newtref
+    if show:
+        cmd = "cat /proc/%s/status" % os.getpid()
+        sout = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE).stdout
+        for line in sout:
+            if line.startswith("VmRSS:"):
+                vmrss = int(line.split()[1]) // 1024
+        print "\t(Resident memory: %d MB)" % vmrss
+    else:
+        print
 
 def enter():
     global tref
-    if show:
-        tref = show_stats("Before creation", time())
+    tref = time()
 
-def after_create():
+def after_create(mess=""):
     global tref
-    if show:
-        tref = show_stats("After creation", tref)
+    if mess: mess = ", "+mess
+    show_rss("creation"+mess)
 
-def after_query():
+def after_query(mess=""):
     global tref
-    if show:
-        show_stats("After query", tref)
+    if mess: mess = ", "+mess
+    show_rss("query"+mess)
 
 
 def test_numpy():
     enter()
-    t0 = time()
-    np.random.seed(12)  # so as to get reproducible results
     t = np.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
-                    dtype="f8,"*NC)
-    print "Time (creation) --> %.3f" % (time()-t0,)
+                    dtype=dt)
     after_create()
-
-    t0 = time()
-    # out = t[eval(nquery)][['f0','f2']]
-    out = np.fromiter(((row['f0'],row['f1']) for row in t[eval(nquery)]),
+    out = np.fromiter(((row['f1'],row['f3']) for row in t[eval(nquery)]),
                       dtype="f8,f8")
-    print "Time (query) --> %.3f" % (time()-t0,)
     after_query()
     return out
 
 
 def test_numexpr():
+    import numexpr as ne
     enter()
-    t0 = time()
-    np.random.seed(12)  # so as to get reproducible results
     t = np.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
-                    dtype="f8,"*NC)
-    print "Time (creation) --> %.3f" % (time()-t0,)
+                    dtype=dt)
     after_create()
 
     map_field = dict(("f%s"%i, t["f%s"%i]) for i in range(NC))
-    t0 = time()
-    #out = t[ne.evaluate(squery, map_field)][['f0','f2']]
-    out = np.fromiter(((row['f0'],row['f1']) for row in
+    out = np.fromiter(((row['f1'],row['f3']) for row in
                        t[ne.evaluate(squery, map_field)]),
                       dtype="f8,f8")
-    print "Time (query) --> %.3f" % (time()-t0,)
     after_query()
     return out
 
 
 def test_ctable(clevel):
     enter()
-    t0 = time()
     tc = ca.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
-                     dtype="f8,"*NC,
+                     dtype=dt,
                      cparams=ca.cparams(clevel),
                      count=int(NR))
-    print "Time (creation, clevel=%d) --> %.3f" % (clevel, time()-t0,)
     after_create()
 
-    t0 = time()
-    out = np.fromiter((row for row in tc.where(squery, 'f0,f2')),
+    out = np.fromiter((row for row in tc.where(squery, 'f1,f3')),
                       dtype="f8,f8")
-    print "Time for (query, clevel=%d) --> %.3f" % (clevel, time()-t0,),
-    print "-- size (MB):", tc.cbytes / 2**20
     after_query()
     return out
 
 
-def test_sqlite(memory=True):
+def test_sqlite():
     enter()
-    sqlquery = "(f1>.9) & ((f2>.3) & (f2<.4))"  # the query
+    sqlquery = "(f2>.9) and ((f8>.3) and (f8<.4))"  # the query
 
-    if memory:
-        con = sqlite3.connect(":memory:")
-    else:
-        filename = "bench.sqlite"
-        if os.path.exists(filename):
-            os.remove(filename)
-        con = sqlite3.connect(filename)
+    con = sqlite3.connect(":memory:")
 
     # Create table
-    t0 = time()
     fields = "(%s)" % ",".join(["f%d real"%i for i in range(NC)])
     con.execute("create table bench %s" % fields)
 
@@ -149,86 +112,30 @@ def test_sqlite(memory=True):
     with con:
         con.executemany("insert into bench values %s" % vals,
                         (mv+np.random.rand(NC)-mv for i in xrange(int(NR))))
-    print "Time (creation) --> %.3f" % (time()-t0,)
     after_create()
 
-    t0 = time()
     out = np.fromiter(
         (row for row in con.execute(
-        "select f0, f2 from bench where %s" % sqlquery)),
+        "select f1, f3 from bench where %s" % sqlquery)),
         dtype="f8,f8")
-    print "Time (query, non-indexed) --> %.3f" % (time()-t0,)
-    after_query()
+    after_query("non-indexed")
 
     # Create indexes
-    t0 = time()
     con.execute("create index f1idx on bench (f1)")
-    con.execute("create index f2idx on bench (f2)")
-    print "Time (indexing) --> %.3f" % (time()-t0,)
-    after_create()
+    con.execute("create index f2idx on bench (f8)")
+    after_create("index")
 
-    t0 = time()
     out = np.fromiter(
         (row for row in con.execute(
-        "select f0, f2 from bench where %s" % sqlquery)),
+        "select f1, f3 from bench where %s" % sqlquery)),
         dtype="f8,f8")
-    print "Time (query, indexed) --> %.3f" % (time()-t0,)
-    after_query()
+    after_query("indexed")
 
     return out
 
-
-def test_pytables(clevel):
-    enter()
-    np.random.seed(12)  # so as to get reproducible results
-    try:
-        import tables
-    except:
-        sys.exit()
-
-    f = tables.openFile("pytables.h5", "w")
-
-    t0 = time()
-    t = f.createTable(f.root, 'tpt', np.dtype("f8,"*NC),
-                      filters=tables.Filters(clevel, 'blosc'),
-                      expectedrows=NR)
-    row = t.row
-    for i in xrange(int(NR)//1000):
-        t.append(mv+np.random.rand(1000,NC)-mv)
-        t.flush()
-    print "Time for PyTables (creation) --> %.3f" % (time()-t0,)
-    after_create()
-
-    t0 = time()
-    out = np.fromiter(
-        ((row['f1'],row['f2']) for row in t.where(squery)),
-        dtype="f8,f8")
-    print "Time for PyTables (query, non-indexed) --> %.3f" % (time()-t0,)
-    after_query()
-
-    if not tables.__version__.endswith("pro"):
-        f.close()
-        return
-
-    print "PyTables Pro detected.  Indexing columns..."
-    # Index the column for maximum speed
-    t0 = time()
-    t.cols.f1.createCSIndex()
-    t.cols.f2.createCSIndex()
-    print "Time (indexing) --> %.3f" % (time()-t0,)
-    after_create()
-
-    t0 = time()
-    out = np.fromiter(
-        ((row['f1'],row['f2']) for row in t.where(squery)),
-        dtype="f8,f8")
-    print "Time for PyTables Pro (query, indexed) --> %.3f" % (time()-t0,)
-    after_query()
-
-    f.close()
-    return out
 
 if __name__=="__main__":
+    global dt
 
     usage = """usage: %s [-s] [-m method] [-c ncols] [-r nrows] [-z clevel]
             -s show memory statistics (only for Linux)
@@ -248,7 +155,8 @@ if __name__=="__main__":
     # Get the options
     for option in opts:
         if option[0] == '-s':
-            show = True
+            if "linux" in sys.platform:
+                show = True
         elif option[0] == '-m':
             method = option[1]
         elif option[0] == '-c':
@@ -259,20 +167,29 @@ if __name__=="__main__":
             clevel = int(option[1])
 
     np.random.seed(12)  # so as to get reproducible results
+    # The dtype for tables
+    #dt = np.dtype("f8,"*NC)             # aligned fields
+    dt = np.dtype("f8,"*(NC-1)+"i1")    # unaligned fields
 
-    print "########## Checking method: %s ############" % method
+    if method == "numexpr":
+        mess = "numexpr (+numpy)"
+    elif method == "ctable":
+        mess = "ctable (clevel=%d)" % clevel
+    elif method == "sqlite":
+        mess = "sqlite (in-memory)"
+    else:
+        mess = method
+    print "########## Checking method: %s ############" % mess
 
-    print "Querying '%s' with 10^%d rows and %d cols" % \
-          (squery, int(math.log10(NR)), NC)
+    print "Querying with %g rows and %d cols" % (NR, NC)
     print "Building database.  Wait please..."
 
     if method == "ctable":
-        test_ctable(clevel)
+        out = test_ctable(clevel)
     elif method == "numpy":
-        test_numpy()
+        out = test_numpy()
     elif method == "numexpr":
-        test_numexpr()
+        out = test_numexpr()
     elif method == "sqlite":
-        test_sqlite()
-    elif method == "pytables":
-        test_pytables(clevel)
+        out = test_sqlite()
+    print "Number of selected elements in query:", len(out)
