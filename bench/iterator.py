@@ -4,7 +4,7 @@ import numpy as np
 import carray as ca
 from time import time
 
-N = 5e7       # the number of elements in x
+N = 1e7       # the number of elements in x
 clevel = 5    # the compression level
 sexpr = "(x-1) < 10."  # the expression to compute
 #sexpr = "((x-1) % 1000) == 0."  # the expression to compute

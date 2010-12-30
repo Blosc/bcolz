@@ -97,27 +97,30 @@ def get_len_of_range(start, stop, step):
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
+    if dtype is not None:
+        dtype = dtype.base
+
     # Arrays with a 0 stride are special
-    if type(array) == np.ndarray and array.strides == (0,):
+    if type(array) == np.ndarray and array.strides[0] == 0:
         if array.dtype != dtype:
-            array = np.ndarray(array.shape, dtype, array, strides=(0,))
+            raise TypeError, "dtypes do not match"
         return array
 
+    # Ensure that we have an ndarray of the correct dtype
     if type(array) != np.ndarray or array.dtype != dtype:
         try:
             array = np.asarray(array, dtype=dtype)
         except ValueError:
             raise ValueError, "cannot convert to an ndarray object"
+
     # We need a contiguous array
     if not array.flags.contiguous:
         array = array.copy()
     if len(array.shape) == 0:
         # We treat scalars like undimensional arrays
         array.shape = (1,)
-    if len(array.shape) != 1:
-        raise ValueError, "only unidimensional shapes supported"
 
-    # Check if we need doing a broadcast
+    # Check if we need a broadcast
     if arrlen is not None and arrlen != len(array):
         if len(array) == 1:
             # Scalar broadcast

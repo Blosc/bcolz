@@ -175,40 +175,48 @@ cdef class chunk:
 
   # To save space, keep these variables under a minimum
   cdef char typekind, isconstant
-  cdef int itemsize, blocksize
+  cdef int atomsize, itemsize, blocksize
   cdef int nbytes, cbytes
   cdef char *data
-  cdef object constant
+  cdef object atom, constant
 
   property dtype:
     "The NumPy dtype for this chunk."
     def __get__(self):
-      return np.dtype("%c%d" % (self.typekind, self.itemsize))
+      return self.atom
 
-  def __cinit__(self, ndarray array, object cparams):
+
+  def __cinit__(self, ndarray array, object atom, object cparams):
     cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
     cdef int clevel, shuffle
     cdef dtype dtype_
     cdef char *dest
 
+    self.atom = atom
+    self.atomsize = atom.itemsize
     dtype_ = array.dtype
     self.itemsize = itemsize = dtype_.elsize
     self.typekind = dtype_.kind
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
-    self.itemsize = itemsize
+    footprint = 128  # the (aprox) footprint of this instance in bytes
 
     # Check whether incoming data is constant
     if array.strides[0] == 0 or check_zeros(array.data, nbytes):
       self.isconstant = 1
-      self.constant = array[0]
+      self.constant = constant = array[0]
+      # Add overhead (64 bytes for the overhead of the numpy container)
+      footprint += 64 + np.prod(constant.shape) * constant.itemsize
     if self.isconstant:
       cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
       # Make blocksize a multiple of itemsize
       if blocksize % itemsize > 0:
         blocksize = (blocksize // itemsize) * itemsize
+      # Correct in case we have a large itemsize
+      if blocksize == 0:
+        blocksize = itemsize
     else:
       # Data is not constant, compress it
       dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
@@ -232,7 +240,6 @@ cdef class chunk:
 
     # Fill instance data
     self.nbytes = nbytes
-    footprint = 256+64  # the (aprox) footprint of this instance in bytes
     self.cbytes = cbytes + footprint
     self.blocksize = blocksize
 
@@ -243,7 +250,7 @@ cdef class chunk:
     cdef ndarray constants
 
     blen = stop - start
-    bsize = blen * self.itemsize
+    bsize = blen * self.atomsize
 
     if self.isconstant:
       # The chunk is made of constants
@@ -277,7 +284,7 @@ cdef class chunk:
       raise IndexError, "key not supported:", key
 
     # Get the corrected values for start, stop, step
-    clen = self.nbytes // self.itemsize
+    clen = self.nbytes // self.atomsize
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a numpy container
@@ -348,7 +355,7 @@ cdef class carray:
 
   """
 
-  cdef int itemsize, _chunksize, _chunklen, leftover
+  cdef int itemsize, atomsize, _chunksize, _chunklen, leftover
   cdef int nrowsinbuf, _row
   cdef int sss_mode, wheretrue_mode, where_mode
   cdef npy_intp startb, stopb
@@ -359,7 +366,7 @@ cdef class carray:
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
   cdef object _dtype, chunks
-  cdef ndarray iobuf, where_buf, _dflt_
+  cdef ndarray iobuf, where_buf
   # For block cache
   cdef int blocksize, idxcache
   cdef ndarray blockcache
@@ -394,7 +401,7 @@ cdef class carray:
     "The length (leading dimension) of this object."
     def __get__(self):
       # Important to do the cast in order to get a npy_intp result
-      return self._nbytes // <npy_intp>self.itemsize
+      return self._nbytes // <npy_intp>self.atomsize
 
   property nbytes:
     "The original (uncompressed) size of this object (in bytes)."
@@ -410,7 +417,7 @@ cdef class carray:
   def __cinit__(self, object array, object cparams=None,
                 object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None):
-    cdef int i, itemsize, chunksize, leftover, nchunks
+    cdef int i, itemsize, atomsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
@@ -422,27 +429,33 @@ cdef class carray:
     if not isinstance(cparams, ca.cparams):
       raise ValueError, "`cparams` param must be an instance of `cparams` class"
 
+    # Convert input to an appropriate type
+    if type(dtype) is str:
+        dtype = np.dtype(dtype)
     array_ = utils.to_ndarray(array, dtype)
-    self._dtype = dtype = array_.dtype
+    if dtype is None:
+      if len(array_.shape) == 1:
+        self._dtype = dtype = array_.dtype
+      else:
+        # Multidimensional array.  The atom will have array_.shape[1:] dims.
+        self._dtype = dtype = np.dtype((array_.dtype.base, array_.shape[1:]))
+    else:
+      self._dtype = dtype
+    # Check that atom size is less than 2 GB
+    if np.prod(dtype.shape)*long(dtype.base.itemsize) >= 2**31:
+      raise ValueError, "atomic size is too large (>= 2 GB)"
 
     # Check defaults for dflt
     if dflt is None:
-      if dtype.kind == 'S':
-        dflt = np.array([''], dtype=dtype)
-      else:
-        dflt = np.array([0], dtype=dtype)
-    else:
+      dflt = np.zeros((), dtype=dtype)
+    elif type(dflt) != np.ndarray:
       dflt = np.array([dflt], dtype=dtype)
-    self._dflt_ = dflt
-    self._dflt = dflt[0]
-
-    # Only accept unidimensional arrays as input
-    if array_.ndim != 1:
-      raise ValueError, "`array` can only be unidimensional"
+    self._dflt = dflt
 
     self._cparams = cparams
     self.chunks = chunks = []
-    self.itemsize = itemsize = dtype.itemsize
+    self.atomsize = atomsize = dtype.itemsize
+    self.itemsize = itemsize = dtype.base.itemsize
 
     # Compute the chunklen/chunksize
     if expectedlen is None:
@@ -450,17 +463,17 @@ cdef class carray:
       expectedlen = len(array_)
     if chunklen is None:
       # Try a guess
-      chunksize = utils.calc_chunksize((expectedlen * itemsize) / float(_MB))
-      # Chunksize must be a multiple of itemsize
-      chunksize = (chunksize // itemsize) * itemsize
+      chunksize = utils.calc_chunksize((expectedlen * atomsize) / float(_MB))
+      # Chunksize must be a multiple of atomsize
+      chunksize = (chunksize // atomsize) * atomsize
       # Protection against large itemsizes
-      if chunksize < itemsize:
-        chunksize = itemsize
+      if chunksize < atomsize:
+        chunksize = atomsize
     else:
       if not isinstance(chunklen, int) or chunklen < 1:
         raise ValueError, "chunklen must be a positive integer"
-      chunksize = chunklen * itemsize
-    chunklen = chunksize  // itemsize
+      chunksize = chunklen * atomsize
+    chunklen = chunksize  // atomsize
     self._chunksize = chunksize
     self._chunklen = chunklen
 
@@ -477,7 +490,7 @@ cdef class carray:
     cbytes = 0
     nchunks = nbytes // <npy_intp>chunksize
     for i from 0 <= i < nchunks:
-      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], self._cparams)
+      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], dtype, cparams)
       chunks.append(chunk_)
       cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % chunksize
@@ -510,16 +523,17 @@ cdef class carray:
         the carray.
 
     """
-    cdef int itemsize, chunksize, leftover
+    cdef int atomsize, itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen, start, stop
     cdef npy_intp nbytes, cbytes, bsize
     cdef ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
     arrcpy = utils.to_ndarray(array, self.dtype)
-    if arrcpy.dtype != self._dtype:
+    if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
 
+    atomsize = self.atomsize
     itemsize = self.itemsize
     chunksize = self._chunksize
     chunks = self.chunks
@@ -533,10 +547,8 @@ cdef class carray:
       if arrcpy.strides[0] > 0:
         memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       else:
-        dflts = np.ndarray(bsize // itemsize, self.dtype,
-                           buffer=self._dflt_, strides=(0,))
-        start, stop = leftover // itemsize, (leftover+bsize) // itemsize
-        self.lastchunkarr[start:stop] = dflts
+        start, stop = leftover // atomsize, (leftover+bsize) // atomsize
+        self.lastchunkarr[start:stop] = arrcpy
       leftover += bsize
     else:
       # Data does not fit in buffer.  Break it in chunks.
@@ -547,12 +559,10 @@ cdef class carray:
         if arrcpy.strides[0] > 0:
           memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
         else:
-          dflts = np.ndarray(nbytesfirst // itemsize, self.dtype,
-                             buffer=self._dflt_, strides=(0,))
-          start, stop = leftover // itemsize, (leftover+nbytesfirst) // itemsize
-          self.lastchunkarr[start:stop] = dflts
+          start, stop = leftover // atomsize, (leftover+nbytesfirst) // atomsize
+          self.lastchunkarr[start:stop] = arrcpy[start:stop]
         # Compress the last chunk and add it to the list
-        chunk_ = chunk(self.lastchunkarr, self._cparams)
+        chunk_ = chunk(self.lastchunkarr, self._dtype, self._cparams)
         chunks.append(chunk_)
         cbytes = chunk_.cbytes
       else:
@@ -563,20 +573,21 @@ cdef class carray:
       nchunks = nbytes // <npy_intp>chunksize
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
-      remainder = arrcpy[nbytesfirst // itemsize:]
+      remainder = arrcpy[nbytesfirst // atomsize:]
       for i from 0 <= i < nchunks:
-        chunk_ = chunk(remainder[i*chunklen:(i+1)*chunklen], self._cparams)
+        chunk_ = chunk(
+          remainder[i*chunklen:(i+1)*chunklen], self._dtype, self._cparams)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
       # Finally, deal with the leftover
       leftover = nbytes % chunksize
       if leftover:
+        remainder = remainder[nchunks*chunklen:]
         if arrcpy.strides[0] > 0:
-          remainder = remainder[nchunks*chunklen:]
+          memcpy(self.lastchunk, remainder.data, leftover)
         else:
-          remainder = remainder[nchunks*chunklen:].copy()
-        memcpy(self.lastchunk, remainder.data, leftover)
+          self.lastchunkarr[:len(remainder)] = remainder
 
     # Update some counters
     self.leftover = leftover
@@ -597,7 +608,7 @@ cdef class carray:
         is enlarged instead.
 
     """
-    cdef int itemsize, leftover, leftover2
+    cdef int atomsize, leftover, leftover2
     cdef npy_intp cbytes, bsize, nchunk2
     cdef chunk chunk_
 
@@ -612,10 +623,10 @@ cdef class carray:
       self.resize(self.len - nitems)
       return
 
-    itemsize = self.itemsize
+    atomsize = self.atomsize
     chunks = self.chunks
     leftover = self.leftover
-    bsize = nitems * itemsize
+    bsize = nitems * atomsize
     cbytes = 0
 
 
@@ -627,7 +638,7 @@ cdef class carray:
       # nitems larger than last chunk
       nchunk = (self.len - nitems) // self._chunklen
       leftover2 = (self.len - nitems) % self._chunklen
-      leftover = leftover2 * itemsize
+      leftover = leftover2 * atomsize
 
       # Remove complete chunks
       nchunk2 = self._nbytes // <npy_intp>self._chunksize
@@ -674,7 +685,7 @@ cdef class carray:
     if nitems > self.len:
       # Create a 0-strided array and append it to self
       chunk = np.ndarray(nitems-self.len, dtype=self.dtype,
-                         buffer=self._dflt_, strides=(0,))
+                         buffer=self._dflt, strides=(0,))
       self.append(chunk)
     else:
       # Just trim the excess of items
@@ -777,27 +788,27 @@ cdef class carray:
     WARNING: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
     """
-    cdef int ret, itemsize, blocksize, offset
+    cdef int ret, atomsize, blocksize, offset
     cdef int idxcache, posinbytes, blocklen
     cdef npy_intp nchunk, nchunks, chunklen
     cdef chunk chunk_
 
-    itemsize = self.itemsize
+    atomsize = self.atomsize
     nchunks = self._nbytes // <npy_intp>self._chunksize
     chunklen = self._chunklen
     nchunk = pos // <npy_intp>chunklen
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
-      posinbytes = (pos % chunklen) * itemsize
-      memcpy(dest, self.lastchunk + posinbytes, itemsize)
+      posinbytes = (pos % chunklen) * atomsize
+      memcpy(dest, self.lastchunk + posinbytes, atomsize)
       return 1
 
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
-    blocklen = blocksize // itemsize
+    blocklen = blocksize // atomsize
 
-    if itemsize > blocksize:
+    if atomsize > blocksize:
       # This request cannot be resolved here
       return 0
 
@@ -813,16 +824,16 @@ cdef class carray:
     idxcache = (pos // <npy_intp>blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
-      posinbytes = (pos % blocklen) * itemsize
-      memcpy(dest, self.datacache + posinbytes, itemsize)
+      posinbytes = (pos % blocklen) * atomsize
+      memcpy(dest, self.datacache + posinbytes, atomsize)
       return 1
 
     # No luck. Read a complete block.
     offset = idxcache % chunklen
     chunk_._getitem(offset, offset+blocklen, self.datacache)
     # Copy the interesting bits to dest
-    posinbytes = (pos % blocklen) * itemsize
-    memcpy(dest, self.datacache + posinbytes, itemsize)
+    posinbytes = (pos % blocklen) * atomsize
+    memcpy(dest, self.datacache + posinbytes, atomsize)
     # Update the cache index
     self.idxcache = idxcache
     return 1
@@ -848,7 +859,10 @@ cdef class carray:
         raise IndexError, "index out of range"
       arr1 = self.arr1
       if self.getitem_cache(key, arr1.data):
-        return PyArray_GETITEM(arr1, arr1.data)
+        if self.itemsize == self.atomsize:
+          return PyArray_GETITEM(arr1, arr1.data)
+        else:
+          return arr1[0]
       # Fallback action
       nchunk = key // <npy_intp>chunklen
       keychunk = key % <npy_intp>chunklen
@@ -1038,7 +1052,7 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._cparams)
+        chunk_ = chunk(cdata, self._dtype, self._cparams)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -1057,7 +1071,7 @@ cdef class carray:
     cdef chunk chunk_
 
     # Check that we are inside limits
-    nrows = self._nbytes // <npy_intp>self.itemsize
+    nrows = self._nbytes // <npy_intp>self.atomsize
     if (start + blen) > nrows:
       blen = nrows - start
 
@@ -1065,7 +1079,7 @@ cdef class carray:
     nwrow = 0
     stop = start + blen
     nchunks = self._nbytes // <npy_intp>self._chunksize
-    chunklen = self._chunksize // self.itemsize
+    chunklen = self._chunksize // self.atomsize
     schunk = start // <npy_intp>chunklen
     echunk = (start+blen) // <npy_intp>chunklen
     for nchunk from schunk <= nchunk <= echunk:
@@ -1084,7 +1098,7 @@ cdef class carray:
         out[nwrow:nwrow+cblen] = self.lastchunkarr[startb:stopb]
       else:
         chunk_ = self.chunks[nchunk]
-        chunk_._getitem(startb, stopb, out.data+nwrow*self.itemsize)
+        chunk_._getitem(startb, stopb, out.data+nwrow*self.atomsize)
       nwrow += cblen
       start += cblen
 
@@ -1107,7 +1121,7 @@ cdef class carray:
     nchunks = self._nbytes // <npy_intp>self._chunksize
     if self.leftover > 0:
       nchunks += 1
-    nrows = self._nbytes // <npy_intp>self.itemsize
+    nrows = self._nbytes // <npy_intp>self.atomsize
     for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
@@ -1129,7 +1143,7 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[boolb] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._cparams)
+        chunk_ = chunk(cdata, self._dtype, self._cparams)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -1143,7 +1157,7 @@ cdef class carray:
 
     if not self.sss_mode:
       self.start = 0
-      self.stop = self._nbytes // <npy_intp>self.itemsize
+      self.stop = self._nbytes // <npy_intp>self.atomsize
       self.step = 1
     # Initialize some internal values
     self.startb = 0
@@ -1301,12 +1315,18 @@ cdef class carray:
             self.iobuf = self[start:start+self.nrowsinbuf]
             self.where_cached = start
           # Return the current value in I/O buffer
-          return PyArray_GETITEM(
-            self.iobuf, self.iobuf.data + self._row * self.itemsize)
+          if self.itemsize == self.atomsize:
+            return PyArray_GETITEM(
+              self.iobuf, self.iobuf.data + self._row * self.atomsize)
+          else:
+            return self.iobuf[self._row]
       else:
         # Return the current value in I/O buffer
-        return PyArray_GETITEM(
-          self.iobuf, self.iobuf.data + self._row * self.itemsize)
+        if self.itemsize == self.atomsize:
+          return PyArray_GETITEM(
+            self.iobuf, self.iobuf.data + self._row * self.atomsize)
+        else:
+          return self.iobuf[self._row]
     else:
       # Release buffers
       self.iobuf = np.empty(0, dtype=self.dtype)
