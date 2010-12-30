@@ -207,7 +207,7 @@ cdef class chunk:
       self.isconstant = 1
       self.constant = constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
-      footprint += 64 + np.prod(constant.shape) * constant.itemsize
+      footprint += 64 + constant.size * constant.itemsize
     if self.isconstant:
       cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
@@ -442,7 +442,7 @@ cdef class carray:
     else:
       self._dtype = dtype
     # Check that atom size is less than 2 GB
-    if np.prod(dtype.shape)*long(dtype.base.itemsize) >= 2**31:
+    if dtype.itemsize >= 2**31:
       raise ValueError, "atomic size is too large (>= 2 GB)"
 
     # Check defaults for dflt
