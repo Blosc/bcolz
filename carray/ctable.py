@@ -341,7 +341,7 @@ class ctable(object):
         Notes
         -----
         You must specify at least a `name` or a `pos`.  You should not
-        specificy both `name` and `pos` arguments, unless they are
+        specify both `name` and `pos` arguments, unless they are
         compatible.
 
         See also

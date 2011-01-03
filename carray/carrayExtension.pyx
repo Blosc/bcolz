@@ -272,6 +272,7 @@ cdef class chunk:
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array
+    cdef object start, stop, step, clen, idx
 
     if isinstance(key, (int, long)):
       # Quickly return a single element
@@ -280,8 +281,19 @@ cdef class chunk:
       return PyArray_GETITEM(array, array.data)
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
+    elif isinstance(key, tuple) and self.dtype.shape != ():
+      # Build an array to guess indices
+      clen = self.nbytes // self.itemsize
+      idx = np.arange(clen, dtype=np.int32).reshape(self.dtype.shape)
+      idx2 = idx(key)
+      if idx2.flags.contiguous:
+        # The slice represents a contiguous slice.  Get start and stop.
+        start, stop = idx2.flatten()[[0,-1]]
+        step = 1
+      else:
+        (start, stop, step) = key[0].start, key[0].stop, key[0].step
     else:
-      raise IndexError, "key not supported:", key
+      raise IndexError, "key not suitable:", key
 
     # Get the corrected values for start, stop, step
     clen = self.nbytes // self.atomsize
@@ -360,7 +372,7 @@ cdef class carray:
   cdef int sss_mode, wheretrue_mode, where_mode
   cdef npy_intp startb, stopb
   cdef npy_intp start, stop, step, nextelement
-  cdef npy_intp _nrow, nrowsread, where_cached
+  cdef npy_intp _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr, arr1
@@ -1164,7 +1176,6 @@ cdef class carray:
     self.nrowsread = self.start
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
-    self.where_cached = -1
     if self.where_mode and isinstance(self.where_arr, carray):
       self.nrowsinbuf = self.where_arr.chunklen
     else:
@@ -1275,23 +1286,17 @@ cdef class carray:
         if self.stopb > self.nrowsinbuf:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
-        if self.where_mode:
-          # Skip chunks with zeros (false values)
-          if self.check_zeros(self.where_arr):
+        # Skip chunks with zeros only if in where_mode or wheretrue_mode
+        if (self.where_mode or self.wheretrue_mode) and self.check_zeros(self):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
             continue
+        if self.where_mode:
           # Read a chunk of the boolean array
           self.where_buf = self.where_arr[
             self.nrowsread:self.nrowsread+self.nrowsinbuf]
-        else:
-          # Skip chunks with zeros only if in wheretrue_mode
-          if self.wheretrue_mode and self.check_zeros(self):
-            self.nrowsread += self.nrowsinbuf
-            self.nextelement += self.nrowsinbuf
-            continue
-          # Read a data chunk
-          self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
+        # Read a data chunk
+        self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf
 
       self._row += self.step
@@ -1306,27 +1311,19 @@ cdef class carray:
         vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
           return self._nrow
-      elif self.where_mode:
-        vbool = <char *>(self.where_buf.data + self._row)
-        if vbool[0]:
-          # Check whether I/O buffer is already cached or not
-          start = self.nrowsread - self.nrowsinbuf
-          if start != self.where_cached:
-            self.iobuf = self[start:start+self.nrowsinbuf]
-            self.where_cached = start
-          # Return the current value in I/O buffer
-          if self.itemsize == self.atomsize:
-            return PyArray_GETITEM(
-              self.iobuf, self.iobuf.data + self._row * self.atomsize)
-          else:
-            return self.iobuf[self._row]
-      else:
-        # Return the current value in I/O buffer
-        if self.itemsize == self.atomsize:
-          return PyArray_GETITEM(
-            self.iobuf, self.iobuf.data + self._row * self.atomsize)
         else:
-          return self.iobuf[self._row]
+          continue
+      if self.where_mode:
+        vbool = <char *>(self.where_buf.data + self._row)
+        if not vbool[0]:
+            continue
+      # Return the current value in I/O buffer
+      if self.itemsize == self.atomsize:
+        return PyArray_GETITEM(
+          self.iobuf, self.iobuf.data + self._row * self.atomsize)
+      else:
+        return self.iobuf[self._row]
+
     else:
       # Release buffers
       self.iobuf = np.empty(0, dtype=self.dtype)
