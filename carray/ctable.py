@@ -455,7 +455,7 @@ class ctable(object):
                 raise ValueError, "not all outcols are real column names"
 
         # Get the length of the result
-        count = sum(boolarr)
+        count = boolarr.sum()
 
         # Get iterators for selected columns
         icols, dtypes = [], []

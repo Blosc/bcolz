@@ -774,7 +774,9 @@ cdef class carray:
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
-        result += chunk_.constant * self._chunklen
+        # Multiplying 0's can be costly (!), so remove the need to do so
+        if chunk_.constant != 0:
+          result += chunk_.constant * self._chunklen
       else:
         result += chunk_[:].sum()
     if self.leftover:
@@ -904,7 +906,7 @@ cdef class carray:
         if len(key) != self.len:
           raise IndexError, "boolean array length must match len(self)"
         if isinstance(key, carray):
-          count = sum(key.where(key))
+          count = key.sum()
         else:
           count = -1
         return np.fromiter(self.where(key), dtype=self.dtype, count=count)
@@ -1124,7 +1126,7 @@ cdef class carray:
     cdef chunk chunk_
     cdef object cdata, boolb
 
-    vlen = sum(boolarr)   # number of true values in bool array
+    vlen = boolarr.sum()   # number of true values in bool array
     value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
 
     # Fill it from data in chunks
@@ -1140,7 +1142,7 @@ cdef class carray:
       # Get boolean values for this chunk
       n = nchunk * chunklen
       boolb = boolarr[n+startb:n+stopb]
-      blen = sum(boolb)
+      blen = boolb.sum()
       if blen == 0:
         continue
       # Modify the data in chunk
