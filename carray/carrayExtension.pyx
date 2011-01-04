@@ -1178,10 +1178,7 @@ cdef class carray:
     self.nrowsread = self.start
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
-    if self.where_mode and isinstance(self.where_arr, carray):
-      self.nrowsinbuf = self.where_arr.chunklen
-    else:
-      self.nrowsinbuf = self._chunklen
+    self.nrowsinbuf = self._chunklen
 
     return self
 
@@ -1275,7 +1272,7 @@ cdef class carray:
 
   def __next__(self):
     cdef char *vbool
-    cdef npy_intp start, nchunk
+    cdef npy_intp nchunk
 
     self.nextelement = self._nrow + self.step
     while self.nextelement < self.stop:
@@ -1289,7 +1286,9 @@ cdef class carray:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
         # Skip chunks with zeros only if in where_mode or wheretrue_mode
-        if (self.where_mode or self.wheretrue_mode) and self.check_zeros(self):
+        if (self.where_mode or self.wheretrue_mode):
+          nchunk = self.nrowsread // <npy_intp>self.nrowsinbuf
+          if self.check_zeros(nchunk):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
             continue
@@ -1341,28 +1340,15 @@ cdef class carray:
     self.where_arr = None
 
 
-  cdef int check_zeros(self, object barr):
-    """Check for zeros.  Return 1 if all zeros, else return 0."""
-    cdef int bsize
-    cdef carray carr
-    cdef ndarray ndarr
+  cdef int check_zeros(self, npy_intp nchunk):
+    """Check for zeros in nchunk.  Return 1 if all zeros, else return 0."""
     cdef chunk chunk_
 
-    if isinstance(barr, carray):
-      # Check for zero'ed chunks in carrays
-      carr = barr
-      nchunk = self.nrowsread // <npy_intp>self.nrowsinbuf
-      if nchunk < len(carr.chunks):
-        chunk_ = carr.chunks[nchunk]
-        if chunk_.isconstant and chunk_.constant in (0, ''):
-          return 1
-    else:
-      # Check for zero'ed chunks in ndarrays
-      ndarr = barr
-      bsize = self.nrowsinbuf
-      if self.nrowsread + bsize > self.len:
-        bsize = self.len - self.nrowsread
-      if check_zeros(ndarr.data + self.nrowsread, bsize):
+    assert self.nrowsinbuf == self._chunklen
+    # Check for zero'ed chunks in carrays
+    if nchunk < len(self.chunks):
+      chunk_ = self.chunks[nchunk]
+      if chunk_.isconstant and chunk_.constant in (0, ''):
         return 1
     return 0
 
