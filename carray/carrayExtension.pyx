@@ -1178,7 +1178,10 @@ cdef class carray:
     self.nrowsread = self.start
     self._nrow = self.start - self.step
     self._row = -1  # a sentinel
-    self.nrowsinbuf = self._chunklen
+    if self.where_mode and isinstance(self.where_arr, carray):
+      self.nrowsinbuf = self.where_arr.chunklen
+    else:
+      self.nrowsinbuf = self._chunklen
 
     return self
 

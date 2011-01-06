@@ -471,22 +471,6 @@ class ctable(object):
         return self._iter(icols, dtype, count)
 
 
-    def _where(self, boolarr, colnames=None):
-        """Return rows where `boolarr` is true as an structured array.
-
-        This is called internally only, so we can assum that `boolarr`
-        is a boolean array.
-        """
-
-        if colnames is None:
-            colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
-
-
     def __iter__(self):
         return self.iter(0, self.len, 1)
 
@@ -555,7 +539,11 @@ class ctable(object):
     def _iter(self, icols, dtype, count):
         """Return `count` values in `icols` list of iterators with `dtype`."""
 
-        icols = tuple(icols)
+        if count > 0:
+            icols = tuple(icols)
+        else:
+            # No elements. Return an empty iterator.
+            return iter([])
         namedt = namedtuple('row', dtype.names)
         iterable = it.imap(namedt, *icols)
         return iterable
@@ -655,6 +643,22 @@ class ctable(object):
             ra[name][:] = self.cols[name][start:stop:step]
 
         return ra
+
+
+    def _where(self, boolarr, colnames=None):
+        """Return rows where `boolarr` is true as an structured array.
+
+        This is called internally only, so we can assum that `boolarr`
+        is a boolean array.
+        """
+
+        if colnames is None:
+            colnames = self.names
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+
+        return result
 
 
     def __setitem__(self, key, value):
