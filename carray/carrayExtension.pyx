@@ -7,6 +7,7 @@
 ########################################################################
 
 
+import sys
 import numpy as np
 import carray as ca
 from carray import utils
@@ -374,6 +375,7 @@ cdef class carray:
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
+  cdef npy_intp nhits, limit
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
@@ -1173,6 +1175,9 @@ cdef class carray:
       self.start = 0
       self.stop = self._nbytes // <npy_intp>self.atomsize
       self.step = 1
+    if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
+      self.nhits = 0
+      self.limit = sys.maxint
     # Initialize some internal values
     self.startb = 0
     self.nrowsread = self.start
@@ -1186,9 +1191,9 @@ cdef class carray:
     return self
 
 
-  def iter(self, start=0, stop=None, step=1):
+  def iter(self, start=0, stop=None, step=1, limit=None):
     """
-    iter(start=0, stop=None, step=1)
+    iter(start=0, stop=None, step=1, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -1201,6 +1206,9 @@ cdef class carray:
     step : int
         The number of items incremented during each iteration.  Cannot be
         negative.
+    limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns
     -------
@@ -1214,15 +1222,23 @@ cdef class carray:
         slice(start, stop, step).indices(self.len)
     self.reset_sentinels()
     self.sss_mode = True
+    if limit is not None:
+      self.limit = limit
     return iter(self)
 
 
-  def wheretrue(self):
+  def wheretrue(self, limit=None):
     """
-    wheretrue()
+    wheretrue(limit=None)
 
     Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
+
+    Parameters
+    ----------
+    limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns
     -------
@@ -1238,18 +1254,23 @@ cdef class carray:
       raise ValueError, "`self` is not an array of booleans"
     self.reset_sentinels()
     self.wheretrue_mode = True
+    if limit is not None:
+      self.limit = limit
     return iter(self)
 
 
-  def where(self, boolarr):
+  def where(self, boolarr, limit=None):
     """
-    where(boolarr)
+    where(boolarr, limit=None)
 
     Iterator that returns values of this object where `boolarr` is true.
 
     Parameters
     ----------
     boolarr : a carray or NumPy array of boolean type
+    limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns
     -------
@@ -1270,6 +1291,8 @@ cdef class carray:
     self.reset_sentinels()
     self.where_mode = True
     self.where_arr = boolarr
+    if limit is not None:
+      self.limit = limit
     return iter(self)
 
 
@@ -1277,7 +1300,7 @@ cdef class carray:
     cdef char *vbool
 
     self.nextelement = self._nrow + self.step
-    while self.nextelement < self.stop:
+    while (self.nextelement < self.stop) and (self.nhits < self.limit):
       if self.nextelement >= self.nrowsread:
         # Skip until there is interesting information
         while self.nextelement >= self.nrowsread + self.nrowsinbuf:
@@ -1319,6 +1342,7 @@ cdef class carray:
       if self.wheretrue_mode:
         vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
+          self.nhits += 1
           return self._nrow
         else:
           continue
@@ -1326,6 +1350,7 @@ cdef class carray:
         vbool = <char *>(self.where_buf.data + self._row)
         if not vbool[0]:
             continue
+      self.nhits += 1
       # Return the current value in I/O buffer
       if self.itemsize == self.atomsize:
         return PyArray_GETITEM(
@@ -1346,6 +1371,8 @@ cdef class carray:
     self.wheretrue_mode = False
     self.where_mode = False
     self.where_arr = None
+    self.nhits = 0
+    self.limit = sys.maxint
 
 
   cdef int check_zeros(self, object barr):

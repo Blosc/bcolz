@@ -68,8 +68,8 @@ print "Time for structured array--> %.3f" % (time()-t0,)
 
 # Retrieve from a ctable
 t0 = time()
-cvals = [tuple(v) for v in ct[cbout]]
-#cvals = [v for v in ct.where(cbout)]
+#cvals = [tuple(v) for v in ct[cbout]]
+cvals = [v for v in ct.where(cbout)]
 print "Time for ctable--> %.3f" % (time()-t0,)
 #print "vals-->", len(cvals)
 assert vals == cvals

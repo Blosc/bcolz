@@ -9,7 +9,9 @@ Release notes for carray
 Changes from 0.3 to 0.4
 =======================
 
-- (None yet)
+- Added a `limit` paramater to `iter`, `where` and `wheretrue` iterators
+  of carray object and to `iter` and `where` of ctable object.
+
 
 Changes from 0.2 to 0.3
 =======================

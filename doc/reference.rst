@@ -300,7 +300,7 @@ carray methods
         The copy of this object.
 
 
-.. py:method:: iter(start=0, stop=None, step=1)
+.. py:method:: iter(start=0, stop=None, step=1, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -312,6 +312,9 @@ carray methods
       step : int
         The number of items incremented during each iteration.  Cannot be
         negative.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterator
@@ -352,12 +355,15 @@ carray methods
     See also:
       :py:func:`append`
 
-.. py:method:: where(boolarr)
+.. py:method:: where(boolarr, limit=None)
 
     Iterator that returns values of this object where `boolarr` is true.
 
     Parameters:
       boolarr : a carray or NumPy array of boolean type
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterator
@@ -365,10 +371,15 @@ carray methods
     See also:
       :py:func:`wheretrue`
 
-.. py:method:: wheretrue()
+.. py:method:: wheretrue(limit=None)
 
     Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
+
+    Parameters:
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterator
@@ -532,7 +543,7 @@ ctable methods
         supported by carray constructor in `kwargs`.
 
 
-.. py:method:: iter(start=0, stop=None, step=1, outcols=None)
+.. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -550,6 +561,9 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterable
@@ -576,7 +590,7 @@ ctable methods
     See also:
       :py:func:`append`
 
-.. py:method:: where(expression, outcols=None)
+.. py:method:: where(expression, outcols=None, limit=None)
 
     Iterate over rows where `expression` is true.
 
@@ -589,6 +603,9 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterable

@@ -408,9 +408,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def where(self, expression, outcols=None):
+    def where(self, expression, outcols=None, limit=None):
         """
-        where(expression, outcols=None)
+        where(expression, outcols=None, limit=None)
 
         Iterate over rows where `expression` is true.
 
@@ -424,6 +424,9 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
+        limit : int
+            A maximum number of elements to return.  The default is return
+            everything.
 
         Returns
         -------
@@ -456,16 +459,18 @@ class ctable(object):
 
         # Get the length of the result
         count = boolarr.sum()
+        if limit is not None:
+            count = min(count, limit)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
             if name == "nrow__":
-                icols.append(boolarr.wheretrue())
+                icols.append(boolarr.wheretrue(limit=count))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.where(boolarr))
+                icols.append(col.where(boolarr, limit=count))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype, count)
@@ -475,9 +480,9 @@ class ctable(object):
         return self.iter(0, self.len, 1)
 
 
-    def iter(self, start=0, stop=None, step=1, outcols=None):
+    def iter(self, start=0, stop=None, step=1, outcols=None, limit=None):
         """
-        iter(start=0, stop=None, step=1, outcols=None)
+        iter(start=0, stop=None, step=1, outcols=None, limit=None)
 
         Iterator with `start`, `stop` and `step` bounds.
 
@@ -496,6 +501,9 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
+        limit : int
+            A maximum number of elements to return.  The default is return
+            everything.
 
         Returns
         -------
@@ -520,6 +528,8 @@ class ctable(object):
             raise NotImplementedError, "step param can only be positive"
         start, stop, step = slice(start, stop, step).indices(self.len)
         count = utils.get_len_of_range(start, stop, step)
+        if limit is not None:
+            count = min(count, limit)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
