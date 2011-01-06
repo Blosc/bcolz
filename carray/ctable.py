@@ -289,7 +289,7 @@ class ctable(object):
         You should not specificy both `name` and `pos` arguments,
         unless they are compatible.
 
-        See also
+        See Also
         --------
         delcol
 
@@ -344,7 +344,7 @@ class ctable(object):
         specify both `name` and `pos` arguments, unless they are
         compatible.
 
-        See also
+        See Also
         --------
         addcol
 
@@ -434,6 +434,10 @@ class ctable(object):
             This iterable returns rows as NumPy structured types (i.e. they
             support being mapped either by position or by name).
 
+        See Also
+        --------
+        iter
+
         """
 
         # Check input
@@ -509,6 +513,10 @@ class ctable(object):
         -------
         out : iterable
 
+        See Also
+        --------
+        where
+
         """
 
         # Check outcols
@@ -576,7 +584,7 @@ class ctable(object):
             these values are true will be returned as a NumPy
             structured array.
 
-        See also
+        See Also
         --------
         eval
 

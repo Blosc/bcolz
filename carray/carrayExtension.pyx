@@ -1214,6 +1214,10 @@ cdef class carray:
     -------
     out : iterator
 
+    See Also
+    --------
+    where, wheretrue
+
     """
     # Check limits
     if step <= 0:
@@ -1246,7 +1250,7 @@ cdef class carray:
 
     See Also
     --------
-    where
+    iter, where
 
     """
     # Check self
@@ -1276,9 +1280,9 @@ cdef class carray:
     -------
     out : iterator
 
-    See also
+    See Also
     --------
-    wheretrue
+    iter, wheretrue
 
     """
     # Check input

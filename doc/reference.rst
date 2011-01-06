@@ -196,7 +196,7 @@ Utility functions
       nthreads : int
         The number of threads to be used during carray operation.
 
-    See also:
+    See Also:
       :py:func:`blosc_set_nthreads`
 
 
@@ -319,6 +319,9 @@ carray methods
     Returns:
       out : iterator
 
+    See Also:
+      :py:func:`where`, :py:func:`wheretrue`
+
 
 .. py:method:: resize(nitems)
 
@@ -352,7 +355,7 @@ carray methods
     nitems : int
         The number of trailing items to be trimmed.
 
-    See also:
+    See Also:
       :py:func:`append`
 
 .. py:method:: where(boolarr, limit=None)
@@ -368,8 +371,8 @@ carray methods
     Returns:
       out : iterator
 
-    See also:
-      :py:func:`wheretrue`
+    See Also:
+      :py:func:`iter`, :py:func:`wheretrue`
 
 .. py:method:: wheretrue(limit=None)
 
@@ -385,7 +388,7 @@ carray methods
       out : iterator
 
     See Also:
-      :py:func:`where`
+      :py:func:`iter`, :py:func:`where`
 
 
 The ctable class
@@ -478,7 +481,7 @@ ctable methods
       You should not specify both `name` and `pos` arguments,
       unless they are compatible.
 
-    See also:
+    See Also:
       :py:func:`delcol`
 
 
@@ -519,7 +522,7 @@ ctable methods
       not specify both `name` and `pos` arguments, unless they
       are compatible.
 
-    See also:
+    See Also:
       :py:func:`addcol`
 
 
@@ -568,6 +571,10 @@ ctable methods
     Returns:
       out : iterable
 
+    See Also:
+      :py:func:`where`
+
+
 .. py:method:: resize(nitems)
 
     Resize the instance to have `nitems`.
@@ -587,7 +594,7 @@ ctable methods
       nitems : int
         The number of trailing items to be trimmed.
 
-    See also:
+    See Also:
       :py:func:`append`
 
 .. py:method:: where(expression, outcols=None, limit=None)
@@ -612,4 +619,5 @@ ctable methods
         This iterable returns rows as NumPy structured types (i.e. they
         support being mapped either by position or by name).
 
-
+    See Also:
+      :py:func:`iter`
