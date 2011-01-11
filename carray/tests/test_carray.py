@@ -1120,11 +1120,7 @@ class largeCarrayTest(unittest.TestCase):
     def test00(self):
         """Creating and working with an extremely large carray (> 2**32)."""
 
-        # Check length
-        n = np.zeros(1e6, dtype="i1")
-        cn = ca.carray(np.zeros(0, dtype="i1"), expectedlen=5e9)
-        for i in xrange(5000):
-            cn.append(n)
+        cn = ca.zeros(5e9, dtype="i1")
         self.assert_(len(cn) == int(5e9))
 
         # Now check some accesses
