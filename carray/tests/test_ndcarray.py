@@ -1,0 +1,118 @@
+########################################################################
+#
+#       License: BSD
+#       Created: January 11, 2011
+#       Author:  Francesc Alted - faltet@pytables.org
+#
+########################################################################
+
+import sys
+import struct
+
+import numpy as np
+from numpy.testing import assert_array_equal, assert_array_almost_equal
+import carray as ca
+from carray.carrayExtension import chunk
+import unittest
+
+
+class constructorTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `carray` constructor"""
+        a = np.arange(16).reshape((2,2,4))
+        b = ca.carray(a)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test01a(self):
+        """Testing `zeros` constructor (I)"""
+        a = np.zeros((2,2,4), dtype='i4')
+        b = ca.zeros((2,2,4), dtype='i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test01b(self):
+        """Testing `zeros` constructor (II)"""
+        a = np.zeros(2, dtype='(2,4)i4')
+        b = ca.zeros(2, dtype='(2,4)i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test01c(self):
+        """Testing `zeros` constructor (III)"""
+        a = np.zeros((2,2), dtype='(4,)i4')
+        b = ca.zeros((2,2), dtype='(4,)i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test02(self):
+        """Testing `ones` constructor"""
+        a = np.ones((2,2), dtype='(4,)i4')
+        b = ca.ones((2,2), dtype='(4,)i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test03a(self):
+        """Testing `fill` constructor (scalar default)"""
+        a = np.ones((2,2), dtype='(4,)i4')*3
+        b = ca.fill((2,2), 3, dtype='(4,)i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test03b(self):
+        """Testing `fill` constructor (array default)"""
+        a = np.ones((2,2), dtype='(4,)i4')*3
+        b = ca.fill((2,2), [3,3,3,3], dtype='(4,)i4')
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+
+class getitemTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `__getitem()__` method with only a start"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((2,3), 3, dtype="i4")
+        sl = slice(1)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test01(self):
+        """Testing `__getitem()__` method with a start and a stop"""
+        a = np.ones((5,2), dtype="i4")*3
+        b = ca.fill((5,2), 3, dtype="i4")
+        sl = slice(1,4)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test02(self):
+        """Testing `__getitem()__` method with a start, stop, step"""
+        a = np.ones((10,2), dtype="i4")*3
+        b = ca.fill((10,2), 3, dtype="i4")
+        sl = slice(1,9,2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+
+def suite():
+    theSuite = unittest.TestSuite()
+
+    theSuite.addTest(unittest.makeSuite(constructorTest))
+    theSuite.addTest(unittest.makeSuite(getitemTest))
+    ###theSuite.addTest(unittest.makeSuite(setitemTest))
+
+
+    return theSuite
+
+
+if __name__ == "__main__":
+    unittest.main(defaultTest="suite")
+
+
+## Local Variables:
+## mode: python
+## py-indent-offset: 4
+## tab-width: 4
+## fill-column: 72
+## End:

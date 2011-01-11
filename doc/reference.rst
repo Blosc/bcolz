@@ -88,7 +88,7 @@ First level constructors
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dflt : Python or NumPy scalar
         The value to be used during the filling process.  If None, values are
         filled with zeros.  Also, the resulting carray will have this value as
@@ -102,6 +102,9 @@ First level constructors
     Returns:
       out : carray
         Array filled with `dflt` values with the given shape and dtype.
+
+    See Also:
+      :py:func:`zeros`, :py:func:`ones`
 
 .. py:function:: fromiter(iterable, dtype, count, **kwargs)
 
@@ -134,7 +137,7 @@ First level constructors
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -145,13 +148,16 @@ First level constructors
       out : carray
         Array of ones with the given shape and dtype.
 
+    See Also:
+      :py:func:`fill`, :py:func:`ones`
+
 .. py:function:: zeros(shape, dtype=float, **kwargs)
 
     Return a new carray object of given shape and type, filled with zeros.
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -161,6 +167,9 @@ First level constructors
     Returns:
       out : carray
         Array of zeros with the given shape and dtype.
+
+    See Also:
+      :py:func:`fill`, :py:func:`zeros`
 
 
 Utility functions
@@ -216,7 +225,7 @@ The carray class
   container in a NumPy-like way.
 
   Parameters:
-    array : an unidimensional NumPy-like object
+    array : a NumPy-like object
       This is taken as the input to create the carray.  It can be any Python
       object that can be converted into a NumPy object.  The data type of
       the resulting carray will be the same as this NumPy object.

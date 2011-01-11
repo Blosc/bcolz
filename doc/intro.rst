@@ -83,6 +83,3 @@ carray also comes with drawbacks:
     Numexpr will let you to perform a wide-range of operations on
     native carray/ctable objects, NumPy exposes a much richer toolset.
 
-  * At this time, carray objects can only be uni-dimensional (newer
-    versions might get rid of this limitation though).
-

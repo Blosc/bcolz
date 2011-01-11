@@ -12,6 +12,7 @@ Changes from 0.3 to 0.4
 - Added a `limit` paramater to `iter`, `where` and `wheretrue` iterators
   of carray object and to `iter` and `where` of ctable object.
 
+- Initial support for multidimensional carrays.
 
 Changes from 0.2 to 0.3
 =======================

@@ -346,7 +346,7 @@ cdef class carray:
 
   Parameters
   ----------
-  array : an unidimensional NumPy-like object
+  array : a NumPy-like object
       This is taken as the input to create the carray.  It can be any Python
       object that can be converted into a NumPy object.  The data type of
       the resulting carray will be the same as this NumPy object.
@@ -435,6 +435,7 @@ cdef class carray:
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
     cdef chunk chunk_
+    cdef object _dflt
 
     # Check defaults for cparams
     if cparams is None:
@@ -460,11 +461,13 @@ cdef class carray:
       raise ValueError, "atomic size is too large (>= 2 GB)"
 
     # Check defaults for dflt
-    if dflt is None:
-      dflt = np.zeros((), dtype=dtype)
-    elif type(dflt) != np.ndarray:
-      dflt = np.array([dflt], dtype=dtype)
-    self._dflt = dflt
+    _dflt = np.zeros((), dtype=dtype)
+    if dflt is not None:
+      if dtype.shape == ():
+        _dflt[()] = dflt
+      else:
+        _dflt[:] = dflt
+    self._dflt = _dflt
 
     self._cparams = cparams
     self.chunks = chunks = []

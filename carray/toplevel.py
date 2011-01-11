@@ -64,7 +64,7 @@ def set_nthreads(nthreads):
     nthreads : int
         The number of threads to be used during carray operation.
 
-    See also
+    See Also
     --------
     blosc_set_nthreads
 
@@ -177,7 +177,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dflt : Python or NumPy scalar
         The value to be used during the filling process.  If None, values are
         filled with zeros.  Also, the resulting carray will have this value as
@@ -193,6 +193,10 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     out : carray
         Array filled with `dflt` values with the given shape and dtype.
 
+    See Also
+    --------
+    ones, zeros
+
     """
 
     dtype = np.dtype(dtype)
@@ -200,6 +204,10 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         shape = (int(shape),)
     else:
         shape = tuple(shape)
+        if len(shape) > 1:
+            # Multidimensional shape.
+            # The atom will have shape[1:] dims (+ the dtype dims).
+            dtype = np.dtype((dtype.base, shape[1:]+dtype.shape))
     length = shape[0]
 
     # Create the container
@@ -229,7 +237,7 @@ def zeros(shape, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -240,6 +248,10 @@ def zeros(shape, dtype=np.float, **kwargs):
     -------
     out : carray
         Array of zeros with the given shape and dtype.
+
+    See Also
+    --------
+    fill, ones
 
     """
     dtype = np.dtype(dtype)
@@ -255,7 +267,7 @@ def ones(shape, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -266,6 +278,10 @@ def ones(shape, dtype=np.float, **kwargs):
     -------
     out : carray
         Array of ones with the given shape and dtype.
+
+    See Also
+    --------
+    fill, zeros
 
     """
     dtype = np.dtype(dtype)

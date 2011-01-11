@@ -967,7 +967,7 @@ class eval_bigTest(evalTest):
 class computeMethodsTest(unittest.TestCase):
 
     def test00(self):
-        """Checking sum()."""
+        """Testing sum()."""
         a = np.arange(1e5)
         sa = a.sum()
         ac = ca.carray(a)
@@ -978,7 +978,7 @@ class computeMethodsTest(unittest.TestCase):
         self.assert_(sa == sac, "sum() is not working correctly.")
 
     def test01(self):
-        """Checking sum() with strings (TypeError)."""
+        """Testing sum() with strings (TypeError)."""
         ac = ca.zeros(10, 'S3')
         self.assertRaises(TypeError, ac.sum)
 
@@ -986,25 +986,25 @@ class computeMethodsTest(unittest.TestCase):
 class arangeTest(unittest.TestCase):
 
     def test00(self):
-        """Checking arange() with only a `stop`."""
+        """Testing arange() with only a `stop`."""
         a = np.arange(self.N)
         ac = ca.arange(self.N)
         self.assert_(np.all(a == ac))
 
     def test01(self):
-        """Checking arange() with a `start` and `stop`."""
+        """Testing arange() with a `start` and `stop`."""
         a = np.arange(3, self.N)
         ac = ca.arange(3, self.N)
         self.assert_(np.all(a == ac))
 
     def test02(self):
-        """Checking arange() with a `start`, `stop` and `step`."""
+        """Testing arange() with a `start`, `stop` and `step`."""
         a = np.arange(3, self.N, 4)
         ac = ca.arange(3, self.N, 4)
         self.assert_(np.all(a == ac))
 
     def test03(self):
-        """Checking arange() with a `dtype`."""
+        """Testing arange() with a `dtype`."""
         a = np.arange(self.N, dtype="i1")
         ac = ca.arange(self.N, dtype="i1")
         self.assert_(np.all(a == ac))
@@ -1019,7 +1019,7 @@ class arange_bigTest(arangeTest):
 class constructorTest(unittest.TestCase):
 
     def test00a(self):
-        """Checking carray constructor with a `dtype`."""
+        """Testing carray constructor with a `dtype`."""
         N = 10
         a = np.arange(N)
         ac = ca.carray(a, dtype='f4')
@@ -1029,7 +1029,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test00b(self):
-        """Checking carray constructor with a `dtype` with an empty input."""
+        """Testing carray constructor with a `dtype` with an empty input."""
         a = np.array([], dtype='i4')
         ac = ca.carray([], dtype='f4')
         self.assert_(ac.dtype == np.dtype('f4'))
@@ -1038,7 +1038,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test01a(self):
-        """Checking zeros() constructor."""
+        """Testing zeros() constructor."""
         N = 10
         a = np.zeros(N)
         ac = ca.zeros(N)
@@ -1046,7 +1046,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test01b(self):
-        """Checking zeros() constructor, with a `dtype`."""
+        """Testing zeros() constructor, with a `dtype`."""
         N = 1e4
         a = np.zeros(N, dtype='i4')
         ac = ca.zeros(N, dtype='i4')
@@ -1055,7 +1055,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test01c(self):
-        """Checking zeros() constructor, with a string type."""
+        """Testing zeros() constructor, with a string type."""
         N = 1e4
         a = np.zeros(N, dtype='S5')
         ac = ca.zeros(N, dtype='S5')
@@ -1064,7 +1064,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test02a(self):
-        """Checking fill() constructor."""
+        """Testing fill() constructor."""
         N = 10
         a = np.ones(N)
         ac = ca.ones(N)
@@ -1072,7 +1072,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test02b(self):
-        """Checking fill() constructor, with a `dtype`."""
+        """Testing fill() constructor, with a `dtype`."""
         N = 1e4
         a = np.ones(N, dtype='i4')
         ac = ca.ones(N, dtype='i4')
@@ -1080,7 +1080,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test02c(self):
-        """Checking fill() constructor, with a string type"""
+        """Testing fill() constructor, with a string type"""
         N = 10
         a = np.ones(N, dtype='S3')
         ac = ca.ones(N, dtype='S3')
@@ -1089,7 +1089,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test03a(self):
-        """Checking fill() constructor."""
+        """Testing fill() constructor."""
         N = 10
         a = np.ones(N)
         ac = ca.fill(N, 1)
@@ -1097,7 +1097,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test03b(self):
-        """Checking fill() constructor, with a `dtype`."""
+        """Testing fill() constructor, with a `dtype`."""
         N = 1e4
         a = np.ones(N, dtype='i4')*3
         ac = ca.fill(N, 3, dtype='i4')
@@ -1105,7 +1105,7 @@ class constructorTest(unittest.TestCase):
         self.assert_(np.all(a == ac))
 
     def test03c(self):
-        """Checking fill() constructor, with a string type"""
+        """Testing fill() constructor, with a string type"""
         N = 10
         a = np.ones(N, dtype='S3')
         ac = ca.fill(N, "1", dtype='S3')
