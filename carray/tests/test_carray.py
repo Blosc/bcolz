@@ -1137,8 +1137,7 @@ class largeCarrayTest(unittest.TestCase):
         cn[-1] = 4
         self.assert_(cn[-1] == 4)
 
-        # The iterator below takes too much (~ 100s)
-        #self.assert_(sum(cn) == 10)
+        self.assert_(cn.sum() == 10)
 
 
 def suite():
