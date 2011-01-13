@@ -95,12 +95,76 @@ class getitemTest(unittest.TestCase):
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 
+class setitemTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing `__setitem()__` method with only a start (scalar)"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((2,3), 3, dtype="i4")
+        sl = slice(1)
+        a[sl,:] = 0
+        b[sl] = 0
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `__setitem()__` method with only a start (vector)"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((2,3), 3, dtype="i4")
+        sl = slice(1)
+        a[sl,:] = range(3)
+        b[sl] = range(3)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test01a(self):
+        """Testing `__setitem()__` method with start,stop (scalar)"""
+        a = np.ones((5,2), dtype="i4")*3
+        b = ca.fill((5,2), 3, dtype="i4")
+        sl = slice(1,4)
+        a[sl,:] = 0
+        b[sl] = 0
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test01b(self):
+        """Testing `__setitem()__` method with start,stop (vector)"""
+        a = np.ones((5,2), dtype="i4")*3
+        b = ca.fill((5,2), 3, dtype="i4")
+        sl = slice(1,4)
+        a[sl,:] = range(2)
+        b[sl] = range(2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test02a(self):
+        """Testing `__setitem()__` method with start,stop,step (scalar)"""
+        a = np.ones((10,2), dtype="i4")*3
+        b = ca.fill((10,2), 3, dtype="i4")
+        sl = slice(1,8,3)
+        a[sl,:] = 0
+        b[sl] = 0
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test02b(self):
+        """Testing `__setitem()__` method with start,stop,step (scalar)"""
+        a = np.ones((10,2), dtype="i4")*3
+        b = ca.fill((10,2), 3, dtype="i4")
+        sl = slice(1,8,3)
+        a[sl,:] = range(2)
+        b[sl] = range(2)
+        #print "b[sl]->", `b[sl]`, `b`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(constructorTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
-    ###theSuite.addTest(unittest.makeSuite(setitemTest))
+    theSuite.addTest(unittest.makeSuite(setitemTest))
 
 
     return theSuite

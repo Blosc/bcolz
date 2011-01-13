@@ -97,19 +97,19 @@ def get_len_of_range(start, stop, step):
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
 
-    if dtype is not None:
-        dtype = dtype.base
+    if dtype is None:
+        return np.array(array)
 
     # Arrays with a 0 stride are special
     if type(array) == np.ndarray and array.strides[0] == 0:
-        if array.dtype != dtype:
+        if array.dtype != dtype.base:
             raise TypeError, "dtypes do not match"
         return array
 
     # Ensure that we have an ndarray of the correct dtype
-    if type(array) != np.ndarray or array.dtype != dtype:
+    if type(array) != np.ndarray or array.dtype != dtype.base:
         try:
-            array = np.asarray(array, dtype=dtype)
+            array = np.array(array, dtype=dtype.base)
         except ValueError:
             raise ValueError, "cannot convert to an ndarray object"
 
@@ -122,14 +122,9 @@ def to_ndarray(array, dtype, arrlen=None):
 
     # Check if we need a broadcast
     if arrlen is not None and arrlen != len(array):
-        if len(array) == 1:
-            # Scalar broadcast
-            array2 = np.empty(shape=(arrlen,), dtype=array.dtype)
-            array2[:] = array   # broadcast
-            array = array2
-        else:
-            # Other broadcasts not supported yet
-            raise NotImplementedError, "broadcast not supported for this case"
+        array2 = np.empty(shape=(arrlen,), dtype=dtype)
+        array2[:] = array   # broadcast
+        array = array2
 
     return array
 
