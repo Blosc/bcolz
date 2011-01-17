@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ########################################################################
 #
 #       License: BSD
@@ -1036,6 +1037,27 @@ class constructorTest(unittest.TestCase):
         a = a.astype('f4')
         self.assert_(a.dtype == ac.dtype)
         self.assert_(np.all(a == ac))
+
+    def test00c(self):
+        """Testing carray constructor with a compound `dtype`."""
+        N = 3
+        a = np.ones(N, dtype="f4,f8")
+        ac = ca.carray(a, dtype='f4,f8')
+        self.assert_(ac.dtype == np.dtype('f4,f8'))
+        self.assert_(a.dtype == ac.dtype)
+        print "ac-->", `ac`
+        assert_array_equal(a, ac[:], "Arrays are not equal")
+
+    def test00d(self):
+        """Testing carray constructor with a unicode `dtype`."""
+        N = 3
+        #a = np.zeros(N, dtype="U4")
+        a = np.array([u"aŀle", u"eñe", u"açò"], dtype="U4")
+        ac = ca.carray(a, dtype='U4')
+        self.assert_(ac.dtype == np.dtype('U4'))
+        self.assert_(a.dtype == ac.dtype)
+        print "ac-->", `ac`
+        assert_array_equal(a, ac, "Arrays are not equal")
 
     def test01a(self):
         """Testing zeros() constructor."""
