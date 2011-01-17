@@ -183,6 +183,35 @@ class appendTest(unittest.TestCase):
         assert_array_equal(a, b, "Arrays are not equal")
 
 
+class resizeTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing `resize()` (trim)"""
+        a = np.ones((2,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4")
+        b.resize(2)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `resize()` (trim to zero)"""
+        a = np.ones((0,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4")
+        b.resize(0)
+        #print "b->", `b`
+        # The next does not work well for carrays with shape (0,)
+        #assert_array_equal(a, b, "Arrays are not equal")
+        self.assert_("a.dtype.base == b.dtype.base")
+        self.assert_("a.shape == b.shape+b.dtype.shape")
+
+    def test01(self):
+        """Testing `resize()` (enlarge)"""
+        a = np.ones((4,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4")
+        b.resize(4)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -191,6 +220,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(resizeTest))
 
 
     return theSuite
