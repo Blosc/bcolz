@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ########################################################################
 #
 #       License: BSD
@@ -337,6 +338,68 @@ class compoundTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
+class stringTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing string types (creation)"""
+        a = np.array([["ale", "ene"], ["aco", "ieie"]], dtype="S4")
+        b = ca.carray(a)
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01(self):
+        """Testing string types (append)"""
+        a = np.ones((300,4), dtype="S4")
+        b = ca.carray([], dtype="S4").reshape((0,4))
+        b.append(a)
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test02(self):
+        """Testing string types (iter)"""
+        a = np.ones((3,), dtype="S40")
+        b = ca.ones((1000,3), dtype="S40")
+        #print "b->", `b`
+        for r in b.iter():
+            #print "r-->", r
+            assert_array_equal(a, r, "Arrays are not equal")
+
+
+class unicodeTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing unicode types (creation)"""
+        a = np.array([[u"aŀle", u"eñe"], [u"açò", u"áèâë"]], dtype="U4")
+        b = ca.carray(a)
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01(self):
+        """Testing unicode types (append)"""
+        a = np.ones((300,4), dtype="U4")
+        b = ca.carray([], dtype="U4").reshape((0,4))
+        b.append(a)
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test02(self):
+        """Testing unicode types (iter)"""
+        a = np.ones((3,), dtype="U40")
+        b = ca.ones((1000,3), dtype="U40")
+        #print "b->", `b`
+        for r in b.iter():
+            #print "r-->", r
+            assert_array_equal(a, r, "Arrays are not equal")
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -348,6 +411,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(iterTest))
     theSuite.addTest(unittest.makeSuite(reshapeTest))
     theSuite.addTest(unittest.makeSuite(compoundTest))
+    theSuite.addTest(unittest.makeSuite(stringTest))
+    theSuite.addTest(unittest.makeSuite(unicodeTest))
 
 
     return theSuite
