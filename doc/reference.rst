@@ -332,6 +332,22 @@ carray methods
       :py:func:`where`, :py:func:`wheretrue`
 
 
+.. py:method:: reshape(newshape)
+
+    Returns a new carray containing the same data with a new shape.
+
+    Parameters:
+      newshape : int or tuple of ints
+        The new shape should be compatible with the original shape. If
+        an integer, then the result will be a 1-D array of that length.
+        One shape dimension can be -1. In this case, the value is inferred
+        from the length of the array and remaining dimensions.
+
+    Returns:
+      reshaped_array : carray
+        A copy of the original carray.
+
+
 .. py:method:: resize(nitems)
 
     Resize the instance to have `nitems`.

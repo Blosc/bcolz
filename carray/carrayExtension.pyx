@@ -549,6 +549,9 @@ cdef class carray:
     arrcpy = utils.to_ndarray(array, self.dtype)
     if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
+    # Appending a single row should be supported
+    if arrcpy.shape == self._dtype.shape:
+      arrcpy = arrcpy.reshape((1,)+arrcpy.shape)
     if arrcpy.shape[1:] != self._dtype.shape:
       raise ValueError, "array trailing dimensions does not match with self"
 
@@ -709,6 +712,75 @@ cdef class carray:
     else:
       # Just trim the excess of items
       self.trim(self.len-nitems)
+
+
+  def reshape(self, newshape):
+    """
+    reshape(newshape)
+
+    Returns a new carray containing the same data with a new shape.
+
+    Parameters
+    ----------
+    newshape : int or tuple of ints
+        The new shape should be compatible with the original shape. If
+        an integer, then the result will be a 1-D array of that length.
+        One shape dimension can be -1. In this case, the value is inferred
+        from the length of the array and remaining dimensions.
+
+    Returns
+    -------
+    reshaped_array : carray
+        A copy of the original carray.
+
+    """
+    cdef npy_intp newlen, ilen, isize, osize, newsize, rsize, i
+    cdef object ishape, oshape, pos, newdtype, out
+
+    # Enforce newshape as tuple
+    if isinstance(newshape, (int, long)):
+      newshape = (newshape,)
+    newsize = np.prod(newshape)
+
+    ishape = self.shape+self._dtype.shape
+    ilen = ishape[0]
+    isize = np.prod(ishape)
+
+    # Check for -1 in newshape
+    if -1 in newshape:
+      if newshape.count(-1) > 1:
+        raise ValueError, "only one shape dimension can be -1"
+      pos = newshape.index(-1)
+      osize = np.prod(newshape[:pos] + newshape[pos+1:])
+      if isize == 0:
+        newshape = newshape[:pos] + (0,) + newshape[pos+1:]
+      else:
+        newshape = newshape[:pos] + (isize/osize,) + newshape[pos+1:]
+      newsize = np.prod(newshape)
+
+    # Check shape compatibility
+    if isize != newsize:
+      raise ValueError, "`newshape` is not compatible with the current one"
+    # Create the output container
+    newdtype = np.dtype((self._dtype.base, newshape[1:]))
+    newlen = newshape[0]
+
+    # If shapes are both n-dimensional, convert first to 1-dim shape
+    # and then convert again to the final newshape.
+    if len(ishape) > 1 and len(newshape) > 1:
+      out = self.reshape(-1)
+      return out.reshape(newshape)
+
+    out = carray([], dtype=newdtype, cparams=self.cparams, expectedlen=newlen)
+    # Append values
+    if newlen < ilen:
+      rsize = isize / newlen
+      for i from 0 <= i < newlen:
+        out.append(self[i*rsize:(i+1)*rsize])
+    else:
+      for i from 0 <= i < ilen:
+        out.append(self[i].reshape(-1))
+    return out
 
 
   def copy(self, **kwargs):

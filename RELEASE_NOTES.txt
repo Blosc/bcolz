@@ -14,6 +14,10 @@ Changes from 0.3 to 0.4
 
 - Initial support for multidimensional carrays.
 
+- Added a new `reshape()` for reshaping to new (multidimensional)
+  carrays.  This supports the same functionality than `reshape()` in
+  NumPy.
+
 Changes from 0.2 to 0.3
 =======================
 

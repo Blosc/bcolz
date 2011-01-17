@@ -160,11 +160,19 @@ class setitemTest(unittest.TestCase):
 
 class appendTest(unittest.TestCase):
 
-    def test00(self):
+    def test00a(self):
         """Testing `append()` method (correct shape)"""
         a = np.ones((2,3), dtype="i4")*3
         b = ca.fill((1,3), 3, dtype="i4")
         b.append([(3,3,3)])
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `append()` method (correct shape, single row)"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((1,3), 3, dtype="i4")
+        b.append((3,3,3))
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
@@ -240,6 +248,57 @@ class iterTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
+class reshapeTest(unittest.TestCase):
+
+    def test00a(self):
+        """Testing `reshape()` (unidim -> ndim)"""
+        a = np.ones((3,4), dtype="i4")
+        b = ca.ones(12, dtype="i4").reshape((3,4))
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `reshape()` (unidim -> ndim, -1 in newshape (I))"""
+        a = np.ones((3,4), dtype="i4")
+        b = ca.ones(12, dtype="i4").reshape((-1,4))
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test00c(self):
+        """Testing `reshape()` (unidim -> ndim, -1 in newshape (II))"""
+        a = np.ones((3,4), dtype="i4")
+        b = ca.ones(12, dtype="i4").reshape((3,-1))
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test01(self):
+        """Testing `reshape()` (ndim -> unidim)"""
+        a = np.ones(12, dtype="i4")
+        c = ca.ones(12, dtype="i4").reshape((3,4))
+        b = c.reshape(12)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test02(self):
+        """Testing `reshape()` (ndim -> ndim)"""
+        a = np.ones((3,4), dtype="i4")
+        c = ca.ones(12, dtype="i4").reshape((4,3))
+        b = c.reshape((3,4))
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test03(self):
+        """Testing `reshape()` (0-dim)"""
+        a = np.ones((0,4), dtype="i4")
+        b = ca.ones(0, dtype="i4").reshape((0,4))
+        #print "b->", `b`
+        # The next does not work well for carrays with shape (0,)
+        #assert_array_equal(a, b, "Arrays are not equal")
+        self.assert_("a.dtype.base == b.dtype.base")
+        self.assert_("a.shape == b.shape+b.dtype.shape")
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -249,6 +308,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(resizeTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
+    theSuite.addTest(unittest.makeSuite(reshapeTest))
 
 
     return theSuite
