@@ -213,6 +213,33 @@ class resizeTest(unittest.TestCase):
         assert_array_equal(a, b, "Arrays are not equal")
 
 
+class iterTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `iter()` (no start, stop, step)"""
+        a = np.ones((3,), dtype="i4")
+        b = ca.ones((1000,3), dtype="i4")
+        #print "b->", `b`
+        for r in b.iter():
+            assert_array_equal(a, r, "Arrays are not equal")
+
+    def test01(self):
+        """Testing `iter()` (w/ start, stop)"""
+        a = np.ones((3,), dtype="i4")
+        b = ca.ones((1000,3), dtype="i4")
+        #print "b->", `b`
+        for r in b.iter(start=10):
+            assert_array_equal(a, r, "Arrays are not equal")
+
+    def test02(self):
+        """Testing `iter()` (w/ start, stop, step)"""
+        a = np.ones((3,), dtype="i4")
+        b = ca.ones((1000,3), dtype="i4")
+        #print "b->", `b`
+        for r in b.iter(15, 100, 3):
+            assert_array_equal(a, r, "Arrays are not equal")
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -221,6 +248,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(resizeTest))
+    theSuite.addTest(unittest.makeSuite(iterTest))
 
 
     return theSuite
