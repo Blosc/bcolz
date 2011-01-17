@@ -158,6 +158,31 @@ class setitemTest(unittest.TestCase):
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 
+class appendTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing `append()` method (correct shape)"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((1,3), 3, dtype="i4")
+        b.append([(3,3,3)])
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test01(self):
+        """Testing `append()` method (incorrect shape)"""
+        a = np.ones((2,3), dtype="i4")*3
+        b = ca.fill((1,3), 3, dtype="i4")
+        self.assertRaises(ValueError, b.append, [(3,3)])
+
+    def test02(self):
+        """Testing `append()` method (several rows)"""
+        a = np.ones((4,3), dtype="i4")*3
+        b = ca.fill((1,3), 3, dtype="i4")
+        b.append([(3,3,3)]*3)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+
 
 def suite():
     theSuite = unittest.TestSuite()
@@ -165,6 +190,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructorTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
+    theSuite.addTest(unittest.makeSuite(appendTest))
 
 
     return theSuite

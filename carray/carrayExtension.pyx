@@ -549,6 +549,8 @@ cdef class carray:
     arrcpy = utils.to_ndarray(array, self.dtype)
     if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
+    if arrcpy.shape[1:] != self._dtype.shape:
+      raise ValueError, "array trailing dimensions does not match with self"
 
     atomsize = self.atomsize
     itemsize = self.itemsize
