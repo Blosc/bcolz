@@ -302,9 +302,39 @@ class reshapeTest(unittest.TestCase):
         #print "b->", `b`
         # The next does not work well for carrays with shape (0,)
         #assert_array_equal(a, b, "Arrays are not equal")
-        self.assert_("a.dtype.base == b.dtype.base")
-        self.assert_("a.shape == b.shape+b.dtype.shape")
+        self.assert_(a.dtype.base == b.dtype.base)
+        self.assert_(a.shape == b.shape+b.dtype.shape)
 
+
+class compoundTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing compound types (creation)"""
+        a = np.ones((300,4), dtype="i4,i8")
+        b = ca.ones((300,4), dtype="i4,i8")
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test01(self):
+        """Testing compound types (append)"""
+        a = np.ones((300,4), dtype="i4,i8")
+        b = ca.carray([], dtype="i4,i8").reshape((0,4))
+        b.append(a)
+        #print "b.dtype-->", b.dtype
+        #print "b->", `b`
+        self.assert_(a.dtype == b.dtype.base)
+        assert_array_equal(a, b[:], "Arrays are not equal")
+
+    def test02(self):
+        """Testing compound types (iter)"""
+        a = np.ones((3,), dtype="i4,i8")
+        b = ca.ones((1000,3), dtype="i4,i8")
+        #print "b->", `b`
+        for r in b.iter():
+            #print "r-->", r
+            assert_array_equal(a, r, "Arrays are not equal")
 
 
 def suite():
@@ -317,6 +347,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(resizeTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
     theSuite.addTest(unittest.makeSuite(reshapeTest))
+    theSuite.addTest(unittest.makeSuite(compoundTest))
 
 
     return theSuite

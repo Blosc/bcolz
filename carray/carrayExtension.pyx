@@ -771,8 +771,8 @@ cdef class carray:
       out = self.reshape(-1)
       return out.reshape(newshape)
 
+    # Create the final container and fill it
     out = carray([], dtype=newdtype, cparams=self.cparams, expectedlen=newlen)
-    # Append values
     if newlen < ilen:
       rsize = isize / newlen
       for i from 0 <= i < newlen:
@@ -780,6 +780,7 @@ cdef class carray:
     else:
       for i from 0 <= i < ilen:
         out.append(self[i].reshape(-1))
+
     return out
 
 
