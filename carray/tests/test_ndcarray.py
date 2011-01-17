@@ -21,7 +21,7 @@ class constructorTest(unittest.TestCase):
     def test00(self):
         """Testing `carray` constructor"""
         a = np.arange(16).reshape((2,2,4))
-        b = ca.carray(a)
+        b = ca.arange(16).reshape((2,2,4))
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
@@ -279,11 +279,19 @@ class reshapeTest(unittest.TestCase):
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
-    def test02(self):
-        """Testing `reshape()` (ndim -> ndim)"""
-        a = np.ones((3,4), dtype="i4")
-        c = ca.ones(12, dtype="i4").reshape((4,3))
+    def test02a(self):
+        """Testing `reshape()` (ndim -> ndim, I)"""
+        a = np.arange(12, dtype="i4").reshape((3,4))
+        c = ca.arange(12, dtype="i4").reshape((4,3))
         b = c.reshape((3,4))
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test02b(self):
+        """Testing `reshape()` (ndim -> ndim, II)"""
+        a = np.arange(24, dtype="i4").reshape((2,3,4))
+        c = ca.arange(24, dtype="i4").reshape((4,3,2))
+        b = c.reshape((2,3,4))
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 

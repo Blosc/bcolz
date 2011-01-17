@@ -776,7 +776,7 @@ cdef class carray:
     if newlen < ilen:
       rsize = isize / newlen
       for i from 0 <= i < newlen:
-        out.append(self[i*rsize:(i+1)*rsize])
+        out.append(self[i*rsize:(i+1)*rsize].reshape(newdtype.shape))
     else:
       for i from 0 <= i < ilen:
         out.append(self[i].reshape(-1))
