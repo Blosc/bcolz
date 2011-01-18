@@ -32,7 +32,7 @@ You can download a source package from:
 http://carray.pytables.org/download
 
 Manual:
-http://carray.pytables.org/manual
+http://carray.pytables.org/docs/manual
 
 Home of Blosc compressor:
 http://blosc.pytables.org
