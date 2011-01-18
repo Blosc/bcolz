@@ -1447,6 +1447,7 @@ cdef class carray:
       # Release buffers
       self.iobuf = np.empty(0, dtype=self.dtype)
       self.where_buf = np.empty(0, dtype=np.bool_)
+      self.reset_sentinels()
       raise StopIteration        # end of iteration
 
 
