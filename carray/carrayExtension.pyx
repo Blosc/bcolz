@@ -545,7 +545,7 @@ cdef class carray:
     """
     cdef int atomsize, itemsize, chunksize, leftover
     cdef int nbytesfirst, chunklen, start, stop
-    cdef npy_intp nbytes, cbytes, bsize
+    cdef npy_intp nbytes, cbytes, bsize, i, nchunks
     cdef ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
