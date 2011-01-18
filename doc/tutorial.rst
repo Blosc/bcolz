@@ -331,6 +331,60 @@ although modifying values in latest chunk is somewhat more cheaper::
 So, in general, you should avoid abusing of this feature when using
 carrays.
 
+Multidimensional carrays
+------------------------
+
+You can create multidimensional carrays too.  However, the trailing
+dimensions of these objects are added to the dtype.  Look at this
+example::
+
+  >>> a = ca.zeros((2,3))
+  >>> a
+  carray((2,), ('float64',(3,)))  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
+    cparams := cparams(clevel=5, shuffle=True)
+  [[ 0.  0.  0.]
+   [ 0.  0.  0.]]
+
+So, you can only access directly elements in the first dimension::
+
+  >>> a[1]
+  array([ 0.,  0.,  0.])
+  >>> a[1,1]
+  IndexError: multidimensional keys are not supported
+
+In case you want to access elements in other dimensions, just add a
+trailing `__getitem__()` operation::
+
+  >>> a[1][1]
+  0.0
+
+Also, you can use the `reshape()` method to set your desired shape to
+an existing carray::
+
+  >>> b = ca.arange(12).reshape((3,4))
+  >>> b
+  carray((3,), ('int64',(4,)))  nbytes: 96; cbytes: 4.00 KB; ratio: 0.02
+    cparams := cparams(clevel=5, shuffle=True)
+  [[ 0  1  2  3]
+   [ 4  5  6  7]
+   [ 8  9 10 11]]
+
+Iterators loop over the leading dimension::
+
+  >>> [r for r in b]
+  [array([0, 1, 2, 3]), array([4, 5, 6, 7]), array([ 8,  9, 10, 11])]
+
+Again, you can select columns by using another indirection level::
+
+  >>> [r[2] for r in b]
+  [2, 6, 10]
+
+Above, the third column has been selected.
+
+In general, you can do the same operations with multidimensional
+carrays than with unidimensional counterparts.  Just keep in mind that
+they are like undimensional objects with multidimensional types.
+
 Operating with carrays
 ----------------------
 
@@ -353,7 +407,6 @@ compression for the output::
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14
     cparams := cparams(clevel=9, shuffle=True)
   [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
-
 
 carray metadata
 ---------------

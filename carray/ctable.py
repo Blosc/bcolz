@@ -289,7 +289,7 @@ class ctable(object):
         You should not specificy both `name` and `pos` arguments,
         unless they are compatible.
 
-        See also
+        See Also
         --------
         delcol
 
@@ -341,10 +341,10 @@ class ctable(object):
         Notes
         -----
         You must specify at least a `name` or a `pos`.  You should not
-        specificy both `name` and `pos` arguments, unless they are
+        specify both `name` and `pos` arguments, unless they are
         compatible.
 
-        See also
+        See Also
         --------
         addcol
 
@@ -408,9 +408,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def where(self, expression, outcols=None):
+    def where(self, expression, outcols=None, limit=None):
         """
-        where(expression, outcols=None)
+        where(expression, outcols=None, limit=None)
 
         Iterate over rows where `expression` is true.
 
@@ -424,12 +424,19 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
+        limit : int
+            A maximum number of elements to return.  The default is return
+            everything.
 
         Returns
         -------
         out : iterable
             This iterable returns rows as NumPy structured types (i.e. they
             support being mapped either by position or by name).
+
+        See Also
+        --------
+        iter
 
         """
 
@@ -455,45 +462,31 @@ class ctable(object):
                 raise ValueError, "not all outcols are real column names"
 
         # Get the length of the result
-        count = sum(boolarr)
+        count = boolarr.sum()
+        if limit is not None:
+            count = min(count, limit)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
             if name == "nrow__":
-                icols.append(boolarr.wheretrue())
+                icols.append(boolarr.wheretrue(limit=count))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.where(boolarr))
+                icols.append(col.where(boolarr, limit=count))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype, count)
-
-
-    def _where(self, boolarr, colnames=None):
-        """Return rows where `boolarr` is true as an structured array.
-
-        This is called internally only, so we can assum that `boolarr`
-        is a boolean array.
-        """
-
-        if colnames is None:
-            colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
 
 
     def __iter__(self):
         return self.iter(0, self.len, 1)
 
 
-    def iter(self, start=0, stop=None, step=1, outcols=None):
+    def iter(self, start=0, stop=None, step=1, outcols=None, limit=None):
         """
-        iter(start=0, stop=None, step=1, outcols=None)
+        iter(start=0, stop=None, step=1, outcols=None, limit=None)
 
         Iterator with `start`, `stop` and `step` bounds.
 
@@ -512,10 +505,17 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
+        limit : int
+            A maximum number of elements to return.  The default is return
+            everything.
 
         Returns
         -------
         out : iterable
+
+        See Also
+        --------
+        where
 
         """
 
@@ -536,6 +536,8 @@ class ctable(object):
             raise NotImplementedError, "step param can only be positive"
         start, stop, step = slice(start, stop, step).indices(self.len)
         count = utils.get_len_of_range(start, stop, step)
+        if limit is not None:
+            count = min(count, limit)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
@@ -555,7 +557,11 @@ class ctable(object):
     def _iter(self, icols, dtype, count):
         """Return `count` values in `icols` list of iterators with `dtype`."""
 
-        icols = tuple(icols)
+        if count > 0:
+            icols = tuple(icols)
+        else:
+            # No elements. Return an empty iterator.
+            return iter([])
         namedt = namedtuple('row', dtype.names)
         iterable = it.imap(namedt, *icols)
         return iterable
@@ -578,7 +584,7 @@ class ctable(object):
             these values are true will be returned as a NumPy
             structured array.
 
-        See also
+        See Also
         --------
         eval
 
@@ -655,6 +661,22 @@ class ctable(object):
             ra[name][:] = self.cols[name][start:stop:step]
 
         return ra
+
+
+    def _where(self, boolarr, colnames=None):
+        """Return rows where `boolarr` is true as an structured array.
+
+        This is called internally only, so we can assum that `boolarr`
+        is a boolean array.
+        """
+
+        if colnames is None:
+            colnames = self.names
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+
+        return result
 
 
     def __setitem__(self, key, value):

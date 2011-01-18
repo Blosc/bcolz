@@ -88,7 +88,7 @@ First level constructors
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dflt : Python or NumPy scalar
         The value to be used during the filling process.  If None, values are
         filled with zeros.  Also, the resulting carray will have this value as
@@ -102,6 +102,9 @@ First level constructors
     Returns:
       out : carray
         Array filled with `dflt` values with the given shape and dtype.
+
+    See Also:
+      :py:func:`zeros`, :py:func:`ones`
 
 .. py:function:: fromiter(iterable, dtype, count, **kwargs)
 
@@ -134,7 +137,7 @@ First level constructors
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -145,13 +148,16 @@ First level constructors
       out : carray
         Array of ones with the given shape and dtype.
 
+    See Also:
+      :py:func:`fill`, :py:func:`ones`
+
 .. py:function:: zeros(shape, dtype=float, **kwargs)
 
     Return a new carray object of given shape and type, filled with zeros.
 
     Parameters:
       shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
       dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -161,6 +167,9 @@ First level constructors
     Returns:
       out : carray
         Array of zeros with the given shape and dtype.
+
+    See Also:
+      :py:func:`fill`, :py:func:`zeros`
 
 
 Utility functions
@@ -196,7 +205,7 @@ Utility functions
       nthreads : int
         The number of threads to be used during carray operation.
 
-    See also:
+    See Also:
       :py:func:`blosc_set_nthreads`
 
 
@@ -216,7 +225,7 @@ The carray class
   container in a NumPy-like way.
 
   Parameters:
-    array : an unidimensional NumPy-like object
+    array : a NumPy-like object
       This is taken as the input to create the carray.  It can be any Python
       object that can be converted into a NumPy object.  The data type of
       the resulting carray will be the same as this NumPy object.
@@ -300,7 +309,7 @@ carray methods
         The copy of this object.
 
 
-.. py:method:: iter(start=0, stop=None, step=1)
+.. py:method:: iter(start=0, stop=None, step=1, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -312,9 +321,31 @@ carray methods
       step : int
         The number of items incremented during each iteration.  Cannot be
         negative.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterator
+
+    See Also:
+      :py:func:`where`, :py:func:`wheretrue`
+
+
+.. py:method:: reshape(newshape)
+
+    Returns a new carray containing the same data with a new shape.
+
+    Parameters:
+      newshape : int or tuple of ints
+        The new shape should be compatible with the original shape. If
+        an integer, then the result will be a 1-D array of that length.
+        One shape dimension can be -1. In this case, the value is inferred
+        from the length of the array and remaining dimensions.
+
+    Returns:
+      reshaped_array : carray
+        A copy of the original carray.
 
 
 .. py:method:: resize(nitems)
@@ -349,32 +380,40 @@ carray methods
     nitems : int
         The number of trailing items to be trimmed.
 
-    See also:
+    See Also:
       :py:func:`append`
 
-.. py:method:: where(boolarr)
+.. py:method:: where(boolarr, limit=None)
 
     Iterator that returns values of this object where `boolarr` is true.
 
     Parameters:
       boolarr : a carray or NumPy array of boolean type
-
-    Returns:
-      out : iterator
-
-    See also:
-      :py:func:`wheretrue`
-
-.. py:method:: wheretrue()
-
-    Iterator that returns indices where this object is true.  Only useful for
-    boolean carrays.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterator
 
     See Also:
-      :py:func:`where`
+      :py:func:`iter`, :py:func:`wheretrue`
+
+.. py:method:: wheretrue(limit=None)
+
+    Iterator that returns indices where this object is true.  Only useful for
+    boolean carrays.
+
+    Parameters:
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
+
+    Returns:
+      out : iterator
+
+    See Also:
+      :py:func:`iter`, :py:func:`where`
 
 
 The ctable class
@@ -467,7 +506,7 @@ ctable methods
       You should not specify both `name` and `pos` arguments,
       unless they are compatible.
 
-    See also:
+    See Also:
       :py:func:`delcol`
 
 
@@ -508,7 +547,7 @@ ctable methods
       not specify both `name` and `pos` arguments, unless they
       are compatible.
 
-    See also:
+    See Also:
       :py:func:`addcol`
 
 
@@ -532,7 +571,7 @@ ctable methods
         supported by carray constructor in `kwargs`.
 
 
-.. py:method:: iter(start=0, stop=None, step=1, outcols=None)
+.. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -550,9 +589,16 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterable
+
+    See Also:
+      :py:func:`where`
+
 
 .. py:method:: resize(nitems)
 
@@ -573,10 +619,10 @@ ctable methods
       nitems : int
         The number of trailing items to be trimmed.
 
-    See also:
+    See Also:
       :py:func:`append`
 
-.. py:method:: where(expression, outcols=None)
+.. py:method:: where(expression, outcols=None, limit=None)
 
     Iterate over rows where `expression` is true.
 
@@ -589,10 +635,14 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
 
     Returns:
       out : iterable
         This iterable returns rows as NumPy structured types (i.e. they
         support being mapped either by position or by name).
 
-
+    See Also:
+      :py:func:`iter`

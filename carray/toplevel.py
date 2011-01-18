@@ -64,7 +64,7 @@ def set_nthreads(nthreads):
     nthreads : int
         The number of threads to be used during carray operation.
 
-    See also
+    See Also
     --------
     blosc_set_nthreads
 
@@ -177,7 +177,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dflt : Python or NumPy scalar
         The value to be used during the filling process.  If None, values are
         filled with zeros.  Also, the resulting carray will have this value as
@@ -193,30 +193,37 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     out : carray
         Array filled with `dflt` values with the given shape and dtype.
 
+    See Also
+    --------
+    ones, zeros
+
     """
 
     dtype = np.dtype(dtype)
-    try:
-        stop = int(shape)
-    except:
-        raise ValueError, "shape must be an integer (or float)."
+    if type(shape) in (int, long, float):
+        shape = (int(shape),)
+    else:
+        shape = tuple(shape)
+        if len(shape) > 1:
+            # Multidimensional shape.
+            # The atom will have shape[1:] dims (+ the dtype dims).
+            dtype = np.dtype((dtype.base, shape[1:]+dtype.shape))
+    length = shape[0]
 
     # Create the container
-    expectedlen = kwargs.pop("expectedlen", stop)
-    if dtype.kind == "V":
-        raise ValueError, "zeros does not support ctables yet."
-    else:
-        obj = ca.carray([], dtype=dtype, dflt=dflt,
-                        expectedlen=expectedlen,
-                        **kwargs)
-        chunklen = obj.chunklen
+    expectedlen = kwargs.pop("expectedlen", length)
+    if dtype.kind == "V" and dtype.shape == ():
+        raise ValueError, "fill does not support ctables objects"
+    obj = ca.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
+                    **kwargs)
+    chunklen = obj.chunklen
 
     # Then fill it
-    # We need an array for the defaults so as to keep the string length info
+    # We need an array for the defaults so as to keep the atom info
     dflt = np.array(obj.dflt, dtype=dtype)
     # Making strides=(0,) below is a trick to create the array fast and
-    # without memory consumption!
-    chunk = np.ndarray(stop, dtype=dtype, buffer=dflt, strides=(0,))
+    # without memory consumption
+    chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
     obj.append(chunk)
     return obj
 
@@ -230,7 +237,7 @@ def zeros(shape, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -242,12 +249,13 @@ def zeros(shape, dtype=np.float, **kwargs):
     out : carray
         Array of zeros with the given shape and dtype.
 
+    See Also
+    --------
+    fill, ones
+
     """
     dtype = np.dtype(dtype)
-    if dtype.kind == "S":
-        return fill(shape=shape, dflt='', dtype=dtype, **kwargs)
-    else:
-        return fill(shape=shape, dflt=0, dtype=dtype, **kwargs)
+    return fill(shape=shape, dflt=np.zeros((), dtype), dtype=dtype, **kwargs)
 
 
 def ones(shape, dtype=np.float, **kwargs):
@@ -259,7 +267,7 @@ def ones(shape, dtype=np.float, **kwargs):
     Parameters
     ----------
     shape : int
-        Shape of the new array, e.g., ``2``.  Only 1-d shapes supported.
+        Shape of the new array, e.g., ``(2,3)``.
     dtype : data-type, optional
         The desired data-type for the array, e.g., `numpy.int8`.  Default is
         `numpy.float64`.
@@ -271,12 +279,13 @@ def ones(shape, dtype=np.float, **kwargs):
     out : carray
         Array of ones with the given shape and dtype.
 
+    See Also
+    --------
+    fill, zeros
+
     """
     dtype = np.dtype(dtype)
-    if dtype.kind == "S":
-        return fill(shape=shape, dflt='1', dtype=dtype, **kwargs)
-    else:
-        return fill(shape=shape, dflt=1, dtype=dtype, **kwargs)
+    return fill(shape=shape, dflt=np.ones((), dtype), dtype=dtype, **kwargs)
 
 
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
