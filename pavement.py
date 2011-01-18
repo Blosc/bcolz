@@ -205,7 +205,7 @@ Operating System :: Unix
 setup(
     name = 'carray',
     version = VERSION,
-    description = "An in-memory data container.",
+    description = "An in-memory, compressed, data container.",
     long_description = """\
 carray is a container for numerical data that can be compressed
 in-memory.  The compression process is carried out internally by Blosc,
