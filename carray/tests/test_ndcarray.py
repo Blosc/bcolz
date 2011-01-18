@@ -311,8 +311,8 @@ class compoundTest(unittest.TestCase):
 
     def test00(self):
         """Testing compound types (creation)"""
-        a = np.ones((300,4), dtype="i4,i8")
-        b = ca.ones((300,4), dtype="i4,i8")
+        a = np.ones((300,4), dtype=self.dtype)
+        b = ca.ones((300,4), dtype=self.dtype)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
         self.assert_(a.dtype == b.dtype.base)
@@ -320,8 +320,8 @@ class compoundTest(unittest.TestCase):
 
     def test01(self):
         """Testing compound types (append)"""
-        a = np.ones((300,4), dtype="i4,i8")
-        b = ca.carray([], dtype="i4,i8").reshape((0,4))
+        a = np.ones((300,4), dtype=self.dtype)
+        b = ca.carray([], dtype=self.dtype).reshape((0,4))
         b.append(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
@@ -330,12 +330,19 @@ class compoundTest(unittest.TestCase):
 
     def test02(self):
         """Testing compound types (iter)"""
-        a = np.ones((3,), dtype="i4,i8")
-        b = ca.ones((1000,3), dtype="i4,i8")
+        a = np.ones((3,), dtype=self.dtype)
+        b = ca.ones((1000,3), dtype=self.dtype)
         #print "b->", `b`
         for r in b.iter():
             #print "r-->", r
             assert_array_equal(a, r, "Arrays are not equal")
+
+
+class plainCompoundTest(compoundTest):
+    dtype = np.dtype("i4,i8")
+
+class nestedCompoundTest(compoundTest):
+    dtype = np.dtype([('f1', [('f1', 'i2'), ('f2', 'i4')])])
 
 
 class stringTest(unittest.TestCase):
@@ -410,7 +417,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(resizeTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
     theSuite.addTest(unittest.makeSuite(reshapeTest))
-    theSuite.addTest(unittest.makeSuite(compoundTest))
+    theSuite.addTest(unittest.makeSuite(plainCompoundTest))
+    theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
     theSuite.addTest(unittest.makeSuite(stringTest))
     theSuite.addTest(unittest.makeSuite(unicodeTest))
 

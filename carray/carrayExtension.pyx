@@ -456,6 +456,9 @@ cdef class carray:
         self._dtype = dtype = np.dtype((array_.dtype.base, array_.shape[1:]))
     else:
       self._dtype = dtype
+    # Checks for the dtype
+    if self._dtype.kind == 'O':
+      raise TypeError, "object dtypes are not supported in carray objects"
     # Check that atom size is less than 2 GB
     if dtype.itemsize >= 2**31:
       raise ValueError, "atomic size is too large (>= 2 GB)"
