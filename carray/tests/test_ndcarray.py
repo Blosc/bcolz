@@ -440,7 +440,7 @@ class d3evalTest(evalTest):
     shape = (3,4,5)
 
 class d4evalTest(evalTest):
-    shape = (3,4,5,2)
+    shape = (3,40,50,2)
 
 
 
