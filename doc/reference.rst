@@ -375,9 +375,8 @@ carray methods
 
     Remove the trailing `nitems` from this instance.
 
-    Parameters
-    ----------
-    nitems : int
+    Parameters:
+      nitems : int
         The number of trailing items to be trimmed.
 
     See Also:
