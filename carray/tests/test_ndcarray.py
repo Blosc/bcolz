@@ -407,6 +407,43 @@ class unicodeTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
+class evalTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing evaluation of ndcarrays (bool out)"""
+        a = np.arange(np.prod(self.shape)).reshape(self.shape)
+        b = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        outa = eval("a>0")
+        outb = ca.eval("b>0")
+        assert_array_equal(outa, outb, "Arrays are not equal")
+
+    def test01(self):
+        """Testing evaluation of ndcarrays (int out)"""
+        a = np.arange(np.prod(self.shape)).reshape(self.shape)
+        b = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        outa = eval("a*2.+1")
+        outb = ca.eval("b*2.+1")
+        assert_array_equal(outa, outb, "Arrays are not equal")
+
+    def test02(self):
+        """Testing evaluation of ndcarrays (reduction)"""
+        a = np.arange(np.prod(self.shape)).reshape(self.shape)
+        b = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        outa = eval("a.sum(axis=0)")
+        outb = ca.eval("sum(b, axis=0)")
+        assert_array_equal(outa, outb, "Arrays are not equal")
+
+class d2evalTest(evalTest):
+    shape = (3,4)
+
+class d3evalTest(evalTest):
+    shape = (3,4,5)
+
+class d4evalTest(evalTest):
+    shape = (3,4,5,2)
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -421,6 +458,10 @@ def suite():
     theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
     theSuite.addTest(unittest.makeSuite(stringTest))
     theSuite.addTest(unittest.makeSuite(unicodeTest))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(d2evalTest))
+        theSuite.addTest(unittest.makeSuite(d3evalTest))
+        theSuite.addTest(unittest.makeSuite(d4evalTest))
 
 
     return theSuite

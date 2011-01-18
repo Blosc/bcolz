@@ -52,6 +52,7 @@ class small_with_listTest(with_listTest):
 class big_with_listTest(with_listTest):
     N = 10000
 
+
 def suite():
     theSuite = unittest.TestSuite()
 

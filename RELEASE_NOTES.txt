@@ -19,6 +19,9 @@ Changes from 0.3 to 0.4
   carrays.  This supports the same functionality than `reshape()` in
   NumPy.
 
+- The behaviour of a carray was altered after using an iterator.  This
+  has been fixed.  Thanks to Han Genuit for reporting.
+
 
 Changes from 0.2 to 0.3
 =======================
