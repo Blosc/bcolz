@@ -1,14 +1,15 @@
-=====================
-Announcing carray 0.4
-=====================
+========================
+Announcing carray 0.3.1
+========================
 
 What's new
 ==========
 
-*** Add blurb here ***
+This version implements multidimensional carrays and support for all
+NumPy dtypes, except 'object'.  Some fixes have been included too.
 
 For more detailed info, see the release notes in:
-https://github.com/FrancescAlted/carray/wiki/Release-0.4
+https://github.com/FrancescAlted/carray/wiki/Release-0.3.1
 
 What it is
 ==========
