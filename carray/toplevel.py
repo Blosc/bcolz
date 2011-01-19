@@ -370,7 +370,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     return obj
 
 
-def _getvars(expression, user_dict, depth):
+def _getvars(expression, user_dict, depth, kernel):
     """Get the variables in `expression`.
 
     `depth` specifies the depth of the frame in order to reach local
@@ -378,9 +378,17 @@ def _getvars(expression, user_dict, depth):
     """
 
     cexpr = compile(expression, '<string>', 'eval')
-    exprvars = [ var for var in cexpr.co_names
-                 if var not in ['None', 'False', 'True']
-                 and var not in numexpr_functions ]
+    if kernel == "python":
+        exprvars = [ var for var in cexpr.co_names
+                     if var not in ['None', 'False', 'True'] ]
+    else:
+        # Check that var is not a numexpr function here.  This is useful for
+        # detecting unbound variables in expressions.  This is not necessary
+        # for the 'python' engine.
+        exprvars = [ var for var in cexpr.co_names
+                     if var not in ['None', 'False', 'True']
+                     and var not in numexpr_functions ]
+
 
     # Get the local and global variable mappings of the user frame
     user_locals, user_globals = {}, {}
@@ -399,18 +407,28 @@ def _getvars(expression, user_dict, depth):
         elif var in user_globals:
             val = user_globals[var]
         else:
-            raise NameError("variable name ``%s`` not found" % var)
+            if kernel == "numexpr":
+                raise NameError("variable name ``%s`` not found" % var)
+            val = None
         # Check the value.
-        if hasattr(val, 'dtype') and val.dtype.str[1:] == 'u8':
+        if (kernel == "numexpr" and
+            hasattr(val, 'dtype') and
+            val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "
                 "a 64-bit unsigned integer object, that is "
-                "not yet supported in expressions, sorry; " % var )
-        reqvars[var] = val
+                "not yet supported in numexpr expressions; "
+                "rather, use the 'python' kernel." % var )
+        if val is not None:
+            reqvars[var] = val
     return reqvars
 
 
-def eval(expression, **kwargs):
+# Assign function `eval` to a variable because we are overriding it
+_eval = eval
+
+
+def eval(expression, kernel=None, **kwargs):
     """
     eval(expression, **kwargs)
 
@@ -422,6 +440,9 @@ def eval(expression, **kwargs):
         A string forming an expression, like '2*a+3*b'. The values for 'a' and
         'b' are variable names to be taken from the calling function's frame.
         These variables may be scalars, carrays or NumPy arrays.
+    kernel : string
+        The computing kernel to be used in computations.  It can be 'numexpr'
+        or 'python'.  The default is to use 'numexpr' if it is installed.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -434,33 +455,43 @@ def eval(expression, **kwargs):
 
     """
 
-    if not ca.numexpr_here:
-        raise ImportError(
-            "You need numexpr %s or higher to use this method" % \
-            ca.min_numexpr_version)
+    if kernel is None:
+        if ca.numexpr_here:
+            kernel = "numexpr"
+        else:
+            kernel = "python"
+    if kernel not in ("python", "numexpr"):
+        raise ValueError, "`kernel` must be either 'numpy' or 'numexpr'"
 
     # Get variables and column names participating in expression
     user_dict = kwargs.pop('user_dict', {})
     depth = kwargs.pop('depth', 2)
-    vars = _getvars(expression, user_dict, depth)
+    vars = _getvars(expression, user_dict, depth, kernel=kernel)
 
     # Gather info about sizes and lengths
     typesize, vlen = 0, 1
     for name in vars.iterkeys():
         var = vars[name]
+        if hasattr(var, "__len__") and not hasattr(var, "dtype"):
+            raise ValueError, "only numpy/carray sequences supported"
         if hasattr(var, "dtype"):  # numpy/carray arrays
-            typesize += var.dtype.itemsize
-        elif hasattr(var, "__len__"): # sequence
-            arr = np.array(var[0])
-            typesize += arr.dtype.itemsize
+            if isinstance(var, np.ndarray):  # numpy array
+                typesize += var.dtype.itemsize * np.prod(var.shape[1:])
+            elif isinstance(var, ca.carray):  # carray array
+                typesize += var.dtype.itemsize
+            else:
+                raise ValueError, "only numpy/carray objects supported"
         if hasattr(var, "__len__"):
             if vlen > 1 and vlen != len(var):
-                raise ValueError, "sequences must have the same length"
+                raise ValueError, "arrays must have the same length"
             vlen = len(var)
 
     if typesize == 0:
         # All scalars
-        return ca.numexpr.evaluate(expression, local_dict=vars)
+        if kernel == "python":
+            return _eval(expression, vars)
+        else:
+            return ca.numexpr.evaluate(expression, local_dict=vars)
 
     # Compute the optimal block size (in elements)
     # The next is based on experiments with bench/ctable-query.py
@@ -483,11 +514,7 @@ def eval(expression, **kwargs):
     for name in vars.iterkeys():
         var = vars[name]
         if hasattr(var, "__len__") and len(var) > bsize:
-            if hasattr(var, "dtype"):
-                dtype = var.dtype
-            else:
-                dtype = np.array([var[0]]).dtype
-            vars_[name] = np.empty(bsize, dtype=dtype)
+            vars_[name] = np.empty(bsize, dtype=var.dtype)
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
         for name in vars.iterkeys():
@@ -502,9 +529,15 @@ def eval(expression, **kwargs):
                     vars_[name] = var[i:i+bsize]
                 expectedlen = len(var)
             else:
-                vars_[name] = var
+                if hasattr(var, "__getitem__"):
+                    vars_[name] = var[:]
+                else:
+                    vars_[name] = var
         # Perform the evaluation for this block
-        res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
+        if kernel == "python":
+            res_block = _eval(expression, vars_)
+        else:
+            res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
         if i == 0:
             # Get a decent default for expectedlen
             nrows = kwargs.pop('expectedlen', expectedlen)

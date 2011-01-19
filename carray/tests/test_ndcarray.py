@@ -427,10 +427,13 @@ class evalTest(unittest.TestCase):
 
     def test02(self):
         """Testing evaluation of ndcarrays (reduction)"""
+        # Do not execute this in numexpr mode (reduction ops are broken there)
+        if ca.numexpr_here:
+            return
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
         outa = eval("a.sum(axis=0)")
-        outb = ca.eval("sum(b, axis=0)")
+        outb = ca.eval("b.sum(axis=0)")
         assert_array_equal(outa, outb, "Arrays are not equal")
 
 class d2evalTest(evalTest):
@@ -458,10 +461,9 @@ def suite():
     theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
     theSuite.addTest(unittest.makeSuite(stringTest))
     theSuite.addTest(unittest.makeSuite(unicodeTest))
-    if ca.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(d2evalTest))
-        theSuite.addTest(unittest.makeSuite(d3evalTest))
-        theSuite.addTest(unittest.makeSuite(d4evalTest))
+    theSuite.addTest(unittest.makeSuite(d2evalTest))
+    theSuite.addTest(unittest.makeSuite(d3evalTest))
+    theSuite.addTest(unittest.makeSuite(d4evalTest))
 
 
     return theSuite
