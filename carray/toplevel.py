@@ -512,11 +512,15 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
 
     vars_ = {}
     # Get temporaries for vars
+    maxndims = 0
     for name in vars.iterkeys():
         var = vars[name]
-        if ( hasattr(var, "__len__") and len(var) > bsize and
-             hasattr(var, "_getrange") ):
-            vars_[name] = np.empty(bsize, dtype=var.dtype)
+        if hasattr(var, "__len__"):
+            ndims = len(var.shape) + len(var.dtype.shape)
+            if ndims > maxndims:
+                maxndims = ndims
+            if len(var) > bsize and hasattr(var, "_getrange"):
+                vars_[name] = np.empty(bsize, dtype=var.dtype)
 
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
@@ -541,6 +545,10 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
         else:
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
         if i == 0:
+            # Detection of reduction operations
+            if len(res_block.shape) < maxndims:
+                raise (NotImplementedError,
+                       "reduction operations are not supported yet")
             # Get a decent default for expectedlen
             nrows = kwargs.pop('expectedlen', vlen)
             result = ca.carray(res_block, expectedlen=nrows, **kwargs)

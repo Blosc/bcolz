@@ -435,14 +435,15 @@ class evalTest(unittest.TestCase):
 
     def test02(self):
         """Testing evaluation of ndcarrays (reduction)"""
-        # Do not execute this in numexpr mode (reduction ops are broken there)
-        if ca.numexpr_here:
-            return
+        # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
-        outa = eval("a.sum(axis=0)")
-        outb = ca.eval("b.sum(axis=0)")
-        assert_array_equal(outa, outb, "Arrays are not equal")
+        if ca.default_kernel:
+            self.assertRaises(NotImplementedError,
+                              ca.eval, "sum(b)", depth=3)
+        else:
+            self.assertRaises(NotImplementedError,
+                              ca.eval, "b.sum(axis=0)", depth=3)
 
 class d2evalTest(evalTest):
     shape = (3,4)
