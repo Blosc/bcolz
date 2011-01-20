@@ -449,12 +449,9 @@ def eval(expression, kernel=None, **kwargs):
     """
 
     if kernel is None:
-        if ca.numexpr_here:
-            kernel = "numexpr"
-        else:
-            kernel = "python"
-    if kernel not in ("python", "numexpr"):
-        raise ValueError, "`kernel` must be either 'numpy' or 'numexpr'"
+        kernel = ca.default_kernel
+    if kernel not in ("numexpr", "python"):
+        raiseValue, "`kernel` must be either 'numexpr' or 'python'"
 
     # Get variables and column names participating in expression
     user_dict = kwargs.pop('user_dict', {})
@@ -598,6 +595,33 @@ class cparams(object):
         args = ["clevel=%d"%self._clevel, "shuffle=%s"%self._shuffle]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
+
+def set_kernel(kernel):
+    """
+    set_kernel(kernel)
+
+    Set the default `kernel` when doing computations.
+
+    Parameters
+    ----------
+    kernel : string
+        The computing kernel to be used in computations.  It can be 'numexpr'
+        or 'python'.
+
+    Returns
+    -------
+    out : string
+        The previous kernel used.
+
+    """
+    if kernel not in ("numexpr", "python"):
+        raiseValue, "`kernel` must be either 'numexpr' or 'python'"
+    if kernel == "numexpr" and not ca.numexpr_here:
+        raise (ValueError,
+               "cannot use `numexpr` kernel (minimum version not installed")
+    prev_kernel = ca.default_kernel
+    ca.default_kernel = kernel
+    return prev_kernel
 
 
 ## Local Variables:

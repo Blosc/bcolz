@@ -409,6 +409,14 @@ class unicodeTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
+    kernel = "python"
+
+    def setUp(self):
+        self.prev_kernel = ca.set_kernel(self.kernel)
+
+    def tearDown(self):
+        ca.set_kernel(self.prev_kernel)
+
     def test00(self):
         """Testing evaluation of ndcarrays (bool out)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
@@ -439,12 +447,23 @@ class evalTest(unittest.TestCase):
 class d2evalTest(evalTest):
     shape = (3,4)
 
+class d2eval_ne(evalTest):
+    shape = (3,4)
+    kernel = "numexpr"
+
 class d3evalTest(evalTest):
     shape = (3,4,5)
+
+class d3eval_ne(evalTest):
+    shape = (3,4,5)
+    kernel = "numexpr"
 
 class d4evalTest(evalTest):
     shape = (3,40,50,2)
 
+class d4eval_ne(evalTest):
+    shape = (3,40,50,2)
+    kernel = "numexpr"
 
 
 def suite():
@@ -464,6 +483,10 @@ def suite():
     theSuite.addTest(unittest.makeSuite(d2evalTest))
     theSuite.addTest(unittest.makeSuite(d3evalTest))
     theSuite.addTest(unittest.makeSuite(d4evalTest))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(d2eval_ne))
+        theSuite.addTest(unittest.makeSuite(d3eval_ne))
+        theSuite.addTest(unittest.makeSuite(d4eval_ne))
 
 
     return theSuite

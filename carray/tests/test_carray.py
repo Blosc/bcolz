@@ -855,6 +855,14 @@ class fromiterTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
+    kernel = "python"
+
+    def setUp(self):
+        self.prev_kernel = ca.set_kernel(self.kernel)
+
+    def tearDown(self):
+        ca.set_kernel(self.prev_kernel)
+
     def test00(self):
         """Testing eval() with only scalars and constants"""
         a = 3
@@ -957,11 +965,19 @@ class evalTest(unittest.TestCase):
         #print "numpy  ->", a
         assert_array_equal(c[:], a, "carray[expr] = v does not work correctly")
 
-class eval_smallTest(evalTest):
+class eval_small(evalTest):
     N = 10
 
-class eval_bigTest(evalTest):
+class eval_big(evalTest):
     N = 1e4
+
+class eval_small_ne(evalTest):
+    N = 10
+    kernel = "numexpr"
+
+class eval_big_ne(evalTest):
+    N = 1e4
+    kernel = "numexpr"
 
 
 class computeMethodsTest(unittest.TestCase):
@@ -1212,8 +1228,12 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructor_bigTest))
     theSuite.addTest(unittest.makeSuite(dtypesTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
-    theSuite.addTest(unittest.makeSuite(eval_smallTest))
-    theSuite.addTest(unittest.makeSuite(eval_bigTest))
+    theSuite.addTest(unittest.makeSuite(eval_small))
+    theSuite.addTest(unittest.makeSuite(eval_big))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(eval_small_ne))
+        theSuite.addTest(unittest.makeSuite(eval_big_ne))
+
     # Only for 64-bit systems
     if is_64bit:
         theSuite.addTest(unittest.makeSuite(largeCarrayTest))

@@ -498,6 +498,14 @@ class specialTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
+    kernel = "python"
+
+    def setUp(self):
+        self.prev_kernel = ca.set_kernel(self.kernel)
+
+    def tearDown(self):
+        ca.set_kernel(self.prev_kernel)
+
     def test00a(self):
         """Testing eval() with only columns"""
         N = 10
@@ -548,7 +556,7 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        if not ca.numexpr_here:
+        if not ca.default_kernel == "numexpr":
             # Populate the name space with functions from numpy
             from numpy import sin
         ctr = t.eval("f0 * sin(f1)")
@@ -594,6 +602,9 @@ class evalTest(unittest.TestCase):
         #print "ctable ->", ctr
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+class eval_ne(evalTest):
+    kernel = "numexpr"
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):
@@ -1134,6 +1145,8 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
     theSuite.addTest(unittest.makeSuite(evalTest))
+    if ca.numexpr_here:
+        theSuite.addTest(unittest.makeSuite(eval_ne))
     theSuite.addTest(unittest.makeSuite(eval_getitemTest))
     theSuite.addTest(unittest.makeSuite(bool_getitemTest))
     theSuite.addTest(unittest.makeSuite(where_smallTest))
