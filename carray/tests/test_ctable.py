@@ -498,7 +498,15 @@ class specialTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
-    def test00(self):
+    kernel = "python"
+
+    def setUp(self):
+        self.prev_kernel = ca.set_kernel(self.kernel)
+
+    def tearDown(self):
+        ca.set_kernel(self.prev_kernel)
+
+    def test00a(self):
         """Testing eval() with only columns"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -508,6 +516,17 @@ class evalTest(unittest.TestCase):
         #print "ctable ->", ctr
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+    def test00b(self):
+        """Testing eval() with only constants"""
+        f0, f1, f2 = 1, 2, 3
+        # Populate the name space with functions from math
+        from math import sin
+        ctr = ca.eval("f0 * f1 * sin(f2)")
+        rar = f0 * f1 * sin(f2)
+        #print "ctable ->", ctr
+        #print "python ->", rar
+        self.assert_(ctr == rar, "values are not correct")
 
     def test01(self):
         """Testing eval() with columns and constants"""
@@ -537,6 +556,9 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
+        if not ca.default_kernel == "numexpr":
+            # Populate the name space with functions from numpy
+            from numpy import sin
         ctr = t.eval("f0 * sin(f1)")
         rar = ra['f0'] * np.sin(ra['f1'])
         #print "ctable ->", ctr
@@ -569,17 +591,20 @@ class evalTest(unittest.TestCase):
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
     def test06(self):
-        """Testing eval() with a mix of columns, numpy arrays and lists"""
+        """Testing eval() with a mix of columns, numpy arrays and carrays"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
         a = np.arange(N)
-        b = np.arange(N).tolist()
+        b = ca.arange(N)
         ctr = t.eval("f0 + f1 - a + b")
         rar = ra['f0'] + ra['f1'] - a + b
         #print "ctable ->", ctr
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
+
+class eval_ne(evalTest):
+    kernel = "numexpr"
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):
@@ -725,7 +750,6 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04a(self):
         """Testing fancy indexing (setitem) with a condition (all false)"""
-        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -739,7 +763,6 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04b(self):
         """Testing fancy indexing (setitem) with a condition (all true)"""
-        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -753,7 +776,6 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04c(self):
         """Testing fancy indexing (setitem) with a condition (mixed values)"""
-        if not ca.numexpr_here: return
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -767,7 +789,6 @@ class fancy_indexing_setitemTest(unittest.TestCase):
 
     def test04d(self):
         """Testing fancy indexing (setitem) with a condition (diff values)"""
-        if not ca.numexpr_here: return
         N = 100
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
@@ -1123,12 +1144,13 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
+    theSuite.addTest(unittest.makeSuite(evalTest))
     if ca.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(evalTest))
-        theSuite.addTest(unittest.makeSuite(eval_getitemTest))
-        theSuite.addTest(unittest.makeSuite(bool_getitemTest))
-        theSuite.addTest(unittest.makeSuite(where_smallTest))
-        theSuite.addTest(unittest.makeSuite(where_largeTest))
+        theSuite.addTest(unittest.makeSuite(eval_ne))
+    theSuite.addTest(unittest.makeSuite(eval_getitemTest))
+    theSuite.addTest(unittest.makeSuite(bool_getitemTest))
+    theSuite.addTest(unittest.makeSuite(where_smallTest))
+    theSuite.addTest(unittest.makeSuite(where_largeTest))
 
     return theSuite
 

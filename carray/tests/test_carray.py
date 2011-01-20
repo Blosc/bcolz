@@ -855,6 +855,14 @@ class fromiterTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
+    kernel = "python"
+
+    def setUp(self):
+        self.prev_kernel = ca.set_kernel(self.kernel)
+
+    def tearDown(self):
+        ca.set_kernel(self.prev_kernel)
+
     def test00(self):
         """Testing eval() with only scalars and constants"""
         a = 3
@@ -902,9 +910,9 @@ class evalTest(unittest.TestCase):
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test05(self):
-        """Testing eval() with a mix of carray, ndarray, scalars and lists"""
+        """Testing eval() with a mix of carray, ndarray and scalars"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
+        c, d = ca.carray(a), b
         cr = ca.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
         #print "ca.eval ->", cr
@@ -912,9 +920,9 @@ class evalTest(unittest.TestCase):
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test06(self):
-        """Testing eval() with only scalars and lists"""
+        """Testing eval() with only scalars and arrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
+        c, d = ca.carray(a), b
         cr = ca.eval("d - 3")
         nr = b - 3
         #print "ca.eval ->", cr
@@ -924,24 +932,23 @@ class evalTest(unittest.TestCase):
     def test07(self):
         """Testing eval() via expression on __getitem__"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
+        c, d = ca.carray(a), b
         cr = c["a + 2 * d - 3 > 0"]
         nr = a[(a + 2 * b - 3) > 0]
         #print "ca[expr] ->", cr
         #print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "carray[expr] does not work correctly")
 
-    def _test08(self):
-        """Testing eval() via expression on __getitem__ (no bool expr)"""
-        a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
-        # This is not going to work because of different frame depth :-/
-        self.assertRaises(IndexError, c.__getitem__, "a*3")
+    def test08(self):
+        """Testing eval() via expression with lists (raise ValueError)"""
+        a, b = range(int(self.N)), range(int(self.N))
+        self.assertRaises(ValueError, ca.eval, "a*3", depth=3)
+        self.assertRaises(ValueError, ca.eval, "b*3", depth=3)
 
     def test09(self):
         """Testing eval() via expression on __setitem__ (I)"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
+        c, d = ca.carray(a), b
         c["a + 2 * d - 3 > 0"] = 3
         a[(a + 2 * b - 3) > 0] = 3
         #print "carray ->", c
@@ -951,18 +958,26 @@ class evalTest(unittest.TestCase):
     def test10(self):
         """Testing eval() via expression on __setitem__ (II)"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b.tolist()
+        c, d = ca.carray(a), b
         c["a + 2 * d - 3 > 1000"] = 0
         a[(a + 2 * b - 3) > 1000] = 0
         #print "carray ->", c
         #print "numpy  ->", a
         assert_array_equal(c[:], a, "carray[expr] = v does not work correctly")
 
-class eval_smallTest(evalTest):
+class eval_small(evalTest):
     N = 10
 
-class eval_bigTest(evalTest):
+class eval_big(evalTest):
     N = 1e4
+
+class eval_small_ne(evalTest):
+    N = 10
+    kernel = "numexpr"
+
+class eval_big_ne(evalTest):
+    N = 1e4
+    kernel = "numexpr"
 
 
 class computeMethodsTest(unittest.TestCase):
@@ -1213,9 +1228,12 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructor_bigTest))
     theSuite.addTest(unittest.makeSuite(dtypesTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
+    theSuite.addTest(unittest.makeSuite(eval_small))
+    theSuite.addTest(unittest.makeSuite(eval_big))
     if ca.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(eval_smallTest))
-        theSuite.addTest(unittest.makeSuite(eval_bigTest))
+        theSuite.addTest(unittest.makeSuite(eval_small_ne))
+        theSuite.addTest(unittest.makeSuite(eval_big_ne))
+
     # Only for 64-bit systems
     if is_64bit:
         theSuite.addTest(unittest.makeSuite(largeCarrayTest))

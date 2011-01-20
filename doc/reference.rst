@@ -2,6 +2,30 @@
 Library Reference
 -----------------
 
+First level variables
+=====================
+
+.. py:attribute:: __version__
+
+    The version of the carray package.
+
+.. py:attribute:: default_kernel
+
+    The kernel to be used in computations.  It can be "numexpr" or "python".
+
+.. py:attribute:: min_numexpr_version
+
+    The minimum version of numexpr needed (numexpr is optional).
+
+.. py:attribute:: ncores
+
+    The number of cores detected.
+
+.. py:attribute:: numexpr_here
+
+    Whether minimum version of numexpr has been detected.
+
+
 First level classes
 ===================
 
@@ -194,6 +218,19 @@ Utility functions
 .. py:function:: detect_number_of_cores()
 
     Return the number of cores on a system.
+
+.. py:function:: set_kernel(kernel)
+
+    Set the default `kernel` when doing computations.
+
+    Parameters :
+      kernel : string
+        The computing kernel to be used in computations.  It can be 'numexpr'
+        or 'python'.
+
+    Returns :
+      out : string
+        The previous kernel used.
 
 .. py:function:: set_nthreads(nthreads)
 
@@ -550,7 +587,7 @@ ctable methods
       :py:func:`addcol`
 
 
-.. py:method:: eval(expression, **kwargs)
+.. py:method:: eval(expression, kernel=None, **kwargs)
 
     Evaluate the `expression` on columns and return the result.
 
@@ -560,6 +597,9 @@ ctable methods
         for 'a' and 'b' are variable names to be taken from the
         calling function's frame.  These variables may be column
         names in this table, scalars, carrays or NumPy arrays.
+      kernel : string
+        The computing kernel to be used in computations.  It can be 'numexpr'
+        or 'python'.  The default is to use 'numexpr' if it is installed.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
