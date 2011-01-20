@@ -19,13 +19,6 @@ if ca.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
 
-# The size of the columns chunks to be used in `ctable.eval()`, in
-# bytes.  For optimal performance, set this so that it will not exceed
-# the size of your L2/L3 (whichever is larger) cache.
-#EVAL_BLOCK_SIZE = 16            # use this for testing purposes
-EVAL_BLOCK_SIZE = 1024*1024    # 1 MB should represent a good average
-
-
 def detect_number_of_cores():
     """
     detect_number_of_cores()
@@ -501,7 +494,12 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
 
     # Compute the optimal block size (in elements)
     # The next is based on experiments with bench/ctable-query.py
-    bsize = EVAL_BLOCK_SIZE
+    if kernel == "numexpr":
+        # When kernel is numexpr, make sure that operands fits in L3 chache
+        bsize = 2**20  # 1 MB is common for L3
+    else:
+        # When kernel is python, make sure that operands fits in L2 chache
+        bsize = 2**17  # 256 KB is common for L2
     bsize //= typesize
     # Evaluation seems more efficient if block size is a power of 2
     bsize = 2 ** (int(math.log(bsize, 2)))
@@ -511,6 +509,9 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
         bsize //= 4
     elif vlen < 10*1000*1000:
         bsize //= 2
+    # Protection against too large atomsizes
+    if bsize == 0:
+        bsize = 1
 
     vars_ = {}
     # Get temporaries for vars
@@ -519,6 +520,7 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
         if ( hasattr(var, "__len__") and len(var) > bsize and
              hasattr(var, "_getrange") ):
             vars_[name] = np.empty(bsize, dtype=var.dtype)
+
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
         for name in vars.iterkeys():

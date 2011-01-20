@@ -66,7 +66,9 @@ if __name__=="__main__":
             import pstats
             import cProfile as prof
             #prof.run('compute_carray(sexpr, clevel=clevel, kernel="numexpr")',
-            prof.run('compute_carray(sexpr, clevel=clevel, kernel="python")',
+            prof.run('compute_carray(sexpr, clevel=0, kernel="numexpr")',
+            #prof.run('compute_carray(sexpr, clevel=clevel, kernel="python")',
+            #prof.run('compute_carray(sexpr, clevel=0, kernel="python")',
                      'eval.prof')
             stats = pstats.Stats('eval.prof')
             stats.strip_dirs()
