@@ -550,7 +550,7 @@ ctable methods
       :py:func:`addcol`
 
 
-.. py:method:: eval(expression, **kwargs)
+.. py:method:: eval(expression, kernel=None, **kwargs)
 
     Evaluate the `expression` on columns and return the result.
 
@@ -560,6 +560,9 @@ ctable methods
         for 'a' and 'b' are variable names to be taken from the
         calling function's frame.  These variables may be column
         names in this table, scalars, carrays or NumPy arrays.
+      kernel : string
+        The computing kernel to be used in computations.  It can be 'numexpr'
+        or 'python'.  The default is to use 'numexpr' if it is installed.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 

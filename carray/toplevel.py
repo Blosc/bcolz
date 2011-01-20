@@ -430,7 +430,7 @@ _eval = eval
 
 def eval(expression, kernel=None, **kwargs):
     """
-    eval(expression, **kwargs)
+    eval(expression, kernel=None, **kwargs)
 
     Evaluate an `expression` and return the result as a carray object.
 
@@ -493,27 +493,31 @@ def eval(expression, kernel=None, **kwargs):
         else:
             return ca.numexpr.evaluate(expression, local_dict=vars)
 
+    return _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs)
+
+
+def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
+    """Perform the evaluation in blocks."""
+
     # Compute the optimal block size (in elements)
     # The next is based on experiments with bench/ctable-query.py
-    if vlen < 100*1000:
-        bsize = EVAL_BLOCK_SIZE // 8
-    elif vlen < 1000*1000:
-        bsize = EVAL_BLOCK_SIZE // 4
-    elif vlen < 10*1000*1000:
-        bsize = EVAL_BLOCK_SIZE // 2
-    else:
-        bsize = EVAL_BLOCK_SIZE
-    bsize = bsize // typesize
+    bsize = EVAL_BLOCK_SIZE
+    bsize //= typesize
     # Evaluation seems more efficient if block size is a power of 2
     bsize = 2 ** (int(math.log(bsize, 2)))
+    if vlen < 100*1000:
+        bsize //= 8
+    elif vlen < 1000*1000:
+        bsize //= 4
+    elif vlen < 10*1000*1000:
+        bsize //= 2
 
-    # Perform the evaluation in blocks
     vars_ = {}
-    expectedlen = bsize    # a default
     # Get temporaries for vars
     for name in vars.iterkeys():
         var = vars[name]
-        if hasattr(var, "__len__") and len(var) > bsize:
+        if ( hasattr(var, "__len__") and len(var) > bsize and
+             hasattr(var, "_getrange") ):
             vars_[name] = np.empty(bsize, dtype=var.dtype)
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
@@ -527,7 +531,6 @@ def eval(expression, kernel=None, **kwargs):
                         vars_[name] = var[i:]
                 else:
                     vars_[name] = var[i:i+bsize]
-                expectedlen = len(var)
             else:
                 if hasattr(var, "__getitem__"):
                     vars_[name] = var[:]
@@ -540,7 +543,7 @@ def eval(expression, kernel=None, **kwargs):
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
         if i == 0:
             # Get a decent default for expectedlen
-            nrows = kwargs.pop('expectedlen', expectedlen)
+            nrows = kwargs.pop('expectedlen', vlen)
             result = ca.carray(res_block, expectedlen=nrows, **kwargs)
         else:
             result.append(res_block)
