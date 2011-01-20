@@ -43,7 +43,7 @@ print "Time for numexpr (numpy)--> %.3f" % (time()-t0,)
 
 # Uncomment the next for disabling threading
 #ne.set_num_threads(1)
-#ca.blosc_set_num_threads(1)
+#ca.blosc_set_nthreads(1)
 # Seems that this works better if we dividw the number of cores by 2.
 # Maybe due to some contention between Numexpr and Blosc?
 #ca.set_nthreads(ca.ncores//2)
