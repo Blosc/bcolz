@@ -498,13 +498,13 @@ class specialTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
-    kernel = "python"
+    vm = "python"
 
     def setUp(self):
-        self.prev_kernel = ca.set_kernel(self.kernel)
+        self.prev_vm = ca.set_vm(self.vm)
 
     def tearDown(self):
-        ca.set_kernel(self.prev_kernel)
+        ca.set_vm(self.prev_vm)
 
     def test00a(self):
         """Testing eval() with only columns"""
@@ -556,7 +556,7 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        if not ca.default_kernel == "numexpr":
+        if not ca.default_vm == "numexpr":
             # Populate the name space with functions from numpy
             from numpy import sin
         ctr = t.eval("f0 * sin(f1)")
@@ -604,7 +604,7 @@ class evalTest(unittest.TestCase):
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
 class eval_ne(evalTest):
-    kernel = "numexpr"
+    vm = "numexpr"
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):

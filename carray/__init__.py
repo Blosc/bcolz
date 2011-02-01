@@ -18,7 +18,7 @@ Public variables
 ----------------
 
 * __version__ : the version of carray package
-* default_kernel : the kernel to be used in computations
+* default_vm : the virtual machine to be used in computations
 * min_numexpr_version : the minimum version of numexpr needed
 * ncores : the number of detected cores
 * numexpr_here : whether minimum version of numexpr has been detected
@@ -43,7 +43,7 @@ Public classes
 
 min_numexpr_version = '1.4.1'  # the minimum version of Numexpr needed
 numexpr_here = False
-default_kernel = "python"
+default_vm = "python"
 try:
     import numexpr
 except ImportError:
@@ -51,7 +51,7 @@ except ImportError:
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
-        default_kernel = "numexpr"
+        default_vm = "numexpr"
 
 from carray.carrayExtension import (
     carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads)
@@ -59,7 +59,7 @@ from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads,
     fromiter, arange, zeros, ones, fill,
-    cparams, eval, set_kernel)
+    cparams, eval, set_vm)
 from carray.version import __version__
 from carray.tests import test
 

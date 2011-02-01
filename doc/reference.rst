@@ -9,9 +9,10 @@ First level variables
 
     The version of the carray package.
 
-.. py:attribute:: default_kernel
+.. py:attribute:: default_vm
 
-    The kernel to be used in computations.  It can be "numexpr" or "python".
+    The virtual machine to be used in computations.  It can be
+    "numexpr" or "python".
 
 .. py:attribute:: min_numexpr_version
 
@@ -219,18 +220,18 @@ Utility functions
 
     Return the number of cores on a system.
 
-.. py:function:: set_kernel(kernel)
+.. py:function:: set_vm(vm)
 
-    Set the default `kernel` when doing computations.
+    Set the default virtual machine when doing computations.
 
     Parameters :
-      kernel : string
-        The computing kernel to be used in computations.  It can be 'numexpr'
+      vm : string
+        The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.
 
     Returns :
       out : string
-        The previous kernel used.
+        The previous virtual machine used.
 
 .. py:function:: set_nthreads(nthreads)
 
@@ -587,7 +588,7 @@ ctable methods
       :py:func:`addcol`
 
 
-.. py:method:: eval(expression, kernel=None, **kwargs)
+.. py:method:: eval(expression, vm=None, **kwargs)
 
     Evaluate the `expression` on columns and return the result.
 
@@ -597,8 +598,8 @@ ctable methods
         for 'a' and 'b' are variable names to be taken from the
         calling function's frame.  These variables may be column
         names in this table, scalars, carrays or NumPy arrays.
-      kernel : string
-        The computing kernel to be used in computations.  It can be 'numexpr'
+      vm : string
+        The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.  The default is to use 'numexpr' if it is installed.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.

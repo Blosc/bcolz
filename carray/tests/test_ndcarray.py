@@ -409,13 +409,13 @@ class unicodeTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
-    kernel = "python"
+    vm = "python"
 
     def setUp(self):
-        self.prev_kernel = ca.set_kernel(self.kernel)
+        self.prev_vm = ca.set_vm(self.vm)
 
     def tearDown(self):
-        ca.set_kernel(self.prev_kernel)
+        ca.set_vm(self.prev_vm)
 
     def test00(self):
         """Testing evaluation of ndcarrays (bool out)"""
@@ -438,7 +438,7 @@ class evalTest(unittest.TestCase):
         # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
-        if ca.default_kernel:
+        if ca.default_vm:
             self.assertRaises(NotImplementedError,
                               ca.eval, "sum(b)", depth=3)
         else:
@@ -450,21 +450,21 @@ class d2evalTest(evalTest):
 
 class d2eval_ne(evalTest):
     shape = (3,4)
-    kernel = "numexpr"
+    vm = "numexpr"
 
 class d3evalTest(evalTest):
     shape = (3,4,5)
 
 class d3eval_ne(evalTest):
     shape = (3,4,5)
-    kernel = "numexpr"
+    vm = "numexpr"
 
 class d4evalTest(evalTest):
     shape = (3,40,50,2)
 
 class d4eval_ne(evalTest):
     shape = (3,40,50,2)
-    kernel = "numexpr"
+    vm = "numexpr"
 
 
 def suite():

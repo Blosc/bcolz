@@ -855,13 +855,13 @@ class fromiterTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
-    kernel = "python"
+    vm = "python"
 
     def setUp(self):
-        self.prev_kernel = ca.set_kernel(self.kernel)
+        self.prev_vm = ca.set_vm(self.vm)
 
     def tearDown(self):
-        ca.set_kernel(self.prev_kernel)
+        ca.set_vm(self.prev_vm)
 
     def test00(self):
         """Testing eval() with only scalars and constants"""
@@ -969,7 +969,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with functions like `np.sin()`"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
         c, d = ca.carray(a), ca.carray(b)
-        if self.kernel == "python":
+        if self.vm == "python":
             cr = ca.eval("np.sin(c) + 2 * np.log(d) - 3")
         else:
             cr = ca.eval("sin(c) + 2 * log(d) - 3")
@@ -986,11 +986,11 @@ class eval_big(evalTest):
 
 class eval_small_ne(evalTest):
     N = 10
-    kernel = "numexpr"
+    vm = "numexpr"
 
 class eval_big_ne(evalTest):
     N = 1e4
-    kernel = "numexpr"
+    vm = "numexpr"
 
 
 class computeMethodsTest(unittest.TestCase):

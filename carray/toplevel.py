@@ -363,7 +363,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     return obj
 
 
-def _getvars(expression, user_dict, depth, kernel):
+def _getvars(expression, user_dict, depth, vm):
     """Get the variables in `expression`.
 
     `depth` specifies the depth of the frame in order to reach local
@@ -371,7 +371,7 @@ def _getvars(expression, user_dict, depth, kernel):
     """
 
     cexpr = compile(expression, '<string>', 'eval')
-    if kernel == "python":
+    if vm == "python":
         exprvars = [ var for var in cexpr.co_names
                      if var not in ['None', 'False', 'True'] ]
     else:
@@ -400,18 +400,18 @@ def _getvars(expression, user_dict, depth, kernel):
         elif var in user_globals:
             val = user_globals[var]
         else:
-            if kernel == "numexpr":
+            if vm == "numexpr":
                 raise NameError("variable name ``%s`` not found" % var)
             val = None
         # Check the value.
-        if (kernel == "numexpr" and
+        if (vm == "numexpr" and
             hasattr(val, 'dtype') and
             val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "
                 "a 64-bit unsigned integer object, that is "
                 "not yet supported in numexpr expressions; "
-                "rather, use the 'python' kernel." % var )
+                "rather, use the 'python' vm." % var )
         if val is not None:
             reqvars[var] = val
     return reqvars
@@ -421,9 +421,9 @@ def _getvars(expression, user_dict, depth, kernel):
 _eval = eval
 
 
-def eval(expression, kernel=None, **kwargs):
+def eval(expression, vm=None, **kwargs):
     """
-    eval(expression, kernel=None, **kwargs)
+    eval(expression, vm=None, **kwargs)
 
     Evaluate an `expression` and return the result as a carray object.
 
@@ -433,8 +433,8 @@ def eval(expression, kernel=None, **kwargs):
         A string forming an expression, like '2*a+3*b'. The values for 'a' and
         'b' are variable names to be taken from the calling function's frame.
         These variables may be scalars, carrays or NumPy arrays.
-    kernel : string
-        The computing kernel to be used in computations.  It can be 'numexpr'
+    vm : string
+        The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.  The default is to use 'numexpr' if it is installed.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
@@ -448,15 +448,15 @@ def eval(expression, kernel=None, **kwargs):
 
     """
 
-    if kernel is None:
-        kernel = ca.default_kernel
-    if kernel not in ("numexpr", "python"):
-        raiseValue, "`kernel` must be either 'numexpr' or 'python'"
+    if vm is None:
+        vm = ca.default_vm
+    if vm not in ("numexpr", "python"):
+        raiseValue, "`vm` must be either 'numexpr' or 'python'"
 
     # Get variables and column names participating in expression
     user_dict = kwargs.pop('user_dict', {})
     depth = kwargs.pop('depth', 2)
-    vars = _getvars(expression, user_dict, depth, kernel=kernel)
+    vars = _getvars(expression, user_dict, depth, vm=vm)
 
     # Gather info about sizes and lengths
     typesize, vlen = 0, 1
@@ -480,24 +480,24 @@ def eval(expression, kernel=None, **kwargs):
 
     if typesize == 0:
         # All scalars
-        if kernel == "python":
+        if vm == "python":
             return _eval(expression, vars)
         else:
             return ca.numexpr.evaluate(expression, local_dict=vars)
 
-    return _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs)
+    return _eval_blocks(expression, vars, vlen, typesize, vm, **kwargs)
 
 
-def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
+def _eval_blocks(expression, vars, vlen, typesize, vm, **kwargs):
     """Perform the evaluation in blocks."""
 
     # Compute the optimal block size (in elements)
     # The next is based on experiments with bench/ctable-query.py
-    if kernel == "numexpr":
-        # When kernel is numexpr, make sure that operands fits in L3 chache
+    if vm == "numexpr":
+        # If numexpr, make sure that operands fits in L3 chache
         bsize = 2**20  # 1 MB is common for L3
     else:
-        # When kernel is python, make sure that operands fits in L2 chache
+        # If python, make sure that operands fits in L2 chache
         bsize = 2**17  # 256 KB is common for L2
     bsize //= typesize
     # Evaluation seems more efficient if block size is a power of 2
@@ -542,7 +542,7 @@ def _eval_blocks(expression, vars, vlen, typesize, kernel, **kwargs):
                 else:
                     vars_[name] = var
         # Perform the evaluation for this block
-        if kernel == "python":
+        if vm == "python":
             res_block = _eval(expression, vars_)
         else:
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
@@ -606,32 +606,33 @@ class cparams(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
-def set_kernel(kernel):
+def set_vm(vm):
     """
-    set_kernel(kernel)
+    set_vm(vm)
 
-    Set the default `kernel` when doing computations.
+    Set the default virtual machine when doing computations.
 
     Parameters
     ----------
-    kernel : string
-        The computing kernel to be used in computations.  It can be 'numexpr'
+    vm : string
+        The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.
 
     Returns
     -------
     out : string
-        The previous kernel used.
+        The previous virtual machine used.
 
     """
-    if kernel not in ("numexpr", "python"):
-        raiseValue, "`kernel` must be either 'numexpr' or 'python'"
-    if kernel == "numexpr" and not ca.numexpr_here:
+    if vm not in ("numexpr", "python"):
+        raiseValue, "`vm` must be either 'numexpr' or 'python'"
+    if vm == "numexpr" and not ca.numexpr_here:
         raise (ValueError,
-               "cannot use `numexpr` kernel (minimum version not installed")
-    prev_kernel = ca.default_kernel
-    ca.default_kernel = kernel
-    return prev_kernel
+               "cannot use `numexpr` virtual machine "
+               "(minimum version is probably not installed)")
+    prev_vm = ca.default_vm
+    ca.default_vm = vm
+    return prev_vm
 
 
 ## Local Variables:
