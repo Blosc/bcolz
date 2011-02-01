@@ -978,6 +978,17 @@ class evalTest(unittest.TestCase):
         #print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
+    def test12(self):
+        """Testing eval() with `out_flavor` == 'numpy'"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        cr = ca.eval("c + 2 * d - 3", out_flavor='numpy')
+        nr = a + 2 * b - 3
+        #print "ca.eval ->", cr, type(cr)
+        #print "numpy   ->", nr
+        self.assert_(type(cr) == np.ndarray)
+        assert_array_equal(cr, nr, "eval does not work correctly")
+
 class eval_small(evalTest):
     N = 10
 

@@ -421,9 +421,9 @@ def _getvars(expression, user_dict, depth, vm):
 _eval = eval
 
 
-def eval(expression, vm=None, **kwargs):
+def eval(expression, vm=None, out_flavor=None, **kwargs):
     """
-    eval(expression, vm=None, **kwargs)
+    eval(expression, vm=None, out_flavor=None, **kwargs)
 
     Evaluate an `expression` and return the result as a carray object.
 
@@ -436,6 +436,8 @@ def eval(expression, vm=None, **kwargs):
     vm : string
         The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.  The default is to use 'numexpr' if it is installed.
+    out_flavor : string
+        The flavor for the `out` object.  It can be 'carray' or 'numpy'.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -452,6 +454,11 @@ def eval(expression, vm=None, **kwargs):
         vm = ca.default_vm
     if vm not in ("numexpr", "python"):
         raiseValue, "`vm` must be either 'numexpr' or 'python'"
+
+    if out_flavor is None:
+        out_flavor = ca.default_eval_out_flavor
+    if out_flavor not in ("carray", "numpy"):
+        raiseValue, "`out_flavor` must be either 'carray' or 'numpy'"
 
     # Get variables and column names participating in expression
     user_dict = kwargs.pop('user_dict', {})
@@ -485,10 +492,12 @@ def eval(expression, vm=None, **kwargs):
         else:
             return ca.numexpr.evaluate(expression, local_dict=vars)
 
-    return _eval_blocks(expression, vars, vlen, typesize, vm, **kwargs)
+    return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
+                        **kwargs)
 
 
-def _eval_blocks(expression, vars, vlen, typesize, vm, **kwargs):
+def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
+                 **kwargs):
     """Perform the evaluation in blocks."""
 
     # Compute the optimal block size (in elements)
@@ -552,10 +561,17 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, **kwargs):
                 raise (NotImplementedError,
                        "reduction operations are not supported yet")
             # Get a decent default for expectedlen
-            nrows = kwargs.pop('expectedlen', vlen)
-            result = ca.carray(res_block, expectedlen=nrows, **kwargs)
+            if out_flavor == "carray":
+                nrows = kwargs.pop('expectedlen', vlen)
+                result = ca.carray(res_block, expectedlen=nrows, **kwargs)
+            else:
+                result = np.empty((vlen,), dtype=res_block.dtype)
+                result[:bsize] = res_block
         else:
-            result.append(res_block)
+            if out_flavor == "carray":
+                result.append(res_block)
+            else:
+                result[i:i+bsize] = res_block
 
     return result
 

@@ -588,7 +588,7 @@ ctable methods
       :py:func:`addcol`
 
 
-.. py:method:: eval(expression, vm=None, **kwargs)
+.. py:method:: eval(expression, vm=None, out_flavor=None, **kwargs)
 
     Evaluate the `expression` on columns and return the result.
 
@@ -601,6 +601,8 @@ ctable methods
       vm : string
         The virtual machine to be used in computations.  It can be 'numexpr'
         or 'python'.  The default is to use 'numexpr' if it is installed.
+      out_flavor : string
+        The flavor for the `out` object.  It can be 'carray' or 'numpy'.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 

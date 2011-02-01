@@ -44,6 +44,7 @@ Public classes
 min_numexpr_version = '1.4.1'  # the minimum version of Numexpr needed
 numexpr_here = False
 default_vm = "python"
+default_eval_out_flavor = "carray"
 try:
     import numexpr
 except ImportError:
