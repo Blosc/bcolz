@@ -451,12 +451,12 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
     """
 
     if vm is None:
-        vm = ca.default_vm
+        vm = ca.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raiseValue, "`vm` must be either 'numexpr' or 'python'"
 
     if out_flavor is None:
-        out_flavor = ca.default_eval_out_flavor
+        out_flavor = ca.defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
         raiseValue, "`out_flavor` must be either 'carray' or 'numpy'"
 
@@ -622,33 +622,6 @@ class cparams(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
-def set_vm(vm):
-    """
-    set_vm(vm)
-
-    Set the default virtual machine when doing computations.
-
-    Parameters
-    ----------
-    vm : string
-        The virtual machine to be used in computations.  It can be 'numexpr'
-        or 'python'.
-
-    Returns
-    -------
-    out : string
-        The previous virtual machine used.
-
-    """
-    if vm not in ("numexpr", "python"):
-        raiseValue, "`vm` must be either 'numexpr' or 'python'"
-    if vm == "numexpr" and not ca.numexpr_here:
-        raise (ValueError,
-               "cannot use `numexpr` virtual machine "
-               "(minimum version is probably not installed)")
-    prev_vm = ca.default_vm
-    ca.default_vm = vm
-    return prev_vm
 
 
 ## Local Variables:

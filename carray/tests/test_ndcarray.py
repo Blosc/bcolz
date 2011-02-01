@@ -412,10 +412,11 @@ class evalTest(unittest.TestCase):
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = ca.set_vm(self.vm)
+        self.prev_vm = ca.defaults.eval_vm
+        ca.defaults.eval_vm = self.vm
 
     def tearDown(self):
-        ca.set_vm(self.prev_vm)
+        ca.defaults.eval_vm = self.prev_vm
 
     def test00(self):
         """Testing evaluation of ndcarrays (bool out)"""
@@ -438,7 +439,7 @@ class evalTest(unittest.TestCase):
         # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
-        if ca.default_vm:
+        if ca.defaults.eval_vm:
             self.assertRaises(NotImplementedError,
                               ca.eval, "sum(b)", depth=3)
         else:

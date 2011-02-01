@@ -501,10 +501,11 @@ class evalTest(unittest.TestCase):
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = ca.set_vm(self.vm)
+        self.prev_vm = ca.defaults.eval_vm
+        ca.defaults.eval_vm = self.vm
 
     def tearDown(self):
-        ca.set_vm(self.prev_vm)
+        ca.defaults.eval_vm = self.prev_vm
 
     def test00a(self):
         """Testing eval() with only columns"""
@@ -556,7 +557,7 @@ class evalTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra)
-        if not ca.default_vm == "numexpr":
+        if not ca.defaults.eval_vm == "numexpr":
             # Populate the name space with functions from numpy
             from numpy import sin
         ctr = t.eval("f0 * sin(f1)")

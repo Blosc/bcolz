@@ -9,11 +9,6 @@ First level variables
 
     The version of the carray package.
 
-.. py:attribute:: default_vm
-
-    The virtual machine to be used in computations.  It can be
-    "numexpr" or "python".
-
 .. py:attribute:: min_numexpr_version
 
     The minimum version of numexpr needed (numexpr is optional).
@@ -219,19 +214,6 @@ Utility functions
 .. py:function:: detect_number_of_cores()
 
     Return the number of cores on a system.
-
-.. py:function:: set_vm(vm)
-
-    Set the default virtual machine when doing computations.
-
-    Parameters :
-      vm : string
-        The virtual machine to be used in computations.  It can be 'numexpr'
-        or 'python'.
-
-    Returns :
-      out : string
-        The previous virtual machine used.
 
 .. py:function:: set_nthreads(nthreads)
 

@@ -858,10 +858,11 @@ class evalTest(unittest.TestCase):
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = ca.set_vm(self.vm)
+        self.prev_vm = ca.defaults.eval_vm
+        ca.defaults.eval_vm = self.vm
 
     def tearDown(self):
-        ca.set_vm(self.prev_vm)
+        ca.defaults.eval_vm = self.prev_vm
 
     def test00(self):
         """Testing eval() with only scalars and constants"""

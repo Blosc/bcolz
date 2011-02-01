@@ -43,8 +43,6 @@ Public classes
 
 min_numexpr_version = '1.4.1'  # the minimum version of Numexpr needed
 numexpr_here = False
-default_vm = "python"
-default_eval_out_flavor = "carray"
 try:
     import numexpr
 except ImportError:
@@ -52,17 +50,17 @@ except ImportError:
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
-        default_vm = "numexpr"
 
 from carray.carrayExtension import (
-    carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads)
+    carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads )
 from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads,
     fromiter, arange, zeros, ones, fill,
-    cparams, eval, set_vm)
+    cparams, eval )
 from carray.version import __version__
 from carray.tests import test
+from defaults import defaults
 
 
 # Initialize Blosc
