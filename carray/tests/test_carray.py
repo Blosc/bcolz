@@ -965,6 +965,19 @@ class evalTest(unittest.TestCase):
         #print "numpy  ->", a
         assert_array_equal(c[:], a, "carray[expr] = v does not work correctly")
 
+    def test11(self):
+        """Testing eval() with functions like `np.sin()`"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        if self.kernel == "python":
+            cr = ca.eval("np.sin(c) + 2 * np.log(d) - 3")
+        else:
+            cr = ca.eval("sin(c) + 2 * log(d) - 3")
+        nr = np.sin(a) + 2 * np.log(b) - 3
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
 class eval_small(evalTest):
     N = 10
 

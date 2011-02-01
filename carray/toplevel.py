@@ -464,6 +464,8 @@ def eval(expression, kernel=None, **kwargs):
         var = vars[name]
         if hasattr(var, "__len__") and not hasattr(var, "dtype"):
             raise ValueError, "only numpy/carray sequences supported"
+        if hasattr(var, "dtype") and not hasattr(var, "__len__"):
+            continue
         if hasattr(var, "dtype"):  # numpy/carray arrays
             if isinstance(var, np.ndarray):  # numpy array
                 typesize += var.dtype.itemsize * np.prod(var.shape[1:])
