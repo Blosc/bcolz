@@ -9,9 +9,16 @@ Release notes for carray
 Changes from 0.3 to 0.4
 =======================
 
-- Implemented the possibility to choose between the 'python' or
-  'numexpr' virtual machines during operations.  In numexpr is not
+- New `vm` parameter for `eval()` that allows to choose a 'python' or
+  'numexpr' virtual machine during operations.  If numexpr is not
   detected, the default will be 'python'.
+
+  That means that you can use any function available in Python for
+  evaluating carray expressions and that numexpr is not necessary
+  anymore for using `eval()`.
+
+- New `out_flavor` parameter for `eval()` that allows to choose the
+  output type.  It can be 'carray' or 'numpy'.
 
 - New `defaults.py` module that enables the user to modify the defaults
   for internal carray operation.  Defaults that are currently

@@ -63,13 +63,18 @@ defaults = Defaults()
 # Default values start here...
 
 defaults.eval_out_flavor = "carray"
-"""The flavor for the output object in `eval()`.  It can be 'carray'
-or 'numpy'.
+"""
+The flavor for the output object in `eval()`.  It can be 'carray' or
+'numpy'.  Default is 'carray'.
+
 """
 
 defaults.eval_vm = "python"
-"""The virtual machine to be used in computations (via `eval`).  It
-can be "numexpr" or "python".
+"""
+The virtual machine to be used in computations (via `eval`).  It can
+be 'numexpr' or 'python'.  Default is 'numexpr', if installed.  If
+not, then the default is 'python'.
+
 """
 
 # If numexpr is available, use it as default

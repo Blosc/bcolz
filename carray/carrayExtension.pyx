@@ -70,7 +70,7 @@ def _blosc_set_nthreads(nthreads):
   """
   blosc_set_nthreads(nthreads)
 
-  Set the number of threads that Blosc can use.
+  Sets the number of threads that Blosc can use.
 
   Parameters
   ----------
@@ -937,6 +937,26 @@ cdef class carray:
 
 
   def __getitem__(self, object key):
+    """
+    x.__getitem__(key) <==> x[key]
+
+    Returns values based on `key`.  All the functionality of
+    ``ndarray.__getitem__()`` is supported (including fancy indexing), plus a
+    special support for expressions:
+
+    Parameters
+    ----------
+    key : string
+        It will be interpret as a boolean expression (computed via `eval`) and
+        the elements where these values are true will be returned as a NumPy
+        array.
+
+    See Also
+    --------
+    eval
+
+    """
+
     cdef int chunklen
     cdef npy_intp startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks
@@ -1046,6 +1066,25 @@ cdef class carray:
 
 
   def __setitem__(self, object key, object value):
+    """
+    x.__setitem__(key, value) <==> x[key] = value
+
+    Sets values based on `key`.  All the functionality of
+    ``ndarray.__setitem__()`` is supported (including fancy indexing), plus a
+    special support for expressions:
+
+    Parameters
+    ----------
+    key : string
+        It will be interpret as a boolean expression (computed via `eval`) and
+        the elements where these values are true will be set to `value`.
+
+    See Also
+    --------
+    eval
+
+    """
+
     cdef int chunklen
     cdef npy_intp startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks

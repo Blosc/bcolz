@@ -16,6 +16,7 @@ Contents:
    tutorial
    reference
    opt-tips
+   defaults
 
 Indices and tables
 ==================

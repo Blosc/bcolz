@@ -82,7 +82,7 @@ try:
     import numexpr
 except ImportError:
     print_warning(
-        "Numexpr is not installed.  For enhanced carray functionality, "
+        "Numexpr is not installed.  For faster carray operation, "
         "please consider installing it.")
 else:
     if numexpr.__version__ >= min_numexpr_version:

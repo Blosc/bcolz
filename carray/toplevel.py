@@ -47,7 +47,7 @@ def set_nthreads(nthreads):
     """
     set_nthreads(nthreads)
 
-    Set the number of threads to be used during carray operation.
+    Sets the number of threads to be used during carray operation.
 
     This affects to both Blosc and Numexpr (if available).  If you want to
     change this number only for Blosc, use `blosc_set_nthreads` instead.
@@ -425,7 +425,7 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
     """
     eval(expression, vm=None, out_flavor=None, **kwargs)
 
-    Evaluate an `expression` and return the result as a carray object.
+    Evaluate an `expression` and return the result.
 
     Parameters
     ----------

@@ -3,7 +3,8 @@ Defaults for carray operation
 -----------------------------
 
 You can tailor the behaviour of carray by changing the values of
-certain defaults listed here.  You can change the values in two ways:
+certain some special first level variables whose defaults are listed
+here.  You can change these values in two ways:
 
 * In your program: the changes will be temporary.
 
@@ -14,15 +15,15 @@ certain defaults listed here.  You can change the values in two ways:
 List of default values
 ======================
 
-.. py:attribute:: eval_vm
-
-    The virtual machine to be used in computations (via `eval`).  It
-    can be "numexpr" or "python".
-
-
 .. py:attribute:: eval_out_flavor
 
-    The flavor for the output object in `eval()`.  It can be 'carray'
-    or 'numpy'.
+    The flavor for the output object in :py:func:`eval`.  It can be
+    'carray' or 'numpy'.  Default is 'carray'.
+
+.. py:attribute:: eval_vm
+
+    The flavor for the output object in :py:func:`eval`.  It can be
+    'carray' or 'numpy'.  Default is 'numexpr', if installed.  If not,
+    then the default is 'python'.
 
 
