@@ -5,11 +5,14 @@ Announcing carray 0.3.1
 What's new
 ==========
 
-This version implements multidimensional carrays and support for all
-NumPy dtypes, except 'object'.  Some fixes have been included too.
+Introduced 'python' as a new virtual machine for carrying out
+computations with carray via `ca.eval()`.  The user won't need to have
+numexpr installed anymore.  In addiiton, all the function weaponery for
+dealing with arrays (NumPy/SciPy/...) can be used with the new virtual
+machine.
 
 For more detailed info, see the release notes in:
-https://github.com/FrancescAlted/carray/wiki/Release-0.3.1
+https://github.com/FrancescAlted/carray/wiki/Release-0.3.2
 
 What it is
 ==========

@@ -1,6 +1,9 @@
 Instrucctions for releasing a new version of carray
 ===================================================
 
+- Verify that the version number is correct in ``VERSION`` as well as in
+  ``doc/conf.py``.
+
 - Make sure that ``ANNOUNCE.txt`` and ``RELEASE-NOTES.txt``
   do contain the most relevant notes for the release.
 

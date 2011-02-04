@@ -8,13 +8,20 @@ a high-performance compressor that is optimized for binary data.
 Rational
 --------
 
-Nowadays memory access is the most common bottleneck in many
-computational scenarios, and CPUs spend most of its time waiting for
-data.
+By using compression, you can deal with more data using the same
+amount of memory.  In case you wonder: which is the price to pay in
+terms of performance? you should know that nowadays memory access is
+the most common bottleneck in many computational scenarios, and CPUs
+spend most of its time waiting for data, and having data compressed in
+memory can reduce the stress of the memory subsystem.
 
-Having data compressed in memory can reduce the stress of the memory
-subsystem.  The net result is that carray operations can be faster
-than using a traditional ndarray object from NumPy.
+In other words, the ultimate goal for carray is not only reducing
+memory needs of large arrays, but also making carray operations to go
+faster than using a traditional ndarray object from NumPy.  That is
+already the case for some special cases now (2011), but will happen
+more generally in a short future, when carray will be able to take
+advantage of newer CPUs integrating more cores and wider vector units
+(256 bit and more).
 
 Building
 --------
@@ -50,11 +57,22 @@ always access docstrings from the console (i.e. help(carray.ctable)).
 Also, you may want to look at the bench/ directory for some examples
 of use.
 
-User's mail list
-----------------
+Resources
+---------
 
-Feel free to send questions related with carray to:
+Visit the main carray site repository at:
+http://github.com/FrancescAlted/carray
 
+You can download a source package from:
+http://carray.pytables.org/download
+
+Manual:
+http://carray.pytables.org/docs/manual
+
+Home of Blosc compressor:
+http://blosc.pytables.org
+
+User's mail list:
 carray@googlegroups.com
 http://groups.google.com/group/carray
 
@@ -62,6 +80,12 @@ License
 -------
 
 Please see CARRAY.txt in LICENSES/ directory.
+
+Share your experience
+---------------------
+
+Let us know of any bugs, suggestions, gripes, kudos, etc. you may
+have.
 
 
 Francesc Alted
