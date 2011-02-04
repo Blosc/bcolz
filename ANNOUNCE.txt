@@ -1,21 +1,21 @@
-========================
 Announcing carray 0.3.2
-========================
+=======================
+
 
 What's new
-==========
+----------
 
 Introduced 'python' as a new virtual machine for carrying out
-computations with carray via `ca.eval()`.  The user won't need to have
-numexpr installed anymore.  In addiiton, all the function weaponery for
-dealing with arrays (NumPy/SciPy/...) can be used with the new virtual
+computations with carray via `ca.eval()`, so the user won't need to have
+numexpr installed anymore.  In addiiton, all the bunch of functions for
+dealing with ndarrays (NumPy/SciPy/...) can be used with the new virtual
 machine.
 
 For more detailed info, see the release notes in:
 https://github.com/FrancescAlted/carray/wiki/Release-0.3.2
 
 What it is
-==========
+----------
 
 carray is a container for numerical data that can be compressed
 in-memory.  The compresion process is carried out internally by Blosc, a
@@ -27,7 +27,7 @@ traditional ndarray object from NumPy.
 carray also supports fully 64-bit addressing (both in UNIX and Windows).
 
 Resources
-=========
+---------
 
 Visit the main carray site repository at:
 http://github.com/FrancescAlted/carray
@@ -46,7 +46,7 @@ carray@googlegroups.com
 http://groups.google.com/group/carray
 
 Share your experience
-=====================
+---------------------
 
 Let us know of any bugs, suggestions, gripes, kudos, etc. you may
 have.
