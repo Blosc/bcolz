@@ -1,5 +1,5 @@
 ========================
-Announcing carray 0.3.1
+Announcing carray 0.3.2
 ========================
 
 What's new
