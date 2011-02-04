@@ -6,8 +6,13 @@ Release notes for carray
 :Contact: faltet@pytables.org
 
 
-Changes from 0.3 to 0.4
-=======================
+Changes from 0.3.2 to 0.4.dev
+=============================
+
+- (None yet).
+
+Changes from 0.3.1 to 0.3.2
+===========================
 
 - New `vm` parameter for `eval()` that allows to choose a 'python' or
   'numexpr' virtual machine during operations.  If numexpr is not
@@ -25,6 +30,9 @@ Changes from 0.3 to 0.4
   implemented: `eval_out_flavor` and `eval_vm`.
 
 - Fixed a bug with `carray.sum()` for multidimensional types.
+
+Changes from 0.3 to 0.3.1
+=========================
 
 - Added a `limit` parameter to `iter`, `where` and `wheretrue` iterators
   of carray object and to `iter` and `where` of ctable object.
