@@ -468,6 +468,21 @@ class d4eval_ne(evalTest):
     vm = "numexpr"
 
 
+class computeMethodsTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing sum()."""
+        a = np.arange(1e5).reshape(10, 1e4)
+        sa = a.sum()
+        ac = ca.carray(a)
+        sac = ac.sum()
+        #print "numpy sum-->", sa
+        #print "carray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -485,6 +500,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(d2evalTest))
     theSuite.addTest(unittest.makeSuite(d3evalTest))
     theSuite.addTest(unittest.makeSuite(d4evalTest))
+    theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(d2eval_ne))
         theSuite.addTest(unittest.makeSuite(d3eval_ne))

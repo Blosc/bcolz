@@ -851,7 +851,7 @@ cdef class carray:
       raise TypeError, "cannot perform reduce with flexible type"
 
     # Get a container for the result
-    result = np.zeros(1, dtype=dtype)[0]
+    result = np.zeros(1, dtype=dtype.base)[0]
 
     nchunks = self._nbytes // <npy_intp>self._chunksize
     for nchunk from 0 <= nchunk < nchunks:
