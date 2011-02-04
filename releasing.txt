@@ -55,7 +55,7 @@ Instrucctions for releasing a new version of carray
 
 - Announcing
   + Register the new package in PyPI::
-    $ paver setup.py register
+    $ paver register
   + Announce to carray@googlegroups.com with copy to pytables-users
   + Wait about 24 hours to give time to people there to test the package
   + If everything goes well, do the post-release actions ("post-release.txt")
