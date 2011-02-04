@@ -15,7 +15,7 @@ the most common bottleneck in many computational scenarios, and CPUs
 spend most of its time waiting for data, and having data compressed in
 memory can reduce the stress of the memory subsystem.
 
-In other words, the ultimate goal for carray is not only reducing
+In other words, the ultimate goal for carray is not only reducing the
 memory needs of large arrays, but also making carray operations to go
 faster than using a traditional ndarray object from NumPy.  That is
 already the case for some special cases now (2011), but will happen

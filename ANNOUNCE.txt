@@ -7,7 +7,7 @@ What's new
 
 Introduced 'python' as a new virtual machine for carrying out
 computations with carray via `ca.eval()`, so the user won't need to have
-numexpr installed anymore.  In addiiton, all the bunch of functions for
+numexpr installed anymore.  In addition, all the bunch of functions for
 dealing with ndarrays (NumPy/SciPy/...) can be used with the new virtual
 machine.
 
