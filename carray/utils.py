@@ -131,24 +131,28 @@ def to_ndarray(array, dtype, arrlen=None):
 
 def human_readable_size(size):
     """Return a string for better assessing large number of bytes."""
-    if size < 1024:
+    if size < 2**10:
         return "%s" % size
-    elif size < 1024*1024:
-        return "%.2f KB" % (size / 1024.)
-    elif size < 1024*1024*1024:
-        return "%.2f MB" % (size / (1024*1024.))
+    elif size < 2**20:
+        return "%.2f KB" % (size / float(2**10))
+    elif size < 2**30:
+        return "%.2f MB" % (size / float(2**20))
+    elif size < 2**40:
+        return "%.2f GB" % (size / float(2**30))
     else:
-        return "%.2f GB" % (size / (1024*1024*1024.))
-
+        return "%.2f TB" % (size / float(2**40))
 
 
 # Main part
 # =========
 if __name__ == '__main__':
+    print human_readable_size(1023)
     print human_readable_size(10234)
     print human_readable_size(10234*100)
     print human_readable_size(10234*10000)
     print human_readable_size(10234*1000000)
+    print human_readable_size(10234*100000000)
+    print human_readable_size(10234*1000000000)
 
 
 ## Local Variables:

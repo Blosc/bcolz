@@ -409,6 +409,15 @@ class unicodeTest(unittest.TestCase):
 
 class evalTest(unittest.TestCase):
 
+    vm = "python"
+
+    def setUp(self):
+        self.prev_vm = ca.defaults.eval_vm
+        ca.defaults.eval_vm = self.vm
+
+    def tearDown(self):
+        ca.defaults.eval_vm = self.prev_vm
+
     def test00(self):
         """Testing evaluation of ndcarrays (bool out)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
@@ -428,20 +437,50 @@ class evalTest(unittest.TestCase):
     # This works badly on Win
     def _test02(self):
         """Testing evaluation of ndcarrays (reduction)"""
+        # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
-        outa = eval("a.sum(axis=0)")
-        outb = ca.eval("sum(b, axis=0)")
-        assert_array_equal(outa, outb, "Arrays are not equal")
+        if ca.defaults.eval_vm:
+            self.assertRaises(NotImplementedError,
+                              ca.eval, "sum(b)", depth=3)
+        else:
+            self.assertRaises(NotImplementedError,
+                              ca.eval, "b.sum(axis=0)", depth=3)
 
 class d2evalTest(evalTest):
     shape = (3,4)
 
+class d2eval_ne(evalTest):
+    shape = (3,4)
+    vm = "numexpr"
+
 class d3evalTest(evalTest):
     shape = (3,4,5)
 
+class d3eval_ne(evalTest):
+    shape = (3,4,5)
+    vm = "numexpr"
+
 class d4evalTest(evalTest):
     shape = (3,40,50,2)
+
+class d4eval_ne(evalTest):
+    shape = (3,40,50,2)
+    vm = "numexpr"
+
+
+class computeMethodsTest(unittest.TestCase):
+
+    def test00(self):
+        """Testing sum()."""
+        a = np.arange(1e5).reshape(10, 1e4)
+        sa = a.sum()
+        ac = ca.carray(a)
+        sac = ac.sum()
+        #print "numpy sum-->", sa
+        #print "carray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
 
 
 
@@ -459,10 +498,14 @@ def suite():
     theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
     theSuite.addTest(unittest.makeSuite(stringTest))
     theSuite.addTest(unittest.makeSuite(unicodeTest))
+    theSuite.addTest(unittest.makeSuite(d2evalTest))
+    theSuite.addTest(unittest.makeSuite(d3evalTest))
+    theSuite.addTest(unittest.makeSuite(d4evalTest))
+    theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(d2evalTest))
-        theSuite.addTest(unittest.makeSuite(d3evalTest))
-        theSuite.addTest(unittest.makeSuite(d4evalTest))
+        theSuite.addTest(unittest.makeSuite(d2eval_ne))
+        theSuite.addTest(unittest.makeSuite(d3eval_ne))
+        theSuite.addTest(unittest.makeSuite(d4eval_ne))
 
 
     return theSuite

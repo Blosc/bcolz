@@ -29,8 +29,8 @@ Testing
 After compiling, you can quickly check that the package is sane by
 running:
 
-$ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
-$ export PYTHONPATH=.  (not needed on win)
+$ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
+$ export PYTHONPATH    (not needed on Windows)
 $ python carray/tests/tests_all.py
 
 Installing

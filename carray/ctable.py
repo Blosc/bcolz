@@ -567,9 +567,25 @@ class ctable(object):
         return iterable
 
 
+    def _where(self, boolarr, colnames=None):
+        """Return rows where `boolarr` is true as an structured array.
+
+        This is called internally only, so we can assum that `boolarr`
+        is a boolean array.
+        """
+
+        if colnames is None:
+            colnames = self.names
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+
+        return result
+
+
     def __getitem__(self, key):
         """
-        x.__getitem__(y) <==> x[y]
+        x.__getitem__(key) <==> x[key]
 
         Returns values based on `key`.  All the functionality of
         ``ndarray.__getitem__()`` is supported (including fancy
@@ -580,13 +596,13 @@ class ctable(object):
         key : string
             The corresponding ctable column name will be returned.  If
             not a column name, it will be interpret as a boolean
-            expression (computed via `self.eval`) and the rows where
+            expression (computed via `ctable.eval`) and the rows where
             these values are true will be returned as a NumPy
             structured array.
 
         See Also
         --------
-        eval
+        ctable.eval
 
         """
 
@@ -663,23 +679,28 @@ class ctable(object):
         return ra
 
 
-    def _where(self, boolarr, colnames=None):
-        """Return rows where `boolarr` is true as an structured array.
+    def __setitem__(self, key, value):
+        """
+        x.__setitem__(key, value) <==> x[key] = value
 
-        This is called internally only, so we can assum that `boolarr`
-        is a boolean array.
+        Sets values based on `key`.  All the functionality of
+        ``ndarray.__setitem__()`` is supported (including fancy
+        indexing), plus a special support for expressions:
+
+        Parameters
+        ----------
+        key : string
+            The corresponding ctable column name will be set to `value`.  If
+            not a column name, it will be interpret as a boolean expression
+            (computed via `ctable.eval`) and the rows where these values are
+            true will be set to `value`.
+
+        See Also
+        --------
+        ctable.eval
+
         """
 
-        if colnames is None:
-            colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
-
-
-    def __setitem__(self, key, value):
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
@@ -719,7 +740,7 @@ class ctable(object):
             calling function's frame.  These variables may be column
             names in this table, scalars, carrays or NumPy arrays.
         kwargs : list of parameters or dictionary
-            Any parameter supported by the carray constructor.
+            Any parameter supported by the `eval()` first level function.
 
         Returns
         -------
@@ -727,6 +748,10 @@ class ctable(object):
             The outcome of the expression.  You can tailor the
             properties of this carray by passing additional arguments
             supported by carray constructor in `kwargs`.
+
+        See Also
+        --------
+        eval (first level function)
 
         """
 

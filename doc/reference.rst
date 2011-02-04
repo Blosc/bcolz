@@ -2,6 +2,26 @@
 Library Reference
 -----------------
 
+First level variables
+=====================
+
+.. py:attribute:: __version__
+
+    The version of the carray package.
+
+.. py:attribute:: min_numexpr_version
+
+    The minimum version of numexpr needed (numexpr is optional).
+
+.. py:attribute:: ncores
+
+    The number of cores detected.
+
+.. py:attribute:: numexpr_here
+
+    Whether minimum version of numexpr has been detected.
+
+
 First level classes
 ===================
 
@@ -23,8 +43,8 @@ Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 
 .. _first-level-constructors:
 
-First level constructors
-========================
+First level functions
+=====================
 
 .. py:function:: arange([start,] stop[, step,], dtype=None, **kwargs)
 
@@ -63,9 +83,9 @@ First level constructors
         this rule may result in the last element of `out` being greater
         than `stop`.
 
-.. py:function:: eval(expression, **kwargs)
+.. py:function::  eval(expression, vm=None, out_flavor=None, **kwargs)
 
-    Evaluate an `expression` and return the result as a carray object.
+    Evaluate an `expression` and return the result.
 
     Parameters:
       expression : string
@@ -73,6 +93,11 @@ First level constructors
         'a' and 'b' are variable names to be taken from the calling
         function's frame.  These variables may be scalars, carrays or
         NumPy arrays.
+      vm : string
+        The virtual machine to be used in computations.  It can be 'numexpr'
+        or 'python'.  The default is to use 'numexpr' if it is installed.
+      out_flavor : string
+        The flavor for the `out` object.  It can be 'carray' or 'numpy'.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -177,7 +202,7 @@ Utility functions
 
 .. py:function:: blosc_set_nthreads(nthreads)
 
-    Set the number of threads that Blosc can use.
+    Sets the number of threads that Blosc can use.
 
     Parameters:
       nthreads : int
@@ -197,7 +222,7 @@ Utility functions
 
 .. py:function:: set_nthreads(nthreads)
 
-    Set the number of threads to be used during carray operation.
+    Sets the number of threads to be used during carray operation.
 
     This affects to both Blosc and Numexpr (if available).
 
@@ -245,40 +270,39 @@ The carray class
       explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
-.. _carray-attributes:
 
 carray attributes
 -----------------
 
-.. py:attribute:: cbytes
+  .. py:attribute:: cbytes
 
     The compressed size of this object (in bytes).
 
-.. py:attribute:: chunklen
+  .. py:attribute:: chunklen
 
     The number of items that fits into a chunk.
 
-.. py:attribute:: cparams
+  .. py:attribute:: cparams
 
     The compression parameters for this object.
 
-.. py:attribute:: dflt
+  .. py:attribute:: dflt
 
     The value to be used when enlarging the carray.
 
-.. py:attribute:: dtype
+  .. py:attribute:: dtype
 
     The NumPy dtype for this object.
 
-.. py:attribute:: len
+  .. py:attribute:: len
 
     The length of this object.
 
-.. py:attribute:: nbytes
+  .. py:attribute:: nbytes
 
     The original (uncompressed) size of this object (in bytes).
 
-.. py:attribute:: shape
+  .. py:attribute:: shape
 
     The shape of this object.
 
@@ -286,7 +310,7 @@ carray attributes
 carray methods
 --------------
 
-.. py:method:: append(array)
+  .. py:method:: append(array)
 
     Append a numpy `array` to this instance.
 
@@ -296,7 +320,7 @@ carray methods
         the carray.
 
 
-.. py:method:: copy(**kwargs)
+  .. py:method:: copy(**kwargs)
 
     Return a copy of this object.
 
@@ -309,7 +333,7 @@ carray methods
         The copy of this object.
 
 
-.. py:method:: iter(start=0, stop=None, step=1, limit=None)
+  .. py:method:: iter(start=0, stop=None, step=1, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -329,10 +353,10 @@ carray methods
       out : iterator
 
     See Also:
-      :py:func:`where`, :py:func:`wheretrue`
+      :py:meth:`where`, :py:meth:`wheretrue`
 
 
-.. py:method:: reshape(newshape)
+  .. py:method:: reshape(newshape)
 
     Returns a new carray containing the same data with a new shape.
 
@@ -348,7 +372,7 @@ carray methods
         A copy of the original carray.
 
 
-.. py:method:: resize(nitems)
+  .. py:method:: resize(nitems)
 
     Resize the instance to have `nitems`.
 
@@ -359,7 +383,7 @@ carray methods
         as filling values.
 
 
-.. py:method:: sum(dtype=None)
+  .. py:method:: sum(dtype=None)
 
     Return the sum of the array elements.
 
@@ -371,7 +395,7 @@ carray methods
     Return value:
       out : NumPy scalar with `dtype`
 
-.. py:method:: trim(nitems)
+  .. py:method:: trim(nitems)
 
     Remove the trailing `nitems` from this instance.
 
@@ -380,9 +404,9 @@ carray methods
         The number of trailing items to be trimmed.
 
     See Also:
-      :py:func:`append`
+      :py:meth:`append`
 
-.. py:method:: where(boolarr, limit=None)
+  .. py:method:: where(boolarr, limit=None)
 
     Iterator that returns values of this object where `boolarr` is true.
 
@@ -396,9 +420,9 @@ carray methods
       out : iterator
 
     See Also:
-      :py:func:`iter`, :py:func:`wheretrue`
+      :py:meth:`iter`, :py:meth:`wheretrue`
 
-.. py:method:: wheretrue(limit=None)
+  .. py:method:: wheretrue(limit=None)
 
     Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
@@ -412,7 +436,46 @@ carray methods
       out : iterator
 
     See Also:
-      :py:func:`iter`, :py:func:`where`
+      :py:meth:`iter`, :py:meth:`where`
+
+
+carray special methods
+----------------------
+
+  .. py:method::  __getitem__(key):
+
+    x.__getitem__(key) <==> x[key]
+
+    Returns values based on `key`.  All the functionality of
+    ``ndarray.__getitem__()`` is supported (including fancy indexing),
+    plus a special support for expressions:
+
+    Parameters:
+      key : string
+        It will be interpret as a boolean expression (computed via
+        `eval`) and the elements where these values are true will be
+        returned as a NumPy array.
+
+    See Also:
+      eval
+
+
+  .. py:method::  __setitem__(key, value):
+
+    x.__setitem__(key, value) <==> x[key] = value
+
+    Sets values based on `key`.  All the functionality of
+    ``ndarray.__setitem__()`` is supported (including fancy indexing),
+    plus a special support for expressions:
+
+    Parameters:
+      key : string
+        It will be interpret as a boolean expression (computed via
+        `eval`) and the elements where these values are true will be
+        set to `value`.
+
+    See Also:
+      eval
 
 
 The ctable class
@@ -447,35 +510,35 @@ The ctable class
 ctable attributes
 -----------------
 
-.. py:attribute:: cbytes
+  .. py:attribute:: cbytes
 
     The compressed size of this object (in bytes).
 
-.. py:attribute:: cols
+  .. py:attribute:: cols
 
     The ctable columns (dict).
 
-.. py:attribute:: cparams
+  .. py:attribute:: cparams
 
     The compression parameters for this object.
 
-.. py:attribute:: dtype
+  .. py:attribute:: dtype
 
     The NumPy dtype for this object.
 
-.. py:attribute:: len
+  .. py:attribute:: len
 
     The length of this object.
 
-.. py:attribute:: names
+  .. py:attribute:: names
 
    The names of the columns (list).
 
-.. py:attribute:: nbytes
+  .. py:attribute:: nbytes
 
     The original (uncompressed) size of this object (in bytes).
 
-.. py:attribute:: shape
+  .. py:attribute:: shape
 
     The shape of this object.
 
@@ -483,7 +546,7 @@ ctable attributes
 ctable methods
 --------------
 
-.. py:method:: addcol(newcol, name=None, pos=None, **kwargs)
+  .. py:method:: addcol(newcol, name=None, pos=None, **kwargs)
 
     Add a new `newcol` carray or ndarray as column.
 
@@ -509,7 +572,7 @@ ctable methods
       :py:func:`delcol`
 
 
-.. py:method:: append(rows)
+  .. py:method:: append(rows)
 
     Append `rows` to this ctable.
 
@@ -519,7 +582,7 @@ ctable methods
         another ctable.
 
 
-.. py:method:: copy(**kwargs)
+  .. py:method:: copy(**kwargs)
 
     Return a copy of this ctable.
 
@@ -531,7 +594,7 @@ ctable methods
       out : ctable object
         The copy of this ctable.
 
-.. py:method:: delcol(name=None, pos=None)
+  .. py:method:: delcol(name=None, pos=None)
 
     Remove the column named `name` or in position `pos`.
 
@@ -550,7 +613,7 @@ ctable methods
       :py:func:`addcol`
 
 
-.. py:method:: eval(expression, **kwargs)
+  .. py:method:: eval(expression, **kwargs)
 
     Evaluate the `expression` on columns and return the result.
 
@@ -561,7 +624,7 @@ ctable methods
         calling function's frame.  These variables may be column
         names in this table, scalars, carrays or NumPy arrays.
       kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
+        Any parameter supported by the `eval()` first level function.
 
     Returns:
       out : carray object
@@ -569,8 +632,11 @@ ctable methods
         properties of this carray by passing additional arguments
         supported by carray constructor in `kwargs`.
 
+    See Also:
+      :py:func:`eval` (first level function)
 
-.. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None)
+
+  .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -596,10 +662,10 @@ ctable methods
       out : iterable
 
     See Also:
-      :py:func:`where`
+      :py:meth:`ctable.where`
 
 
-.. py:method:: resize(nitems)
+  .. py:method:: resize(nitems)
 
     Resize the instance to have `nitems`.
 
@@ -610,7 +676,7 @@ ctable methods
         filling values.
 
 
-.. py:method:: trim(nitems)
+  .. py:method:: trim(nitems)
 
     Remove the trailing `nitems` from this instance.
 
@@ -619,9 +685,10 @@ ctable methods
         The number of trailing items to be trimmed.
 
     See Also:
-      :py:func:`append`
+      :py:meth:`ctable.append`
 
-.. py:method:: where(expression, outcols=None, limit=None)
+
+  .. py:method:: where(expression, outcols=None, limit=None)
 
     Iterate over rows where `expression` is true.
 
@@ -644,4 +711,44 @@ ctable methods
         support being mapped either by position or by name).
 
     See Also:
-      :py:func:`iter`
+      :py:meth:`ctable.iter`
+
+
+ctable special methods
+----------------------
+
+  .. py:method::  __getitem__(key):
+
+    x.__getitem__(y) <==> x[y]
+
+    Returns values based on `key`.  All the functionality of
+    ``ndarray.__getitem__()`` is supported (including fancy indexing),
+    plus a special support for expressions:
+
+    Parameters:
+      key : string
+        The corresponding ctable column name will be returned.  If not
+        a column name, it will be interpret as a boolean expression
+        (computed via `ctable.eval`) and the rows where these values are
+        true will be returned as a NumPy structured array.
+
+    See Also:
+      :py:meth:`ctable.eval`
+
+  .. py:method::  __setitem__(key, value):
+
+    x.__setitem__(key, value) <==> x[key] = value
+
+    Sets values based on `key`.  All the functionality of
+    ``ndarray.__setitem__()`` is supported (including fancy indexing),
+    plus a special support for expressions:
+
+    Parameters:
+      key : string
+        The corresponding ctable column name will be set to `value`.
+        If not a column name, it will be interpret as a boolean
+        expression (computed via `ctable.eval`) and the rows where these
+        values are true will be set to `value`.
+
+    See Also:
+      :py:meth:`ctable.eval`

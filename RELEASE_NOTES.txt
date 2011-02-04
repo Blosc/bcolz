@@ -9,6 +9,23 @@ Release notes for carray
 Changes from 0.3 to 0.3.1
 =========================
 
+- New `vm` parameter for `eval()` that allows to choose a 'python' or
+  'numexpr' virtual machine during operations.  If numexpr is not
+  detected, the default will be 'python'.
+
+  That means that you can use any function available in Python for
+  evaluating carray expressions and that numexpr is not necessary
+  anymore for using `eval()`.
+
+- New `out_flavor` parameter for `eval()` that allows to choose the
+  output type.  It can be 'carray' or 'numpy'.
+
+- New `defaults.py` module that enables the user to modify the defaults
+  for internal carray operation.  Defaults that are currently
+  implemented: `eval_out_flavor` and `eval_vm`.
+
+- Fixed a bug with `carray.sum()` for multidimensional types.
+
 - Added a `limit` parameter to `iter`, `where` and `wheretrue` iterators
   of carray object and to `iter` and `where` of ctable object.
 
