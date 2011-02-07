@@ -992,6 +992,10 @@ cdef class carray:
         raise NotImplementedError("step in slice can only be positive")
     # Multidimensional keys
     elif isinstance(key, tuple):
+      if len(key) == 0:
+        raise ValueError("empty tuple not supported")
+      elif len(key) == 1:
+        return self[key[0]]
       # An n-dimensional slice
       # First, retrieve elements in the leading dimension
       arr = self[key[0]]
@@ -1098,7 +1102,7 @@ cdef class carray:
     cdef npy_intp nwrow, blen, vlen
     cdef chunk chunk_
     cdef object start, stop, step
-    cdef object cdata
+    cdef object cdata, arr
 
     # We are going to modify data.  Mark block cache as dirty.
     if self.idxcache >= 0:
@@ -1120,6 +1124,21 @@ cdef class carray:
       if step:
         if step <= 0 :
           raise NotImplementedError("step in slice can only be positive")
+    # Multidimensional keys
+    elif isinstance(key, tuple):
+      if len(key) == 0:
+        raise ValueError("empty tuple not supported")
+      elif len(key) == 1:
+        self[key[0]] = value
+        return
+      # An n-dimensional slice
+      # First, retrieve elements in the leading dimension
+      arr = self[key[0]]
+      # Then, assing only the requested elements in other dimensions
+      arr[(slice(None),) + key[1:]] = value
+      # Finally, update this superset of values in self
+      self[key[0]] = arr
+      return
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
       # Try to convert to a integer array

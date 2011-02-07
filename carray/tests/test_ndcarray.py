@@ -103,7 +103,6 @@ class getitemTest(unittest.TestCase):
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
-
     def test03b(self):
         """Testing `__getitem()__` method with several slices (II)"""
         a = np.arange(24).reshape((4,3,2))
@@ -182,6 +181,50 @@ class setitemTest(unittest.TestCase):
         b[sl] = range(2)
         #print "b[sl]->", `b[sl]`, `b`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test03a(self):
+        """Testing `__setitem()__` method with several slices (I)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (slice(1,3,1), slice(1,None,2))
+        #print "before->", `b[sl]`
+        a[sl] = [[1],[2]]
+        b[sl] = [[1],[2]]
+        #print "after->", `b[sl]`
+        assert_array_equal(a[:], b[:], "Arrays are not equal")
+
+    def test03b(self):
+        """Testing `__setitem()__` method with several slices (II)"""
+        a = np.arange(24).reshape((4,3,2))
+        b = ca.carray(a)
+        sl = (slice(1,3,1), slice(1,None,2), slice(1))
+        #print "before->", `b[sl]`
+        a[sl] = [[[1]],[[2]]]
+        b[sl] = [[[1]],[[2]]]
+        #print "after->", `b[sl]`
+        assert_array_equal(a[:], b[:], "Arrays are not equal")
+
+    def test03c(self):
+        """Testing `__setitem()__` method with several slices (III)"""
+        a = np.arange(120).reshape((5,4,3,2))
+        b = ca.carray(a)
+        sl = (slice(1,3), slice(1,3,1), slice(1,None,2), slice(1))
+        #print "before->", `b[sl]`
+        a[sl] = [[[[1]],[[2]]]]*2
+        b[sl] = [[[[1]],[[2]]]]*2
+        #print "after->", `b[sl]`
+        assert_array_equal(a[:], b[:], "Arrays are not equal")
+
+    def test03d(self):
+        """Testing `__setitem()__` method with several slices (IV)"""
+        a = np.arange(120).reshape((5,4,3,2))
+        b = ca.carray(a)
+        sl = (slice(1,3), slice(1,3,1), slice(1,None,2), slice(1))
+        #print "before->", `b[sl]`
+        a[sl] = 2
+        b[sl] = 2
+        #print "after->", `b[sl]`
+        assert_array_equal(a[:], b[:], "Arrays are not equal")
 
 
 class appendTest(unittest.TestCase):
