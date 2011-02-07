@@ -409,7 +409,7 @@ cdef class carray:
   property dtype:
     "The dtype of this object."
     def __get__(self):
-      return self._dtype
+      return self._dtype.base
 
   property len:
     "The length (leading dimension) of this object."
@@ -425,7 +425,7 @@ cdef class carray:
   property shape:
     "The shape of this object."
     def __get__(self):
-      return (self.len,)
+      return (self.len,) + self._dtype.shape
 
 
   def __cinit__(self, object array, object cparams=None,
@@ -453,6 +453,10 @@ cdef class carray:
         self._dtype = dtype = array_.dtype
       else:
         # Multidimensional array.  The atom will have array_.shape[1:] dims.
+        # atom dimensions will be stored in `self._dtype`, which is different
+        # than `self.dtype` in that `self._dtype` dimensions are transferred
+        # to `self.shape`.  `self.dtype` will always be scalar (NumPy
+        # convention).
         self._dtype = dtype = np.dtype((array_.dtype.base, array_.shape[1:]))
     else:
       self._dtype = dtype
@@ -527,7 +531,7 @@ cdef class carray:
     self.idxcache = -1       # cache not initialized
 
     # Cache a len-1 array for accelerating self[int] case
-    self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
+    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
 
 
   def append(self, object array):
@@ -549,7 +553,7 @@ cdef class carray:
     cdef ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
-    arrcpy = utils.to_ndarray(array, self.dtype)
+    arrcpy = utils.to_ndarray(array, self._dtype)
     if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
     # Appending a single row should be supported
@@ -709,7 +713,7 @@ cdef class carray:
 
     if nitems > self.len:
       # Create a 0-strided array and append it to self
-      chunk = np.ndarray(nitems-self.len, dtype=self.dtype,
+      chunk = np.ndarray(nitems-self.len, dtype=self._dtype,
                          buffer=self._dflt, strides=(0,))
       self.append(chunk)
     else:
@@ -745,7 +749,7 @@ cdef class carray:
       newshape = (newshape,)
     newsize = np.prod(newshape)
 
-    ishape = self.shape+self._dtype.shape
+    ishape = self.shape
     ilen = ishape[0]
     isize = np.prod(ishape)
 
@@ -811,7 +815,7 @@ cdef class carray:
     expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty carray
-    ccopy = carray(np.empty(0, dtype=self.dtype),
+    ccopy = carray(np.empty(0, dtype=self._dtype),
                    cparams=cparams,
                    expectedlen=expectedlen,
                    **kwargs)
@@ -846,7 +850,7 @@ cdef class carray:
     cdef npy_intp nchunk, nchunks
 
     if dtype is None:
-      dtype = self.dtype
+      dtype = self._dtype
     if dtype.kind == 'S':
       raise TypeError, "cannot perform reduce with flexible type"
 
@@ -911,7 +915,7 @@ cdef class carray:
 
     # Check whether the cache block has to be initialized
     if self.idxcache < 0:
-      self.blockcache = np.empty(shape=(blocklen,), dtype=self.dtype)
+      self.blockcache = np.empty(shape=(blocklen,), dtype=self._dtype)
       self.datacache = self.blockcache.data
       if self.idxcache == -1:
         # Absolute first time.  Add the cache size to cbytes counter.
@@ -1023,10 +1027,10 @@ cdef class carray:
           count = key.sum()
         else:
           count = -1
-        return np.fromiter(self.where(key), dtype=self.dtype, count=count)
+        return np.fromiter(self.where(key), dtype=self._dtype, count=count)
       elif np.issubsctype(key, np.int_):
         # An integer array
-        return np.array([self[i] for i in key], dtype=self.dtype)
+        return np.array([self[i] for i in key], dtype=self._dtype)
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
@@ -1158,7 +1162,7 @@ cdef class carray:
         return
       elif np.issubsctype(key, np.int_):
         # An integer array
-        value = utils.to_ndarray(value, self.dtype, arrlen=len(key))
+        value = utils.to_ndarray(value, self._dtype, arrlen=len(key))
         # XXX This could be optimised, but it works like this
         for i, item in enumerate(key):
           self[item] = value[i]
@@ -1189,7 +1193,7 @@ cdef class carray:
     if vlen == 0:
       # If range is empty, return immediately
       return
-    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1275,7 +1279,7 @@ cdef class carray:
     cdef object cdata, boolb
 
     vlen = boolarr.sum()   # number of true values in bool array
-    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1400,7 +1404,7 @@ cdef class carray:
 
     """
     # Check self
-    if self.dtype.type != np.bool_:
+    if self._dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
     self.reset_sentinels()
     self.wheretrue_mode = True
@@ -1510,7 +1514,7 @@ cdef class carray:
 
     else:
       # Release buffers
-      self.iobuf = np.empty(0, dtype=self.dtype)
+      self.iobuf = np.empty(0, dtype=self._dtype)
       self.where_buf = np.empty(0, dtype=np.bool_)
       self.reset_sentinels()
       raise StopIteration        # end of iteration
