@@ -1004,7 +1004,10 @@ cdef class carray:
       # First, retrieve elements in the leading dimension
       arr = self[key[0]]
       # Then, keep only the required elements in other dimensions
-      arr = arr[(slice(None),) + key[1:]]
+      if type(key[0]) == slice:
+        arr = arr[(slice(None),) + key[1:]]
+      else:
+        arr = arr[key[1:]]
       # Force a copy in case returned array is not contiguous
       if not arr.flags.contiguous:
         arr = arr.copy()
@@ -1139,7 +1142,10 @@ cdef class carray:
       # First, retrieve elements in the leading dimension
       arr = self[key[0]]
       # Then, assing only the requested elements in other dimensions
-      arr[(slice(None),) + key[1:]] = value
+      if type(key[0]) == slice:
+        arr[(slice(None),) + key[1:]] = value
+      else:
+        arr[key[1:]] = value
       # Finally, update this superset of values in self
       self[key[0]] = arr
       return

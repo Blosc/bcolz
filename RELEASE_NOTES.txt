@@ -9,7 +9,29 @@ Release notes for carray
 Changes from 0.3.2 to 0.4.dev
 =============================
 
-- (None yet).
+- Implemented multidimensional indexing for carrays.  Than means that
+  you can do::
+
+    >>> a = ca.zeros((2,3))
+    carray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
+      cparams := cparams(clevel=5, shuffle=True)
+    [[ 0.  0.  0.]
+     [ 0.  0.  0.]]
+
+  So, you can only access any element in any dimension::
+
+    >>> a[1]
+    array([ 0.,  0.,  0.])
+    >>> a[1,::2]
+    array([ 0., 0.])
+    >>> a[1,1]
+    0.0
+
+- `dtype` and `shape` attributes follow now ndarray (NumPy) convention.
+  The `dtype` is always a scalar and the dimensionality is added to the
+  `shape` attribute.  Before, all the additional dimensionality was in
+  the `dtype`.  The new convention should be more familiar for
+  everybody.
 
 Changes from 0.3.1 to 0.3.2
 ===========================

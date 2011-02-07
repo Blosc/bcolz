@@ -119,6 +119,30 @@ class getitemTest(unittest.TestCase):
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
+    def test04a(self):
+        """Testing `__getitem()__` method with shape reduction (I)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (1,1)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04b(self):
+        """Testing `__getitem()__` method with shape reduction (II)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (1,slice(1,4,2))
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04c(self):
+        """Testing `__getitem()__` method with shape reduction (III)"""
+        a = np.arange(60).reshape((5,4,3))
+        b = ca.carray(a)
+        sl = (1,slice(1,4,2),2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
 
 class setitemTest(unittest.TestCase):
 
@@ -225,6 +249,39 @@ class setitemTest(unittest.TestCase):
         b[sl] = 2
         #print "after->", `b[sl]`
         assert_array_equal(a[:], b[:], "Arrays are not equal")
+
+    def test04a(self):
+        """Testing `__setitem()__` method with shape reduction (I)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (1,1)
+        #print "before->", `b[sl]`
+        a[sl] = 2
+        b[sl] = 2
+        #print "after->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04b(self):
+        """Testing `__setitem()__` method with shape reduction (II)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (1,slice(1,4,2))
+        #print "before->", `b[sl]`
+        a[sl] = 2
+        b[sl] = 2
+        #print "after->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04c(self):
+        """Testing `__setitem()__` method with shape reduction (III)"""
+        a = np.arange(24).reshape((4,3,2))
+        b = ca.carray(a)
+        sl = (1,2,slice(None,None,None))
+        #print "before->", `b[sl]`
+        a[sl] = 2
+        b[sl] = 2
+        #print "after->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 
 class appendTest(unittest.TestCase):
