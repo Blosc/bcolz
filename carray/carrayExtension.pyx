@@ -963,6 +963,7 @@ cdef class carray:
     cdef npy_intp nwrow, blen
     cdef ndarray arr1
     cdef object start, stop, step
+    cdef object arr
 
     chunklen = self._chunklen
 
@@ -991,9 +992,15 @@ cdef class carray:
         raise NotImplementedError("step in slice can only be positive")
     # Multidimensional keys
     elif isinstance(key, tuple):
-      if len(key) != 1:
-        raise IndexError, "multidimensional keys are not supported"
-      return self[key[0]]
+      # An n-dimensional slice
+      # First, retrieve elements in the leading dimension
+      arr = self[key[0]]
+      # Then, keep only the required elements in other dimensions
+      arr = arr[(slice(None),) + key[1:]]
+      # Force a copy in case returned array is not contiguous
+      if not arr.flags.contiguous:
+        arr = arr.copy()
+      return arr
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
       # Try to convert to a integer array
@@ -1040,10 +1047,10 @@ cdef class carray:
 
     # Build a numpy container
     blen = get_len_of_range(start, stop, step)
-    array = np.empty(shape=(blen,), dtype=self._dtype)
+    arr = np.empty(shape=(blen,), dtype=self._dtype)
     if blen == 0:
       # If empty, return immediately
-      return array
+      return arr
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1057,12 +1064,12 @@ cdef class carray:
         continue
       # Get the data chunk and assign it to result array
       if nchunk == nchunks-1 and self.leftover:
-        array[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
+        arr[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
       else:
-        array[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
+        arr[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
       nwrow += blen
 
-    return array
+    return arr
 
 
   def __setitem__(self, object key, object value):

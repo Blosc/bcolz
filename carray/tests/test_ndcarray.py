@@ -95,6 +95,31 @@ class getitemTest(unittest.TestCase):
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
+    def test03a(self):
+        """Testing `__getitem()__` method with several slices (I)"""
+        a = np.arange(12).reshape((4,3))
+        b = ca.carray(a)
+        sl = (slice(1,3,1), slice(1,4,2))
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+
+    def test03b(self):
+        """Testing `__getitem()__` method with several slices (II)"""
+        a = np.arange(24).reshape((4,3,2))
+        b = ca.carray(a)
+        sl = (slice(1,3,2), slice(1,4,2), slice(None))
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test03c(self):
+        """Testing `__getitem()__` method with several slices (III)"""
+        a = np.arange(120).reshape((5,4,3,2))
+        b = ca.carray(a)
+        sl = (slice(None,None,3), slice(1,3,2), slice(1,4,2))
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
 
 class setitemTest(unittest.TestCase):
 
