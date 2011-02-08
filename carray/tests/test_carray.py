@@ -198,12 +198,21 @@ class getitemTest(unittest.TestCase):
 
 class setitemTest(unittest.TestCase):
 
-    def test00(self):
+    def test00a(self):
         """Testing `__setitem()__` method with only one element"""
         a = np.arange(1e2)
         b = ca.carray(a, chunklen=10)
         b[1] = 10.
         a[1] = 10.
+        #print "b->", `b`
+        assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test00b(self):
+        """Testing `__setitem()__` method with only one element (tuple)"""
+        a = np.arange(1e2)
+        b = ca.carray(a, chunklen=10)
+        b[(1,)] = 10.
+        a[(1,)] = 10.
         #print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 

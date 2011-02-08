@@ -334,29 +334,25 @@ carrays.
 Multidimensional carrays
 ------------------------
 
-You can create multidimensional carrays too.  However, the trailing
-dimensions of these objects are added to the dtype.  Look at this
-example::
+You can create multidimensional carrays too.  Look at this example::
 
   >>> a = ca.zeros((2,3))
-  >>> a
-  carray((2,), ('float64',(3,)))  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
+  carray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True)
   [[ 0.  0.  0.]
    [ 0.  0.  0.]]
 
-So, you can only access directly elements in the first dimension::
+So, you can only access any element in any dimension::
 
   >>> a[1]
   array([ 0.,  0.,  0.])
+  >>> a[1,::2]
+  array([ 0., 0.])
   >>> a[1,1]
-  IndexError: multidimensional keys are not supported
-
-In case you want to access elements in other dimensions, just add a
-trailing `__getitem__()` operation::
-
-  >>> a[1][1]
   0.0
+
+As you see, multidimensional carrays support the same multidimensional
+indexes than its NumPy counterparts.
 
 Also, you can use the `reshape()` method to set your desired shape to
 an existing carray::
@@ -374,16 +370,12 @@ Iterators loop over the leading dimension::
   >>> [r for r in b]
   [array([0, 1, 2, 3]), array([4, 5, 6, 7]), array([ 8,  9, 10, 11])]
 
-Again, you can select columns by using another indirection level::
+And you can select columns there by using another indirection level::
 
   >>> [r[2] for r in b]
   [2, 6, 10]
 
 Above, the third column has been selected.
-
-In general, you can do the same operations with multidimensional
-carrays than with unidimensional counterparts.  Just keep in mind that
-they are like undimensional objects with multidimensional types.
 
 Operating with carrays
 ----------------------
