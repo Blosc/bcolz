@@ -9,6 +9,10 @@ Release notes for carray
 Changes from 0.3.2 to 0.4.dev
 =============================
 
+- Implemented a `skip` parameter for iterators in `carray` and `ctable`
+  objects.  This complements `limit` for selecting the number of
+  elements to be returned by the iterator.
+
 - Implemented multidimensional indexing for carrays.  Than means that
   you can do::
 

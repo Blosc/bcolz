@@ -408,9 +408,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def where(self, expression, outcols=None, limit=None):
+    def where(self, expression, outcols=None, limit=None, skip=0):
         """
-        where(expression, outcols=None, limit=None)
+        where(expression, outcols=None, limit=None, skip=0)
 
         Iterate over rows where `expression` is true.
 
@@ -427,6 +427,8 @@ class ctable(object):
         limit : int
             A maximum number of elements to return.  The default is return
             everything.
+        skip : int
+            An initial number of elements to skip.  The default is 0.
 
         Returns
         -------
@@ -461,32 +463,28 @@ class ctable(object):
             if set(outcols) - set(self.names+['nrow__']) != set():
                 raise ValueError, "not all outcols are real column names"
 
-        # Get the length of the result
-        count = boolarr.sum()
-        if limit is not None:
-            count = min(count, limit)
-
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
             if name == "nrow__":
-                icols.append(boolarr.wheretrue(limit=count))
+                icols.append(boolarr.wheretrue(limit=limit, skip=skip))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.where(boolarr, limit=count))
+                icols.append(col.where(boolarr, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
-        return self._iter(icols, dtype, count)
+        return self._iter(icols, dtype)
 
 
     def __iter__(self):
         return self.iter(0, self.len, 1)
 
 
-    def iter(self, start=0, stop=None, step=1, outcols=None, limit=None):
+    def iter(self, start=0, stop=None, step=1, outcols=None,
+             limit=None, skip=0):
         """
-        iter(start=0, stop=None, step=1, outcols=None, limit=None)
+        iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
 
         Iterator with `start`, `stop` and `step` bounds.
 
@@ -508,6 +506,8 @@ class ctable(object):
         limit : int
             A maximum number of elements to return.  The default is return
             everything.
+        skip : int
+            An initial number of elements to skip.  The default is 0.
 
         Returns
         -------
@@ -535,33 +535,29 @@ class ctable(object):
         if step <= 0:
             raise NotImplementedError, "step param can only be positive"
         start, stop, step = slice(start, stop, step).indices(self.len)
-        count = utils.get_len_of_range(start, stop, step)
-        if limit is not None:
-            count = min(count, limit)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
         for name in outcols:
             if name == "nrow__":
-                #icols.append(iter(xrange(start, stop, step)))  # XXX
-                icols.append(xrange(start, stop, step))
+                istop = None
+                if limit is not None:
+                    istop = limit + skip
+                icols.append(it.islice(xrange(start, stop, step), skip, istop))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.iter(start, stop, step))
+                icols.append(
+                    col.iter(start, stop, step, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
-        return self._iter(icols, dtype, count)
+        return self._iter(icols, dtype)
 
 
-    def _iter(self, icols, dtype, count):
-        """Return `count` values in `icols` list of iterators with `dtype`."""
+    def _iter(self, icols, dtype):
+        """Return a list of `icols` iterators with `dtype` names."""
 
-        if count > 0:
-            icols = tuple(icols)
-        else:
-            # No elements. Return an empty iterator.
-            return iter([])
+        icols = tuple(icols)
         namedt = namedtuple('row', dtype.names)
         iterable = it.imap(namedt, *icols)
         return iterable
