@@ -861,9 +861,7 @@ cdef class carray:
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
-        # Multiplying 0's can be costly (!), so remove the need to do so
-        if chunk_.constant != 0:
-          result += chunk_.constant * self._chunklen
+        result += chunk_.constant * self._chunklen
       else:
         result += chunk_[:].sum()
     if self.leftover:
