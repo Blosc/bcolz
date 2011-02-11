@@ -230,6 +230,10 @@ Utility functions
       nthreads : int
         The number of threads to be used during carray operation.
 
+    Returns:
+      out : int
+        The previous setting for the number of threads.
+
     See Also:
       :py:func:`blosc_set_nthreads`
 

@@ -57,14 +57,20 @@ def set_nthreads(nthreads):
     nthreads : int
         The number of threads to be used during carray operation.
 
+    Returns
+    -------
+    out : int
+        The previous setting for the number of threads.
+
     See Also
     --------
     blosc_set_nthreads
 
     """
-    ca.blosc_set_nthreads(nthreads)
+    nthreads_old = ca.blosc_set_nthreads(nthreads)
     if ca.numexpr_here:
         ca.numexpr.set_num_threads(nthreads)
+    return nthreads_old
 
 
 def fromiter(iterable, dtype, count, **kwargs):
