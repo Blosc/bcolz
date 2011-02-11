@@ -161,6 +161,17 @@ cdef int check_zeros(char *data, int nbytes):
   return iszero
 
 
+cdef int true_count(char *data, int nbytes):
+  """Count the number of true values in data (boolean)."""
+  cdef int i, count
+
+  with nogil:
+    count = 0
+    for i from 0 <= i < nbytes:
+      count += <int>(data[i])
+  return count
+
+
 #-------------------------------------------------------------
 
 
@@ -178,6 +189,7 @@ cdef class chunk:
   cdef char typekind, isconstant
   cdef int atomsize, itemsize, blocksize
   cdef int nbytes, cbytes
+  cdef int true_count
   cdef char *data
   cdef object atom, constant
 
@@ -219,6 +231,8 @@ cdef class chunk:
       if blocksize == 0:
         blocksize = itemsize
     else:
+      if self.typekind == 'b':
+        self.true_count = true_count(array.data, nbytes)
       # Data is not constant, compress it
       dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       # Compress data
@@ -846,11 +860,13 @@ cdef class carray:
 
     """
     cdef chunk chunk_
-    cdef object result
     cdef npy_intp nchunk, nchunks
+    cdef object result
 
     if dtype is None:
       dtype = self._dtype
+    else:
+      dtype = np.dtype(dtype)
     if dtype.kind == 'S':
       raise TypeError, "cannot perform reduce with flexible type"
 
@@ -862,6 +878,8 @@ cdef class carray:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
         result += chunk_.constant * self._chunklen
+      elif dtype.kind == 'b':
+        result += chunk_.true_count
       else:
         result += chunk_[:].sum()
     if self.leftover:
