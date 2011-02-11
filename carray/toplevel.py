@@ -405,7 +405,7 @@ def _getvars(expression, user_dict, depth, vm):
             val = None
         # Check the value.
         if (vm == "numexpr" and
-            hasattr(val, 'dtype') and
+            hasattr(val, 'dtype') and hasattr(val, "__len__") and
             val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "

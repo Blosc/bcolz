@@ -197,7 +197,7 @@ but, as can be seen, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
 fine-tuning the performance for an specific carray).
 
-See ``Optimization tips`` section for info on how you can change other
+See :ref:`opt-tips` chapter for info on how you can change other
 internal parameters like the size of the chunk.
 
 Accessing carray data
@@ -251,38 +251,65 @@ Querying carrays
 ----------------
 
 carrays can be queried in different ways.  The most easy, yet powerful
-way is using its iterator::
+way is using its set of iterators.  The most common way is::
 
   >>> a = np.arange(1e7)
   >>> b = ca.carray(a)
   >>> %time sum(v for v in a if v < 10)
-  CPU times: user 8.02 s, sys: 0.00 s, total: 8.03 s
-  Wall time: 8.33 s
+  CPU times: user 7.44 s, sys: 0.00 s, total: 7.45 s
+  Wall time: 7.57 s
   45.0
   >>> %time sum(v for v in b if v < 10)
   CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s
-  Wall time: 0.93 s   # 9x faster than NumPy
+  Wall time: 0.93 s   # 8x faster than NumPy
   45.0
+
+The iterator also has support for looking into slices of the array::
+
+  >>> %time sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
+  CPU times: user 0.00 s, sys: 0.00 s, total: 0.00 s
+  Wall time: 0.00 s
+  15.0
+  >>> %timeit sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
+  10000 loops, best of 3: 121 µs per loop
+
+See that the time taken in this case is much shorter because the slice
+to do the lookup is much shorter too.
 
 Also, you can quickly retrieve the indices of a boolean carray that
 have a true value::
 
-  >>> barr = ca.carray(a < 10)
+  >>> barr = ca.eval("b<10")  # see 'Operating with carrays' section below
   >>> [i for i in barr.wheretrue()]
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+  >>> %timeit [i for i in barr.wheretrue()]
+  1000 loops, best of 3: 1.06 ms per loop
 
 And get the values where a boolean array is true::
 
   >>> [i for i in b.where(barr)]
   [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
+  >>> %timeit [i for i in b.where(barr)]
+  1000 loops, best of 3: 1.59 ms per loop
+
+Note how `wheretrue` and `where` iterators are really fast.  They are
+also very powerful.  For example, they support `limit` and `skip`
+parameters for limiting the number of elements returned and skipping
+the leading elements respectively::
+
+  >>> [i for i in barr.wheretrue(limit=5)]
+  [0, 1, 2, 3, 4]
+  >>> [i for i in barr.wheretrue(skip=3)]
+  [3, 4, 5, 6, 7, 8, 9]
+  >>> [i for i in barr.wheretrue(limit=5, skip=3)]
+  [3, 4, 5, 6, 7]
 
 The advantage of the carray iterators is that you can use them in
 generator contexts and hence, you don't need to waste memory for
 creating temporaries, which can be important when dealing with large
-arrays.
-
-Finally, we have seen that all these iterators are very fast, so try
-to express your problems in a way that you can use them extensively.
+arrays.  Also, we have seen that all these iterators are very fast, so
+try to express your problems in a way that you can use them
+extensively.
 
 Modifying carrays
 -----------------
@@ -291,7 +318,7 @@ Although it is not a very efficient operation, carrays can be modified
 too.  You can do it by specifying scalar or slice indices::
 
   >>> a = np.arange(10)
-  >>> b = ca.carray(a)
+  >>> b = ca.arange(10)
   >>> b[1] = 10
   >>> print b
   [ 0 10  2  3  4  5  6  7  8  9]
@@ -328,7 +355,7 @@ although modifying values in latest chunk is somewhat more cheaper::
   >>> %timeit b[-1] = 3
   10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
 
-So, in general, you should avoid abusing of this feature when using
+In general, you should avoid modifications (if you can) when using
 carrays.
 
 Multidimensional carrays
@@ -375,16 +402,36 @@ And you can select columns there by using another indirection level::
   >>> [r[2] for r in b]
   [2, 6, 10]
 
-Above, the third column has been selected.
+Above, the third column has been selected.  And, although for this
+case the indexing is easier::
+
+  >>> b[:,2]
+  array([ 2,  6, 10])
+
+the iterator approach might consume less memory resources.
 
 Operating with carrays
 ----------------------
 
-carrays can be operated pretty easily if you have the Numexpr package
-installed::
+Right now, you cannot operate with carrays directly (although that
+might be implemented in the future)::
 
   >>> x = ca.arange(1e7)
-  >>> y = ca.eval(".5x**3+2.1*x**2")
+  >>> x + x
+  TypeError: unsupported operand type(s) for +:
+  'carray.carrayExtension.carray' and 'carray.carrayExtension.carray'
+
+Rather, you should use the `eval` function::
+
+  >>> y = ca.eval("x + x")
+  >>> y
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.64 MB; ratio: 28.88
+    cparams := cparams(clevel=5, shuffle=True)
+  [0.0, 2.0, 4.0, ..., 19999994.0, 19999996.0, 19999998.0]
+
+You can also compute arbitrarily complex expressions in one go::
+
+  >>> y = ca.eval(".5*x**3 + 2.1*x**2")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01
     cparams := cparams(clevel=5, shuffle=True)
@@ -394,11 +441,46 @@ Note how the output of `eval()` is also a carray object.  You can pass
 other parameters of the carray constructor too.  Let's force maximum
 compression for the output::
 
-  >>> y = ca.eval(".5*x**3+2.1*x**2", cparams=ca.cparams(9))
+  >>> y = ca.eval(".5*x**3 + 2.1*x**2", cparams=ca.cparams(9))
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14
     cparams := cparams(clevel=9, shuffle=True)
   [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
+
+By default, `eval` will use Numexpr virtual machine if it is installed
+and if not, it will default to use the Python one.  You can use the
+`vm` parameter to select the desired virtual machine ("numexpr" or
+"python")::
+
+  >>> %timeit ca.eval(".5*x**3 + 2.1*x**2", vm="numexpr")
+  10 loops, best of 3: 303 ms per loop
+  >>> %timeit ca.eval(".5*x**3 + 2.1*x**2", vm="python")
+  10 loops, best of 3: 1.9 s per loop
+
+As can be seen, using the "numexpr" virtual machine is generally
+(much) faster, but there are situations that the "python" one is
+desirable because it offers much more functionality::
+
+  >>> ca.eval("np.diff(x)", vm="numexpr")
+  NameError: variable name ``diff`` not found
+  >>> ca.eval("np.diff(x)", vm="python")
+  carray((9999389,), float64)  nbytes: 76.29 MB; cbytes: 814.25 KB; ratio: 95.94
+    cparams := cparams(clevel=5, shuffle=True)
+  [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]
+
+Finally, `eval` lets you select the type of the outcome of the
+evaluation by using the `out_flavor` argument::
+
+  >>> ca.eval("x**3", out_flavor="carray")
+  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 37.85 MB; ratio: 2.02
+    cparams := cparams(clevel=5, shuffle=True)
+  [0.0, 1.0, 8.0, ..., 9.999991e+20, 9.999994e+20, 9.999997e+20]
+  >>> ca.eval("x**3", out_flavor="numpy")
+  array([  0.00000000e+00,   1.00000000e+00,   8.00000000e+00, ...,
+           9.99999100e+20,   9.99999400e+20,   9.99999700e+20])
+
+For setting permanently your own defaults for the `vm` and
+`out_flavors`, see :ref:`carray-defaults` chapter.
 
 carray metadata
 ---------------
@@ -451,6 +533,7 @@ this carray::
 
 For a complete list of public attributes of carray, see section on
 :ref:`carray-attributes`.
+
 
 Tutorial on ctable objects
 ==========================

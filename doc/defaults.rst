@@ -1,3 +1,5 @@
+.. _carray-defaults:
+
 -----------------------------
 Defaults for carray operation
 -----------------------------
