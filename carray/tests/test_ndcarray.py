@@ -559,8 +559,7 @@ class evalTest(unittest.TestCase):
         outb = ca.eval("b*2.+1")
         assert_array_equal(outa, outb, "Arrays are not equal")
 
-    # This works badly on Win
-    def _test02(self):
+    def test02(self):
         """Testing evaluation of ndcarrays (reduction)"""
         # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
