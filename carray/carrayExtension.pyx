@@ -19,6 +19,9 @@ _MB = 1024*_KB
 # lengths, row numbers, shapes, chunk shapes, byte counts...
 SizeType = np.int64
 
+# The native int type for this platform
+IntType = np.dtype(np.int_)
+
 #-----------------------------------------------------------------
 
 # numpy functions & objects
@@ -161,6 +164,17 @@ cdef int check_zeros(char *data, int nbytes):
   return iszero
 
 
+cdef int true_count(char *data, int nbytes):
+  """Count the number of true values in data (boolean)."""
+  cdef int i, count
+
+  with nogil:
+    count = 0
+    for i from 0 <= i < nbytes:
+      count += <int>(data[i])
+  return count
+
+
 #-------------------------------------------------------------
 
 
@@ -178,6 +192,7 @@ cdef class chunk:
   cdef char typekind, isconstant
   cdef int atomsize, itemsize, blocksize
   cdef int nbytes, cbytes
+  cdef int true_count
   cdef char *data
   cdef object atom, constant
 
@@ -219,6 +234,8 @@ cdef class chunk:
       if blocksize == 0:
         blocksize = itemsize
     else:
+      if self.typekind == 'b':
+        self.true_count = true_count(array.data, nbytes)
       # Data is not constant, compress it
       dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       # Compress data
@@ -375,7 +392,7 @@ cdef class carray:
   cdef npy_intp start, stop, step, nextelement
   cdef npy_intp _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
-  cdef npy_intp nhits, limit
+  cdef npy_intp nhits, limit, skip
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
@@ -409,7 +426,7 @@ cdef class carray:
   property dtype:
     "The dtype of this object."
     def __get__(self):
-      return self._dtype
+      return self._dtype.base
 
   property len:
     "The length (leading dimension) of this object."
@@ -425,7 +442,7 @@ cdef class carray:
   property shape:
     "The shape of this object."
     def __get__(self):
-      return (self.len,)
+      return (self.len,) + self._dtype.shape
 
 
   def __cinit__(self, object array, object cparams=None,
@@ -453,6 +470,10 @@ cdef class carray:
         self._dtype = dtype = array_.dtype
       else:
         # Multidimensional array.  The atom will have array_.shape[1:] dims.
+        # atom dimensions will be stored in `self._dtype`, which is different
+        # than `self.dtype` in that `self._dtype` dimensions are transferred
+        # to `self.shape`.  `self.dtype` will always be scalar (NumPy
+        # convention).
         self._dtype = dtype = np.dtype((array_.dtype.base, array_.shape[1:]))
     else:
       self._dtype = dtype
@@ -527,7 +548,7 @@ cdef class carray:
     self.idxcache = -1       # cache not initialized
 
     # Cache a len-1 array for accelerating self[int] case
-    self.arr1 = np.empty(shape=(1,), dtype=self.dtype)
+    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
 
 
   def append(self, object array):
@@ -549,7 +570,7 @@ cdef class carray:
     cdef ndarray remainder, arrcpy, dflts
     cdef chunk chunk_
 
-    arrcpy = utils.to_ndarray(array, self.dtype)
+    arrcpy = utils.to_ndarray(array, self._dtype)
     if arrcpy.dtype != self._dtype.base:
       raise TypeError, "array dtype does not match with self"
     # Appending a single row should be supported
@@ -709,7 +730,7 @@ cdef class carray:
 
     if nitems > self.len:
       # Create a 0-strided array and append it to self
-      chunk = np.ndarray(nitems-self.len, dtype=self.dtype,
+      chunk = np.ndarray(nitems-self.len, dtype=self._dtype,
                          buffer=self._dflt, strides=(0,))
       self.append(chunk)
     else:
@@ -745,7 +766,7 @@ cdef class carray:
       newshape = (newshape,)
     newsize = np.prod(newshape)
 
-    ishape = self.shape+self._dtype.shape
+    ishape = self.shape
     ilen = ishape[0]
     isize = np.prod(ishape)
 
@@ -811,7 +832,7 @@ cdef class carray:
     expectedlen = kwargs.pop('expectedlen', self.len)
 
     # Create a new, empty carray
-    ccopy = carray(np.empty(0, dtype=self.dtype),
+    ccopy = carray(np.empty(0, dtype=self._dtype),
                    cparams=cparams,
                    expectedlen=expectedlen,
                    **kwargs)
@@ -834,7 +855,10 @@ cdef class carray:
     ----------
     dtype : NumPy dtype
         The desired type of the output.  If ``None``, the dtype of `self` is
-        used.
+        used.  An exception is when `self` has an integer type with less
+        precision than the default platform integer.  In that case, the
+        default platform integer is used instead (NumPy convention).
+
 
     Return value
     ------------
@@ -842,28 +866,34 @@ cdef class carray:
 
     """
     cdef chunk chunk_
-    cdef object result
     cdef npy_intp nchunk, nchunks
+    cdef object result
 
     if dtype is None:
-      dtype = self.dtype
+      dtype = self._dtype.base
+      # Check if we have less precision than required for ints
+      # (mimick NumPy logic)
+      if dtype.kind in ('b', 'i') and dtype.itemsize < IntType.itemsize:
+        dtype = IntType
+    else:
+      dtype = np.dtype(dtype)
     if dtype.kind == 'S':
       raise TypeError, "cannot perform reduce with flexible type"
 
     # Get a container for the result
-    result = np.zeros(1, dtype=dtype.base)[0]
+    result = np.zeros(1, dtype=dtype)[0]
 
     nchunks = self._nbytes // <npy_intp>self._chunksize
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
-        # Multiplying 0's can be costly (!), so remove the need to do so
-        if chunk_.constant != 0:
-          result += chunk_.constant * self._chunklen
+        result += chunk_.constant * self._chunklen
+      elif self._dtype.type == np.bool_:
+        result += chunk_.true_count
       else:
-        result += chunk_[:].sum()
+        result += chunk_[:].sum(dtype=dtype)
     if self.leftover:
-      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum()
+      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum(dtype=dtype)
 
     return result
 
@@ -911,7 +941,7 @@ cdef class carray:
 
     # Check whether the cache block has to be initialized
     if self.idxcache < 0:
-      self.blockcache = np.empty(shape=(blocklen,), dtype=self.dtype)
+      self.blockcache = np.empty(shape=(blocklen,), dtype=self._dtype)
       self.datacache = self.blockcache.data
       if self.idxcache == -1:
         # Absolute first time.  Add the cache size to cbytes counter.
@@ -963,6 +993,7 @@ cdef class carray:
     cdef npy_intp nwrow, blen
     cdef ndarray arr1
     cdef object start, stop, step
+    cdef object arr
 
     chunklen = self._chunklen
 
@@ -991,9 +1022,22 @@ cdef class carray:
         raise NotImplementedError("step in slice can only be positive")
     # Multidimensional keys
     elif isinstance(key, tuple):
-      if len(key) != 1:
-        raise IndexError, "multidimensional keys are not supported"
-      return self[key[0]]
+      if len(key) == 0:
+        raise ValueError("empty tuple not supported")
+      elif len(key) == 1:
+        return self[key[0]]
+      # An n-dimensional slice
+      # First, retrieve elements in the leading dimension
+      arr = self[key[0]]
+      # Then, keep only the required elements in other dimensions
+      if type(key[0]) == slice:
+        arr = arr[(slice(None),) + key[1:]]
+      else:
+        arr = arr[key[1:]]
+      # Force a copy in case returned array is not contiguous
+      if not arr.flags.contiguous:
+        arr = arr.copy()
+      return arr
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
       # Try to convert to a integer array
@@ -1012,10 +1056,10 @@ cdef class carray:
           count = key.sum()
         else:
           count = -1
-        return np.fromiter(self.where(key), dtype=self.dtype, count=count)
+        return np.fromiter(self.where(key), dtype=self._dtype, count=count)
       elif np.issubsctype(key, np.int_):
         # An integer array
-        return np.array([self[i] for i in key], dtype=self.dtype)
+        return np.array([self[i] for i in key], dtype=self._dtype)
       else:
         raise IndexError, \
               "arrays used as indices must be of integer (or boolean) type"
@@ -1040,10 +1084,10 @@ cdef class carray:
 
     # Build a numpy container
     blen = get_len_of_range(start, stop, step)
-    array = np.empty(shape=(blen,), dtype=self._dtype)
+    arr = np.empty(shape=(blen,), dtype=self._dtype)
     if blen == 0:
       # If empty, return immediately
-      return array
+      return arr
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1057,12 +1101,12 @@ cdef class carray:
         continue
       # Get the data chunk and assign it to result array
       if nchunk == nchunks-1 and self.leftover:
-        array[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
+        arr[nwrow:nwrow+blen] = self.lastchunkarr[startb:stopb:step]
       else:
-        array[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
+        arr[nwrow:nwrow+blen] = self.chunks[nchunk][startb:stopb:step]
       nwrow += blen
 
-    return array
+    return arr
 
 
   def __setitem__(self, object key, object value):
@@ -1091,7 +1135,7 @@ cdef class carray:
     cdef npy_intp nwrow, blen, vlen
     cdef chunk chunk_
     cdef object start, stop, step
-    cdef object cdata
+    cdef object cdata, arr
 
     # We are going to modify data.  Mark block cache as dirty.
     if self.idxcache >= 0:
@@ -1113,6 +1157,24 @@ cdef class carray:
       if step:
         if step <= 0 :
           raise NotImplementedError("step in slice can only be positive")
+    # Multidimensional keys
+    elif isinstance(key, tuple):
+      if len(key) == 0:
+        raise ValueError("empty tuple not supported")
+      elif len(key) == 1:
+        self[key[0]] = value
+        return
+      # An n-dimensional slice
+      # First, retrieve elements in the leading dimension
+      arr = self[key[0]]
+      # Then, assing only the requested elements in other dimensions
+      if type(key[0]) == slice:
+        arr[(slice(None),) + key[1:]] = value
+      else:
+        arr[key[1:]] = value
+      # Finally, update this superset of values in self
+      self[key[0]] = arr
+      return
     # List of integers (case of fancy indexing)
     elif isinstance(key, list):
       # Try to convert to a integer array
@@ -1132,7 +1194,7 @@ cdef class carray:
         return
       elif np.issubsctype(key, np.int_):
         # An integer array
-        value = utils.to_ndarray(value, self.dtype, arrlen=len(key))
+        value = utils.to_ndarray(value, self._dtype, arrlen=len(key))
         # XXX This could be optimised, but it works like this
         for i, item in enumerate(key):
           self[item] = value[i]
@@ -1163,7 +1225,7 @@ cdef class carray:
     if vlen == 0:
       # If range is empty, return immediately
       return
-    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1249,7 +1311,7 @@ cdef class carray:
     cdef object cdata, boolb
 
     vlen = boolarr.sum()   # number of true values in bool array
-    value = utils.to_ndarray(value, self.dtype, arrlen=vlen)
+    value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
 
     # Fill it from data in chunks
     nwrow = 0
@@ -1298,6 +1360,7 @@ cdef class carray:
     if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
       self.nhits = 0
       self.limit = sys.maxint
+      self.skip = 0
     # Initialize some internal values
     self.startb = 0
     self.nrowsread = self.start
@@ -1311,9 +1374,9 @@ cdef class carray:
     return self
 
 
-  def iter(self, start=0, stop=None, step=1, limit=None):
+  def iter(self, start=0, stop=None, step=1, limit=None, skip=0):
     """
-    iter(start=0, stop=None, step=1, limit=None)
+    iter(start=0, stop=None, step=1, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -1329,6 +1392,8 @@ cdef class carray:
     limit : int
         A maximum number of elements to return.  The default is return
         everything.
+    skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns
     -------
@@ -1347,13 +1412,14 @@ cdef class carray:
     self.reset_sentinels()
     self.sss_mode = True
     if limit is not None:
-      self.limit = limit
+      self.limit = limit + skip
+    self.skip = skip
     return iter(self)
 
 
-  def wheretrue(self, limit=None):
+  def wheretrue(self, limit=None, skip=0):
     """
-    wheretrue(limit=None)
+    wheretrue(limit=None, skip=0)
 
     Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
@@ -1363,6 +1429,8 @@ cdef class carray:
     limit : int
         A maximum number of elements to return.  The default is return
         everything.
+    skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns
     -------
@@ -1374,18 +1442,19 @@ cdef class carray:
 
     """
     # Check self
-    if self.dtype.type != np.bool_:
+    if self._dtype.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
     self.reset_sentinels()
     self.wheretrue_mode = True
     if limit is not None:
-      self.limit = limit
+      self.limit = limit + skip
+    self.skip = skip
     return iter(self)
 
 
-  def where(self, boolarr, limit=None):
+  def where(self, boolarr, limit=None, skip=0):
     """
-    where(boolarr, limit=None)
+    where(boolarr, limit=None, skip=0)
 
     Iterator that returns values of this object where `boolarr` is true.
 
@@ -1395,6 +1464,8 @@ cdef class carray:
     limit : int
         A maximum number of elements to return.  The default is return
         everything.
+    skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns
     -------
@@ -1416,12 +1487,14 @@ cdef class carray:
     self.where_mode = True
     self.where_arr = boolarr
     if limit is not None:
-      self.limit = limit
+      self.limit = limit + skip
+    self.skip = skip
     return iter(self)
 
 
   def __next__(self):
     cdef char *vbool
+    cdef int nhits_buf
 
     self.nextelement = self._nrow + self.step
     while (self.nextelement < self.stop) and (self.nhits < self.limit):
@@ -1455,6 +1528,17 @@ cdef class carray:
         self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf
 
+        # Check if we can skip this buffer
+        if (self.wheretrue_mode or self.where_mode) and self.skip > 0:
+          if self.wheretrue_mode:
+            nhits_buf = self.iobuf.sum()
+          else:
+            nhits_buf = self.where_buf.sum()
+          if (self.nhits + nhits_buf) < self.skip:
+            self.nhits += nhits_buf
+            self.nextelement += self.nrowsinbuf
+            continue
+
       self._row += self.step
       self._nrow = self.nextelement
       if self._row + self.step >= self.stopb:
@@ -1467,6 +1551,8 @@ cdef class carray:
         vbool = <char *>(self.iobuf.data + self._row)
         if vbool[0]:
           self.nhits += 1
+          if self.nhits <= self.skip:
+            continue
           return self._nrow
         else:
           continue
@@ -1475,6 +1561,8 @@ cdef class carray:
         if not vbool[0]:
             continue
       self.nhits += 1
+      if self.nhits <= self.skip:
+        continue
       # Return the current value in I/O buffer
       if self.itemsize == self.atomsize:
         return PyArray_GETITEM(
@@ -1484,7 +1572,7 @@ cdef class carray:
 
     else:
       # Release buffers
-      self.iobuf = np.empty(0, dtype=self.dtype)
+      self.iobuf = np.empty(0, dtype=self._dtype)
       self.where_buf = np.empty(0, dtype=np.bool_)
       self.reset_sentinels()
       raise StopIteration        # end of iteration
@@ -1498,6 +1586,7 @@ cdef class carray:
     self.where_arr = None
     self.nhits = 0
     self.limit = sys.maxint
+    self.skip = 0
 
 
   cdef int check_zeros(self, object barr):

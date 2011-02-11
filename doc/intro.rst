@@ -70,8 +70,7 @@ carray objects bring several advantages over plain NumPy objects:
 
   * Numexpr-powered: you can operate with compressed data in a fast
     and convenient way.  Blosc ensures that the additional overhead of
-    handling compressed data natively is very low (the secret goal is
-    to make compressed data operations to perform actually faster :-).
+    handling compressed data natively is very low.
 
 
 carray limitations
@@ -79,7 +78,16 @@ carray limitations
 
 carray also comes with drawbacks:
 
-  * Lack of support for the complete NumPy functionality.  Although
-    Numexpr will let you to perform a wide-range of operations on
-    native carray/ctable objects, NumPy exposes a much richer toolset.
+  * Limited broadcast support.  For example, NumPy lets you operate
+    seamlessly with arrays of different shape (as long as they are
+    compatible), but you cannot do that with carray.  The only object
+    that can be bradcasted currently are scalars
+    (e.g. ``ca.eval("x+3")``).
 
+  * Serialization is not supported yet.  If you want to serialize a
+    carray, you will have to convert carray objects to NumPy objects
+    first.
+
+  * Multidimensional `ctable` objects are not supported.  However, as
+    the columns of these objects can be fully multidimensional, this
+    is not regarded as a grave limitation.

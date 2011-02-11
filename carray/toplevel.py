@@ -57,14 +57,20 @@ def set_nthreads(nthreads):
     nthreads : int
         The number of threads to be used during carray operation.
 
+    Returns
+    -------
+    out : int
+        The previous setting for the number of threads.
+
     See Also
     --------
     blosc_set_nthreads
 
     """
-    ca.blosc_set_nthreads(nthreads)
+    nthreads_old = ca.blosc_set_nthreads(nthreads)
     if ca.numexpr_here:
         ca.numexpr.set_num_threads(nthreads)
+    return nthreads_old
 
 
 def fromiter(iterable, dtype, count, **kwargs):
@@ -405,7 +411,7 @@ def _getvars(expression, user_dict, depth, vm):
             val = None
         # Check the value.
         if (vm == "numexpr" and
-            hasattr(val, 'dtype') and
+            hasattr(val, 'dtype') and hasattr(val, "__len__") and
             val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "

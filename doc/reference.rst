@@ -230,6 +230,10 @@ Utility functions
       nthreads : int
         The number of threads to be used during carray operation.
 
+    Returns:
+      out : int
+        The previous setting for the number of threads.
+
     See Also:
       :py:func:`blosc_set_nthreads`
 
@@ -333,7 +337,7 @@ carray methods
         The copy of this object.
 
 
-  .. py:method:: iter(start=0, stop=None, step=1, limit=None)
+  .. py:method:: iter(start=0, stop=None, step=1, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -348,6 +352,8 @@ carray methods
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns:
       out : iterator
@@ -389,8 +395,11 @@ carray methods
 
     Parameters:
       dtype : NumPy dtype
-        The desired type of the output.  If ``None``, the dtype of `self` is
-        used.
+        The desired type of the output.  If ``None``, the dtype of
+        `self` is used.  An exception is when `self` has an integer
+        type with less precision than the default platform integer.
+        In that case, the default platform integer is used instead
+        (NumPy convention).
 
     Return value:
       out : NumPy scalar with `dtype`
@@ -406,7 +415,7 @@ carray methods
     See Also:
       :py:meth:`append`
 
-  .. py:method:: where(boolarr, limit=None)
+  .. py:method:: where(boolarr, limit=None, skip=0)
 
     Iterator that returns values of this object where `boolarr` is true.
 
@@ -415,6 +424,8 @@ carray methods
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns:
       out : iterator
@@ -422,7 +433,7 @@ carray methods
     See Also:
       :py:meth:`iter`, :py:meth:`wheretrue`
 
-  .. py:method:: wheretrue(limit=None)
+  .. py:method:: wheretrue(limit=None, skip=0)
 
     Iterator that returns indices where this object is true.  Only useful for
     boolean carrays.
@@ -431,6 +442,8 @@ carray methods
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns:
       out : iterator
@@ -636,7 +649,7 @@ ctable methods
       :py:func:`eval` (first level function)
 
 
-  .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None)
+  .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -657,6 +670,8 @@ ctable methods
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns:
       out : iterable
@@ -688,7 +703,7 @@ ctable methods
       :py:meth:`ctable.append`
 
 
-  .. py:method:: where(expression, outcols=None, limit=None)
+  .. py:method:: where(expression, outcols=None, limit=None, skip=0)
 
     Iterate over rows where `expression` is true.
 
@@ -704,6 +719,8 @@ ctable methods
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
 
     Returns:
       out : iterable

@@ -6,6 +6,34 @@ Release notes for carray
 :Contact: faltet@pytables.org
 
 
+Changes from 0.3.2 to 0.4
+=========================
+
+- Implemented a `skip` parameter for iterators in `carray` and `ctable`
+  objects.  This complements `limit` for selecting the number of
+  elements to be returned by the iterator.
+
+- Implemented multidimensional indexing for carrays.  Than means that
+  you can do::
+
+    >>> a = ca.zeros((2,3))
+
+  Now, you can access any element in any dimension::
+
+    >>> a[1]
+    array([ 0.,  0.,  0.])
+    >>> a[1,::2]
+    array([ 0., 0.])
+    >>> a[1,1]
+    0.0
+
+- `dtype` and `shape` attributes follow now ndarray (NumPy) convention.
+  The `dtype` is always a scalar and the dimensionality is added to the
+  `shape` attribute.  Before, all the additional dimensionality was in
+  the `dtype`.  The new convention should be more familiar for
+  everybody.
+
+
 Changes from 0.3.1 to 0.3.2
 ===========================
 
