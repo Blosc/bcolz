@@ -1,40 +1,13 @@
-Announcing carray 0.4
+Announcing carray 0.5
 =====================
 
 What's new
 ----------
 
-The most prominent feature in 0.4 is the support of multidimensional
-carrays.  Than means that, for example, you can do::
-
-    >>> a = ca.arange(6).reshape((2,3))
-
-Now, you can access any element in any dimension::
-
-    >>> a[:]
-    array([[0, 1, 2],
-           [3, 4, 5]])
-    >>> a[1]
-    array([3, 4, 5])
-    >>> a[1,::2]
-    array([3, 5])
-    >>> a[1,1]
-    4
-
-Also, all the iterators in carray have received a couple of new
-parameters that allows to `limit` or `skip` selected elements in
-queries.
-
-Finally, many performance improvements have been implemented (mainly
-related with efficient zero-detection code).  This allows for improved
-query times when using iterators.
-
-See:
-https://github.com/FrancescAlted/carray/wiki/query-compress
-for an example on how fast the new iterators can do.
+#XXX version-specific blurb XXX#
 
 For more detailed info, see the release notes in:
-https://github.com/FrancescAlted/carray/wiki/Release-0.3.2
+https://github.com/FrancescAlted/carray/wiki/Release-0.5
 
 What it is
 ----------

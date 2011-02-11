@@ -6,8 +6,14 @@ Release notes for carray
 :Contact: faltet@pytables.org
 
 
+Changes from 0.4 to 0.5.dev
+---------------------------
+
+- (None yet.)
+
+
 Changes from 0.3.2 to 0.4
-=========================
+-------------------------
 
 - Implemented a `skip` parameter for iterators in `carray` and `ctable`
   objects.  This complements `limit` for selecting the number of
@@ -35,7 +41,7 @@ Changes from 0.3.2 to 0.4
 
 
 Changes from 0.3.1 to 0.3.2
-===========================
+---------------------------
 
 - New `vm` parameter for `eval()` that allows to choose a 'python' or
   'numexpr' virtual machine during operations.  If numexpr is not
@@ -56,7 +62,7 @@ Changes from 0.3.1 to 0.3.2
 
 
 Changes from 0.3 to 0.3.1
-=========================
+-------------------------
 
 - Added a `limit` parameter to `iter`, `where` and `wheretrue` iterators
   of carray object and to `iter` and `where` of ctable object.
@@ -73,7 +79,7 @@ Changes from 0.3 to 0.3.1
 
 
 Changes from 0.2 to 0.3
-=======================
+-----------------------
 
 - Added a new `ctable` class that implements a compressed, column-wise
   table.
@@ -178,7 +184,7 @@ Changes from 0.2 to 0.3
 
 
 Changes from 0.1 to 0.2
-=======================
+-----------------------
 
 - Added a couple of iterators for carray: `__iter__()` and `iter(start,
   stop, step)`.  The difference is that the later does accept slices.
