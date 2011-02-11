@@ -391,8 +391,11 @@ carray methods
 
     Parameters:
       dtype : NumPy dtype
-        The desired type of the output.  If ``None``, the dtype of `self` is
-        used.
+        The desired type of the output.  If ``None``, the dtype of
+        `self` is used.  An exception is when `self` has an integer
+        type with less precision than the default platform integer.
+        In that case, the default platform integer is used instead
+        (NumPy convention).
 
     Return value:
       out : NumPy scalar with `dtype`

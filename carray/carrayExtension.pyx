@@ -19,6 +19,9 @@ _MB = 1024*_KB
 # lengths, row numbers, shapes, chunk shapes, byte counts...
 SizeType = np.int64
 
+# The native int type for this platform
+IntType = np.dtype(np.int_)
+
 #-----------------------------------------------------------------
 
 # numpy functions & objects
@@ -852,7 +855,10 @@ cdef class carray:
     ----------
     dtype : NumPy dtype
         The desired type of the output.  If ``None``, the dtype of `self` is
-        used.
+        used.  An exception is when `self` has an integer type with less
+        precision than the default platform integer.  In that case, the
+        default platform integer is used instead (NumPy convention).
+
 
     Return value
     ------------
@@ -864,26 +870,30 @@ cdef class carray:
     cdef object result
 
     if dtype is None:
-      dtype = self._dtype
+      dtype = self._dtype.base
+      # Check if we have less precision than required for ints
+      # (mimick NumPy logic)
+      if dtype.kind in ('b', 'i') and dtype.itemsize < IntType.itemsize:
+        dtype = IntType
     else:
       dtype = np.dtype(dtype)
     if dtype.kind == 'S':
       raise TypeError, "cannot perform reduce with flexible type"
 
     # Get a container for the result
-    result = np.zeros(1, dtype=dtype.base)[0]
+    result = np.zeros(1, dtype=dtype)[0]
 
     nchunks = self._nbytes // <npy_intp>self._chunksize
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
         result += chunk_.constant * self._chunklen
-      elif dtype.kind == 'b':
+      elif self._dtype.type == np.bool_:
         result += chunk_.true_count
       else:
-        result += chunk_[:].sum()
+        result += chunk_[:].sum(dtype=dtype)
     if self.leftover:
-      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum()
+      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum(dtype=dtype)
 
     return result
 

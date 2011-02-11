@@ -1138,6 +1138,17 @@ class computeMethodsTest(unittest.TestCase):
         self.assert_(sa == sac, "sum() is not working correctly.")
 
     def test01(self):
+        """Testing sum() with dtype."""
+        a = np.arange(1e5)
+        sa = a.sum(dtype='i8')
+        ac = ca.carray(a)
+        sac = ac.sum(dtype='i8')
+        #print "numpy sum-->", sa
+        #print "carray sum-->", sac
+        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assert_(sa == sac, "sum() is not working correctly.")
+
+    def test02(self):
         """Testing sum() with strings (TypeError)."""
         ac = ca.zeros(10, 'S3')
         self.assertRaises(TypeError, ac.sum)

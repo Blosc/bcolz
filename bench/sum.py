@@ -4,7 +4,7 @@ from time import time
 
 N = 1e8
 #a = np.arange(N, dtype='f8')
-a = np.random.randint(0,100,N).astype('bool')
+a = np.random.randint(0,10,N).astype('bool')
 
 t0 = time()
 sa = a.sum()
