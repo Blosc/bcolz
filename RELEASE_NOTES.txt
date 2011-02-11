@@ -6,8 +6,8 @@ Release notes for carray
 :Contact: faltet@pytables.org
 
 
-Changes from 0.3.2 to 0.4.dev
-=============================
+Changes from 0.3.2 to 0.4
+=========================
 
 - Implemented a `skip` parameter for iterators in `carray` and `ctable`
   objects.  This complements `limit` for selecting the number of
@@ -17,12 +17,8 @@ Changes from 0.3.2 to 0.4.dev
   you can do::
 
     >>> a = ca.zeros((2,3))
-    carray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
-      cparams := cparams(clevel=5, shuffle=True)
-    [[ 0.  0.  0.]
-     [ 0.  0.  0.]]
 
-  So, you can only access any element in any dimension::
+  Now, you can access any element in any dimension::
 
     >>> a[1]
     array([ 0.,  0.,  0.])
