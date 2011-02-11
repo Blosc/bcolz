@@ -13,14 +13,15 @@ https://github.com/FrancescAlted/carray/wiki/Release-0.4
 What it is
 ==========
 
-carray is a container for numerical data that can be compressed
-in-memory.  The compresion process is carried out internally by Blosc, a
-high-performance compressor that is optimized for binary data.  Having
-data compressed in-memory can reduce the stress of the memory subsystem.
-The net result is that carray operations may be faster than using a
-traditional ndarray object from NumPy.
+carray is a chunked container for numerical data.  Chunking allows for
+efficient enlarging/shrinking of data container.  In addition, it can
+also be compressed for reducing memory needs.  The compression process
+is carried out internally by Blosc, a high-performance compressor that
+is optimized for binary data.
 
-carray also supports fully 64-bit addressing (both in UNIX and Windows).
+carray comes with an exhaustive test suite and fully supports both
+32-bit and 64-bit platforms.  Also, it is typically tested on both UNIX
+and Windows operating systems.
 
 Resources
 =========

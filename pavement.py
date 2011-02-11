@@ -205,11 +205,13 @@ Operating System :: Unix
 setup(
     name = 'carray',
     version = VERSION,
-    description = "An in-memory, compressed, data container.",
+    description = "A chunked data container that can be compressed in-memory.",
     long_description = """\
-carray is a container for numerical data that can be compressed
-in-memory.  The compression process is carried out internally by Blosc,
-a high-performance compressor that is optimized for binary data.""",
+carray is a chunked container for numerical data.  Chunking allows for
+efficient enlarging/shrinking of data container.  In addition, it can
+also be compressed for reducing memory needs.  The compression process
+is carried out internally by Blosc, a high-performance compressor that
+is optimized for binary data.""",
     classifiers = filter(None, classifiers.split("\n")),
     author = 'Francesc Alted',
     author_email = 'faltet@pytables.org',
