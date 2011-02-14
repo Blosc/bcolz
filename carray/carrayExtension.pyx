@@ -1495,6 +1495,8 @@ cdef class carray:
   def __next__(self):
     cdef char *vbool
     cdef int nhits_buf
+    cdef npy_intp nchunk, nchunks
+    cdef chunk chunk_
 
     self.nextelement = self._nrow + self.step
     while (self.nextelement < self.stop) and (self.nhits < self.limit):
@@ -1509,10 +1511,26 @@ cdef class carray:
         self._row = self.startb - self.step
 
         # Skip chunks with zeros if in wheretrue_mode
-        if self.wheretrue_mode and self.check_zeros(self):
-          self.nrowsread += self.nrowsinbuf
-          self.nextelement += self.nrowsinbuf
-          continue
+        if self.wheretrue_mode:
+          nchunks = self._nbytes // <npy_intp>self._chunksize
+          nchunk = self.nrowsread // self.nrowsinbuf
+          if nchunk < nchunks:
+            chunk_ = self.chunks[nchunk]
+            nhits_buf = chunk_.true_count
+            if self.skip == 0 and nhits_buf == 0:
+              self.nrowsread += self.nrowsinbuf
+              self.nextelement += self.nrowsinbuf
+              continue
+            if (self.nhits + nhits_buf) < self.skip:
+              self.nhits += nhits_buf
+              self.nrowsread += self.nrowsinbuf
+              self.nextelement += self.nrowsinbuf
+              continue
+          # Check zeros is last chunk
+          elif self.check_zeros(self):
+            self.nrowsread += self.nrowsinbuf
+            self.nextelement += self.nrowsinbuf
+            continue
 
         if self.where_mode:
           # Skip chunks with zeros in where_arr
@@ -1529,11 +1547,8 @@ cdef class carray:
         self.nrowsread += self.nrowsinbuf
 
         # Check if we can skip this buffer
-        if (self.wheretrue_mode or self.where_mode) and self.skip > 0:
-          if self.wheretrue_mode:
-            nhits_buf = self.iobuf.sum()
-          else:
-            nhits_buf = self.where_buf.sum()
+        if self.where_mode and self.skip > 0:
+          nhits_buf = self.where_buf.sum()
           if (self.nhits + nhits_buf) < self.skip:
             self.nhits += nhits_buf
             self.nextelement += self.nrowsinbuf
