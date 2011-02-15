@@ -1510,23 +1510,25 @@ cdef class carray:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
 
-        # Skip chunks with zeros if in wheretrue_mode
+        # Skip chunks if in wheretrue_mode
         if self.wheretrue_mode:
           nchunks = self._nbytes // <npy_intp>self._chunksize
           nchunk = self.nrowsread // self.nrowsinbuf
           if nchunk < nchunks:
             chunk_ = self.chunks[nchunk]
             nhits_buf = chunk_.true_count
+            # Skip chunks with all zeros
             if self.skip == 0 and nhits_buf == 0:
               self.nrowsread += self.nrowsinbuf
               self.nextelement += self.nrowsinbuf
               continue
+            # Skip chunks while nhits < skip
             if (self.nhits + nhits_buf) < self.skip:
               self.nhits += nhits_buf
               self.nrowsread += self.nrowsinbuf
               self.nextelement += self.nrowsinbuf
               continue
-          # Check zeros is last chunk
+          # Skip last chunk if all zeros on it
           elif self.check_zeros(self):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
