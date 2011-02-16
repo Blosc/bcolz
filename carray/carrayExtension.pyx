@@ -1495,6 +1495,9 @@ cdef class carray:
   def __next__(self):
     cdef char *vbool
     cdef int nhits_buf
+    cdef npy_intp nchunk, nchunks
+    cdef chunk chunk_
+    cdef carray where_arr
 
     self.nextelement = self._nrow + self.step
     while (self.nextelement < self.stop) and (self.nhits < self.limit):
@@ -1508,36 +1511,49 @@ cdef class carray:
           self.stopb = self.nrowsinbuf
         self._row = self.startb - self.step
 
-        # Skip chunks with zeros if in wheretrue_mode
-        if self.wheretrue_mode and self.check_zeros(self):
-          self.nrowsread += self.nrowsinbuf
-          self.nextelement += self.nrowsinbuf
-          continue
-
-        if self.where_mode:
-          # Skip chunks with zeros in where_arr
+        # Skip chunks if in where_mode or wheretrue_mode
+        if self.where_mode and type(self.where_arr) == np.ndarray:
+          # Skip chunks with zeros in where_arr (numpy array version)
           if self.check_zeros(self.where_arr):
             self.nrowsread += self.nrowsinbuf
             self.nextelement += self.nrowsinbuf
             continue
+        elif self.where_mode or self.wheretrue_mode:
+          # Skip chunks if in where_mode or wheretrue_mode (carray version)
+          if self.where_mode:
+              where_arr = self.where_arr
+          else:
+              where_arr = self
+          nchunks = where_arr._nbytes // <npy_intp>where_arr._chunksize
+          nchunk = self.nrowsread // self.nrowsinbuf
+          if nchunk < nchunks:
+            chunk_ = where_arr.chunks[nchunk]
+            nhits_buf = chunk_.true_count
+            # Skip chunks with all zeros
+            if self.skip == 0 and nhits_buf == 0:
+              self.nrowsread += self.nrowsinbuf
+              self.nextelement += self.nrowsinbuf
+              continue
+            # Skip chunks while nhits < skip
+            if (self.nhits + nhits_buf) < self.skip:
+              self.nhits += nhits_buf
+              self.nrowsread += self.nrowsinbuf
+              self.nextelement += self.nrowsinbuf
+              continue
+          # Skip last chunk if all zeros on it
+          elif self.check_zeros(where_arr):
+            self.nrowsread += self.nrowsinbuf
+            self.nextelement += self.nrowsinbuf
+            continue
+
+        if self.where_mode:
           # Read a chunk of the boolean array
           self.where_buf = self.where_arr[
-            self.nrowsread:self.nrowsread+self.nrowsinbuf]
+          self.nrowsread:self.nrowsread+self.nrowsinbuf]
 
         # Read a data chunk
         self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
         self.nrowsread += self.nrowsinbuf
-
-        # Check if we can skip this buffer
-        if (self.wheretrue_mode or self.where_mode) and self.skip > 0:
-          if self.wheretrue_mode:
-            nhits_buf = self.iobuf.sum()
-          else:
-            nhits_buf = self.where_buf.sum()
-          if (self.nhits + nhits_buf) < self.skip:
-            self.nhits += nhits_buf
-            self.nextelement += self.nrowsinbuf
-            continue
 
       self._row += self.step
       self._nrow = self.nextelement
