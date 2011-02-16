@@ -340,7 +340,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
 
     # Guess the dtype
     if dtype is None:
-        if type(stop) in (int, long):
+        if isinstance(stop, (int, long)):
             dtype = np.dtype(np.int_)
     dtype = np.dtype(dtype)
     stop = int(stop)
