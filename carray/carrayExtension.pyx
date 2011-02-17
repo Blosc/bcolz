@@ -1530,12 +1530,12 @@ cdef class carray:
             chunk_ = where_arr.chunks[nchunk]
             nhits_buf = chunk_.true_count
             # Skip chunks with all zeros
-            if self.skip == 0 and nhits_buf == 0:
+            if nhits_buf == 0:
               self.nrowsread += self.nrowsinbuf
               self.nextelement += self.nrowsinbuf
               continue
             # Skip chunks while nhits < skip
-            if (self.nhits + nhits_buf) < self.skip:
+            elif (self.nhits + nhits_buf) < self.skip:
               self.nhits += nhits_buf
               self.nrowsread += self.nrowsinbuf
               self.nextelement += self.nrowsinbuf
@@ -1549,7 +1549,7 @@ cdef class carray:
         if self.where_mode:
           # Read a chunk of the boolean array
           self.where_buf = self.where_arr[
-          self.nrowsread:self.nrowsread+self.nrowsinbuf]
+            self.nrowsread:self.nrowsread+self.nrowsinbuf]
 
         # Read a data chunk
         self.iobuf = self[self.nrowsread:self.nrowsread+self.nrowsinbuf]
