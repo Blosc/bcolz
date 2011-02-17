@@ -585,7 +585,7 @@ class iterTest(unittest.TestCase):
         #print "c ->", repr(c)
         assert_array_equal(a[:1010], c, "iterator fails on zeros")
 
-    def test06(self):
+    def test06a(self):
         """Testing `iter()` method with `skip`"""
         a = np.arange(1e4, dtype='f8')
         b = ca.carray(a, chunklen=100)
@@ -594,7 +594,16 @@ class iterTest(unittest.TestCase):
         #print "c ->", repr(c)
         assert_array_equal(a[1010:], c, "iterator fails on zeros")
 
-    def test07(self):
+    def test06b(self):
+        """Testing `iter()` method with negative `skip`"""
+        a = np.arange(1e4, dtype='f8')
+        b = ca.carray(a, chunklen=100)
+        c = ca.fromiter((v for v in b.iter(skip=-1010)), dtype='f8',
+                        count=1010)
+        #print "c ->", repr(c)
+        assert_array_equal(a[-1010:], c, "iterator fails on zeros")
+
+    def test07a(self):
         """Testing `iter()` method with `limit` and `skip`"""
         a = np.arange(1e4, dtype='f8')
         b = ca.carray(a, chunklen=100)
@@ -602,6 +611,15 @@ class iterTest(unittest.TestCase):
                         count=1010)
         #print "c ->", repr(c)
         assert_array_equal(a[1010:2020], c, "iterator fails on zeros")
+
+    def test07b(self):
+        """Testing `iter()` method with `limit` and negative `skip`"""
+        a = np.arange(1e4, dtype='f8')
+        b = ca.carray(a, chunklen=100)
+        c = ca.fromiter((v for v in b.iter(limit=1000, skip=-1010)), dtype='f8',
+                        count=1000)
+        #print "c ->", repr(c)
+        assert_array_equal(a[-1010:-10], c, "iterator fails on zeros")
 
 
 class wheretrueTest(unittest.TestCase):
@@ -656,7 +674,7 @@ class wheretrueTest(unittest.TestCase):
         #print "where ->", [i for i in b.wheretrue(limit=3)]
         self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
-    def test05(self):
+    def test05a(self):
         """Testing `wheretrue()` iterator with `skip`"""
         a = np.arange(1, 11) > 5
         b = ca.carray(a)
@@ -666,14 +684,34 @@ class wheretrueTest(unittest.TestCase):
         #print "where ->", [i for i in b.wheretrue(skip=2)]
         self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
-    def test06(self):
+    def test05b(self):
+        """Testing `wheretrue()` iterator with negative `skip`"""
+        a = np.arange(1, 11) > 5
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()[-2:]
+        cwt = [i for i in b.wheretrue(skip=-2)]
+        #print "numpy ->", a.nonzero()[0].tolist()[-2:]
+        #print "where ->", [i for i in b.wheretrue(skip=-2)]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+
+    def test06a(self):
         """Testing `wheretrue()` iterator with `limit` and `skip`"""
         a = np.arange(1, 11) > 5
         b = ca.carray(a)
         wt = a.nonzero()[0].tolist()[2:4]
-        cwt = [i for i in b.wheretrue(skip=2, limit=2)]
+        cwt = [i for i in b.wheretrue(limit=2, skip=2)]
         #print "numpy ->", a.nonzero()[0].tolist()[2:4]
-        #print "where ->", [i for i in b.wheretrue(limit=2,skip=2)]
+        #print "where ->", [i for i in b.wheretrue(limit=2, skip=2)]
+        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+
+    def test06b(self):
+        """Testing `wheretrue()` iterator with `limit` and negative `skip`"""
+        a = np.arange(1, 11) > 5
+        b = ca.carray(a)
+        wt = a.nonzero()[0].tolist()[-4:-2]
+        cwt = [i for i in b.wheretrue(limit=2, skip=-4)]
+        #print "numpy ->", a.nonzero()[0].tolist()[-4:-2]
+        #print "where ->", [i for i in b.wheretrue(limit=2, skip=-4)]
         self.assert_(wt == cwt, "wheretrue() does not work correctly")
 
     def test07(self):

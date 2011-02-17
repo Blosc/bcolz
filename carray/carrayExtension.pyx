@@ -1353,14 +1353,16 @@ cdef class carray:
 
   def __iter__(self):
 
+    self.nhits = 0
     if not self.sss_mode:
       self.start = 0
       self.stop = self._nbytes // <npy_intp>self.atomsize
       self.step = 1
     if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
-      self.nhits = 0
       self.limit = sys.maxint
       self.skip = 0
+    if self.limit < 0:
+      raise ValueError, "`limit` cannot be negative"
     # Initialize some internal values
     self.startb = 0
     self.nrowsread = self.start
@@ -1391,9 +1393,10 @@ cdef class carray:
         negative.
     limit : int
         A maximum number of elements to return.  The default is return
-        everything.
+        everything.  Cannot be negative.
     skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns
     -------
@@ -1411,6 +1414,8 @@ cdef class carray:
         slice(start, stop, step).indices(self.len)
     self.reset_sentinels()
     self.sss_mode = True
+    if skip < 0:
+      skip += get_len_of_range(self.start, self.stop, self.step)
     if limit is None:
       self.limit = sys.maxint
     else:
@@ -1430,9 +1435,10 @@ cdef class carray:
     ----------
     limit : int
         A maximum number of elements to return.  The default is return
-        everything.
+        everything.  Cannot be negative.
     skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns
     -------
@@ -1448,6 +1454,8 @@ cdef class carray:
       raise ValueError, "`self` is not an array of booleans"
     self.reset_sentinels()
     self.wheretrue_mode = True
+    if skip < 0:
+      skip += self.sum()
     if limit is None:
       self.limit = sys.maxint
     else:
@@ -1467,9 +1475,10 @@ cdef class carray:
     boolarr : a carray or NumPy array of boolean type
     limit : int
         A maximum number of elements to return.  The default is return
-        everything.
+        everything.  Cannot be negative.
     skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns
     -------
@@ -1490,6 +1499,8 @@ cdef class carray:
     self.reset_sentinels()
     self.where_mode = True
     self.where_arr = boolarr
+    if skip < 0:
+      skip += boolarr.sum()
     if limit is None:
       self.limit = sys.maxint
     else:

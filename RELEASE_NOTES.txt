@@ -9,7 +9,16 @@ Release notes for carray
 Changes from 0.4 to 0.5.dev
 ---------------------------
 
-- (None yet.)
+- `skip` parameter can be negative now on iterators, meaning that the
+  count of elements to skip bengins from the end.  That is, instead of::
+
+    [r for r in ac.wheretrue(skip=ac.sum()-1)]
+
+  that can be expressed as:: 
+
+    [r for r in ac.wheretrue(skip=-1)]
+
+- Important boost in performance when using `skip` in carray objects.
 
 
 Changes from 0.3.2 to 0.4

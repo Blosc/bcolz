@@ -353,7 +353,8 @@ carray methods
         A maximum number of elements to return.  The default is return
         everything.
       skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns:
       out : iterator
@@ -425,7 +426,8 @@ carray methods
         A maximum number of elements to return.  The default is return
         everything.
       skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns:
       out : iterator
@@ -443,7 +445,8 @@ carray methods
         A maximum number of elements to return.  The default is return
         everything.
       skip : int
-        An initial number of elements to skip.  The default is 0.
+        An initial number of elements to skip.  The default is 0.  If
+        negative, the count begins from the end.
 
     Returns:
       out : iterator
@@ -649,7 +652,7 @@ ctable methods
       :py:func:`eval` (first level function)
 
 
-  .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
+  .. py:method:: iter(start=0, stop=None, step=1, outcols=None, **kwargs)
 
     Iterator with `start`, `stop` and `step` bounds.
 
@@ -667,11 +670,8 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
-      limit : int
-        A maximum number of elements to return.  The default is return
-        everything.
-      skip : int
-        An initial number of elements to skip.  The default is 0.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by :py:meth:`ctable.iter`.
 
     Returns:
       out : iterable
@@ -703,7 +703,7 @@ ctable methods
       :py:meth:`ctable.append`
 
 
-  .. py:method:: where(expression, outcols=None, limit=None, skip=0)
+  .. py:method:: where(expression, outcols=None, **kwargs)
 
     Iterate over rows where `expression` is true.
 
@@ -716,11 +716,8 @@ ctable methods
         or 'f0, f1'.  If None, all the columns are returned.  If the
         special name 'nrow__' is present, the number of row will be
         included in output.
-      limit : int
-        A maximum number of elements to return.  The default is return
-        everything.
-      skip : int
-        An initial number of elements to skip.  The default is 0.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by :py:meth:`carray.where`.
 
     Returns:
       out : iterable

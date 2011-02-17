@@ -871,7 +871,7 @@ class iterTest(unittest.TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    def test06(self):
+    def test06a(self):
         """Testing ctable.iter() with start, stop, step and skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -882,13 +882,35 @@ class iterTest(unittest.TestCase):
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
-    def test07(self):
+    def test06b(self):
+        """Testing ctable.iter() with start, stop, step and negative skip"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunklen=4)
+        cl = [r.f1 for r in t.iter(1,9,2, skip=-3)]
+        nl = [r['f1'] for r in ra[1:9:2][-3:]]
+        #print "cl ->", cl
+        #print "nl ->", nl
+        self.assert_(cl == nl, "iter not working correctily")
+
+    def test07a(self):
         """Testing ctable.iter() with start, stop, step and limit, skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=4)
         cl = [r.f1 for r in t.iter(1,9,2, limit=2, skip=1)]
         nl = [r['f1'] for r in ra[1:9:2][1:3]]
+        #print "cl ->", cl
+        #print "nl ->", nl
+        self.assert_(cl == nl, "iter not working correctily")
+
+    def test07b(self):
+        """Testing ctable.iter() with start, stop, step and limit, neg. skip"""
+        N = 10
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra, chunklen=4)
+        cl = [r.f1 for r in t.iter(1,9,2, limit=2, skip=-3)]
+        nl = [r['f1'] for r in ra[1:9:2][-3:3]]
         #print "cl ->", cl
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
@@ -1167,7 +1189,7 @@ class whereTest(unittest.TestCase):
         #print "rl->", rl
         self.assert_(rt == rl, "where not working correctly")
 
-    def test06(self):
+    def test06a(self):
         """Testing where() with skip"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -1179,7 +1201,19 @@ class whereTest(unittest.TestCase):
         #print "rl->", rl
         self.assert_(rt == rl, "where not working correctly")
 
-    def test07(self):
+    def test06b(self):
+        """Testing where() with negative skip"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
+                                 skip=-3)]
+        rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][-3:]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "where not working correctly")
+
+    def test07a(self):
         """Testing where() with limit & skip"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -1187,6 +1221,18 @@ class whereTest(unittest.TestCase):
         rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
                                  limit=1, skip=2)]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][2:3]
+        #print "rt->", rt
+        #print "rl->", rl
+        self.assert_(rt == rl, "where not working correctly")
+
+    def test07b(self):
+        """Testing where() with limit & negative skip"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = ca.ctable(ra)
+        rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
+                                 limit=1, skip=-2)]
+        rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][-2:-1]
         #print "rt->", rt
         #print "rl->", rl
         self.assert_(rt == rl, "where not working correctly")

@@ -408,9 +408,9 @@ class ctable(object):
         return self.cbytes
 
 
-    def where(self, expression, outcols=None, limit=None, skip=0):
+    def where(self, expression, outcols=None, **kwargs):
         """
-        where(expression, outcols=None, limit=None, skip=0)
+        where(expression, outcols=None, **kwargs)
 
         Iterate over rows where `expression` is true.
 
@@ -424,11 +424,8 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
-        limit : int
-            A maximum number of elements to return.  The default is return
-            everything.
-        skip : int
-            An initial number of elements to skip.  The default is 0.
+        kwargs : list of parameters or dictionary
+            Any parameter supported by `carray.where`.
 
         Returns
         -------
@@ -467,11 +464,11 @@ class ctable(object):
         icols, dtypes = [], []
         for name in outcols:
             if name == "nrow__":
-                icols.append(boolarr.wheretrue(limit=limit, skip=skip))
+                icols.append(boolarr.wheretrue(**kwargs))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
-                icols.append(col.where(boolarr, limit=limit, skip=skip))
+                icols.append(col.where(boolarr, **kwargs))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype)
@@ -481,10 +478,9 @@ class ctable(object):
         return self.iter(0, self.len, 1)
 
 
-    def iter(self, start=0, stop=None, step=1, outcols=None,
-             limit=None, skip=0):
+    def iter(self, start=0, stop=None, step=1, outcols=None, **kwargs):
         """
-        iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
+        iter(start=0, stop=None, step=1, outcols=None, **kwargs)
 
         Iterator with `start`, `stop` and `step` bounds.
 
@@ -503,11 +499,8 @@ class ctable(object):
             'f0, f1'.  If None, all the columns are returned.  If the special
             name 'nrow__' is present, the number of row will be included in
             output.
-        limit : int
-            A maximum number of elements to return.  The default is return
-            everything.
-        skip : int
-            An initial number of elements to skip.  The default is 0.
+        kwargs : list of parameters or dictionary
+            Any parameter supported by `carray.iter`.
 
         Returns
         -------
@@ -541,6 +534,8 @@ class ctable(object):
         for name in outcols:
             if name == "nrow__":
                 istop = None
+                limit = kwargs.get('limit', None)
+                skip = kwargs.get('skip', 0)
                 if limit is not None:
                     istop = limit + skip
                 icols.append(it.islice(xrange(start, stop, step), skip, istop))
@@ -548,7 +543,7 @@ class ctable(object):
             else:
                 col = self.cols[name]
                 icols.append(
-                    col.iter(start, stop, step, limit=limit, skip=skip))
+                    col.iter(start, stop, step, **kwargs))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype)
