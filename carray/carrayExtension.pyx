@@ -1411,7 +1411,9 @@ cdef class carray:
         slice(start, stop, step).indices(self.len)
     self.reset_sentinels()
     self.sss_mode = True
-    if limit is not None:
+    if limit is None:
+      self.limit = sys.maxint
+    else:
       self.limit = limit + skip
     self.skip = skip
     return iter(self)
@@ -1446,7 +1448,9 @@ cdef class carray:
       raise ValueError, "`self` is not an array of booleans"
     self.reset_sentinels()
     self.wheretrue_mode = True
-    if limit is not None:
+    if limit is None:
+      self.limit = sys.maxint
+    else:
       self.limit = limit + skip
     self.skip = skip
     return iter(self)
@@ -1486,7 +1490,9 @@ cdef class carray:
     self.reset_sentinels()
     self.where_mode = True
     self.where_arr = boolarr
-    if limit is not None:
+    if limit is None:
+      self.limit = sys.maxint
+    else:
       self.limit = limit + skip
     self.skip = skip
     return iter(self)

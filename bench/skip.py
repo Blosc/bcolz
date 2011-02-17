@@ -12,8 +12,8 @@ t0 = time()
 sa = np.where(a>T)[0][-1]
 print "Time where numpy --> %.3f" % (time()-t0)
 
-iac = ca.arange(int(N), cparams=ca.cparams(clevel))
 t0 = time()
+iac = ca.arange(int(N), cparams=ca.cparams(clevel))
 ac = ca.eval("a>T", cparams=ca.cparams(clevel))
 sac1 = [r for r in iac.where(ac)][-1]
 print "Time where carray --> %.3f" % (time()-t0)
@@ -23,8 +23,8 @@ ac = ca.eval("a>T", cparams=ca.cparams(clevel))
 sac = [r for r in ac.wheretrue()][-1]
 print "Time wheretrue carray --> %.3f" % (time()-t0)
 
-iac = ca.arange(int(N), cparams=ca.cparams(clevel))
 t0 = time()
+iac = ca.arange(int(N), cparams=ca.cparams(clevel))
 ac = ca.eval("a>T", cparams=ca.cparams(clevel))
 sac3 = [r for r in iac.where(ac, skip=ac.sum()-1)][0]
 print "Time where carray, skip --> %.3f" % (time()-t0)
