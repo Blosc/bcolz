@@ -8,15 +8,15 @@ import numexpr as ne
 import carray as ca
 from time import time
 
-def compute_carray(sexpr, clevel, kernel):
+def compute_carray(sexpr, clevel, vm):
     # Uncomment the next for disabling threading
     #ca.set_nthreads(1)
     #ca.blosc_set_nthreads(1)
     print("*** carray (using compression clevel = %d):" % clevel)
     x = cx  # comment this for using numpy arrays in inputs
     t0 = time()
-    cout = ca.eval(sexpr, kernel=kernel, cparams=ca.cparams(clevel))
-    print("Time for ca.eval (%s) --> %.3f" % (kernel, time()-t0,))
+    cout = ca.eval(sexpr, vm=vm, cparams=ca.cparams(clevel))
+    print("Time for ca.eval (%s) --> %.3f" % (vm, time()-t0,))
     #print(", cratio (out): %.1f" % (cout.nbytes / float(cout.cbytes)))
     #print "cout-->", repr(cout)
 
@@ -28,7 +28,7 @@ if __name__=="__main__":
     sexpr = "(x+1)<0"
     sexpr = "(((.25*x + .75)*x - 1.5)*x - 2)<0"
     #sexpr = "(((.25*x + .75)*x - 1.5)*x - 2)"
-    doprofile = 0
+    doprofile = True
 
     print("Creating inputs...")
     x = np.arange(N)
@@ -44,13 +44,13 @@ if __name__=="__main__":
     if doprofile:
         import pstats
         import cProfile as prof
-        prof.run('compute_carray(sexpr, clevel=clevel, kernel="numexpr")',
-        #prof.run('compute_carray(sexpr, clevel=clevel, kernel="python")',
+        prof.run('compute_carray(sexpr, clevel=clevel, vm="numexpr")',
+        #prof.run('compute_carray(sexpr, clevel=clevel, vm="python")',
                  'eval.prof')
         stats = pstats.Stats('eval.prof')
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
         stats.print_stats(20)
     else:
-        compute_carray(sexpr, clevel=clevel, kernel="numexpr")
-        #compute_carray(sexpr, clevel=clevel, kernel="python")
+        compute_carray(sexpr, clevel=clevel, vm="numexpr")
+        #compute_carray(sexpr, clevel=clevel, vm="python")

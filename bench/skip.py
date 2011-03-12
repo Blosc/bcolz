@@ -4,7 +4,7 @@ from time import time
 
 N = 1e7
 T = 100
-clevel=0
+clevel=1
 np.random.seed(1)
 a = np.random.normal(scale=100,size=N)
 
@@ -31,11 +31,18 @@ print "Time where carray, skip --> %.3f" % (time()-t0)
 
 t0 = time()
 ac = ca.eval("a>T", cparams=ca.cparams(clevel))
-sac2 = [r for r in ac.wheretrue(skip=-1)][0]
+sac4 = [r for r in ac.wheretrue(skip=-1)][0]
 print "Time wheretrue carray, skip --> %.3f" % (time()-t0)
 
-print "sa, sac, sac1, sca2, sac3-->", sa, sac1, sac, sac2, sac3
+t0 = time()
+ct = ca.ctable((a,))
+sac5 = [r for r in ct.where("a>T", skip=-1)][0]
+print "Time wheretrue carray, skip --> %.3f" % (time()-t0)
+
+print "results -->", sa, sac1, sac, sac2, sac3, sa4, sa5
 assert(sa == sac)
 assert(sa == sac1)
 assert(sa == sac2)
 assert(sa == sac3)
+assert(sa == sac4)
+assert(sa == sac5)

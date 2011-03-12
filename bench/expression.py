@@ -48,11 +48,11 @@ print "Time for numexpr (numpy)--> %.3f" % (time()-t0,)
 # Maybe due to some contention between Numexpr and Blosc?
 #ca.set_nthreads(ca.ncores//2)
 
-for kernel in "python", "numexpr":
+for vm in "python", "numexpr":
     t0 = time()
-    #cout = t.eval(sexpr, kernel=kernel, cparams=cparams)
-    cout = t.eval(sexpr, cparams=cparams)
-    print "Time for ctable (%s) --> %.3f" % (kernel, time()-t0,)
+    cout = t.eval(sexpr, vm=vm, cparams=cparams)
+    #cout = t.eval(sexpr, cparams=cparams)
+    print "Time for ctable (%s) --> %.3f" % (vm, time()-t0,)
     #print "cout-->", repr(cout)
 
 #assert_array_equal(out, cout, "Arrays are not equal")

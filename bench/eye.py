@@ -8,17 +8,12 @@ import numexpr as ne
 import carray as ca
 from time import time
 
-N = 1e7       # the number of elements in x
+N = 1e4       # the number of rows in x
 clevel = 9    # the compression level
-sexprs = [ "(x+1)<0",
-           "(2*x**2+.3*y**2+z+1)<0",
-           "((.25*x + .75)*x - 1.5)*x - 2",
-           "(((.25*x + .75)*x - 1.5)*x - 2)<0",
-           ]
 
 # Initial dataset
-#x = np.arange(N)
-x = np.linspace(0,100,N)
+x = np.eye(N)
+sexprs = ["x*x"]
 
 doprofile = False
 
@@ -37,7 +32,7 @@ def compute_carray(sexpr, clevel, vm):
     # ca.set_nthreads(ca.ncores//2)
     print "*** carray (using compression clevel = %d):" % clevel
     if clevel > 0:
-        x, y, z = cx, cy, cz
+        x = cx
     t0 = time()
     cout = ca.eval(sexpr, vm=vm, cparams=ca.cparams(clevel))
     print "Time for ca.eval (%s) --> %.3f" % (vm, time()-t0,),
@@ -47,21 +42,12 @@ def compute_carray(sexpr, clevel, vm):
 
 if __name__=="__main__":
 
-    print "Creating inputs..."
-
-    cparams = ca.cparams(clevel)
-
-    y = x.copy()
-    z = x.copy()
-    cx = ca.carray(x, cparams=cparams)
-    cy = ca.carray(y, cparams=cparams)
-    cz = ca.carray(z, cparams=cparams)
+    cx = ca.carray(x, cparams=ca.cparams(clevel=clevel))
 
     for sexpr in sexprs:
-        print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
+        xpo = int(math.log10(N))
+        print "Evaluating '%s' with 10^%d x 10^%d" % (sexpr, xpo, xpo)
         compute_ref(sexpr)
-        for vm in "python", "numexpr":
-            compute_carray(sexpr, clevel=0, vm=vm)
         if doprofile:
             import pstats
             import cProfile as prof
