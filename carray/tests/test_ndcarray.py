@@ -431,6 +431,13 @@ class reshapeTest(unittest.TestCase):
         self.assert_(a.dtype.base == b.dtype.base)
         self.assert_(a.shape == b.shape+b.dtype.shape)
 
+    def test04(self):
+        """Testing `ndim` and `shape` attributes"""
+        shape = (2,3,4)
+        c = ca.arange(24).reshape(shape)
+        self.assert_(c.shape == shape)
+        self.assert_(c.ndim == len(shape))
+
 
 class compoundTest(unittest.TestCase):
 
