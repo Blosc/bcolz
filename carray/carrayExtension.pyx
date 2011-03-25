@@ -1652,20 +1652,64 @@ cdef class carray:
         return 1
     return 0
 
+
   def __richcmp__(self, object other, int rcmp):
-      if rcmp == 0:
-        op = '<'
-      elif rcmp == 1:
-        op = '<='
-      elif rcmp == 2:
-        op = '=='
-      elif rcmp == 3:
-        op = '!='
-      elif rcmp == 4:
-        op = '>'
-      elif rcmp == 5:
-        op = '>='
-      return ca.eval('self %s other' % op, user_dict=locals())
+    if rcmp == 0:
+      op = '<'
+    elif rcmp == 1:
+      op = '<='
+    elif rcmp == 2:
+      op = '=='
+    elif rcmp == 3:
+      op = '!='
+    elif rcmp == 4:
+      op = '>'
+    elif rcmp == 5:
+      op = '>='
+    return ca.eval('self %s other' % op, user_dict=locals())
+
+
+  def __add__(self, object other):
+    return ca.eval('self %s other' % '+', user_dict=locals())
+
+
+  def __sub__(self, object other):
+    return ca.eval('self %s other' % '-', user_dict=locals())
+
+
+  def __mul__(self, object other):
+    return ca.eval('self %s other' % '*', user_dict=locals())
+
+
+  def __mod__(self, object other):
+    return ca.eval('self %s other' % '%', user_dict=locals())
+
+
+  def __pow__(self, object other, object modulo):
+    if modulo:
+      return ca.eval('self**other % modulo', user_dict=locals())
+    return ca.eval('self %s other' % '**', user_dict=locals())
+
+
+  def __truediv__(self, object other):
+    return self.__div__(other)
+
+
+  def __div__(self, object other):
+    return ca.eval('self %s other' % '/', user_dict=locals())
+
+
+  def __neg__(self):
+    return ca.eval('-self', user_dict=locals())
+
+
+  def __pos__(self):
+    return ca.eval('+self', user_dict=locals())
+
+
+  def __abs__(self):
+    return ca.eval('abs(self)', user_dict=locals())
+
 
   def __str__(self):
     if self.len > 100:

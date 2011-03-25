@@ -588,6 +588,24 @@ class evalTest(unittest.TestCase):
         assert_array_equal(ca.eval("c<=cmpv"), c<=cmpv)
         assert_array_equal(ca.eval("c!=cmpv"), c!=cmpv)
         assert_array_equal(ca.eval("c>=cmpv"), c>=cmpv)
+        
+    def test04(self):
+        """Testing numeric operands of ndcarrays"""
+        c = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        cmpv = c.len - 1
+        assert_array_equal(ca.eval("c+cmpv"), c+cmpv)
+        assert_array_equal(ca.eval("c-cmpv"), c-cmpv)
+        assert_array_equal(ca.eval("c*cmpv"), c*cmpv)
+        assert_array_equal(ca.eval("c/cmpv"), c/cmpv)
+        # TODO: add 'true division'..
+        assert_array_equal(ca.eval("c%cmpv"), c%cmpv)
+        assert_array_equal(ca.eval("c**2"), c**2)
+        assert_array_equal(ca.eval("c**2%2"), pow(c,2,2))
+        assert_array_equal(ca.eval("-c"), -c)
+        assert_array_equal(ca.eval("+c"), +c)
+        assert_array_equal(ca.eval("abs(c-cmpv)"), abs(c-cmpv))
+        assert_array_equal(ca.eval("c**2-(2*c%3)+7"), c**2-(2*c%3)+7)
+        
 
 class d2evalTest(evalTest):
     shape = (3,4)
