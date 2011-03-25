@@ -1652,6 +1652,20 @@ cdef class carray:
         return 1
     return 0
 
+  def __richcmp__(self, object other, int rcmp):
+      if rcmp == 0:
+        op = '<'
+      elif rcmp == 1:
+        op = '<='
+      elif rcmp == 2:
+        op = '=='
+      elif rcmp == 3:
+        op = '!='
+      elif rcmp == 4:
+        op = '>'
+      elif rcmp == 5:
+        op = '>='
+      return ca.eval('self %s other' % op, user_dict=locals())
 
   def __str__(self):
     if self.len > 100:

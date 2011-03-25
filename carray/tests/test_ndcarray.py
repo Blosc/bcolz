@@ -577,6 +577,17 @@ class evalTest(unittest.TestCase):
         else:
             self.assertRaises(NotImplementedError,
                               ca.eval, "b.sum(axis=0)", depth=3)
+            
+    def test03(self):
+        """Testing rich comparisons of ndcarrays"""
+        c = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        cmpv = c.len - 1
+        assert_array_equal(ca.eval("c<cmpv"), c<cmpv)
+        assert_array_equal(ca.eval("c==cmpv"), c==cmpv)
+        assert_array_equal(ca.eval("c>cmpv"), c>cmpv)
+        assert_array_equal(ca.eval("c<=cmpv"), c<=cmpv)
+        assert_array_equal(ca.eval("c!=cmpv"), c!=cmpv)
+        assert_array_equal(ca.eval("c>=cmpv"), c>=cmpv)
 
 class d2evalTest(evalTest):
     shape = (3,4)
