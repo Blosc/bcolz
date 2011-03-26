@@ -459,12 +459,12 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
     if vm is None:
         vm = ca.defaults.eval_vm
     if vm not in ("numexpr", "python"):
-        raiseValue, "`vm` must be either 'numexpr' or 'python'"
+        raise ValueError, "`vm` must be either 'numexpr' or 'python'"
 
     if out_flavor is None:
         out_flavor = ca.defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
-        raiseValue, "`out_flavor` must be either 'carray' or 'numpy'"
+        raise ValueError, "`out_flavor` must be either 'carray' or 'numpy'"
 
     # Get variables and column names participating in expression
     user_dict = kwargs.pop('user_dict', {})
@@ -614,7 +614,7 @@ class cparams(object):
             raise ValueError, "`shuffle` must a boolean."
         shuffle = bool(shuffle)
         if clevel < 0:
-            raiseValueError, "clevel must be a positive integer"
+            raise ValueError, "clevel must be a positive integer"
         self._clevel = clevel
         self._shuffle = shuffle
 
