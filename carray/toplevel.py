@@ -480,12 +480,7 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
         if hasattr(var, "dtype") and not hasattr(var, "__len__"):
             continue
         if hasattr(var, "dtype"):  # numpy/carray arrays
-            if isinstance(var, np.ndarray):  # numpy array
-                typesize += var.dtype.itemsize * np.prod(var.shape[1:])
-            elif isinstance(var, ca.carray):  # carray array
-                typesize += var.dtype.itemsize
-            else:
-                raise ValueError, "only numpy/carray objects supported"
+            typesize += var.dtype.itemsize * np.prod(var.shape[1:])
         if hasattr(var, "__len__"):
             if vlen > 1 and vlen != len(var):
                 raise ValueError, "arrays must have the same length"

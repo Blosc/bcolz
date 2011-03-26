@@ -379,7 +379,7 @@ cdef class carray:
       decide the best `chunklen` used for compression and memory I/O
       purposes.
   chunklen : int, optional
-      The number of items that fits into a chunk.  By specifying it you can
+      The number of rows that fits into a chunk.  By specifying it you can
       explicitely set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
@@ -409,7 +409,7 @@ cdef class carray:
       return self._cbytes
 
   property chunklen:
-    "The chunklen of this object (in rows)."
+    "The number of rows that fits into a chunk."
     def __get__(self):
       return self._chunklen
 

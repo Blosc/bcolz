@@ -270,7 +270,7 @@ The carray class
       decide the best `chunklen` used for compression and memory I/O
       purposes.
     chunklen : int, optional
-      The number of items that fits on a chunk.  By specifying it you can
+      The number of rows that fits on a chunk.  By specifying it you can
       explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
 
@@ -284,7 +284,7 @@ carray attributes
 
   .. py:attribute:: chunklen
 
-    The number of items that fits into a chunk.
+    The number of rows that fits into a chunk.
 
   .. py:attribute:: cparams
 
