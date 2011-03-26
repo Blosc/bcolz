@@ -439,15 +439,15 @@ cdef class carray:
     def __get__(self):
       return self._nbytes
 
+  property ndim:
+    "The number of dimensions of this object."
+    def __get__(self):
+      return len(self.shape)
+
   property shape:
     "The shape of this object."
     def __get__(self):
       return (self.len,) + self._dtype.shape
-
-  property ndim:
-    "Number of dimensions of this object."
-    def __get__(self):
-      return len(self.shape)
 
   def __cinit__(self, object array, object cparams=None,
                 object dtype=None, object dflt=None,

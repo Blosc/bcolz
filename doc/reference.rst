@@ -313,6 +313,10 @@ carray attributes
 
     The original (uncompressed) size of this object (in bytes).
 
+  .. py:attribute:: ndim
+
+    The number of dimensions of this object..
+
   .. py:attribute:: shape
 
     The shape of this object.
