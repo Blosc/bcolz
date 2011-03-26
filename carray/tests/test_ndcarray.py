@@ -431,6 +431,13 @@ class reshapeTest(unittest.TestCase):
         self.assert_(a.dtype.base == b.dtype.base)
         self.assert_(a.shape == b.shape+b.dtype.shape)
 
+    def test04(self):
+        """Testing `ndim` and `shape` attributes"""
+        shape = (2,3,4)
+        c = ca.arange(24).reshape(shape)
+        self.assert_(c.shape == shape)
+        self.assert_(c.ndim == len(shape))
+
 
 class compoundTest(unittest.TestCase):
 
@@ -570,6 +577,35 @@ class evalTest(unittest.TestCase):
         else:
             self.assertRaises(NotImplementedError,
                               ca.eval, "b.sum(axis=0)", depth=3)
+            
+    def test03(self):
+        """Testing rich comparisons of ndcarrays"""
+        c = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        cmpv = c.len - 1
+        assert_array_equal(ca.eval("c<cmpv"), c<cmpv)
+        assert_array_equal(ca.eval("c==cmpv"), c==cmpv)
+        assert_array_equal(ca.eval("c>cmpv"), c>cmpv)
+        assert_array_equal(ca.eval("c<=cmpv"), c<=cmpv)
+        assert_array_equal(ca.eval("c!=cmpv"), c!=cmpv)
+        assert_array_equal(ca.eval("c>=cmpv"), c>=cmpv)
+        
+    def test04(self):
+        """Testing numeric operands of ndcarrays"""
+        c = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        cmpv = c.len - 1
+        assert_array_equal(ca.eval("c+cmpv"), c+cmpv)
+        assert_array_equal(ca.eval("c-cmpv"), c-cmpv)
+        assert_array_equal(ca.eval("c*cmpv"), c*cmpv)
+        assert_array_equal(ca.eval("c/cmpv"), c/cmpv)
+        # TODO: add 'true division'..
+        assert_array_equal(ca.eval("c%cmpv"), c%cmpv)
+        assert_array_equal(ca.eval("c**2"), c**2)
+        assert_array_equal(ca.eval("c**2%2"), pow(c,2,2))
+        assert_array_equal(ca.eval("-c"), -c)
+        assert_array_equal(ca.eval("+c"), +c)
+        assert_array_equal(ca.eval("abs(c-cmpv)"), abs(c-cmpv))
+        assert_array_equal(ca.eval("c**2-(2*c%3)+7"), c**2-(2*c%3)+7)
+        
 
 class d2evalTest(evalTest):
     shape = (3,4)
