@@ -28,6 +28,7 @@ IntType = np.dtype(np.int_)
 from definitions cimport import_array, ndarray, dtype, \
      malloc, realloc, free, memcpy, memset, strdup, strcmp, \
      PyString_AsString, PyString_FromString, \
+     PyBytes_AS_STRING, PyBytes_FromStringAndSize, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
      npy_intp
@@ -1730,7 +1731,54 @@ cdef class carray:
     return fullrepr
 
 
+  def tostring(self):
+    print 'not counted', self.leftover
+    return make_stream(self.chunks, self.shape, self.dtype)
 
+
+cdef make_stream(chunks, shape, dtype):
+    cdef npy_intp ndim, dsize, hsize, totsize
+    cdef char *dt
+    cdef char *dp
+    cdef chunk chunk_
+    cdef int intp_s = sizeof(npy_intp)
+    
+    dsize = <npy_intp>sum(chunk_.cbytes for chunk_ in chunks)
+    ndim = len(shape)
+    dt = dtype.char
+    
+    cdef npy_intp* shp = <npy_intp*>malloc((1+ndim)*intp_s)
+    shp[0] = ndim
+    for i in range(ndim):
+      shp[1+i] = <npy_intp>shape[i]
+    
+    hsize = (1+ndim)*intp_s + 1
+    totsize = hsize + dsize
+    
+    print 'dsize', dsize
+    print 'hsize', hsize
+    print 'ndim', ndim
+    print 'dt', dt
+    print 'totsize', totsize
+    #print 'chunksize', self.chunksize
+    
+    ret = PyBytes_FromStringAndSize(NULL, totsize)
+    
+    # TODO raise error on NULL
+    
+    dp = PyBytes_AS_STRING(ret)
+    
+    memcpy(dp, shp, (1+ndim)*intp_s)
+    free(shp)
+    dp += (1+ndim)*intp_s
+    
+    memcpy(dp, dt, 1)
+    dp += 1
+    
+    for chunk_ in chunks:
+      memcpy(dp, chunk_.data, chunk_.cbytes)
+    
+    return ret
 
 ## Local Variables:
 ## mode: python

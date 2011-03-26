@@ -62,6 +62,8 @@ cdef extern from "Python.h":
   object PyString_FromString(char *)
   object PyString_FromStringAndSize(char *s, int len)
   char *PyString_AsString(object string)
+  object PyBytes_FromStringAndSize(char *s, int len)
+  char *PyBytes_AS_STRING(object bytes)
 
   # Functions for lists
   int PyList_Append(object list, object item)
