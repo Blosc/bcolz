@@ -1028,11 +1028,33 @@ class evalTest(unittest.TestCase):
         #print "ca.eval ->", cr
         self.assert_(cr == 6, "eval does not work correctly")
 
-    def test01(self):
+    def test01a(self):
         """Testing eval() with only carrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
         c, d = ca.carray(a), ca.carray(b)
         cr = ca.eval("c * d")
+        nr = a * b
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test01b(self):
+        """Testing eval() with `user_dict`"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        cr = ca.eval("c * d2", user_dict={'d2': d})
+        nr = a * b
+        #print "ca.eval ->", cr
+        #print "numpy   ->", nr
+        assert_array_equal(cr[:], nr, "eval does not work correctly")
+
+    def test01c(self):
+        """Testing eval() with `depth`"""
+        a, b = np.arange(self.N), np.arange(1, self.N+1)
+        c, d = ca.carray(a), ca.carray(b)
+        def compute(expression):
+            return ca.eval("c * d", depth=3)
+        cr = compute("c * d")
         nr = a * b
         #print "ca.eval ->", cr
         #print "numpy   ->", nr

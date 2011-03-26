@@ -83,7 +83,7 @@ First level functions
         this rule may result in the last element of `out` being greater
         than `stop`.
 
-.. py:function::  eval(expression, vm=None, out_flavor=None, **kwargs)
+.. py:function::  eval(expression, vm=None, out_flavor=None, user_dict={}, depth=2, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -98,6 +98,13 @@ First level functions
         or 'python'.  The default is to use 'numexpr' if it is installed.
       out_flavor : string
         The flavor for the `out` object.  It can be 'carray' or 'numpy'.
+      user_dict : dictionary
+        Dictionary where the user can pass additional variables to the
+        `expression`.
+      depth : int
+        The deepness of the frames that `eval` will look for local an global
+        variables.  The default is 2.  Increase this level if you want to
+        reach variables in calling frames.
       kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 

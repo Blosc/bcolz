@@ -427,9 +427,9 @@ def _getvars(expression, user_dict, depth, vm):
 _eval = eval
 
 
-def eval(expression, vm=None, out_flavor=None, **kwargs):
+def eval(expression, vm=None, out_flavor=None, user_dict={}, depth=2, **kwargs):
     """
-    eval(expression, vm=None, out_flavor=None, **kwargs)
+    eval(expression, vm=None, out_flavor=None, user_dict={}, depth=2, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -444,6 +444,13 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
         or 'python'.  The default is to use 'numexpr' if it is installed.
     out_flavor : string
         The flavor for the `out` object.  It can be 'carray' or 'numpy'.
+    user_dict : dictionary
+        Dictionary where the user can pass additional variables to the
+        `expression`.
+    depth : int
+        The deepness of the frames that `eval` will look for local an global
+        variables.  The default is 2.  Increase this level if you want to
+        reach variables in calling frames.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -467,8 +474,6 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
         raise ValueError, "`out_flavor` must be either 'carray' or 'numpy'"
 
     # Get variables and column names participating in expression
-    user_dict = kwargs.pop('user_dict', {})
-    depth = kwargs.pop('depth', 2)
     vars = _getvars(expression, user_dict, depth, vm=vm)
 
     # Gather info about sizes and lengths
