@@ -184,19 +184,23 @@ cdef from_stream(object stream):
     cdef size_t nbytes
     cdef size_t cbytes
     cdef size_t blocksize
+    cdef int ret
     
     carray_ = carray(np.empty(0, dtype=dtype))
     
     for i in range(numchunks):
         blosc_cbuffer_sizes(dp, &nbytes, &cbytes, &blocksize)
         chunk_ = np.empty(nbytes / dtype.itemsize, dtype=dtype)
-        blosc_decompress(chunk_.data, dp, nbytes)
-        assert chunksize == blocksize, 'sizes do not match!? %s != %s' % (chunksize, blocksize)
+        ret = blosc_decompress(dp, chunk_.data, nbytes)
+        if ret < 0:
+            raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
         carray_.append(chunk_)
         dp += chunksize
+    else:
+        chunk_ = np.empty(info.rsize / dtype.itemsize, dtype=dtype)
+        memcpy(chunk_.data, info.remain.data, info.rsize)
+        carray_.append(chunk_)
     
-    chunk_ = np.empty(info.rsize / dtype.itemsize, dtype=dtype)
-    memcpy(chunk_.data, info.remain.data, info.rsize)
-    
-    carray_.append(chunk_)
-    return carray_.reshape(shape) # makes a copy, not nice.. :-(
+    if shape != carray_.shape:
+        return carray_.reshape(shape) # TODO: figure out how to reshape without a copy
+    return carray_
