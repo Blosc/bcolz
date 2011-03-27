@@ -1733,6 +1733,10 @@ cdef class carray:
   def tostring(self):
     return create_stream(self)
 
+
+def fromstring(object string):
+  return from_stream(string)
+
 include "streaming.pxi"
 
 
