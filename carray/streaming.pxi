@@ -47,7 +47,7 @@ cdef void _fill_chunk_info(StreamInfo* info, carray c) except *:
     cdef Chunks_t* chunks = &(info.chunks)
     chunks.numchunks = len(c.chunks)
     chunks.chunksize = c._chunksize
-    info.csize = chunks.chunksize*chunks.numchunks
+    info.csize = 2*SIZE_SIZE + chunks.chunksize*chunks.numchunks
     info.rsize = c.leftover
 
 
@@ -92,6 +92,8 @@ cdef object create_stream(carray c):
     memcpy(dp, &(CHECKMARK), 1);            dp += 1
     
     memcpy(dp, &(info.csize), SIZE_SIZE);   dp += SIZE_SIZE
+    memcpy(dp, &(info.chunks.numchunks), SIZE_SIZE); dp += SIZE_SIZE
+    memcpy(dp, &(info.chunks.chunksize), SIZE_SIZE); dp += SIZE_SIZE
     tmp = info.chunks.chunksize
     for chunk_ in c.chunks:
         memcpy(dp, chunk_.data, tmp);       dp += tmp
