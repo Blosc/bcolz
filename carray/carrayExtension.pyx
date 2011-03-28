@@ -1731,10 +1731,18 @@ cdef class carray:
     return fullrepr
 
   def tostring(self):
-    return create_stream(self)
+    """Return bytestring representation of carray"""
+    return to_stream(self)
 
 
 def fromstring(object string):
+  """
+  fromstring(string)
+  
+  Return carray object from input string
+  
+  Note: this will only work for bytestrings that were created with `carray.tostring()`
+  """
   return from_stream(string)
 
 include "streaming.pxi"

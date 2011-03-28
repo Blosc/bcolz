@@ -52,7 +52,8 @@ else:
         numexpr_here = True
 
 from carray.carrayExtension import (
-    carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads )
+    carray, blosc_version, fromstring,
+    _blosc_set_nthreads as blosc_set_nthreads )
 from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads,
