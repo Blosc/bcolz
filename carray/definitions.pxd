@@ -25,6 +25,7 @@ cdef extern from "string.h":
   char *strcpy(char *dest, char *src)
   char *strncpy(char *dest, char *src, size_t n)
   int strcmp(char *s1, char *s2)
+  int strncmp(char *s1, char *s2, size_t n)
   char *strdup(char *s)
   void *memcpy(void *dest, void *src, size_t n)
   void *memset(void *s, int c, size_t n)
