@@ -39,7 +39,7 @@ cdef void _fill_header_info(StreamInfo* info, carray c) except *:
     # fill in dtype information
     header.dtype[0] = (<char*>c.dtype.byteorder)[0]
     header.dtype[1] = (<char*>c.dtype.kind)[0]
-    # NOTE: cannot handle itemsize > 9!!
+    assert 0 < c.dtype.itemsize <= 9, 'Cannot handle itemsizes outside 1-9 bytes!'
     tmp = str(c.dtype.itemsize)
     header.dtype[2] = (<char*>tmp)[0]
     # fill in dimensional information
