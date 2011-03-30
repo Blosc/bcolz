@@ -90,14 +90,14 @@ cdef object to_stream(carray c):
     dp = PyBytes_AS_STRING(obj)
     
     memcpy(dp, &(info.totsize), SIZE_SIZE);         dp += SIZE_SIZE
-    memcpy(dp, &(info.streamtype), 2);              dp += 2
+    memcpy(dp, info.streamtype, 2);                 dp += 2
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
     memcpy(dp, &(info.hsize), SIZE_SIZE);           dp += SIZE_SIZE
-    memcpy(dp, &(info.header.dtype), 3);            dp += 3
+    memcpy(dp, info.header.dtype, 3);               dp += 3
     memcpy(dp, &(info.header.ndim), SIZE_SIZE);     dp += SIZE_SIZE
     tmp = info.header.ndim*SIZE_SIZE
-    memcpy(dp, &(info.header.dims), tmp);           dp += tmp
+    memcpy(dp, info.header.dims, tmp);              dp += tmp
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
     memcpy(dp, &(info.rsize), SIZE_SIZE);           dp += SIZE_SIZE
