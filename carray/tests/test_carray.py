@@ -1417,11 +1417,9 @@ class streamTest(unittest.TestCase):
         s = c.tostring()
         assert_array_equal(ca.fromstring(s), c)
     
-    def _test03(self):
+    def test03(self):
         """Testing tostring/fromstring for carray"""
-        # Skipping test; streaming strings does not work, it seems (DivideByZero)
-        a = np.array(["ale", "e", "aco"], dtype="S4")
-        c = ca.carray(a, dtype='S4')
+        c = ca.carray(["ale", "e", "aco"], dtype='S4')
         s = c.tostring()
         assert_array_equal(ca.fromstring(s), c)
 

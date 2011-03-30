@@ -2,7 +2,7 @@ DEF MAX_DIMS = 255 # Arbitrary convention
 
 
 cdef struct Header_t:
-    char[1]             dtype
+    char[3]             dtype
     npy_intp            ndim
     npy_intp[MAX_DIMS]  dims
 
@@ -37,13 +37,17 @@ cdef int SIZE_SIZE = sizeof(npy_intp)
 cdef void _fill_header_info(StreamInfo* info, carray c) except *:
     cdef Header_t* header = &(info.header)
     # fill in dtype information
-    header.dtype[0] = (<char*>c.dtype.char)[0]
+    header.dtype[0] = (<char*>c.dtype.byteorder)[0]
+    header.dtype[1] = (<char*>c.dtype.kind)[0]
+    # NOTE: cannot handle itemsize > 9!!
+    tmp = str(c.dtype.itemsize)
+    header.dtype[2] = (<char*>tmp)[0]
     # fill in dimensional information
     header.ndim = c.ndim
     for i in range(header.ndim):
         header.dims[i] = c.shape[i]
     # fill in size information
-    info.hsize = 1 + (1+header.ndim)*SIZE_SIZE
+    info.hsize = 3 + (1+header.ndim)*SIZE_SIZE
 
 
 cdef void _fill_remain_info(StreamInfo* info, carray c) except *:
@@ -90,7 +94,7 @@ cdef object to_stream(carray c):
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
     memcpy(dp, &(info.hsize), SIZE_SIZE);           dp += SIZE_SIZE
-    memcpy(dp, &(info.header.dtype), 1);            dp += 1
+    memcpy(dp, &(info.header.dtype), 3);            dp += 3
     memcpy(dp, &(info.header.ndim), SIZE_SIZE);     dp += SIZE_SIZE
     tmp = info.header.ndim*SIZE_SIZE
     memcpy(dp, &(info.header.dims), tmp);           dp += tmp
@@ -122,7 +126,9 @@ cdef void _extract_header_info(StreamInfo* info, void* stream, npy_intp offset) 
     info.hsize = (<npy_intp*>sp)[0];                sp += SIZE_SIZE
     assert_checkmark(stream, offset+SIZE_SIZE+info.hsize)
     # extract dtype information
-    header.dtype[0] = (<char*>sp)[0];               sp += 1
+    header.dtype[0] = (<char*>sp)[0]
+    header.dtype[1] = (<char*>sp)[1]
+    header.dtype[2] = (<char*>sp)[2];               sp += 3
     # extract dimensional information
     header.ndim = (<npy_intp*>sp)[0];               sp += SIZE_SIZE
     for n in range(header.ndim):
@@ -167,8 +173,10 @@ cdef void extract_stream_info(StreamInfo* info, void* stream) except *:
 
 
 cdef object _info_to_dtype(StreamInfo* info):
-    cdef char* dt = ' '
+    cdef char* dt = '   '
     dt[0] = info.header.dtype[0]
+    dt[1] = info.header.dtype[1]
+    dt[2] = info.header.dtype[2]
     return np.dtype(dt)
 
 
@@ -200,7 +208,7 @@ cdef from_stream(char* stream):
     for i in range(num_chunks):
         bsize_buf = (<npy_intp*>dp)[0];     dp += SIZE_SIZE
         blosc_cbuffer_sizes(dp, &nbytes, &cbytes, &blocksize)
-        chunk_ = np.empty(nbytes / dtype.itemsize, dtype=dtype)
+        chunk_ = np.empty(nbytes // dtype.itemsize, dtype=dtype)
         with nogil: # release the GIL
             ret = blosc_decompress(dp, chunk_.data, nbytes)
         if ret < 0:
