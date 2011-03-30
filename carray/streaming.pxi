@@ -201,7 +201,8 @@ cdef from_stream(char* stream):
         bsize_buf = (<npy_intp*>dp)[0];     dp += SIZE_SIZE
         blosc_cbuffer_sizes(dp, &nbytes, &cbytes, &blocksize)
         chunk_ = np.empty(nbytes / dtype.itemsize, dtype=dtype)
-        ret = blosc_decompress(dp, chunk_.data, nbytes)
+        with nogil: # release the GIL
+            ret = blosc_decompress(dp, chunk_.data, nbytes)
         if ret < 0:
             raise RuntimeError, "Blosc decompression error: %i" % ret
         carray_.append(chunk_)
