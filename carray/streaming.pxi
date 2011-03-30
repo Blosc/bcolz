@@ -2,29 +2,36 @@ DEF MAX_DIMS = 255 # Arbitrary convention
 
 
 cdef struct Header_t:
+    npy_intp            hsize
     char[3]             dtype
     npy_intp            ndim
     npy_intp[MAX_DIMS]  dims
 
 
 cdef struct Remainder_t:
+    npy_intp            rsize
     void*               data
 
 
 cdef struct Chunks_t:
+    npy_intp            csize
     npy_intp            numck
     void*               data
 
 
-cdef struct StreamInfo_t:    
+cdef struct Columns_t:
+    npy_intp            numcol
+    npy_intp            nsize
+    char*               names
+
+
+cdef struct StreamInfo_t:
     Header_t            header
     Remainder_t         remain
     Chunks_t            chunks
+    Columns_t           columns
     char[2]             streamtype
     char[1]             checkmark
-    npy_intp            hsize
-    npy_intp            rsize
-    npy_intp            csize
     npy_intp            totsize
 
 ctypedef StreamInfo_t StreamInfo
@@ -34,7 +41,7 @@ cdef char* CHECKMARK = '|'
 cdef int SIZE_SIZE = sizeof(npy_intp)
 
 
-cdef void _fill_header_info(StreamInfo* info, carray c) except *:
+cdef void _fill_ca_header_info(StreamInfo* info, carray c) except *:
     cdef Header_t* header = &(info.header)
     # fill in dtype information
     header.dtype[0] = (<char*>c.dtype.byteorder)[0]
@@ -47,35 +54,39 @@ cdef void _fill_header_info(StreamInfo* info, carray c) except *:
     for i in range(header.ndim):
         header.dims[i] = c.shape[i]
     # fill in size information
-    info.hsize = 3 + (1+header.ndim)*SIZE_SIZE
+    info.header.hsize = 3 + (1+header.ndim)*SIZE_SIZE
 
 
-cdef void _fill_remain_info(StreamInfo* info, carray c) except *:
-    info.rsize = c.leftover
+cdef void _fill_ca_remain_info(StreamInfo* info, carray c) except *:
+    info.remain.rsize = c.leftover
 
 
-cdef void _fill_chunk_info(StreamInfo* info, carray c) except *:
+cdef void _fill_ca_chunk_info(StreamInfo* info, carray c) except *:
     cdef Chunks_t* chunks = &(info.chunks)
     cdef chunk chunk_
     chunks.numck = len(c.chunks)
     cdef npy_intp bsize_all = sum(chunk_.blocksize for chunk_ in c.chunks)
-    info.csize = SIZE_SIZE + bsize_all + chunks.numck*SIZE_SIZE
+    info.chunks.csize = SIZE_SIZE + bsize_all + chunks.numck*SIZE_SIZE
 
 
 cdef void fill_stream_info(StreamInfo* info, carray c) except *:
-    _fill_header_info(info, c)
-    _fill_remain_info(info, c)
-    _fill_chunk_info(info, c)
+    # initialize
+    info.totsize     =  0
+    info.header.hsize = 0
+    info.remain.rsize = 0
+    info.chunks.csize = 0
     info.streamtype[0] = 'C'    # TODO: multiple type support
     info.streamtype[1] = 'A'
-    info.totsize = 0            # initialize
-    info.totsize += SIZE_SIZE   # total size mark
-    info.totsize += 2           # streamtype mark
-    info.totsize += 4           # four checkmarks
-    info.totsize += 3*SIZE_SIZE # component size marks
-    info.totsize += info.hsize  # header size
-    info.totsize += info.rsize  # remainder size
-    info.totsize += info.csize  # chunks size
+    _fill_ca_header_info(info, c)
+    _fill_ca_remain_info(info, c)
+    _fill_ca_chunk_info(info, c)
+    info.totsize += SIZE_SIZE         # total size mark
+    info.totsize += 2                 # streamtype mark
+    info.totsize += 4                 # four checkmarks
+    info.totsize += 3*SIZE_SIZE       # component size marks
+    info.totsize += info.header.hsize # header size
+    info.totsize += info.remain.rsize # remainder size
+    info.totsize += info.chunks.csize # chunks size
 
 
 cdef object to_stream(carray c):
@@ -93,18 +104,18 @@ cdef object to_stream(carray c):
     memcpy(dp, info.streamtype, 2);                 dp += 2
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
-    memcpy(dp, &(info.hsize), SIZE_SIZE);           dp += SIZE_SIZE
+    memcpy(dp, &(info.header.hsize), SIZE_SIZE);    dp += SIZE_SIZE
     memcpy(dp, info.header.dtype, 3);               dp += 3
     memcpy(dp, &(info.header.ndim), SIZE_SIZE);     dp += SIZE_SIZE
     tmp = info.header.ndim*SIZE_SIZE
     memcpy(dp, info.header.dims, tmp);              dp += tmp
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
-    memcpy(dp, &(info.rsize), SIZE_SIZE);           dp += SIZE_SIZE
-    memcpy(dp, c.lastchunk, info.rsize);            dp += info.rsize
+    memcpy(dp, &(info.remain.rsize), SIZE_SIZE);    dp += SIZE_SIZE
+    memcpy(dp, c.lastchunk, info.remain.rsize);     dp += info.remain.rsize
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
-    memcpy(dp, &(info.csize), SIZE_SIZE);           dp += SIZE_SIZE
+    memcpy(dp, &(info.chunks.csize), SIZE_SIZE);    dp += SIZE_SIZE
     memcpy(dp, &(info.chunks.numck), SIZE_SIZE);    dp += SIZE_SIZE
     for chunk_ in c.chunks:
         tmp = <npy_intp>(chunk_.blocksize)
@@ -119,12 +130,12 @@ cdef void assert_checkmark(void* stream, npy_intp offset) except *:
     assert (<char*>stream)[offset] == CHECKMARK[0], 'Checkmark not found at %i!' % offset
 
 
-cdef void _extract_header_info(StreamInfo* info, void* stream, npy_intp offset) except *:
+cdef void _extract_ca_header_info(StreamInfo* info, void* stream, npy_intp offset) except *:
     cdef void* sp = stream + offset
     cdef Header_t* header = &(info.header)
     # extract header size
-    info.hsize = (<npy_intp*>sp)[0];                sp += SIZE_SIZE
-    assert_checkmark(stream, offset+SIZE_SIZE+info.hsize)
+    header.hsize = (<npy_intp*>sp)[0];              sp += SIZE_SIZE
+    assert_checkmark(stream, offset+SIZE_SIZE+header.hsize)
     # extract dtype information
     header.dtype[0] = (<char*>sp)[0]
     header.dtype[1] = (<char*>sp)[1]
@@ -135,21 +146,21 @@ cdef void _extract_header_info(StreamInfo* info, void* stream, npy_intp offset) 
         header.dims[n] = (<npy_intp*>sp)[0];        sp += SIZE_SIZE
 
 
-cdef void _extract_remain_info(StreamInfo* info, void* stream, npy_intp offset) except *:
+cdef void _extract_ca_remain_info(StreamInfo* info, void* stream, npy_intp offset) except *:
     cdef void* sp = stream + offset
     # extract remainder size
-    info.rsize = (<npy_intp*>sp)[0];                sp += SIZE_SIZE
-    assert_checkmark(stream, offset+SIZE_SIZE+info.rsize)
+    info.remain.rsize = (<npy_intp*>sp)[0];         sp += SIZE_SIZE
+    assert_checkmark(stream, offset+SIZE_SIZE+info.remain.rsize)
     # hook data pointer
     info.remain.data = sp
 
 
-cdef void _extract_chunk_info(StreamInfo* info, void* stream, npy_intp offset) except *:
+cdef void _extract_ca_chunk_info(StreamInfo* info, void* stream, npy_intp offset) except *:
     cdef void* sp = stream + offset
     cdef Chunks_t* chunks = &(info.chunks)
     # extract chunks size
-    info.csize = (<npy_intp*>sp)[0];                sp += SIZE_SIZE
-    assert_checkmark(stream, offset+SIZE_SIZE+info.csize)
+    chunks.csize = (<npy_intp*>sp)[0];              sp += SIZE_SIZE
+    assert_checkmark(stream, offset+SIZE_SIZE+chunks.csize)
     # extract number of chunks
     chunks.numck = (<npy_intp*>sp)[0];              sp += SIZE_SIZE
     # hook data pointer
@@ -164,12 +175,21 @@ cdef void extract_stream_info(StreamInfo* info, void* stream) except *:
     info.streamtype[0] = (<char*>stream)[offset]
     info.streamtype[1] = (<char*>stream)[1+offset]; offset += 2
     assert_checkmark(stream, offset);               offset += 1
+    sf = _info_to_streamformat(info)
+    assert sf == 'CA', "Unsupported format '%s'!" % sf
     # extract info
-    _extract_header_info(info, stream, offset);     offset += (SIZE_SIZE + info.hsize + 1)
-    _extract_remain_info(info, stream, offset);     offset += (SIZE_SIZE + info.rsize + 1)
-    _extract_chunk_info(info, stream, offset);      offset += (SIZE_SIZE + info.csize + 1)
+    _extract_ca_header_info(info, stream, offset);  offset += (SIZE_SIZE + info.header.hsize + 1)
+    _extract_ca_remain_info(info, stream, offset);  offset += (SIZE_SIZE + info.remain.rsize + 1)
+    _extract_ca_chunk_info(info, stream, offset);   offset += (SIZE_SIZE + info.chunks.csize + 1)
     # sanity check
     assert offset == info.totsize, 'wrong sizes: %s != %s' % (offset, info.totsize)
+
+
+cdef object _info_to_streamformat(StreamInfo* info):
+    cdef char* st = '  '
+    st[0] = info.streamtype[0]
+    st[1] = info.streamtype[1]
+    return <object>st
 
 
 cdef object _info_to_dtype(StreamInfo* info):
@@ -216,8 +236,8 @@ cdef from_stream(char* stream):
         carray_.append(chunk_)
         dp += bsize_buf
     else:
-        chunk_ = np.empty(info.rsize / dtype.itemsize, dtype=dtype)
-        memcpy(chunk_.data, info.remain.data, info.rsize)
+        chunk_ = np.empty(info.remain.rsize / dtype.itemsize, dtype=dtype)
+        memcpy(chunk_.data, info.remain.data, info.remain.rsize)
         carray_.append(chunk_)
     
     if shape != carray_.shape:
