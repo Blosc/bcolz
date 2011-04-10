@@ -28,6 +28,7 @@ cdef struct StreamInfo_t:
     char[1]             checkmark
     npy_intp            totsize
 
+
 ctypedef StreamInfo_t StreamInfo
 
 
@@ -61,17 +62,18 @@ cdef void _fill_ca_chunk_info(StreamInfo* info, carray c) except *:
     info.chunks.csize = SIZE_SIZE + bsize_all + chunks.numck*SIZE_SIZE
 
 
-cdef void fill_stream_info(StreamInfo* info, carray c) except *:
+cdef void fill_stream_info(StreamInfo* info, object c) except *:
     # initialize
     info.totsize     =  0
     info.header.hsize = 0
     info.remain.rsize = 0
     info.chunks.csize = 0
-    info.streamtype[0] = 'C'    # TODO: multiple type support
-    info.streamtype[1] = 'A'
-    _fill_ca_header_info(info, c)
-    _fill_ca_remain_info(info, c)
-    _fill_ca_chunk_info(info, c)
+    if isinstance(c, carray):    
+      info.streamtype[0] = 'C'    # TODO: multiple type support
+      info.streamtype[1] = 'A'
+      _fill_ca_header_info(info, c)
+      _fill_ca_remain_info(info, c)
+      _fill_ca_chunk_info(info, c)
     info.totsize += SIZE_SIZE         # total size mark
     info.totsize += 2                 # streamtype mark
     info.totsize += 4                 # four checkmarks
@@ -80,17 +82,20 @@ cdef void fill_stream_info(StreamInfo* info, carray c) except *:
     info.totsize += info.remain.rsize # remainder size
     info.totsize += info.chunks.csize # chunks size
 
-
-cdef object to_stream(carray c):
+cdef object to_stream(object c):
+    cdef char* dp
     cdef StreamInfo info
-    cdef char* dp # stream pointer
-    cdef npy_intp tmp # for internal use
-    cdef chunk chunk_
-    
     fill_stream_info(&info, c)
-    
     obj = PyBytes_FromStringAndSize(NULL, info.totsize) # TODO: MemoryError?
     dp = PyBytes_AS_STRING(obj)
+    if isinstance(c, carray):
+      _ca_serialize(&info, c, dp)
+    return obj  
+    
+
+cdef object _ca_serialize(StreamInfo* info, carray c, char* dp):
+    cdef npy_intp tmp # for internal use
+    cdef chunk chunk_
     
     memcpy(dp, &(info.totsize), SIZE_SIZE);         dp += SIZE_SIZE
     memcpy(dp, info.streamtype, 2);                 dp += 2
@@ -115,8 +120,6 @@ cdef object to_stream(carray c):
         memcpy(dp, &(tmp), SIZE_SIZE);              dp += SIZE_SIZE
         memcpy(dp, chunk_.data, tmp);               dp += tmp
     memcpy(dp, CHECKMARK, 1);                       dp += 1
-    
-    return obj
 
 
 cdef void assert_checkmark(void* stream, npy_intp offset) except *:
@@ -171,9 +174,9 @@ cdef void extract_stream_info(StreamInfo* info, void* stream) except *:
     sf = _info_to_streamformat(info)
     assert sf == 'CA', "Unsupported format '%s'!" % sf
     # extract info
-    _extract_ca_header_info(info, stream, offset);  offset += (SIZE_SIZE + info.header.hsize + 1)
-    _extract_ca_remain_info(info, stream, offset);  offset += (SIZE_SIZE + info.remain.rsize + 1)
-    _extract_ca_chunk_info(info, stream, offset);   offset += (SIZE_SIZE + info.chunks.csize + 1)
+    _extract_ca_header_info(info, stream, offset);  offset += (SIZE_SIZE+info.header.hsize+1)
+    _extract_ca_remain_info(info, stream, offset);  offset += (SIZE_SIZE+info.remain.rsize+1)
+    _extract_ca_chunk_info(info, stream, offset);   offset += (SIZE_SIZE+info.chunks.csize+1)
     # sanity check
     assert offset == info.totsize, 'wrong sizes: %s != %s' % (offset, info.totsize)
 
