@@ -3,7 +3,8 @@ DEF MAX_DIMS = 255 # Arbitrary convention
 
 cdef struct Header_t:
     npy_intp            hsize
-    char[3]             dtype
+    char[2]             dtype
+    npy_intp            dtype_sz
     npy_intp            ndim
     npy_intp[MAX_DIMS]  dims
 
@@ -19,17 +20,10 @@ cdef struct Chunks_t:
     void*               data
 
 
-cdef struct Columns_t:
-    npy_intp            numcol
-    npy_intp            nsize
-    char*               names
-
-
 cdef struct StreamInfo_t:
     Header_t            header
     Remainder_t         remain
     Chunks_t            chunks
-    Columns_t           columns
     char[2]             streamtype
     char[1]             checkmark
     npy_intp            totsize
@@ -46,15 +40,13 @@ cdef void _fill_ca_header_info(StreamInfo* info, carray c) except *:
     # fill in dtype information
     header.dtype[0] = (<char*>c.dtype.byteorder)[0]
     header.dtype[1] = (<char*>c.dtype.kind)[0]
-    assert 0 < c.dtype.itemsize <= 9, 'Cannot handle itemsizes outside 1-9 bytes!'
-    tmp = str(c.dtype.itemsize)
-    header.dtype[2] = (<char*>tmp)[0]
+    header.dtype_sz = c.dtype.itemsize
     # fill in dimensional information
     header.ndim = c.ndim
     for i in range(header.ndim):
         header.dims[i] = c.shape[i]
     # fill in size information
-    info.header.hsize = 3 + (1+header.ndim)*SIZE_SIZE
+    info.header.hsize = 2 + SIZE_SIZE + (1+header.ndim)*SIZE_SIZE
 
 
 cdef void _fill_ca_remain_info(StreamInfo* info, carray c) except *:
@@ -105,7 +97,8 @@ cdef object to_stream(carray c):
     memcpy(dp, CHECKMARK, 1);                       dp += 1
     
     memcpy(dp, &(info.header.hsize), SIZE_SIZE);    dp += SIZE_SIZE
-    memcpy(dp, info.header.dtype, 3);               dp += 3
+    memcpy(dp, info.header.dtype, 2);               dp += 2
+    memcpy(dp, &(info.header.dtype_sz), SIZE_SIZE); dp += SIZE_SIZE
     memcpy(dp, &(info.header.ndim), SIZE_SIZE);     dp += SIZE_SIZE
     tmp = info.header.ndim*SIZE_SIZE
     memcpy(dp, info.header.dims, tmp);              dp += tmp
@@ -138,8 +131,8 @@ cdef void _extract_ca_header_info(StreamInfo* info, void* stream, npy_intp offse
     assert_checkmark(stream, offset+SIZE_SIZE+header.hsize)
     # extract dtype information
     header.dtype[0] = (<char*>sp)[0]
-    header.dtype[1] = (<char*>sp)[1]
-    header.dtype[2] = (<char*>sp)[2];               sp += 3
+    header.dtype[1] = (<char*>sp)[1];               sp += 2
+    header.dtype_sz = (<npy_intp*>sp)[0];           sp += SIZE_SIZE
     # extract dimensional information
     header.ndim = (<npy_intp*>sp)[0];               sp += SIZE_SIZE
     for n in range(header.ndim):
@@ -193,11 +186,11 @@ cdef object _info_to_streamformat(StreamInfo* info):
 
 
 cdef object _info_to_dtype(StreamInfo* info):
-    cdef char* dt = '   '
+    cdef char* dt = '  '
     dt[0] = info.header.dtype[0]
     dt[1] = info.header.dtype[1]
-    dt[2] = info.header.dtype[2]
-    return np.dtype(dt)
+    dt_str = "%s%i" % (dt, info.header.dtype_sz)
+    return np.dtype(dt_str)
 
 
 cdef object _info_to_shape(StreamInfo* info):
