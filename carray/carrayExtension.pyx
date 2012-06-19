@@ -471,8 +471,8 @@ cdef class carray:
       else:
         # Multidimensional array.  The atom will have array_.shape[1:] dims.
         # atom dimensions will be stored in `self._dtype`, which is different
-        # than `self.dtype` in that `self._dtype` dimensions are transferred
-        # to `self.shape`.  `self.dtype` will always be scalar (NumPy
+        # than `self.dtype` in that `self._dtype` dimensions are borrowed
+        # from `self.shape`.  `self.dtype` will always be scalar (NumPy
         # convention).
         self._dtype = dtype = np.dtype((array_.dtype.base, array_.shape[1:]))
     else:
@@ -893,7 +893,8 @@ cdef class carray:
       else:
         result += chunk_[:].sum(dtype=dtype)
     if self.leftover:
-      result += self.lastchunkarr[:self.len-nchunks*self._chunklen].sum(dtype=dtype)
+      leftover = self.len-nchunks*self._chunklen
+      result += self.lastchunkarr[:leftover].sum(dtype=dtype)
 
     return result
 
@@ -912,7 +913,7 @@ cdef class carray:
     It returns 1 if asked `pos` can be copied to `dest`.  Else, this returns
     0.
 
-    WARNING: Any update operation (e.g. __setitem__) *must* disable this
+    IMPORTANT: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
     """
     cdef int ret, atomsize, blocksize, offset
