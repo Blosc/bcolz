@@ -11,9 +11,21 @@ import sys
 import numpy as np
 import carray as ca
 from carray import utils
+import os, os.path
+import struct
+import shutil
 
 _KB = 1024
 _MB = 1024*_KB
+
+# For the persistence layer
+EXTENSION = '.blp'
+MAGIC = 'blpk'
+BLOSCPACK_HEADER_LENGTH = 16
+BLOSC_HEADER_LENGTH = 16
+FORMAT_VERSION = 1
+MAX_FORMAT_VERSION = 255
+MAX_CHUNKS = (2**63)-1
 
 # The type used for size values: indexes, coordinates, dimension
 # lengths, row numbers, shapes, chunk shapes, byte counts...
@@ -351,16 +363,122 @@ cdef class chunk:
     free(self.data)
 
 
-cdef class Chunks(dict):
-    """Store the different carray chunks in different media."""
-    cdef object media
+cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
+    """ Create the bloscpack header string.
 
-    cdef __cinit__(self, object dirname):
+    Parameters
+    ----------
+    nchunks : int
+        the number of chunks, default: None
+    format_version : int
+        the version format for the compressed file
+
+    Returns
+    -------
+    bloscpack_header : string
+        the header as string
+
+    Notes
+    -----
+
+    The bloscpack header is 16 bytes as follows:
+
+    |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
+    | b   l   p   k | ^ | RESERVED  |           nchunks             |
+                   version
+
+    The first four are the magic string 'blpk'. The next one is an 8 bit
+    unsigned little-endian integer that encodes the format version. The next
+    three are reserved, and the last eight are a signed  64 bit little endian
+    integer that encodes the number of chunks
+
+    The value of '-1' for 'nchunks' designates an unknown size and can be
+    inserted by setting 'nchunks' to None.
+
+    Raises
+    ------
+    ValueError
+        if the nchunks argument is too large or negative
+    struct.error
+        if the format_version is too large or negative
+
+    """
+    if not 0 <= nchunks <= MAX_CHUNKS and nchunks is not None:
+      raise ValueError(
+        "'nchunks' must be in the range 0 <= n <= %d, not '%s'" %
+        (MAX_CHUNKS, str(nchunks)))
+    return (MAGIC + struct.pack('<B', format_version) + '\x00\x00\x00' +
+            struct.pack('<q', nchunks if nchunks is not None else -1))
+
+
+cdef class Chunks(object):
+    """Store the different carray chunks in dirname."""
+    cdef object dirname, datadir, metadir, _list
+    cdef int nchunks
+
+    def __cinit__(self, object dirname):
       self.dirname = dirname
-      if dirname is not None:
-          
+      if dirname is None:
+        self._list = []
+      else:
+        if os.path.exists(dirname):
+          if os.path.isdir(dirname):
+            shutil.rmtree(dirname)
+          else:
+            os.remove(dirname)
+        os.mkdir(dirname)
+        self.datadir = os.path.join(dirname, 'data')
+        os.mkdir(self.datadir)
+        self.metadir = os.path.join(dirname, 'meta')
+        os.mkdir(self.metadir)
+        self.nchunks = 0
 
-    cdef __getitem__(self, object key):
+    def __getitem__(self, object nchunk):
+
+      if self.dirname:
+        raise RuntimeError("This cannot happen!")
+      else:
+        return self._list[nchunk]
+
+    def __setitem__(self, object nchunk, object chunk_):
+      cdef object schunkfile, bloscpack_header
+
+      if self.dirname:
+        self._save(nchunk, chunk_)
+      else:
+        self._list[nchunk] = chunk_
+
+    def append(self, object chunk_):
+      cdef object nchunk, dname, schunkfile, bloscpack_header
+
+      if self.dirname:
+        nchunk = self.nchunks
+        self._save(nchunk, chunk_)
+        self.nchunks += 1
+      else:
+        self._list.append(chunk_)
+
+    def __len__(self):
+      if self.dirname:
+        return self.nchunks
+      else:
+        return len(self._list)
+
+    def pop(self):
+      if self.dirname:
+        raise NotImplementedError("This should never happen")
+      else:
+        return self._list.pop()
+
+    cdef _save(self, nchunk, chunk):
+      dname = "__%d%s" % (nchunk, EXTENSION)
+      schunkfile = os.path.join(self.datadir, dname)
+      if os.path.exists(schunkfile):
+        raise ValueError("filename %s already exists" % schunkfile)
+      bloscpack_header = create_bloscpack_header(1)
+      with open(schunkfile, 'wb') as schunk:
+        schunk.write(bloscpack_header)
+        schunk.write(chunk[:].data)
 
 
 cdef class carray:
@@ -408,6 +526,7 @@ cdef class carray:
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
   cdef object _dtype, chunks
+  cdef object dirname
   cdef ndarray iobuf, where_buf
   # For block cache
   cdef int blocksize, idxcache
@@ -458,7 +577,7 @@ cdef class carray:
 
   def __cinit__(self, object array, object cparams=None,
                 object dtype=None, object dflt=None,
-                object expectedlen=None, object chunklen=None
+                object expectedlen=None, object chunklen=None,
                 object dirname=None):
     cdef int i, itemsize, atomsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
@@ -508,6 +627,7 @@ cdef class carray:
     self._cparams = cparams
     #self.chunks = chunks = []
     self.chunks = chunks = Chunks(dirname)
+    self.dirname = dirname
     self.atomsize = atomsize = dtype.itemsize
     self.itemsize = itemsize = dtype.base.itemsize
 
@@ -1647,6 +1767,17 @@ cdef class carray:
 %s""" % (self.shape, self.dtype, snbytes, scbytes, cratio,
          self.cparams, str(self))
     return fullrepr
+
+  def flush(self):
+    """Flush lastchunk data."""
+    cdef chunk chunk_
+    cdef int nchunks, leftover
+
+    if self.dirname is not None and self.leftover:
+      nchunks = self._nbytes // <npy_intp>self._chunksize
+      leftover = self.len-nchunks*self._chunklen
+      chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
+      self.chunks.append(chunk_)
 
 
 
