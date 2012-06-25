@@ -351,6 +351,17 @@ cdef class chunk:
     free(self.data)
 
 
+cdef class Chunks(dict):
+    """Store the different carray chunks in different media."""
+    cdef object media
+
+    cdef __cinit__(self, object dirname):
+      self.dirname = dirname
+      if dirname is not None:
+          
+
+    cdef __getitem__(self, object key):
+
 
 cdef class carray:
   """
@@ -447,7 +458,8 @@ cdef class carray:
 
   def __cinit__(self, object array, object cparams=None,
                 object dtype=None, object dflt=None,
-                object expectedlen=None, object chunklen=None):
+                object expectedlen=None, object chunklen=None
+                object dirname=None):
     cdef int i, itemsize, atomsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
@@ -494,7 +506,8 @@ cdef class carray:
     self._dflt = _dflt
 
     self._cparams = cparams
-    self.chunks = chunks = []
+    #self.chunks = chunks = []
+    self.chunks = chunks = Chunks(dirname)
     self.atomsize = atomsize = dtype.itemsize
     self.itemsize = itemsize = dtype.base.itemsize
 

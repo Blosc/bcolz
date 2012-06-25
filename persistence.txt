@@ -1,0 +1,154 @@
+Some thoughts for a persistence layer on carray
+-----------------------------------------------
+
+The original carray container consists on basically a list of
+compressed in-memory blocks.  This document explains how to extend
+this to allow to store the data blocks on disk too.
+
+The goals of this proposal are:
+
+1. Allow to work with data directly on disk, exactly on the same way
+that data in memory.
+
+2. Must support the same access capabilities than carray objects
+including: append data, modying data and direct access to data.
+
+3. Compression must be possible too.
+
+A possible format allowing doing all of this follows:
+
+The layout
+----------
+
+Data will be stored by blocks, and each block will use exactly one
+file.  The size of each block will be decided automatically, but it
+could be specified by the user manually too.
+
+For every dataset, it will be created a directory, called the root.
+The root will have another couple of subdirectories, named data and
+meta:
+
+        root  (the name of the dataset)
+        /  \
+     data  meta
+
+The `data` layout
+-----------------
+
+Each of these directories will contain 1 or more so-called superchunks
+for storing the actual data.  Every data superchunk will be named
+after its sequential number.  For example::
+
+    $ ls data
+    __1__.bin  __2__.bin  __3__.bin  __4__.bin ... __1030__.bin
+
+This structure of separate superchunks allows for two things:
+
+1. Datasets can be enlarged and very easily
+2. Horizontal sharding in a distributed system is possible (and cheap!)
+
+At his time, the `data` directory might contain other subdirectories
+that are meant for storing components for a 'nested' dtype (i.e. an
+structured array, stored in column-wise order)::
+
+        data  (the root for a nested datatype)
+        /  \     \
+     col1  col2  col3
+          /  \
+        sc1  sc3
+
+The binary data 'superchunk' layout
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The layout of binary superchunk data files looks like this::
+
+    |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
+    | b   l   s   k | ^ | RESERVED  |    typesize   |    nchunks    |
+                   version
+
+The magic 'blsk' magic signature stands for 'BLosc Super-chunK'.  This
+is very close to the bloscpack format, and it might end being the same
+if some agreement is reached.
+
+After the above header, it will follow index data and the actual data
+in blosc chunks::
+
+    offset1 | offset 2 | offset N | ...   | ...   | ... | ...
+                index             | chunk | chunk | ... | chunk
+
+The index part above stores the offsets on where each chunk starts, so
+it is is easy to access the different chunks in the superchunk file.
+
+And each blosc chunk has this format (Blosc 1.0 on)::
+
+    |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
+      ^   ^   ^   ^ |     nbytes    |   blocksize   |    ctbytes    |
+      |   |   |   |
+      |   |   |   +--typesize
+      |   |   +------flags
+      |   +----------blosclz version
+      +--------------blosc version
+
+At the end of each blosc chunk some empty space could be added in
+order to allow the modification of some data elements inside each
+block.  As these chunks will be typically compressed, when modifying
+some element of the chunk it is not guaranteed that it will fit in the
+same space than the old data chunk.  Having this provision of small
+empty space at the end of each chunk will allow for storing the
+modifyed chunks in many cases, without a need to save the entire
+superchunk on a different part of the disk.
+
+The `meta` files
+----------------
+
+Here there are as many files as you want.  The format for every file
+will tentatively be YAML.  There should be (at least) three files:
+
+The `nrows` file
+~~~~~~~~~~~~~~~~
+
+This contains the number of rows in the dataset.  It will be written
+as a regular text file.  For example::
+
+    $ cat meta/nrows
+    2123244
+
+The `storage` file (may also be `dtype` or `domain`)
+~~~~~~~~~~~~~~~~~~
+
+Here comes the information about how data has to be stored and its
+meaning. Example::
+
+    dtype: 
+      col1: int8
+      col2: float32
+    shape: (300,200)
+    chunkshape: (30, 20)
+    superchunksize: 10  # max. number of chunks in a single file
+    endianness: big  # default: little
+    order: C         # default: C
+    compression:
+      library: blosclz
+      level: 5
+      filters: [shuffle, truncate]  # order matters
+
+The `attributes` file
+~~~~~~~~~~~~~~~~~~~~~
+
+In this file it comes additional user information.  Example::
+
+    temperature:
+      value: 23.5
+      type: scalar
+      dtype: float32
+    pressure:
+      value: 225.5
+      type: scalar
+      dtype: float32
+    ids:
+      value: [1,3,6,10]
+      type: array
+      dtype: int32
+
+More files could be added for storing other kind of information.
+
