@@ -40,6 +40,7 @@ IntType = np.dtype(np.int_)
 from definitions cimport import_array, ndarray, dtype, \
      malloc, realloc, free, memcpy, memset, strdup, strcmp, \
      PyString_AsString, PyString_FromString, \
+     PyString_FromStringAndSize, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
      npy_intp
@@ -299,6 +300,11 @@ cdef class chunk:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 
 
+  def getdata(self):
+    """Get a String object out of this chunk."""
+    return PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cbytes)
+
+
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
     cdef ndarray array
@@ -434,22 +440,19 @@ cdef class Chunks(object):
         self.nchunks = 0
 
     def __getitem__(self, object nchunk):
-
       if self.dirname:
         raise RuntimeError("This cannot happen!")
       else:
         return self._list[nchunk]
 
     def __setitem__(self, object nchunk, object chunk_):
-      cdef object schunkfile, bloscpack_header
-
       if self.dirname:
         self._save(nchunk, chunk_)
       else:
         self._list[nchunk] = chunk_
 
     def append(self, object chunk_):
-      cdef object nchunk, dname, schunkfile, bloscpack_header
+      cdef object nchunk
 
       if self.dirname:
         nchunk = self.nchunks
@@ -478,7 +481,8 @@ cdef class Chunks(object):
       bloscpack_header = create_bloscpack_header(1)
       with open(schunkfile, 'wb') as schunk:
         schunk.write(bloscpack_header)
-        schunk.write(chunk[:].data)
+        #schunk.write(chunk[:].data)
+        schunk.write(chunk.getdata())
 
 
 cdef class carray:
