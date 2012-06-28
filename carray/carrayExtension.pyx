@@ -419,59 +419,25 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
 
 cdef class Chunks(object):
     """Store the different carray chunks in dirname."""
-    cdef object dirname, datadir, metadir, _list
+    cdef object datadir
     cdef int nchunks
 
-    def __cinit__(self, object dirname):
-      self.dirname = dirname
-      if dirname is None:
-        self._list = []
-      else:
-        if os.path.exists(dirname):
-          if os.path.isdir(dirname):
-            shutil.rmtree(dirname)
-          else:
-            os.remove(dirname)
-        os.mkdir(dirname)
-        self.datadir = os.path.join(dirname, 'data')
-        os.mkdir(self.datadir)
-        self.metadir = os.path.join(dirname, 'meta')
-        os.mkdir(self.metadir)
-        self.nchunks = 0
+    def __init__(self, object datadir):
+      self.datadir = datadir
+      self.nchunks = 0
 
     def __getitem__(self, object nchunk):
-      if self.dirname:
-        raise RuntimeError("This cannot happen!")
-      else:
-        return self._list[nchunk]
+        raise NotImplementedError
 
     def __setitem__(self, object nchunk, object chunk_):
-      if self.dirname:
-        self._save(nchunk, chunk_)
-      else:
-        self._list[nchunk] = chunk_
-
-    def append(self, object chunk_):
-      cdef object nchunk
-
-      if self.dirname:
-        nchunk = self.nchunks
-        self._save(nchunk, chunk_)
-        self.nchunks += 1
-      else:
-        self._list.append(chunk_)
+      self._save(nchunk, chunk_)
 
     def __len__(self):
-      if self.dirname:
-        return self.nchunks
-      else:
-        return len(self._list)
+      return self.nchunks
 
-    def pop(self):
-      if self.dirname:
-        raise NotImplementedError("This should never happen")
-      else:
-        return self._list.pop()
+    def append(self, object chunk_):
+      self._save(self.nchunks, chunk_)
+      self.nchunks += 1
 
     cdef _save(self, nchunk, chunk):
       dname = "__%d%s" % (nchunk, EXTENSION)
@@ -482,6 +448,9 @@ cdef class Chunks(object):
       with open(schunkfile, 'wb') as schunk:
         schunk.write(bloscpack_header)
         schunk.write(chunk.getdata())
+
+    def pop(self):
+      raise NotImplementedError
 
 
 cdef class carray:
@@ -529,7 +498,7 @@ cdef class carray:
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
   cdef object _dtype, chunks
-  cdef object dirname
+  cdef object rootdir, datadir, metadir
   cdef ndarray iobuf, where_buf
   # For block cache
   cdef int blocksize, idxcache
@@ -581,7 +550,7 @@ cdef class carray:
   def __cinit__(self, object array, object cparams=None,
                 object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None,
-                object dirname=None):
+                object rootdir=None):
     cdef int i, itemsize, atomsize, chunksize, leftover, nchunks
     cdef npy_intp nbytes, cbytes
     cdef ndarray array_, remainder, lastchunkarr
@@ -628,9 +597,11 @@ cdef class carray:
     self._dflt = _dflt
 
     self._cparams = cparams
-    #self.chunks = chunks = []
-    self.chunks = chunks = Chunks(dirname)
-    self.dirname = dirname
+    if self.datadir is None:
+      self.chunks = chunks = []
+    else:
+      self.mkdirs(rootdir)
+      self.chunks = chunks = Chunks(self.datadir)
     self.atomsize = atomsize = dtype.itemsize
     self.itemsize = itemsize = dtype.base.itemsize
 
@@ -685,6 +656,20 @@ cdef class carray:
 
     # Cache a len-1 array for accelerating self[int] case
     self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
+
+
+  def mkdirs(self, object rootdir):
+    self.rootdir = rootdir
+    if os.path.exists(rootdir):
+      if os.path.isdir(rootdir):
+        shutil.rmtree(rootdir)
+      else:
+        os.remove(rootdir)
+    os.mkdir(rootdir)
+    self.datadir = os.path.join(rootdir, 'data')
+    os.mkdir(self.datadir)
+    self.metadir = os.path.join(rootdir, 'meta')
+    os.mkdir(self.metadir)
 
 
   def append(self, object array):
@@ -1776,7 +1761,7 @@ cdef class carray:
     cdef chunk chunk_
     cdef int nchunks, leftover
 
-    if self.dirname is not None and self.leftover:
+    if self.rootdir is not None and self.leftover:
       nchunks = self._nbytes // <npy_intp>self._chunksize
       leftover = self.len-nchunks*self._chunklen
       chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
