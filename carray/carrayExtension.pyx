@@ -481,7 +481,6 @@ cdef class Chunks(object):
       bloscpack_header = create_bloscpack_header(1)
       with open(schunkfile, 'wb') as schunk:
         schunk.write(bloscpack_header)
-        #schunk.write(chunk[:].data)
         schunk.write(chunk.getdata())
 
 

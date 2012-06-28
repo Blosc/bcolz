@@ -1,5 +1,5 @@
-Some thoughts for a persistence layer on carray
------------------------------------------------
+Proposal for a persistence layer for carray
+-------------------------------------------
 
 The original carray container consists on basically a list of
 compressed in-memory blocks.  This document explains how to extend
@@ -13,41 +13,56 @@ that data in memory.
 2. Must support the same access capabilities than carray objects
 including: append data, modying data and direct access to data.
 
-3. Compression must be possible too.
+3. Transparent data compression must be possible.
 
-A possible format allowing doing all of this follows:
+4. User metadata addition must be possible too.
+
+5. And last but not least, the data should be easily 'shardeable' for
+optimal behaviour in a distributed storage environment.
+
+This, in combination with a distributed filesystem, and combined with
+a system that would be aware of the physical topology of the
+underlying infraestructure would allow to almost replace the need for
+a Disco/Hadoop infraestructure.
+
 
 The layout
 ----------
 
-Data will be stored by blocks, and each block will use exactly one
-file.  The size of each block will be decided automatically, but it
-could be specified by the user manually too.
-
-For every dataset, it will be created a directory, called the root.
+For every dataset, it will be created a directory, with a
+user-provided name that, for generality, we will call it `root` here.
 The root will have another couple of subdirectories, named data and
-meta:
+meta::
 
         root  (the name of the dataset)
         /  \
      data  meta
 
+The `data` directory will contain the actual data of the dataset,
+while the `meta` will contain the metainformation (dtype, shape,
+chunkshape, compression level, filters...).
+
 The `data` layout
 -----------------
 
-Each of these directories will contain 1 or more so-called superchunks
-for storing the actual data.  Every data superchunk will be named
-after its sequential number.  For example::
+Data will be stored by what is called a `superchunk`, and each
+superchunk will use exactly one file.  The size of each superchunk
+will be decided automatically by default, but it could be specified by
+the user too.
+
+Each of these directories will contain one or more superchunks for
+storing the actual data.  Every data superchunk will be named after
+its sequential number.  For example::
 
     $ ls data
     __1__.bin  __2__.bin  __3__.bin  __4__.bin ... __1030__.bin
 
-This structure of separate superchunks allows for two things:
+This structure of separate superchunk files allows for two things:
 
-1. Datasets can be enlarged and very easily
+1. Datasets can be enlarged and shrinked very easily
 2. Horizontal sharding in a distributed system is possible (and cheap!)
 
-At his time, the `data` directory might contain other subdirectories
+At its time, the `data` directory might contain other subdirectories
 that are meant for storing components for a 'nested' dtype (i.e. an
 structured array, stored in column-wise order)::
 
@@ -57,18 +72,34 @@ structured array, stored in column-wise order)::
           /  \
         sc1  sc3
 
-The binary data 'superchunk' layout
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This structure allows for quick access to specific chunks of columns
+without a need to load the complete data in memory.
+
+The `superchunk` layout
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The superchunk is made of a series of data chunks put together using
+the Blosc metacompressor by default.  Blosc being a metacompressor,
+means that it can use different compressors and filters, while
+leveraging its blocking and multithreading capabilities.
 
 The layout of binary superchunk data files looks like this::
 
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
-    | b   l   s   k | ^ | RESERVED  |    typesize   |    nchunks    |
-                   version
+    | b   l   p   k | ^ | ^ | ^ | R |   chunk-size  |   RESERVED    |
+                      |   |   |
+                      |   |   +- indexes
+                      |   + ---- checksums
+                      +--------- version
 
-The magic 'blsk' magic signature stands for 'BLosc Super-chunK'.  This
-is very close to the bloscpack format, and it might end being the same
-if some agreement is reached.
+    |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
+    |           file-size           |            nchunks            |
+
+The magic 'blpk' magic signature is the same than a forthcoming
+bloscpack format (see https://github.com/esc/bloscpack).  This new
+version of the format will allow to include indexes (offsets to where
+the data chunks begin) and checksums (probably using the adler32
+algorithm or similar).
 
 After the above header, it will follow index data and the actual data
 in blosc chunks::
@@ -91,18 +122,20 @@ And each blosc chunk has this format (Blosc 1.0 on)::
 
 At the end of each blosc chunk some empty space could be added in
 order to allow the modification of some data elements inside each
-block.  As these chunks will be typically compressed, when modifying
-some element of the chunk it is not guaranteed that it will fit in the
-same space than the old data chunk.  Having this provision of small
-empty space at the end of each chunk will allow for storing the
-modifyed chunks in many cases, without a need to save the entire
-superchunk on a different part of the disk.
+block.  The reason for the additional space is that, as these chunks
+will be typically compressed, when modifying some element of the chunk
+it is not guaranteed that it will fit in the same space than the old
+data chunk.  Having this provision of small empty space at the end of
+each chunk will allow for storing the modifyed chunks in many cases,
+without a need to save the entire superchunk on a different part of
+the disk.
 
 The `meta` files
 ----------------
 
-Here there are as many files as you want.  The format for every file
-will tentatively be YAML.  There should be (at least) three files:
+Here there can be as many files as necessary.  The format for every
+file will tentatively be YAML.  There should be (at least) three
+files:
 
 The `nrows` file
 ~~~~~~~~~~~~~~~~
@@ -113,7 +146,7 @@ as a regular text file.  For example::
     $ cat meta/nrows
     2123244
 
-The `storage` file (may also be `dtype` or `domain`)
+The `storage` file (may also be `dtype`, `dtype adaptor` or `domain`)
 ~~~~~~~~~~~~~~~~~~
 
 Here comes the information about how data has to be stored and its
@@ -128,7 +161,7 @@ meaning. Example::
     endianness: big  # default: little
     order: C         # default: C
     compression:
-      library: blosclz
+      library: blosclz   # could be zlib, fastlz or others
       level: 5
       filters: [shuffle, truncate]  # order matters
 
@@ -150,5 +183,5 @@ In this file it comes additional user information.  Example::
       type: array
       dtype: int32
 
-More files could be added for storing other kind of information.
-
+More files could be added for providing other kind of meta-information
+about data (read indexes, masks...).
