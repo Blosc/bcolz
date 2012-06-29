@@ -14,6 +14,7 @@ from carray import utils
 import os, os.path
 import struct
 import shutil
+import yaml
 
 _KB = 1024
 _MB = 1024*_KB
@@ -596,12 +597,14 @@ cdef class carray:
         _dflt[:] = dflt
     self._dflt = _dflt
 
+    # Create layout for data and metadata
     self._cparams = cparams
-    if self.datadir is None:
+    if rootdir is None:
       self.chunks = chunks = []
     else:
       self.mkdirs(rootdir)
-      self.chunks = chunks = Chunks(self.datadir)
+      self.chunks = chunks = Chunks(rootdir)
+
     self.atomsize = atomsize = dtype.itemsize
     self.itemsize = itemsize = dtype.base.itemsize
 
@@ -624,6 +627,16 @@ cdef class carray:
     chunklen = chunksize  // atomsize
     self._chunksize = chunksize
     self._chunklen = chunklen
+
+    if rootdir is not None:
+      # Write metadata
+      storagef = os.path.join(self.metadir, "storage")
+      with open(storagef, 'w') as storagefh:
+        storagefh.write(yaml.dump({
+          "dtype": str(self.dtype),
+          "cparams": str(self.cparams),
+          "chunksize": str(chunksize),
+          }))
 
     # Book memory for last chunk (uncompressed)
     lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
@@ -1756,17 +1769,21 @@ cdef class carray:
          self.cparams, str(self))
     return fullrepr
 
+
   def flush(self):
     """Flush lastchunk data."""
     cdef chunk chunk_
     cdef int nchunks, leftover
 
-    if self.rootdir is not None and self.leftover:
-      nchunks = self._nbytes // <npy_intp>self._chunksize
-      leftover = self.len-nchunks*self._chunklen
-      chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
-      self.chunks.append(chunk_)
-
+    if self.rootdir is not None:
+      if self.leftover:
+        nchunks = self._nbytes // <npy_intp>self._chunksize
+        leftover = self.len-nchunks*self._chunklen
+        chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
+        self.chunks.append(chunk_)
+      rowsf = os.path.join(self.metadir, "shape")
+      with open(rowsf, 'w') as rowsfh:
+        rowsfh.write("%s"%self.shape)
 
 
 

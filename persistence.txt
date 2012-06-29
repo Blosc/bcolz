@@ -137,14 +137,14 @@ Here there can be as many files as necessary.  The format for every
 file will tentatively be YAML.  There should be (at least) three
 files:
 
-The `nrows` file
+The `shape` file
 ~~~~~~~~~~~~~~~~
 
-This contains the number of rows in the dataset.  It will be written
-as a regular text file.  For example::
+This contains the shape of the dataset.  It will be written as a
+regular text file.  For example::
 
-    $ cat meta/nrows
-    2123244
+    $ cat meta/shape
+    (300, 200)
 
 The `storage` file (may also be `dtype`, `dtype adaptor` or `domain`)
 ~~~~~~~~~~~~~~~~~~
@@ -155,7 +155,6 @@ meaning. Example::
     dtype: 
       col1: int8
       col2: float32
-    shape: (300,200)
     chunkshape: (30, 20)
     superchunksize: 10  # max. number of chunks in a single file
     endianness: big  # default: little
