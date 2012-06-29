@@ -629,14 +629,7 @@ cdef class carray:
     self._chunklen = chunklen
 
     if rootdir is not None:
-      # Write metadata
-      storagef = os.path.join(self.metadir, "storage")
-      with open(storagef, 'w') as storagefh:
-        storagefh.write(yaml.dump({
-          "dtype": str(self.dtype),
-          "cparams": str(self.cparams),
-          "chunksize": str(chunksize),
-          }))
+      self.write_meta()
 
     # Book memory for last chunk (uncompressed)
     lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
@@ -672,6 +665,7 @@ cdef class carray:
 
 
   def mkdirs(self, object rootdir):
+    """Create the basic directory layout for persistent storage."""
     self.rootdir = rootdir
     if os.path.exists(rootdir):
       if os.path.isdir(rootdir):
@@ -683,6 +677,37 @@ cdef class carray:
     os.mkdir(self.datadir)
     self.metadir = os.path.join(rootdir, 'meta')
     os.mkdir(self.metadir)
+
+
+  def write_meta(self):
+      """Write metadata persistently."""
+      storagef = os.path.join(self.metadir, "storage")
+      with open(storagef, 'w') as storagefh:
+        storagefh.write(yaml.dump({
+          "dtype": str(self.dtype),
+          "cparams": str(self.cparams),
+          "chunklen": str(self._chunklen),
+          }))
+
+
+  def read_meta(self):
+      """Read persistent metadata."""
+      # First read the shape
+      shapef = os.path.join(self.metadir, "shape")
+      with open(shapef, 'r') as shapefh:
+        data = shapefh.read()
+      if data.startswith('('):
+        shape = tuple(data)
+      else:
+        shape = int(data)
+      # Then the other metadata the shape
+      storagef = os.path.join(self.metadir, "storage")
+      with open(storagef, 'r') as storagefh:
+        data = yaml.load(storagefh.read())
+      dtype_ = data["dtype"]
+      chunklen = data["chunklen"]
+      cparams = data["cparams"]
+      return(shape, dtype_, chunklen, cparams)
 
 
   def append(self, object array):
