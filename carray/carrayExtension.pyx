@@ -495,6 +495,7 @@ cdef class carray:
   cdef npy_intp _nrow, nrowsread
   cdef npy_intp _nbytes, _cbytes
   cdef npy_intp nhits, limit, skip
+  cdef npy_intp expectedlen
   cdef char *lastchunk
   cdef object lastchunkarr, where_arr, arr1
   cdef object _cparams, _dflt
@@ -612,6 +613,7 @@ cdef class carray:
     if expectedlen is None:
       # Try a guess
       expectedlen = len(array_)
+    self.expectedlen = expectedlen
     if chunklen is None:
       # Try a guess
       chunksize = utils.calc_chunksize((expectedlen * atomsize) / float(_MB))
@@ -685,8 +687,13 @@ cdef class carray:
       with open(storagef, 'w') as storagefh:
         storagefh.write(yaml.dump({
           "dtype": str(self.dtype),
-          "cparams": str(self.cparams),
-          "chunklen": str(self._chunklen),
+          "cparams": {
+            "clevel": self.cparams.clevel,
+            "shuffle": self.cparams.shuffle,
+            },
+          "chunklen": self._chunklen,
+          "expectedlen": self.expectedlen,
+          "dflt": self.dflt.item(),  # XXX Fix for dtype.shape != ()
           }))
 
 
@@ -704,10 +711,14 @@ cdef class carray:
       storagef = os.path.join(self.metadir, "storage")
       with open(storagef, 'r') as storagefh:
         data = yaml.load(storagefh.read())
-      dtype_ = data["dtype"]
+      dtype_ = np.dtype(data["dtype"])
       chunklen = data["chunklen"]
-      cparams = data["cparams"]
-      return(shape, dtype_, chunklen, cparams)
+      cparams = ca.cparams(
+        clevel = data["cparams"]["clevel"],
+        shuffle = data["cparams"]["shuffle"])
+      expectedlen = data["expectedlen"]
+      dflt = data["dflt"]
+      return(shape, dtype_, chunklen, cparams, expectedlen, dflt)
 
 
   def append(self, object array):
