@@ -553,11 +553,9 @@ cdef class carray:
                 object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None,
                 object rootdir=None):
-    cdef int i, itemsize, atomsize, chunksize, leftover, nchunks
-    cdef npy_intp nbytes, cbytes
-    cdef ndarray array_, remainder, lastchunkarr
-    cdef chunk chunk_
-    cdef object _dflt
+    cdef int itemsize, atomsize, chunksize
+    cdef ndarray lastchunkarr
+    cdef object array_, _dflt
 
     # Check defaults for cparams
     if cparams is None:
@@ -638,23 +636,11 @@ cdef class carray:
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
-    # The number of bytes in incoming array
-    nbytes = itemsize * array_.size
-    self._nbytes = nbytes
+    if array_ is not None:
+      self.fill_chunks(array_)
 
-    # Compress data in chunks
-    cbytes = 0
-    nchunks = nbytes // <npy_intp>chunksize
-    for i from 0 <= i < nchunks:
-      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen], dtype, cparams)
-      chunks.append(chunk_)
-      cbytes += chunk_.cbytes
-    self.leftover = leftover = nbytes % chunksize
-    if leftover:
-      remainder = array_[nchunks*chunklen:]
-      memcpy(self.lastchunk, remainder.data, leftover)
-    cbytes += self._chunksize  # count the space in last chunk
-    self._cbytes = cbytes
+    # Cache a len-1 array for accelerating self[int] case
+    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
 
     # Sentinels
     self.sss_mode = False
@@ -662,8 +648,33 @@ cdef class carray:
     self.where_mode = False
     self.idxcache = -1       # cache not initialized
 
-    # Cache a len-1 array for accelerating self[int] case
-    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
+
+  def fill_chunks(self, object array_):
+    """Fill chunks, either in-memory or on-disk."""
+    cdef int i, leftover, nchunks, chunklen
+    cdef npy_intp nbytes, cbytes
+    cdef chunk chunk_
+    cdef ndarray remainder
+
+    # The number of bytes in incoming array
+    nbytes = self.itemsize * array_.size
+    self._nbytes = nbytes
+
+    # Compress data in chunks
+    cbytes = 0
+    chunklen = self._chunklen
+    nchunks = nbytes // <npy_intp>self._chunksize
+    for i from 0 <= i < nchunks:
+      chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
+                     self._dtype, self._cparams)
+      self.chunks.append(chunk_)
+      cbytes += chunk_.cbytes
+    self.leftover = leftover = nbytes % self._chunksize
+    if leftover:
+      remainder = array_[nchunks*chunklen:]
+      memcpy(self.lastchunk, remainder.data, leftover)
+    cbytes += self._chunksize  # count the space in last chunk
+    self._cbytes = cbytes
 
 
   def mkdirs(self, object rootdir):
