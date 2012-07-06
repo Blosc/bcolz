@@ -423,7 +423,7 @@ cdef class Chunks(object):
     cdef object datadir
     cdef int nchunks
 
-    def __init__(self, object datadir):
+    def __init__(self, object datadir, _new=False):
       self.datadir = datadir
       self.nchunks = 0
 
@@ -549,10 +549,56 @@ cdef class carray:
       return (self.len,) + self._dtype.shape
 
 
-  def __cinit__(self, object array, object cparams=None,
+  def __cinit__(self, object array=None, object cparams=None,
                 object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None,
                 object rootdir=None):
+
+    if array is not None:
+      self.create_carray(array, cparams, dtype, dflt,
+                         expectedlen, chunklen, rootdir)
+    elif rootdir is not None:
+      self.open_carray(self.read_meta(rootdir))
+    else:
+      raise ValueError("You need at least to pass an array or/and a rootdir")
+
+    # Cache a len-1 array for accelerating self[int] case
+    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
+
+    # Sentinels
+    self.sss_mode = False
+    self.wheretrue_mode = False
+    self.where_mode = False
+    self.idxcache = -1       # cache not initialized
+
+
+  def open_carray(self, shape, cparams, dtype, dflt,
+                  expectedlen, chunklen, rootdir):
+    """Open an existing array."""
+    cdef ndarray lastchunkarr
+    cdef object array_, _dflt
+
+    self._cparams = cparams
+    self._dtype = dtype
+    self.atomsize = dtype.itemsize
+    self.itemsize = dtype.base.itemsize
+    self._chunklen = chunklen
+    self._chunksize = chunklen * self.atomsize
+    self._dflt = dflt
+    self.expectedlen = expectedlen
+
+    # Book memory for last chunk (uncompressed)
+    lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
+    self.lastchunk = lastchunkarr.data
+    self.lastchunkarr = lastchunkarr
+
+    # Finally, open data directory
+    self.chunks = Chunks(rootdir, _new=False)
+
+
+  def create_carray(self, array, cparams, dtype, dflt,
+                    expectedlen, chunklen, rootdir):
+    """Create a new array."""
     cdef int itemsize, atomsize, chunksize
     cdef ndarray lastchunkarr
     cdef object array_, _dflt
@@ -587,6 +633,9 @@ cdef class carray:
     if dtype.itemsize >= 2**31:
       raise ValueError, "atomic size is too large (>= 2 GB)"
 
+    self.atomsize = atomsize = dtype.itemsize
+    self.itemsize = itemsize = dtype.base.itemsize
+
     # Check defaults for dflt
     _dflt = np.zeros((), dtype=dtype)
     if dflt is not None:
@@ -599,13 +648,10 @@ cdef class carray:
     # Create layout for data and metadata
     self._cparams = cparams
     if rootdir is None:
-      self.chunks = chunks = []
+      self.chunks = []
     else:
       self.mkdirs(rootdir)
-      self.chunks = chunks = Chunks(rootdir)
-
-    self.atomsize = atomsize = dtype.itemsize
-    self.itemsize = itemsize = dtype.base.itemsize
+      self.chunks = Chunks(rootdir, _new=True)
 
     # Compute the chunklen/chunksize
     if expectedlen is None:
@@ -636,17 +682,8 @@ cdef class carray:
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
-    if array_ is not None:
-      self.fill_chunks(array_)
-
-    # Cache a len-1 array for accelerating self[int] case
-    self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
-
-    # Sentinels
-    self.sss_mode = False
-    self.wheretrue_mode = False
-    self.where_mode = False
-    self.idxcache = -1       # cache not initialized
+    # Finally, fill the chunks
+    self.fill_chunks(array_)
 
 
   def fill_chunks(self, object array_):
@@ -729,7 +766,7 @@ cdef class carray:
         shuffle = data["cparams"]["shuffle"])
       expectedlen = data["expectedlen"]
       dflt = data["dflt"]
-      return(shape, dtype_, chunklen, cparams, expectedlen, dflt)
+      return(shape, cparams, dtype_, dflt, expectedlen, chunklen)
 
 
   def append(self, object array):
