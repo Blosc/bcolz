@@ -592,6 +592,16 @@ cdef class carray:
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
+    self.rootdir = rootdir
+    if not os.path.isdir(self.rootdir):
+      raise RuntimeError("root directory does not exist")
+    self.datadir = os.path.join(rootdir, 'data')
+    if not os.path.isdir(self.datadir):
+      raise RuntimeError("data directory does not exist")
+    self.metadir = os.path.join(rootdir, 'meta')
+    if not os.path.isdir(self.metadir):
+      raise RuntimeError("meta directory does not exist")
+
     # Finally, open data directory
     self.chunks = Chunks(rootdir, _new=False)
 
@@ -651,7 +661,7 @@ cdef class carray:
       self.chunks = []
     else:
       self.mkdirs(rootdir)
-      self.chunks = Chunks(rootdir, _new=True)
+      self.chunks = Chunks(self.datadir, _new=True)
 
     # Compute the chunklen/chunksize
     if expectedlen is None:
