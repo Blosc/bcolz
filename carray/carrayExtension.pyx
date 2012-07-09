@@ -194,7 +194,7 @@ cdef int true_count(char *data, int nbytes):
 
 cdef class chunk:
   """
-  chunk(array, cparams)
+  chunk(array, atom, cparams)
 
   Compressed in-memory container for a data chunk.
 
@@ -418,17 +418,111 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
             struct.pack('<q', nchunks if nchunks is not None else -1))
 
 
+def decode_byte(byte):
+  return int(byte.encode('hex'), 16)
+def decode_uint32(fourbyte):
+  return struct.unpack('<I', fourbyte)[0]
+
+cdef decode_blosc_header(buffer_):
+    """ Read and decode header from compressed Blosc buffer.
+
+    Parameters
+    ----------
+    buffer_ : string of bytes
+        the compressed buffer
+
+    Returns
+    -------
+    settings : dict
+        a dict containing the settings from Blosc
+
+    Notes
+    -----
+
+    The Blosc 1.1.3 header is 16 bytes as follows:
+
+    |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
+      ^   ^   ^   ^ |     nbytes    |   blocksize   |    ctbytes    |
+      |   |   |   |
+      |   |   |   +--typesize
+      |   |   +------flags
+      |   +----------versionlz
+      +--------------version
+
+    The first four are simply bytes, the last three are are each unsigned ints
+    (uint32) each occupying 4 bytes. The header is always little-endian.
+    'ctbytes' is the length of the buffer including header and nbytes is the
+    length of the data when uncompressed.
+
+    """
+    return {'version': decode_byte(buffer_[0]),
+            'versionlz': decode_byte(buffer_[1]),
+            'flags': decode_byte(buffer_[2]),
+            'typesize': decode_byte(buffer_[3]),
+            'nbytes': decode_uint32(buffer_[4:8]),
+            'blocksize': decode_uint32(buffer_[8:12]),
+            'ctbytes': decode_uint32(buffer_[12:16])}
+
+
 cdef class Chunks(object):
     """Store the different carray chunks in dirname."""
     cdef object datadir
-    cdef int nchunks
+    cdef object dtype, cparams, shape
+    cdef int nchunks, chunksize
+    cdef char *lastchunk
 
-    def __init__(self, object datadir, _new=False):
+    def __init__(self, object datadir, object metainfo=None, _new=False):
+      cdef ndarray lastchunkarr
+      cdef void *decompressed, *compressed
+      cdef int leftover
+      cdef size_t chunksize
+
       self.datadir = datadir
       self.nchunks = 0
+      self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
+      self.chunksize = len(lastchunkarr) * self.dtype.itemsize
+      self.lastchunk = lastchunkarr.data
+      leftover = np.prod(self.shape) % len(lastchunkarr)
+      if not _new and leftover:
+        # Fill lastchunk with data on disk
+        last_chunk = np.prod(self.shape) / len(lastchunkarr)
+        print "last chunk->", last_chunk
+        compressed = PyString_AsString(self.read_chunk(last_chunk))
+        blosc_decompress(compressed, self.lastchunk, self.chunksize)
 
     def __getitem__(self, object nchunk):
-        raise NotImplementedError
+      cdef object chunk_
+      cdef void *decompressed, *compressed
+      cdef object sdecomp, adecomp
+
+      #print "Getting chunk: %d" % nchunk
+      compressed = PyString_AsString(self.read_chunk(nchunk))
+      decompressed = malloc(self.chunksize)
+      blosc_decompress(compressed, decompressed, self.chunksize)
+      sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
+      adecomp = np.fromstring(sdecomp, dtype=self.dtype)
+      chunk_ = chunk(adecomp, self.dtype, self.cparams)
+      free(decompressed)
+      return chunk_
+
+    cdef read_chunk(self, nchunk):
+      """Read a chunk and return it in compressed form."""
+      dname = "__%d%s" % (nchunk, EXTENSION)
+      schunkfile = os.path.join(self.datadir, dname)
+      if not os.path.exists(schunkfile):
+        raise ValueError("chunkfile %s not found" % schunkfile)
+      with open(schunkfile, 'rb') as schunk:
+        bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
+        blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
+        blosc_header = decode_blosc_header(blosc_header_raw)
+        print 'blosc_header: %s' % repr(blosc_header)
+        ctbytes = blosc_header['ctbytes']
+        nbytes = blosc_header['nbytes']
+        # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
+        # position
+        schunk.seek(-BLOSC_HEADER_LENGTH, 1)
+        compressed = schunk.read(ctbytes)
+      return compressed
 
     def __setitem__(self, object nchunk, object chunk_):
       self._save(nchunk, chunk_)
@@ -554,11 +648,13 @@ cdef class carray:
                 object expectedlen=None, object chunklen=None,
                 object rootdir=None):
 
+    self.rootdir = rootdir
     if array is not None:
       self.create_carray(array, cparams, dtype, dflt,
                          expectedlen, chunklen, rootdir)
     elif rootdir is not None:
-      self.open_carray(self.read_meta(rootdir))
+      meta_info = self.read_meta()
+      self.open_carray(*meta_info)
     else:
       raise ValueError("You need at least to pass an array or/and a rootdir")
 
@@ -573,11 +669,12 @@ cdef class carray:
 
 
   def open_carray(self, shape, cparams, dtype, dflt,
-                  expectedlen, chunklen, rootdir):
+                  expectedlen, cbytes, chunklen):
     """Open an existing array."""
     cdef ndarray lastchunkarr
     cdef object array_, _dflt
 
+    print "Obrint un carray a:", self.rootdir
     self._cparams = cparams
     self._dtype = dtype
     self.atomsize = dtype.itemsize
@@ -592,18 +689,24 @@ cdef class carray:
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
-    self.rootdir = rootdir
+    # Check rootdir hierarchy
     if not os.path.isdir(self.rootdir):
       raise RuntimeError("root directory does not exist")
-    self.datadir = os.path.join(rootdir, 'data')
+    self.datadir = os.path.join(self.rootdir, 'data')
     if not os.path.isdir(self.datadir):
       raise RuntimeError("data directory does not exist")
-    self.metadir = os.path.join(rootdir, 'meta')
+    self.metadir = os.path.join(self.rootdir, 'meta')
     if not os.path.isdir(self.metadir):
       raise RuntimeError("meta directory does not exist")
 
     # Finally, open data directory
-    self.chunks = Chunks(rootdir, _new=False)
+    metainfo = (dtype, cparams, shape, lastchunkarr)
+    self.chunks = Chunks(self.datadir, metainfo=metainfo, _new=False)
+
+    # Update some counters
+    self.leftover = np.product(shape) % chunklen
+    self._cbytes = cbytes
+    self._nbytes = np.product(shape) * dtype.itemsize
 
 
   def create_carray(self, array, cparams, dtype, dflt,
@@ -655,14 +758,6 @@ cdef class carray:
         _dflt[:] = dflt
     self._dflt = _dflt
 
-    # Create layout for data and metadata
-    self._cparams = cparams
-    if rootdir is None:
-      self.chunks = []
-    else:
-      self.mkdirs(rootdir)
-      self.chunks = Chunks(self.datadir, _new=True)
-
     # Compute the chunklen/chunksize
     if expectedlen is None:
       # Try a guess
@@ -684,16 +779,24 @@ cdef class carray:
     self._chunksize = chunksize
     self._chunklen = chunklen
 
-    if rootdir is not None:
-      self.write_meta()
-
     # Book memory for last chunk (uncompressed)
     lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
+    # Create layout for data and metadata
+    self._cparams = cparams
+    if rootdir is None:
+      self.chunks = []
+    else:
+      self.mkdirs(rootdir)
+      metainfo = (dtype, cparams, self.shape, lastchunkarr)
+      self.chunks = Chunks(self.datadir, metainfo=metainfo, _new=True)
+
     # Finally, fill the chunks
     self.fill_chunks(array_)
+    if rootdir is not None:
+      self.write_meta()
 
 
   def fill_chunks(self, object array_):
@@ -751,32 +854,35 @@ cdef class carray:
             },
           "chunklen": self._chunklen,
           "expectedlen": self.expectedlen,
+          "cbytes": self.cbytes,
           "dflt": self.dflt.item(),  # XXX Fix for dtype.shape != ()
           }))
 
 
   def read_meta(self):
-      """Read persistent metadata."""
-      # First read the shape
-      shapef = os.path.join(self.metadir, "shape")
-      with open(shapef, 'r') as shapefh:
-        data = shapefh.read()
-      if data.startswith('('):
-        shape = tuple(data)
-      else:
-        shape = int(data)
-      # Then the other metadata the shape
-      storagef = os.path.join(self.metadir, "storage")
-      with open(storagef, 'r') as storagefh:
-        data = yaml.load(storagefh.read())
-      dtype_ = np.dtype(data["dtype"])
-      chunklen = data["chunklen"]
-      cparams = ca.cparams(
-        clevel = data["cparams"]["clevel"],
-        shuffle = data["cparams"]["shuffle"])
-      expectedlen = data["expectedlen"]
-      dflt = data["dflt"]
-      return(shape, cparams, dtype_, dflt, expectedlen, chunklen)
+    """Read persistent metadata."""
+    # First read the shape
+    metadir = os.path.join(self.rootdir, "meta")
+    shapef = os.path.join(metadir, "shape")
+    with open(shapef, 'r') as shapefh:
+      data = shapefh.read()
+    if data.startswith('('):
+      shape = tuple(data)
+    else:
+      shape = int(data)
+    # Then the other metadata the shape
+    storagef = os.path.join(metadir, "storage")
+    with open(storagef, 'r') as storagefh:
+      data = yaml.load(storagefh.read())
+    dtype_ = np.dtype(data["dtype"])
+    chunklen = data["chunklen"]
+    cparams = ca.cparams(
+      clevel = data["cparams"]["clevel"],
+      shuffle = data["cparams"]["shuffle"])
+    expectedlen = data["expectedlen"]
+    dflt = data["dflt"]
+    cbytes = data["cbytes"]
+    return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
 
   def append(self, object array):
