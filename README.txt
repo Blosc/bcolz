@@ -28,9 +28,24 @@ advantage of newer CPUs integrating more cores and wider vector units
 Building
 --------
 
+There are two differnt ways to build from sources, depending on how you obtained
+them.
+
+From tarball
+~~~~~~~~~~~~
+
 Assuming that you have NumPy, Cython and a C compiler installed, do:
 
 $ python setup.py build_ext --inplace
+
+From Git clone
+~~~~~~~~~~~~~~
+
+To build in a git clone you must use `paver <http://paver.github.com/paver/>`_
+and then issue:
+
+$ paver build
+
 
 Testing
 -------
@@ -45,9 +60,21 @@ $ python carray/tests/tests_all.py
 Installing
 ----------
 
+Installation, like building, depends on how you obtained the sources.
+
+From tarball
+~~~~~~~~~~~~
+
 Install it as a typical Python package:
 
 $ python setup.py install
+
+From Git clone
+~~~~~~~~~~~~~~
+
+Again, using paver:
+
+$ paver install
 
 Documentation
 -------------
