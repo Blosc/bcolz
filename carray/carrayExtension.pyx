@@ -465,86 +465,99 @@ cdef decode_blosc_header(buffer_):
 
 
 cdef class Chunks(object):
-    """Store the different carray chunks in dirname."""
-    cdef object datadir
-    cdef object dtype, cparams, shape
-    cdef int nchunks, chunksize
-    cdef char *lastchunk
+  """Store the different carray chunks in a directory on-disk."""
+  cdef object datadir
+  cdef object dtype, cparams, shape
+  cdef int nchunks, chunksize
+  cdef char *lastchunk
 
-    def __init__(self, object datadir, object metainfo=None, _new=False):
-      cdef ndarray lastchunkarr
-      cdef void *decompressed, *compressed
-      cdef int leftover
-      cdef size_t chunksize
+  def __init__(self, object datadir, object metainfo=None, _new=False):
+    cdef ndarray lastchunkarr
+    cdef void *decompressed, *compressed
+    cdef int leftover
+    cdef size_t chunksize
+    cdef object scomp
 
-      self.datadir = datadir
-      self.nchunks = 0
-      self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
-      self.chunksize = len(lastchunkarr) * self.dtype.itemsize
-      self.lastchunk = lastchunkarr.data
-      leftover = np.prod(self.shape) % len(lastchunkarr)
-      if not _new and leftover:
-        # Fill lastchunk with data on disk
-        last_chunk = np.prod(self.shape) / len(lastchunkarr)
-        compressed = PyString_AsString(self.read_chunk(last_chunk))
-        blosc_decompress(compressed, self.lastchunk, self.chunksize)
+    self.datadir = datadir
+    self.nchunks = 0
+    self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
+    self.chunksize = len(lastchunkarr) * self.dtype.itemsize
+    self.lastchunk = lastchunkarr.data
+    leftover = np.prod(self.shape) % len(lastchunkarr)
+    if not _new and leftover:
+      # Fill lastchunk with data on disk
+      last_chunk = np.prod(self.shape) / len(lastchunkarr)
+      scomp = self.read_chunk(last_chunk)
+      compressed = PyString_AsString(scomp)
+      blosc_decompress(compressed, self.lastchunk, self.chunksize)
 
-    def __getitem__(self, object nchunk):
-      cdef object chunk_
-      cdef void *decompressed, *compressed
-      cdef object sdecomp, adecomp
 
-      #print "Getting chunk: %d" % nchunk
-      compressed = PyString_AsString(self.read_chunk(nchunk))
-      decompressed = malloc(self.chunksize)
-      blosc_decompress(compressed, decompressed, self.chunksize)
-      sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
-      adecomp = np.fromstring(sdecomp, dtype=self.dtype)
-      chunk_ = chunk(adecomp, self.dtype, self.cparams)
-      free(decompressed)
-      return chunk_
+  def __getitem__(self, object nchunk):
+    cdef object chunk_
+    cdef void *decompressed, *compressed
+    cdef object scomp, sdecomp, adecomp
 
-    cdef read_chunk(self, nchunk):
-      """Read a chunk and return it in compressed form."""
-      dname = "__%d%s" % (nchunk, EXTENSION)
-      schunkfile = os.path.join(self.datadir, dname)
-      if not os.path.exists(schunkfile):
-        raise ValueError("chunkfile %s not found" % schunkfile)
-      with open(schunkfile, 'rb') as schunk:
-        bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
-        blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
-        blosc_header = decode_blosc_header(blosc_header_raw)
-        #print 'blosc_header: %s' % repr(blosc_header)
-        ctbytes = blosc_header['ctbytes']
-        nbytes = blosc_header['nbytes']
-        # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
-        # position
-        schunk.seek(-BLOSC_HEADER_LENGTH, 1)
-        compressed = schunk.read(ctbytes)
-      return compressed
+    #print "Getting chunk: %d" % nchunk
+    scomp = self.read_chunk(nchunk)
+    compressed = PyString_AsString(scomp)
+    decompressed = malloc(self.chunksize)
+    blosc_decompress(compressed, decompressed, self.chunksize)
+    sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
+    adecomp = np.fromstring(sdecomp, dtype=self.dtype)
+    chunk_ = chunk(adecomp, self.dtype, self.cparams)
+    free(decompressed)
+    return chunk_
 
-    def __setitem__(self, object nchunk, object chunk_):
-      self._save(nchunk, chunk_)
 
-    def __len__(self):
-      return self.nchunks
+  cdef read_chunk(self, nchunk):
+    """Read a chunk and return it in compressed form."""
+    dname = "__%d%s" % (nchunk, EXTENSION)
+    schunkfile = os.path.join(self.datadir, dname)
+    if not os.path.exists(schunkfile):
+      raise ValueError("chunkfile %s not found" % schunkfile)
+    with open(schunkfile, 'rb') as schunk:
+      bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
+      blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
+      blosc_header = decode_blosc_header(blosc_header_raw)
+      #print 'blosc_header: %s' % repr(blosc_header)
+      ctbytes = blosc_header['ctbytes']
+      nbytes = blosc_header['nbytes']
+      # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
+      # position
+      schunk.seek(-BLOSC_HEADER_LENGTH, 1)
+      compressed = schunk.read(ctbytes)
+    return compressed
 
-    def append(self, object chunk_):
-      self._save(self.nchunks, chunk_)
-      self.nchunks += 1
 
-    cdef _save(self, nchunk, chunk):
-      dname = "__%d%s" % (nchunk, EXTENSION)
-      schunkfile = os.path.join(self.datadir, dname)
-      if os.path.exists(schunkfile):
-        raise ValueError("filename %s already exists" % schunkfile)
-      bloscpack_header = create_bloscpack_header(1)
-      with open(schunkfile, 'wb') as schunk:
-        schunk.write(bloscpack_header)
-        schunk.write(chunk.getdata())
+  def __setitem__(self, object nchunk, object chunk_):
+    self._save(nchunk, chunk_)
 
-    def pop(self):
-      raise NotImplementedError
+
+  def __len__(self):
+    return self.nchunks
+
+
+  def append(self, object chunk_):
+    #print "append nchunk ->", self.nchunks
+    self._save(self.nchunks, chunk_)
+    self.nchunks += 1
+
+
+  cdef _save(self, nchunk, chunk_):
+    cdef object data
+    dname = "__%d%s" % (nchunk, EXTENSION)
+    schunkfile = os.path.join(self.datadir, dname)
+    if os.path.exists(schunkfile):
+      raise ValueError("filename %s already exists" % schunkfile)
+    bloscpack_header = create_bloscpack_header(1)
+    with open(schunkfile, 'wb') as schunk:
+      schunk.write(bloscpack_header)
+      data = chunk_.getdata()
+      schunk.write(data)
+
+
+  def pop(self):
+    raise NotImplementedError
 
 
 cdef class carray:
@@ -813,6 +826,7 @@ cdef class carray:
     chunklen = self._chunklen
     nchunks = nbytes // <npy_intp>self._chunksize
     for i from 0 <= i < nchunks:
+      assert i*chunklen < array_.size, "i, nchunks: %d, %d" % (i, nchunks)
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
                      self._dtype, self._cparams)
       self.chunks.append(chunk_)
