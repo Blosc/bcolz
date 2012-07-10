@@ -486,7 +486,6 @@ cdef class Chunks(object):
       if not _new and leftover:
         # Fill lastchunk with data on disk
         last_chunk = np.prod(self.shape) / len(lastchunkarr)
-        print "last chunk->", last_chunk
         compressed = PyString_AsString(self.read_chunk(last_chunk))
         blosc_decompress(compressed, self.lastchunk, self.chunksize)
 
@@ -515,7 +514,7 @@ cdef class Chunks(object):
         bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
         blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
         blosc_header = decode_blosc_header(blosc_header_raw)
-        print 'blosc_header: %s' % repr(blosc_header)
+        #print 'blosc_header: %s' % repr(blosc_header)
         ctbytes = blosc_header['ctbytes']
         nbytes = blosc_header['nbytes']
         # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
@@ -674,7 +673,6 @@ cdef class carray:
     cdef ndarray lastchunkarr
     cdef object array_, _dflt
 
-    print "Obrint un carray a:", self.rootdir
     self._cparams = cparams
     self._dtype = dtype
     self.atomsize = dtype.itemsize
