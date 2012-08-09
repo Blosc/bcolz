@@ -564,13 +564,15 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
         if i == 0:
             # Detection of reduction operations
             scalar = False
+            dim_reduction = False
             if len(res_block.shape) == 0:
                 scalar = True
                 result = res_block
                 continue
             elif len(res_block.shape) < maxndims:
-                raise (NotImplementedError,
-                       "reduction operations are not supported yet")
+                dim_reduction = True
+                result = res_block
+                continue
             # Get a decent default for expectedlen
             if out_flavor == "carray":
                 nrows = kwargs.pop('expectedlen', vlen)
@@ -579,7 +581,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 result = np.empty((vlen,), dtype=res_block.dtype)
                 result[:bsize] = res_block
         else:
-            if scalar:
+            if scalar or dim_reduction:
                 result += res_block
             elif out_flavor == "carray":
                 result.append(res_block)

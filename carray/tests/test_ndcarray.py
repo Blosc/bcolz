@@ -560,26 +560,26 @@ class evalTest(unittest.TestCase):
         assert_array_equal(outa, outb, "Arrays are not equal")
 
     def test02(self):
-        """Testing evaluation of ndcarrays (reduction)"""
+        """Testing evaluation of ndcarrays (reduction, no axis)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
         if ca.defaults.eval_vm == "python":
-            self.assertRaises(NotImplementedError,
-                              ca.eval, "sum(b)", depth=3)
+            assert_array_equal(sum(a), ca.eval("sum(b)"),
+                               "Arrays are not equal")
         else:
             self.assertEqual(a.sum(), ca.eval("sum(b)"))
 
     def test02b(self):
-        """Testing evaluation of ndcarrays (reduction)"""
-        # Reduction ops in axis are not supported yet
+        """Testing evaluation of ndcarrays (reduction, with axis)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
         if ca.defaults.eval_vm == "python":
-            self.assertRaises(NotImplementedError,
-                              ca.eval, "sum(b)", depth=3)
+            # The Python VM does not have support for `axis` param
+            assert_array_equal(sum(a), ca.eval("sum(b)"),
+                               "Arrays are not equal")
         else:
-            self.assertRaises(NotImplementedError,
-                              ca.eval, "sum(b, axis=0)", depth=3)
+            assert_array_equal(a.sum(axis=1), ca.eval("sum(b, axis=1)"),
+                               "Arrays are not equal")
 
 class d2eval_python(evalTest):
     shape = (3,4)

@@ -9,8 +9,8 @@ Release notes for carray
 Changes from 0.4 to 0.5
 =======================
 
-- Reductions (`sum` and `prod`) work now when the output is an scalar.
-  They still raises a `NotImplementedError` when the output is an array.
+- Reductions (`sum` and `prod`) work now, even with the `axis` parameter
+  (when using the Numexpr virtual machine).
 
 
 Changes from 0.3.2 to 0.4
