@@ -28,13 +28,21 @@ print "time open (disk) ->", round(time()-t0, 3)
 print "data (disk):", repr(c)
 
 t0 = time()
-sum(ac)
-print "time sum (memory) ->", round(time()-t0, 3)
+print sum(ac)
+print "time sum (memory, iter) ->", round(time()-t0, 3)
 
 t0 = time()
-sum(c)
-print "time sum (disk) ->", round(time()-t0, 3)
+print sum(c)
+print "time sum (disk, iter) ->", round(time()-t0, 3)
 
 t0 = time()
-sum(a)
+print ca.eval('sum(ac)')
+print "time sum (memory, eval) ->", round(time()-t0, 3)
+
+t0 = time()
+print ca.eval('sum(c)')
+print "time sum (disk, eval) ->", round(time()-t0, 3)
+
+t0 = time()
+print np.sum(a)
 print "time sum (numpy) ->", round(time()-t0, 3)

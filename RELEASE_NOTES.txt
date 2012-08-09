@@ -2,8 +2,15 @@
 Release notes for carray
 ========================
 
-:Author: Francesc Alted i Abad
-:Contact: faltet@pytables.org
+:Author: Francesc Alted
+:Contact: faltet@gmail.com
+
+
+Changes from 0.4 to 0.5
+=======================
+
+- Reductions (`sum` and `prod`) work now when the output is an scalar.
+  They still raises a `NotImplementedError` when the output is an array.
 
 
 Changes from 0.3.2 to 0.4

@@ -563,7 +563,12 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
         if i == 0:
             # Detection of reduction operations
-            if len(res_block.shape) < maxndims:
+            scalar = False
+            if len(res_block.shape) == 0:
+                scalar = True
+                result = res_block
+                continue
+            elif len(res_block.shape) < maxndims:
                 raise (NotImplementedError,
                        "reduction operations are not supported yet")
             # Get a decent default for expectedlen
@@ -574,12 +579,17 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 result = np.empty((vlen,), dtype=res_block.dtype)
                 result[:bsize] = res_block
         else:
-            if out_flavor == "carray":
+            if scalar:
+                result += res_block
+            elif out_flavor == "carray":
                 result.append(res_block)
             else:
                 result[i:i+bsize] = res_block
 
-    return result
+    if scalar:
+        return result[()]
+    else:
+        return result
 
 
 class cparams(object):

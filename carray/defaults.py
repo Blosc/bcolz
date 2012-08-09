@@ -44,7 +44,7 @@ class Defaults(object):
         if value == "numexpr" and not ca.numexpr_here:
             raise (ValueError,
                    "cannot use `numexpr` virtual machine "
-                   "(minimum version is probably not installed)")
+                   "(minimum required version is probably not installed)")
         self.__eval_vm = value
 
     @property

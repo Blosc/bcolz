@@ -561,31 +561,41 @@ class evalTest(unittest.TestCase):
 
     def test02(self):
         """Testing evaluation of ndcarrays (reduction)"""
-        # Reduction ops are not supported yet
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
-        if ca.defaults.eval_vm:
+        if ca.defaults.eval_vm == "python":
+            self.assertRaises(NotImplementedError,
+                              ca.eval, "sum(b)", depth=3)
+        else:
+            self.assertEqual(a.sum(), ca.eval("sum(b)"))
+
+    def test02b(self):
+        """Testing evaluation of ndcarrays (reduction)"""
+        # Reduction ops in axis are not supported yet
+        a = np.arange(np.prod(self.shape)).reshape(self.shape)
+        b = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        if ca.defaults.eval_vm == "python":
             self.assertRaises(NotImplementedError,
                               ca.eval, "sum(b)", depth=3)
         else:
             self.assertRaises(NotImplementedError,
-                              ca.eval, "b.sum(axis=0)", depth=3)
+                              ca.eval, "sum(b, axis=0)", depth=3)
 
-class d2evalTest(evalTest):
+class d2eval_python(evalTest):
     shape = (3,4)
 
 class d2eval_ne(evalTest):
     shape = (3,4)
     vm = "numexpr"
 
-class d3evalTest(evalTest):
+class d3eval_python(evalTest):
     shape = (3,4,5)
 
 class d3eval_ne(evalTest):
     shape = (3,4,5)
     vm = "numexpr"
 
-class d4evalTest(evalTest):
+class d4eval_python(evalTest):
     shape = (3,40,50,2)
 
 class d4eval_ne(evalTest):
@@ -622,9 +632,9 @@ def suite():
     theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
     theSuite.addTest(unittest.makeSuite(stringTest))
     theSuite.addTest(unittest.makeSuite(unicodeTest))
-    theSuite.addTest(unittest.makeSuite(d2evalTest))
-    theSuite.addTest(unittest.makeSuite(d3evalTest))
-    theSuite.addTest(unittest.makeSuite(d4evalTest))
+    theSuite.addTest(unittest.makeSuite(d2eval_python))
+    theSuite.addTest(unittest.makeSuite(d3eval_python))
+    theSuite.addTest(unittest.makeSuite(d4eval_python))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(d2eval_ne))
