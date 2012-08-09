@@ -547,8 +547,8 @@ cdef class Chunks(object):
     cdef object data
     dname = "__%d%s" % (nchunk, EXTENSION)
     schunkfile = os.path.join(self.datadir, dname)
-    if os.path.exists(schunkfile):
-      raise ValueError("filename %s already exists" % schunkfile)
+    # if os.path.exists(schunkfile):
+    #   raise ValueError("filename %s already exists" % schunkfile)
     bloscpack_header = create_bloscpack_header(1)
     with open(schunkfile, 'wb') as schunk:
       schunk.write(bloscpack_header)

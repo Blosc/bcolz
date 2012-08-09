@@ -2,17 +2,18 @@ import numpy as np
 import carray as ca
 from time import time
 
-N = 1 * 1000 * 1000
+N = 10 * 1000 * 1000
+CLEVEL = 5
 
 a = np.linspace(0, 1, N)
 
 t0 = time()
-ac = ca.carray(a, cparams=ca.cparams(clevel=5))
+ac = ca.carray(a, cparams=ca.cparams(clevel=CLEVEL))
 print "time creation (memory) ->", round(time()-t0, 3)
 print "data (memory):", repr(ac)
 
 t0 = time()
-b = ca.carray(a, cparams=ca.cparams(clevel=5), rootdir='myarray')
+b = ca.carray(a, cparams=ca.cparams(clevel=CLEVEL), rootdir='myarray')
 b.flush()
 print "time creation (disk) ->", round(time()-t0, 3)
 #print "meta (disk):", b.read_meta()
