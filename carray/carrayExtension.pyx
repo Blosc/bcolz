@@ -513,7 +513,6 @@ cdef class Chunks(object):
     cdef void *decompressed, *compressed
     cdef object scomp, sdecomp, adecomp
 
-    #print "Getting chunk: %d" % nchunk
     scomp = self.read_chunk(nchunk)
     compressed = PyString_AsString(scomp)
     decompressed = malloc(self.chunksize)
@@ -550,7 +549,6 @@ cdef class Chunks(object):
     return self.nchunks
 
   def append(self, object chunk_):
-    #print "append nchunk ->", self.nchunks
     self._save(self.nchunks, chunk_)
     self.nchunks += 1
 
@@ -558,8 +556,6 @@ cdef class Chunks(object):
     cdef object data
     dname = "__%d%s" % (nchunk, EXTENSION)
     schunkfile = os.path.join(self.datadir, dname)
-    # if os.path.exists(schunkfile):
-    #   raise ValueError("filename %s already exists" % schunkfile)
     bloscpack_header = create_bloscpack_header(1)
     with open(schunkfile, 'wb') as schunk:
       schunk.write(bloscpack_header)
@@ -567,7 +563,16 @@ cdef class Chunks(object):
       schunk.write(data)
 
   def pop(self):
-    raise NotImplementedError
+    cdef object chunk_
+    nchunk = self.nchunks - 1
+    chunk_ = self.__getitem__(nchunk)
+    dname = "__%d%s" % (nchunk, EXTENSION)
+    schunkfile = os.path.join(self.datadir, dname)
+    if not os.path.exists(schunkfile):
+      raise RuntimeError("chunk filename %s does exist" % schunkfile)
+    os.remove(schunkfile)
+    self.nchunks -= 1
+    return chunk_
 
 
 cdef class carray:
