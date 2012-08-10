@@ -25,10 +25,18 @@ more generally in a short future, when carray will be able to take
 advantage of newer CPUs integrating more cores and wider vector units
 (256 bit and more).
 
+Requisites
+----------
+
+- Python >= 2.6
+- NumPy >= 1.6
+- Cython >= 0.16
+- PyYAML >= 3.10
+
 Building
 --------
 
-Assuming that you have NumPy, Cython and a C compiler installed, do:
+Assuming that you have the requisites and a C compiler installed, do:
 
 $ python setup.py build_ext --inplace
 

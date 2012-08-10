@@ -45,5 +45,13 @@ print ca.eval('sum(c)')
 print "time sum (disk, eval) ->", round(time()-t0, 3)
 
 t0 = time()
-print np.sum(a)
-print "time sum (numpy) ->", round(time()-t0, 3)
+print ac.sum()
+print "time sum (memory, method) ->", round(time()-t0, 3)
+
+t0 = time()
+print c.sum()
+print "time sum (disk, method) ->", round(time()-t0, 3)
+
+t0 = time()
+print a.sum()
+print "time sum (numpy, method) ->", round(time()-t0, 3)

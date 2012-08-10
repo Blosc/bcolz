@@ -198,7 +198,7 @@ cdef class chunk:
   # To save space, keep these variables under a minimum
   cdef char typekind, isconstant
   cdef int atomsize, itemsize, blocksize
-  cdef int nbytes, cbytes
+  cdef int nbytes, cbytes, cdbytes
   cdef int true_count
   cdef char *data
   cdef object atom, constant
@@ -223,6 +223,7 @@ cdef class chunk:
     # Compute the total number of bytes in this array
     nbytes = itemsize * array.size
     footprint = 128  # the (aprox) footprint of this instance in bytes
+    self.isconstant = 0
 
     # Check whether incoming data is constant
     if array.strides[0] == 0 or check_zeros(array.data, nbytes):
@@ -265,7 +266,43 @@ cdef class chunk:
     # Fill instance data
     self.nbytes = nbytes
     self.cbytes = cbytes + footprint
+    self.cdbytes = cbytes
     self.blocksize = blocksize
+
+  def getdata(self, object cparams):
+    """Get a compressed String object out of this chunk (for persistence)."""
+    cdef size_t nbytes, cbytes
+    cdef char *cdata, *dest
+    cdef int clevel, shuffle
+    cdef ndarray constants
+    cdef object string
+
+    if self.isconstant:
+      nbytes = self.nbytes
+      # The chunk is made of constants.  Regenerate the data and compress it.
+      constants = np.ndarray(shape=(nbytes // self.atomsize,),
+                             dtype=self.dtype,
+                             buffer=self.constant,
+                             strides=(0,)
+                             ).copy()
+      # Compress data
+      clevel = cparams.clevel
+      shuffle = cparams.shuffle
+      dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
+      with nogil:
+        cbytes = blosc_compress(clevel, shuffle, self.itemsize, nbytes,
+                                constants.data,
+                                dest, nbytes+BLOSC_MAX_OVERHEAD)
+      if cbytes <= 0:
+        raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
+      # Free the unused data in dest
+      cdata = <char *>realloc(dest, cbytes)
+      string = PyString_FromStringAndSize(cdata, <Py_ssize_t>cbytes)
+      # Free the compressed buffer
+      free(cdata)
+    else:
+      string = PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cdbytes)
+    return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
@@ -290,10 +327,6 @@ cdef class chunk:
         ret = blosc_getitem(self.data, start, blen, dest)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
-
-  def getdata(self):
-    """Get a String object out of this chunk."""
-    return PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cbytes)
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
@@ -530,7 +563,7 @@ cdef class Chunks(object):
     bloscpack_header = create_bloscpack_header(1)
     with open(schunkfile, 'wb') as schunk:
       schunk.write(bloscpack_header)
-      data = chunk_.getdata()
+      data = chunk_.getdata(self.cparams)
       schunk.write(data)
 
   def pop(self):
