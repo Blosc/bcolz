@@ -54,7 +54,6 @@ def csformula(expectedsizeinMB):
     basesize = 1024
     return basesize * int(2**(math.log10(expectedsizeinMB)+6))
 
-
 def limit_es(expectedsizeinMB):
     """Protection against creating too small or too large chunks."""
     if expectedsizeinMB < 1e-4:     # < .1 KB
@@ -62,7 +61,6 @@ def limit_es(expectedsizeinMB):
     elif expectedsizeinMB > 1e4:    # > 10 GB
         expectedsizeinMB = 1e4
     return expectedsizeinMB
-
 
 def calc_chunksize(expectedsizeinMB):
     """Compute the optimum chunksize for memory I/O in carray/ctable.
@@ -85,14 +83,12 @@ def calc_chunksize(expectedsizeinMB):
     chunksize = csformula(expectedsizeinMB)
     return chunksize
 
-
 def get_len_of_range(start, stop, step):
     """Get the length of a (start, stop, step) range."""
     n = 0
     if start < stop:
         n = ((stop - start - 1) // step + 1);
     return n
-
 
 def to_ndarray(array, dtype, arrlen=None):
     """Convert object to a ndarray."""
@@ -127,7 +123,6 @@ def to_ndarray(array, dtype, arrlen=None):
         array = array2
 
     return array
-
 
 def human_readable_size(size):
     """Return a string for better assessing large number of bytes."""

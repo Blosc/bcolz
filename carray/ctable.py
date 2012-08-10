@@ -92,6 +92,7 @@ class ctable(object):
             compression ratio.
 
         """
+
         nbytes, cbytes, ratio = 0, 0, 0.0
         names, cols = self.names, self.cols
         for name in names:
@@ -100,7 +101,6 @@ class ctable(object):
             cbytes += column.cbytes
         cratio = nbytes / float(cbytes)
         return (nbytes, cbytes, cratio)
-
 
     def __init__(self, cols, names=None, **kwargs):
 
@@ -169,7 +169,6 @@ class ctable(object):
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-
     def append(self, rows):
         """
         append(rows)
@@ -226,7 +225,6 @@ class ctable(object):
             clen = clen2
         self.len += clen
 
-
     def trim(self, nitems):
         """
         trim(nitems)
@@ -239,10 +237,10 @@ class ctable(object):
             The number of trailing items to be trimmed.
 
         """
+
         for name in self.names:
             self.cols[name].trim(nitems)
         self.len -= nitems
-
 
     def resize(self, nitems):
         """
@@ -258,10 +256,10 @@ class ctable(object):
             filling values.
 
         """
+
         for name in self.names:
             self.cols[name].resize(nitems)
         self.len = nitems
-
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):
         """
@@ -324,7 +322,6 @@ class ctable(object):
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-
     def delcol(self, name=None, pos=None):
         """
         delcol(name=None, pos=None)
@@ -349,6 +346,7 @@ class ctable(object):
         addcol
 
         """
+
         if name is None and pos is None:
             raise ValueError, "specify either a `name` or a `pos`"
         if name is not None and pos is not None:
@@ -371,7 +369,6 @@ class ctable(object):
         del self.cols[name]
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
-
 
     def copy(self, **kwargs):
         """
@@ -399,14 +396,11 @@ class ctable(object):
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
 
-
     def __len__(self):
         return self.len
 
-
     def __sizeof__(self):
         return self.cbytes
-
 
     def where(self, expression, outcols=None, limit=None, skip=0):
         """
@@ -476,10 +470,8 @@ class ctable(object):
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype)
 
-
     def __iter__(self):
         return self.iter(0, self.len, 1)
-
 
     def iter(self, start=0, stop=None, step=1, outcols=None,
              limit=None, skip=0):
@@ -553,7 +545,6 @@ class ctable(object):
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype)
 
-
     def _iter(self, icols, dtype):
         """Return a list of `icols` iterators with `dtype` names."""
 
@@ -561,7 +552,6 @@ class ctable(object):
         namedt = namedtuple('row', dtype.names)
         iterable = it.imap(namedt, *icols)
         return iterable
-
 
     def _where(self, boolarr, colnames=None):
         """Return rows where `boolarr` is true as an structured array.
@@ -577,7 +567,6 @@ class ctable(object):
         result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
 
         return result
-
 
     def __getitem__(self, key):
         """
@@ -674,7 +663,6 @@ class ctable(object):
 
         return ra
 
-
     def __setitem__(self, key, value):
         """
         x.__setitem__(key, value) <==> x[key] = value
@@ -696,7 +684,6 @@ class ctable(object):
         ctable.eval
 
         """
-
 
         # First, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
@@ -720,7 +707,6 @@ class ctable(object):
         for name in self.names:
             self.cols[name][key] = value[name]
         return
-
 
     def eval(self, expression, **kwargs):
         """
@@ -756,14 +742,12 @@ class ctable(object):
         # Call top-level eval with cols as user_dict
         return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
-
     def __str__(self):
         if self.len > 100:
             return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
                    (self[0], self[1], self[2], self[-3], self[-2], self[-1])
         else:
             return str(self[:])
-
 
     def __repr__(self):
         nbytes, cbytes, cratio = self._get_stats()

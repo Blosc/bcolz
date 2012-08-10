@@ -102,7 +102,6 @@ def _blosc_set_nthreads(nthreads):
   """
   return blosc_set_nthreads(nthreads)
 
-
 def blosc_version():
   """
   blosc_version()
@@ -111,7 +110,6 @@ def blosc_version():
 
   """
   return (<char *>BLOSC_VERSION_STRING, <char *>BLOSC_VERSION_DATE)
-
 
 # This is the same than in utils.py, but works faster in extensions
 cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
@@ -122,7 +120,6 @@ cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
   if start < stop:
       n = ((stop - start - 1) // step + 1);
   return n
-
 
 cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
                 npy_intp start, npy_intp stop, npy_intp step):
@@ -154,7 +151,6 @@ cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
 
   return startb, stopb, blen
 
-
 cdef int check_zeros(char *data, int nbytes):
   """Check whether [data, data+nbytes] is zero or not."""
   cdef int i, iszero, chunklen, leftover
@@ -177,7 +173,6 @@ cdef int check_zeros(char *data, int nbytes):
           break
   return iszero
 
-
 cdef int true_count(char *data, int nbytes):
   """Count the number of true values in data (boolean)."""
   cdef int i, count
@@ -188,9 +183,7 @@ cdef int true_count(char *data, int nbytes):
       count += <int>(data[i])
   return count
 
-
 #-------------------------------------------------------------
-
 
 cdef class chunk:
   """
@@ -214,7 +207,6 @@ cdef class chunk:
     "The NumPy dtype for this chunk."
     def __get__(self):
       return self.atom
-
 
   def __cinit__(self, ndarray array, object atom, object cparams):
     cdef int itemsize, footprint
@@ -275,7 +267,6 @@ cdef class chunk:
     self.cbytes = cbytes + footprint
     self.blocksize = blocksize
 
-
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
     cdef int ret, bsize, blen
@@ -300,11 +291,9 @@ cdef class chunk:
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 
-
   def getdata(self):
     """Get a String object out of this chunk."""
     return PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cbytes)
-
 
   def __getitem__(self, object key):
     """__getitem__(self, key) -> values."""
@@ -346,16 +335,13 @@ cdef class chunk:
       return array[::step]
     return array
 
-
   def __setitem__(self, object key, object value):
     """__setitem__(self, key, value) -> None."""
     raise NotImplementedError
 
-
   def __str__(self):
     """Represent the chunk as an string."""
     return str(self[:])
-
 
   def __repr__(self):
     """Represent the chunk as an string, with additional info."""
@@ -363,7 +349,6 @@ cdef class chunk:
     fullrepr = "chunk(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
         (self.shape, self.dtype, self.nbytes, self.cbytes, cratio, str(self))
     return fullrepr
-
 
   def __dealloc__(self):
     """Release C resources before destruction."""
@@ -416,7 +401,6 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
         (MAX_CHUNKS, str(nchunks)))
     return (MAGIC + struct.pack('<B', format_version) + '\x00\x00\x00' +
             struct.pack('<q', nchunks if nchunks is not None else -1))
-
 
 def decode_byte(byte):
   return int(byte.encode('hex'), 16)
@@ -491,7 +475,6 @@ cdef class Chunks(object):
       compressed = PyString_AsString(scomp)
       blosc_decompress(compressed, self.lastchunk, self.chunksize)
 
-
   def __getitem__(self, object nchunk):
     cdef object chunk_
     cdef void *decompressed, *compressed
@@ -507,7 +490,6 @@ cdef class Chunks(object):
     chunk_ = chunk(adecomp, self.dtype, self.cparams)
     free(decompressed)
     return chunk_
-
 
   cdef read_chunk(self, nchunk):
     """Read a chunk and return it in compressed form."""
@@ -528,20 +510,16 @@ cdef class Chunks(object):
       compressed = schunk.read(ctbytes)
     return compressed
 
-
   def __setitem__(self, object nchunk, object chunk_):
     self._save(nchunk, chunk_)
 
-
   def __len__(self):
     return self.nchunks
-
 
   def append(self, object chunk_):
     #print "append nchunk ->", self.nchunks
     self._save(self.nchunks, chunk_)
     self.nchunks += 1
-
 
   cdef _save(self, nchunk, chunk_):
     cdef object data
@@ -554,7 +532,6 @@ cdef class Chunks(object):
       schunk.write(bloscpack_header)
       data = chunk_.getdata()
       schunk.write(data)
-
 
   def pop(self):
     raise NotImplementedError
@@ -654,7 +631,6 @@ cdef class carray:
     def __get__(self):
       return (self.len,) + self._dtype.shape
 
-
   def __cinit__(self, object array=None, object cparams=None,
                 object dtype=None, object dflt=None,
                 object expectedlen=None, object chunklen=None,
@@ -678,7 +654,6 @@ cdef class carray:
     self.wheretrue_mode = False
     self.where_mode = False
     self.idxcache = -1       # cache not initialized
-
 
   def open_carray(self, shape, cparams, dtype, dflt,
                   expectedlen, cbytes, chunklen):
@@ -718,7 +693,6 @@ cdef class carray:
     self.leftover = np.product(shape) % chunklen
     self._cbytes = cbytes
     self._nbytes = np.product(shape) * dtype.itemsize
-
 
   def create_carray(self, array, cparams, dtype, dflt,
                     expectedlen, chunklen, rootdir):
@@ -809,7 +783,6 @@ cdef class carray:
     if rootdir is not None:
       self.write_meta()
 
-
   def fill_chunks(self, object array_):
     """Fill chunks, either in-memory or on-disk."""
     cdef int i, leftover, nchunks, chunklen
@@ -838,7 +811,6 @@ cdef class carray:
     cbytes += self._chunksize  # count the space in last chunk
     self._cbytes = cbytes
 
-
   def mkdirs(self, object rootdir):
     """Create the basic directory layout for persistent storage."""
     self.rootdir = rootdir
@@ -852,7 +824,6 @@ cdef class carray:
     os.mkdir(self.datadir)
     self.metadir = os.path.join(rootdir, 'meta')
     os.mkdir(self.metadir)
-
 
   def write_meta(self):
       """Write metadata persistently."""
@@ -869,7 +840,6 @@ cdef class carray:
           "cbytes": self.cbytes,
           "dflt": self.dflt.item(),  # XXX Fix for dtype.shape != ()
           }))
-
 
   def read_meta(self):
     """Read persistent metadata."""
@@ -895,7 +865,6 @@ cdef class carray:
     dflt = data["dflt"]
     cbytes = data["cbytes"]
     return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
-
 
   def append(self, object array):
     """
@@ -986,7 +955,6 @@ cdef class carray:
     self._cbytes += cbytes
     self._nbytes += bsize
 
-
   def trim(self, object nitems):
     """
     trim(nitems)
@@ -1050,7 +1018,6 @@ cdef class carray:
     self._cbytes -= cbytes
     self._nbytes -= bsize
 
-
   def resize(self, object nitems):
     """
     resize(nitems)
@@ -1082,7 +1049,6 @@ cdef class carray:
     else:
       # Just trim the excess of items
       self.trim(self.len-nitems)
-
 
   def reshape(self, newshape):
     """
@@ -1153,7 +1119,6 @@ cdef class carray:
 
     return out
 
-
   def copy(self, **kwargs):
     """
     copy(**kwargs)
@@ -1189,7 +1154,6 @@ cdef class carray:
       ccopy.append(self[i:i+chunklen])
 
     return ccopy
-
 
   def sum(self, dtype=None):
     """
@@ -1244,14 +1208,11 @@ cdef class carray:
 
     return result
 
-
   def __len__(self):
     return self.len
 
-
   def __sizeof__(self):
     return self._cbytes
-
 
   cdef int getitem_cache(self, npy_intp pos, char *dest):
     """Get a single item from self.  It can use an internal cache.
@@ -1311,7 +1272,6 @@ cdef class carray:
     # Update the cache index
     self.idxcache = idxcache
     return 1
-
 
   def __getitem__(self, object key):
     """
@@ -1454,7 +1414,6 @@ cdef class carray:
       nwrow += blen
 
     return arr
-
 
   def __setitem__(self, object key, object value):
     """
@@ -1606,7 +1565,6 @@ cdef class carray:
     # Safety check
     assert (nwrow == vlen)
 
-
   # This is a private function that is specific for `eval`
   def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
     cdef int chunklen
@@ -1646,7 +1604,6 @@ cdef class carray:
         chunk_._getitem(startb, stopb, out.data+nwrow*self.atomsize)
       nwrow += cblen
       start += cblen
-
 
   cdef void bool_update(self, boolarr, value):
     """Update self in positions where `boolarr` is true with `value` array."""
@@ -1697,7 +1654,6 @@ cdef class carray:
     # Safety check
     assert (nwrow == vlen)
 
-
   def __iter__(self):
 
     if not self.sss_mode:
@@ -1719,7 +1675,6 @@ cdef class carray:
       self.nrowsinbuf = self._chunklen
 
     return self
-
 
   def iter(self, start=0, stop=None, step=1, limit=None, skip=0):
     """
@@ -1763,7 +1718,6 @@ cdef class carray:
     self.skip = skip
     return iter(self)
 
-
   def wheretrue(self, limit=None, skip=0):
     """
     wheretrue(limit=None, skip=0)
@@ -1797,7 +1751,6 @@ cdef class carray:
       self.limit = limit + skip
     self.skip = skip
     return iter(self)
-
 
   def where(self, boolarr, limit=None, skip=0):
     """
@@ -1837,7 +1790,6 @@ cdef class carray:
       self.limit = limit + skip
     self.skip = skip
     return iter(self)
-
 
   def __next__(self):
     cdef char *vbool
@@ -1924,7 +1876,6 @@ cdef class carray:
       self.reset_sentinels()
       raise StopIteration        # end of iteration
 
-
   cdef reset_sentinels(self):
     """Reset sentinels for iterator."""
     self.sss_mode = False
@@ -1934,7 +1885,6 @@ cdef class carray:
     self.nhits = 0
     self.limit = sys.maxint
     self.skip = 0
-
 
   cdef int check_zeros(self, object barr):
     """Check for zeros.  Return 1 if all zeros, else return 0."""
@@ -1962,14 +1912,12 @@ cdef class carray:
         return 1
     return 0
 
-
   def __str__(self):
     if self.len > 100:
       return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
                                                   self[-3], self[-2], self[-1])
     else:
       return str(self[:])
-
 
   def __repr__(self):
     snbytes = utils.human_readable_size(self._nbytes)
@@ -1980,7 +1928,6 @@ cdef class carray:
 %s""" % (self.shape, self.dtype, snbytes, scbytes, cratio,
          self.cparams, str(self))
     return fullrepr
-
 
   def flush(self):
     """Flush lastchunk data."""

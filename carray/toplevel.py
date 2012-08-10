@@ -42,7 +42,6 @@ def detect_number_of_cores():
             return ncpus
     return 1 # Default
 
-
 def set_nthreads(nthreads):
     """
     set_nthreads(nthreads)
@@ -71,7 +70,6 @@ def set_nthreads(nthreads):
     if ca.numexpr_here:
         ca.numexpr.set_num_threads(nthreads)
     return nthreads_old
-
 
 def fromiter(iterable, dtype, count, **kwargs):
     """
@@ -166,7 +164,6 @@ def fromiter(iterable, dtype, count, **kwargs):
             break
     return obj
 
-
 def fill(shape, dflt=None, dtype=np.float, **kwargs):
     """
     fill(shape, dtype=float, dflt=None, **kwargs)
@@ -226,7 +223,6 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     obj.append(chunk)
     return obj
 
-
 def zeros(shape, dtype=np.float, **kwargs):
     """
     zeros(shape, dtype=float, **kwargs)
@@ -256,7 +252,6 @@ def zeros(shape, dtype=np.float, **kwargs):
     dtype = np.dtype(dtype)
     return fill(shape=shape, dflt=np.zeros((), dtype), dtype=dtype, **kwargs)
 
-
 def ones(shape, dtype=np.float, **kwargs):
     """
     ones(shape, dtype=float, **kwargs)
@@ -285,7 +280,6 @@ def ones(shape, dtype=np.float, **kwargs):
     """
     dtype = np.dtype(dtype)
     return fill(shape=shape, dflt=np.ones((), dtype), dtype=dtype, **kwargs)
-
 
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     """
@@ -368,7 +362,6 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
         bstop += incr
     return obj
 
-
 def _getvars(expression, user_dict, depth, vm):
     """Get the variables in `expression`.
 
@@ -425,7 +418,6 @@ def _getvars(expression, user_dict, depth, vm):
 
 # Assign function `eval` to a variable because we are overriding it
 _eval = eval
-
 
 def eval(expression, vm=None, out_flavor=None, **kwargs):
     """
@@ -500,7 +492,6 @@ def eval(expression, vm=None, out_flavor=None, **kwargs):
 
     return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                         **kwargs)
-
 
 def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                  **kwargs):
