@@ -15,6 +15,7 @@ import os, os.path
 import struct
 import shutil
 import yaml
+import cython
 
 _KB = 1024
 _MB = 1024*_KB
@@ -118,7 +119,8 @@ cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
 
   n = 0
   if start < stop:
-      n = ((stop - start - 1) // step + 1);
+    # Do not use a cython.cdiv here (do not ask me why!)
+    n = ((stop - start - 1) // step + 1)
   return n
 
 cdef clip_chunk(npy_intp nchunk, npy_intp chunklen,
@@ -158,7 +160,7 @@ cdef int check_zeros(char *data, int nbytes):
 
   iszero = 1
   sdata = <size_t *>data
-  chunklen = nbytes // sizeof(size_t)
+  chunklen = cython.cdiv(nbytes, sizeof(size_t))
   leftover = nbytes % sizeof(size_t)
   with nogil:
     for i from 0 <= i < chunklen:
@@ -236,7 +238,7 @@ cdef class chunk:
       blocksize = 4*1024  # use 4 KB as a cache for blocks
       # Make blocksize a multiple of itemsize
       if blocksize % itemsize > 0:
-        blocksize = (blocksize // itemsize) * itemsize
+        blocksize = cython.cdiv(blocksize, itemsize) * itemsize
       # Correct in case we have a large itemsize
       if blocksize == 0:
         blocksize = itemsize
@@ -280,7 +282,7 @@ cdef class chunk:
     if self.isconstant:
       nbytes = self.nbytes
       # The chunk is made of constants.  Regenerate the data and compress it.
-      constants = np.ndarray(shape=(nbytes // self.atomsize,),
+      constants = np.ndarray(shape=(cython.cdiv(nbytes, self.atomsize),),
                              dtype=self.dtype,
                              buffer=self.constant,
                              strides=(0,)
@@ -342,7 +344,7 @@ cdef class chunk:
       (start, stop, step) = key.start, key.stop, key.step
     elif isinstance(key, tuple) and self.dtype.shape != ():
       # Build an array to guess indices
-      clen = self.nbytes // self.itemsize
+      clen = cython.cdiv(self.nbytes, self.itemsize)
       idx = np.arange(clen, dtype=np.int32).reshape(self.dtype.shape)
       idx2 = idx(key)
       if idx2.flags.contiguous:
@@ -355,7 +357,7 @@ cdef class chunk:
       raise IndexError, "key not suitable:", key
 
     # Get the corrected values for start, stop, step
-    clen = self.nbytes // self.atomsize
+    clen = cython.cdiv(self.nbytes, self.atomsize)
     (start, stop, step) = slice(start, stop, step).indices(clen)
 
     # Build a numpy container
@@ -657,7 +659,7 @@ cdef class carray:
     "The length (leading dimension) of this object."
     def __get__(self):
       # Important to do the cast in order to get a npy_intp result
-      return self._nbytes // <npy_intp>self.atomsize
+      return cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
 
   property nbytes:
     "The original (uncompressed) size of this object (in bytes)."
@@ -790,7 +792,7 @@ cdef class carray:
       # Try a guess
       chunksize = utils.calc_chunksize((expectedlen * atomsize) / float(_MB))
       # Chunksize must be a multiple of atomsize
-      chunksize = (chunksize // atomsize) * atomsize
+      chunksize = cython.cdiv(chunksize, atomsize) * atomsize
       # Protection against large itemsizes
       if chunksize < atomsize:
         chunksize = atomsize
@@ -798,7 +800,7 @@ cdef class carray:
       if not isinstance(chunklen, int) or chunklen < 1:
         raise ValueError, "chunklen must be a positive integer"
       chunksize = chunklen * atomsize
-    chunklen = chunksize  // atomsize
+    chunklen = cython.cdiv(chunksize, atomsize)
     self._chunksize = chunksize
     self._chunklen = chunklen
 
@@ -835,7 +837,7 @@ cdef class carray:
     # Compress data in chunks
     cbytes = 0
     chunklen = self._chunklen
-    nchunks = nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(nbytes, <npy_intp>self._chunksize)
     for i from 0 <= i < nchunks:
       assert i*chunklen < array_.size, "i, nchunks: %d, %d" % (i, nchunks)
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
@@ -946,7 +948,8 @@ cdef class carray:
       if arrcpy.strides[0] > 0:
         memcpy(self.lastchunk+leftover, arrcpy.data, bsize)
       else:
-        start, stop = leftover // atomsize, (leftover+bsize) // atomsize
+        start = cython.cdiv(leftover, atomsize)
+        stop = cython.cdiv((leftover+bsize), atomsize)
         self.lastchunkarr[start:stop] = arrcpy
       leftover += bsize
     else:
@@ -958,7 +961,8 @@ cdef class carray:
         if arrcpy.strides[0] > 0:
           memcpy(self.lastchunk+leftover, arrcpy.data, nbytesfirst)
         else:
-          start, stop = leftover // atomsize, (leftover+nbytesfirst) // atomsize
+          start = cython.cdiv(leftover, atomsize)
+          stop = cython.cdiv((leftover+nbytesfirst), atomsize)
           self.lastchunkarr[start:stop] = arrcpy[start:stop]
         # Compress the last chunk and add it to the list
         chunk_ = chunk(self.lastchunkarr, self._dtype, self._cparams)
@@ -969,10 +973,10 @@ cdef class carray:
 
       # Then fill other possible chunks
       nbytes = bsize - nbytesfirst
-      nchunks = nbytes // <npy_intp>chunksize
+      nchunks = cython.cdiv(nbytes, <npy_intp>chunksize)
       chunklen = self._chunklen
       # Get a new view skipping the elements that have been already copied
-      remainder = arrcpy[nbytesfirst // atomsize:]
+      remainder = arrcpy[cython.cdiv(nbytesfirst, atomsize):]
       for i from 0 <= i < nchunks:
         chunk_ = chunk(
           remainder[i*chunklen:(i+1)*chunklen], self._dtype, self._cparams)
@@ -1034,12 +1038,12 @@ cdef class carray:
       leftover -= bsize
     else:
       # nitems larger than last chunk
-      nchunk = (self.len - nitems) // self._chunklen
+      nchunk = cython.cdiv((self.len - nitems), self._chunklen)
       leftover2 = (self.len - nitems) % self._chunklen
       leftover = leftover2 * atomsize
 
       # Remove complete chunks
-      nchunk2 = self._nbytes // <npy_intp>self._chunksize
+      nchunk2 = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
       while nchunk2 > nchunk+1:
         chunk_ = chunks.pop()
         cbytes += chunk_.cbytes
@@ -1231,7 +1235,7 @@ cdef class carray:
     # Get a container for the result
     result = np.zeros(1, dtype=dtype)[0]
 
-    nchunks = self._nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
     for nchunk from 0 <= nchunk < nchunks:
       chunk_ = self.chunks[nchunk]
       if chunk_.isconstant:
@@ -1267,9 +1271,9 @@ cdef class carray:
     cdef chunk chunk_
 
     atomsize = self.atomsize
-    nchunks = self._nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
     chunklen = self._chunklen
-    nchunk = pos // <npy_intp>chunklen
+    nchunk = cython.cdiv(pos, <npy_intp>chunklen)
 
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
@@ -1279,7 +1283,7 @@ cdef class carray:
 
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
-    blocklen = blocksize // atomsize
+    blocklen = cython.cdiv(blocksize, atomsize)
 
     if atomsize > blocksize:
       # This request cannot be resolved here
@@ -1294,7 +1298,7 @@ cdef class carray:
         self._cbytes += self.blocksize
 
     # Check if data is cached
-    idxcache = (pos // <npy_intp>blocklen) * blocklen
+    idxcache = cython.cdiv(pos, <npy_intp>blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
       posinbytes = (pos % blocklen) * atomsize
@@ -1357,7 +1361,7 @@ cdef class carray:
         else:
           return arr1[0]
       # Fallback action
-      nchunk = key // <npy_intp>chunklen
+      nchunk = cython.cdiv(key, <npy_intp>chunklen)
       keychunk = key % <npy_intp>chunklen
       return self.chunks[nchunk][keychunk]
     # Slices
@@ -1436,7 +1440,7 @@ cdef class carray:
 
     # Fill it from data in chunks
     nwrow = 0
-    nchunks = self._nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -1574,7 +1578,7 @@ cdef class carray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = self._nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
     if self.leftover > 0:
       nchunks += 1
     for nchunk from 0 <= nchunk < nchunks:
@@ -1612,17 +1616,17 @@ cdef class carray:
     cdef chunk chunk_
 
     # Check that we are inside limits
-    nrows = self._nbytes // <npy_intp>self.atomsize
+    nrows = cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
     if (start + blen) > nrows:
       blen = nrows - start
 
     # Fill `out` from data in chunks
     nwrow = 0
     stop = start + blen
-    nchunks = self._nbytes // <npy_intp>self._chunksize
-    chunklen = self._chunksize // self.atomsize
-    schunk = start // <npy_intp>chunklen
-    echunk = (start+blen) // <npy_intp>chunklen
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
+    chunklen = cython.cdiv(self._chunksize, self.atomsize)
+    schunk = cython.cdiv(start, <npy_intp>chunklen)
+    echunk = cython.cdiv((start+blen), <npy_intp>chunklen)
     for nchunk from schunk <= nchunk <= echunk:
       # Compute start & stop for each block
       startb = start % chunklen
@@ -1658,10 +1662,10 @@ cdef class carray:
     # Fill it from data in chunks
     nwrow = 0
     chunklen = self._chunklen
-    nchunks = self._nbytes // <npy_intp>self._chunksize
+    nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
     if self.leftover > 0:
       nchunks += 1
-    nrows = self._nbytes // <npy_intp>self.atomsize
+    nrows = cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
     for nchunk from 0 <= nchunk < nchunks:
       # Compute start & stop for each block
       startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
@@ -1696,7 +1700,7 @@ cdef class carray:
 
     if not self.sss_mode:
       self.start = 0
-      self.stop = self._nbytes // <npy_intp>self.atomsize
+      self.stop = cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
       self.step = 1
     if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
       self.nhits = 0
@@ -1935,7 +1939,7 @@ cdef class carray:
     if isinstance(barr, carray):
       # Check for zero'ed chunks in carrays
       carr = barr
-      nchunk = self.nrowsread // <npy_intp>self.nrowsinbuf
+      nchunk = cython.cdiv(self.nrowsread, <npy_intp>self.nrowsinbuf)
       if nchunk < len(carr.chunks):
         chunk_ = carr.chunks[nchunk]
         if chunk_.isconstant and chunk_.constant in (0, ''):
@@ -1974,7 +1978,7 @@ cdef class carray:
 
     if self.rootdir is not None:
       if self.leftover:
-        nchunks = self._nbytes // <npy_intp>self._chunksize
+        nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
         leftover = self.len-nchunks*self._chunklen
         chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
         self.chunks.append(chunk_)

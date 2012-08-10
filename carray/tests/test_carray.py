@@ -1432,8 +1432,7 @@ def suite():
         theSuite.addTest(unittest.makeSuite(eval_big_ne))
 
     # Only for 64-bit systems
-    # Disabled because it takes too much memory
-    if False and is_64bit:
+    if is_64bit:
         theSuite.addTest(unittest.makeSuite(largeCarrayTest))
 
     return theSuite
