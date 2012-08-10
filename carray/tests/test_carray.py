@@ -419,11 +419,11 @@ class trimDiskTest(trimTest):
     disk = True
 
 
-class resizeTest(unittest.TestCase):
+class resizeTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing `resize()` method (decrease)"""
-        b = ca.arange(self.N)
+        b = ca.arange(self.N, rootdir=self.rootdir)
         b.resize(self.N-3)
         a = np.arange(self.N-3)
         #print "b->", `b`
@@ -431,7 +431,7 @@ class resizeTest(unittest.TestCase):
 
     def test00b(self):
         """Testing `resize()` method (increase)"""
-        b = ca.arange(self.N)
+        b = ca.arange(self.N, rootdir=self.rootdir)
         b.resize(self.N+3)
         a = np.arange(self.N+3)
         a[self.N:] = 0
@@ -440,7 +440,7 @@ class resizeTest(unittest.TestCase):
 
     def test01a(self):
         """Testing `resize()` method (decrease, large variation)"""
-        b = ca.arange(self.N)
+        b = ca.arange(self.N, rootdir=self.rootdir)
         b.resize(3)
         a = np.arange(3)
         #print "b->", `b`
@@ -448,7 +448,7 @@ class resizeTest(unittest.TestCase):
 
     def test01b(self):
         """Testing `resize()` method (increase, large variation)"""
-        b = ca.arange(self.N, dflt=1)
+        b = ca.arange(self.N, dflt=1, rootdir=self.rootdir)
         b.resize(self.N*3)
         a = np.arange(self.N*3)
         a[self.N:] = 1
@@ -457,7 +457,7 @@ class resizeTest(unittest.TestCase):
 
     def test02(self):
         """Testing `resize()` method (zero size)"""
-        b = ca.arange(self.N)
+        b = ca.arange(self.N, rootdir=self.rootdir)
         b.resize(0)
         a = np.arange(0)
         #print "b->", `b`
@@ -467,21 +467,29 @@ class resizeTest(unittest.TestCase):
 class resize_smallTest(resizeTest):
     N = 10
 
+class resize_smallDiskTest(resizeTest):
+    N = 10
+    disk = True
+
 class resize_largeTest(resizeTest):
     N = 10000
 
-class miscTest(unittest.TestCase):
+class resize_largeDiskTest(resizeTest):
+    N = 10000
+    disk = True
+
+class miscTest(MayBeDiskTest):
 
     def test00(self):
         """Testing __len__()"""
         a = np.arange(111)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         self.assert_(len(a) == len(b), "Arrays do not have the same length")
 
     def test01(self):
         """Testing __sizeof__() (big carrays)"""
         a = np.arange(2e5)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         #print "size b uncompressed-->", b.nbytes
         #print "size b compressed  -->", b.cbytes
         self.assert_(sys.getsizeof(b) < b.nbytes,
@@ -496,13 +504,16 @@ class miscTest(unittest.TestCase):
         self.assert_(sys.getsizeof(b) > b.nbytes,
                      "carray compress too much??")
 
+class miscDiskTest(miscTest):
+    disk = True
 
-class copyTest(unittest.TestCase):
+
+class copyTest(MayBeDiskTest):
 
     def test00(self):
         """Testing copy() without params"""
         a = np.arange(111)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         c = b.copy()
         c.append(np.arange(111, 122))
         self.assert_(len(b) == 111, "copy() does not work well")
@@ -513,7 +524,7 @@ class copyTest(unittest.TestCase):
     def test01(self):
         """Testing copy() with higher compression"""
         a = np.linspace(-1., 1., 1e4)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=ca.cparams(clevel=9))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes > c.cbytes, "clevel not changed")
@@ -521,7 +532,7 @@ class copyTest(unittest.TestCase):
     def test02(self):
         """Testing copy() with lesser compression"""
         a = np.linspace(-1., 1., 1e4)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=ca.cparams(clevel=1))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes < c.cbytes, "clevel not changed")
@@ -529,18 +540,21 @@ class copyTest(unittest.TestCase):
     def test03(self):
         """Testing copy() with no shuffle"""
         a = np.linspace(-1., 1., 1e4)
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=ca.cparams(shuffle=False))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assert_(b.cbytes < c.cbytes, "shuffle not changed")
 
+class copyDiskTest(copyTest):
+    disk = True
 
-class iterTest(unittest.TestCase):
+
+class iterTest(MayBeDiskTest):
 
     def test00(self):
         """Testing `iter()` method"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter1->", sum(b)
         #print "sum iter2->", sum((v for v in b))
         self.assert_(sum(a) == sum(b), "Sums are not equal")
@@ -550,28 +564,28 @@ class iterTest(unittest.TestCase):
     def test01a(self):
         """Testing `iter()` method with a positive start"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3))
         self.assert_(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
 
     def test01b(self):
         """Testing `iter()` method with a negative start"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(-3))
         self.assert_(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
 
     def test02a(self):
         """Testing `iter()` method with positive start, stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3, 24))
         self.assert_(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
 
     def test02b(self):
         """Testing `iter()` method with negative start, stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(-24, -3))
         self.assert_(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
                      "Sums are not equal")
@@ -579,7 +593,7 @@ class iterTest(unittest.TestCase):
     def test02c(self):
         """Testing `iter()` method with positive start, negative stop"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(24, -3))
         self.assert_(sum(a[24:-3]) == sum(b.iter(24, -3)),
                      "Sums are not equal")
@@ -587,7 +601,7 @@ class iterTest(unittest.TestCase):
     def test03a(self):
         """Testing `iter()` method with only step"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(step=4))
         self.assert_(sum(a[::4]) == sum(b.iter(step=4)),
                      "Sums are not equal")
@@ -595,7 +609,7 @@ class iterTest(unittest.TestCase):
     def test03b(self):
         """Testing `iter()` method with start, stop, step"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3, 24, 4))
         self.assert_(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
                      "Sums are not equal")
@@ -603,13 +617,13 @@ class iterTest(unittest.TestCase):
     def test03c(self):
         """Testing `iter()` method with negative step"""
         a = np.arange(101)
-        b = ca.carray(a, chunklen=2)
+        b = ca.carray(a, chunklen=2, rootdir=self.rootdir)
         self.assertRaises(NotImplementedError, b.iter, 0, 1, -3)
 
     def test04(self):
         """Testing `iter()` method with large zero arrays"""
         a = np.zeros(1e4, dtype='f8')
-        b = ca.carray(a, chunklen=100)
+        b = ca.carray(a, chunklen=100, rootdir=self.rootdir)
         c = ca.fromiter((v for v in b), dtype='f8', count=len(a))
         #print "c ->", repr(c)
         assert_array_equal(a, c[:], "iterator fails on zeros")
@@ -617,7 +631,7 @@ class iterTest(unittest.TestCase):
     def test05(self):
         """Testing `iter()` method with `limit`"""
         a = np.arange(1e4, dtype='f8')
-        b = ca.carray(a, chunklen=100)
+        b = ca.carray(a, chunklen=100, rootdir=self.rootdir)
         c = ca.fromiter((v for v in b.iter(limit=1010)), dtype='f8',
                         count=1010)
         #print "c ->", repr(c)
@@ -626,7 +640,7 @@ class iterTest(unittest.TestCase):
     def test06(self):
         """Testing `iter()` method with `skip`"""
         a = np.arange(1e4, dtype='f8')
-        b = ca.carray(a, chunklen=100)
+        b = ca.carray(a, chunklen=100, rootdir=self.rootdir)
         c = ca.fromiter((v for v in b.iter(skip=1010)), dtype='f8',
                         count=10000-1010)
         #print "c ->", repr(c)
@@ -635,11 +649,14 @@ class iterTest(unittest.TestCase):
     def test07(self):
         """Testing `iter()` method with `limit` and `skip`"""
         a = np.arange(1e4, dtype='f8')
-        b = ca.carray(a, chunklen=100)
+        b = ca.carray(a, chunklen=100, rootdir=self.rootdir)
         c = ca.fromiter((v for v in b.iter(limit=1010, skip=1010)), dtype='f8',
                         count=1010)
         #print "c ->", repr(c)
         assert_array_equal(a[1010:2020], c, "iterator fails on zeros")
+
+class iterDiskTest(iterTest):
+    disk = True
 
 
 class wheretrueTest(unittest.TestCase):
@@ -1010,28 +1027,31 @@ class fromiterTest(unittest.TestCase):
         assert_array_equal(b[:], a, "iterator with a hint fails")
 
 
-class evalTest(unittest.TestCase):
+class evalTest(MayBeDiskTest):
 
     vm = "python"
 
     def setUp(self):
         self.prev_vm = ca.defaults.eval_vm
         ca.defaults.eval_vm = self.vm
+        MayBeDiskTest.setUp(self)
 
     def tearDown(self):
         ca.defaults.eval_vm = self.prev_vm
+        MayBeDiskTest.tearDown(self)
 
     def test00(self):
         """Testing eval() with only scalars and constants"""
         a = 3
-        cr = ca.eval("2 * a")
+        cr = ca.eval("2 * a", rootdir=self.rootdir)
         #print "ca.eval ->", cr
         self.assert_(cr == 6, "eval does not work correctly")
 
     def test01(self):
         """Testing eval() with only carrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), ca.carray(b)
+        c = ca.carray(a, rootdir=self.rootdir)
+        d = ca.carray(b, rootdir=self.rootdir)
         cr = ca.eval("c * d")
         nr = a * b
         #print "ca.eval ->", cr
@@ -1041,7 +1061,7 @@ class evalTest(unittest.TestCase):
     def test02(self):
         """Testing eval() with only ndarrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        cr = ca.eval("a * b")
+        cr = ca.eval("a * b", rootdir=self.rootdir)
         nr = a * b
         #print "ca.eval ->", cr
         #print "numpy   ->", nr
@@ -1050,7 +1070,8 @@ class evalTest(unittest.TestCase):
     def test03(self):
         """Testing eval() with a mix of carrays and ndarrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), ca.carray(b)
+        c = ca.carray(a, rootdir=self.rootdir)
+        d = ca.carray(b, rootdir=self.rootdir)
         cr = ca.eval("a * d")
         nr = a * b
         #print "ca.eval ->", cr
@@ -1060,7 +1081,8 @@ class evalTest(unittest.TestCase):
     def test04(self):
         """Testing eval() with a mix of carray, ndarray and scalars"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), ca.carray(b)
+        c = ca.carray(a, rootdir=self.rootdir)
+        d = ca.carray(b, rootdir=self.rootdir)
         cr = ca.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
         #print "ca.eval ->", cr
@@ -1070,7 +1092,7 @@ class evalTest(unittest.TestCase):
     def test05(self):
         """Testing eval() with a mix of carray, ndarray and scalars"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b
+        c, d = ca.carray(a, rootdir=self.rootdir), b
         cr = ca.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
         #print "ca.eval ->", cr
@@ -1080,7 +1102,7 @@ class evalTest(unittest.TestCase):
     def test06(self):
         """Testing eval() with only scalars and arrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b
+        c, d = ca.carray(a, rootdir=self.rootdir), b
         cr = ca.eval("d - 3")
         nr = b - 3
         #print "ca.eval ->", cr
@@ -1090,7 +1112,7 @@ class evalTest(unittest.TestCase):
     def test07(self):
         """Testing eval() via expression on __getitem__"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b
+        c, d = ca.carray(a, rootdir=self.rootdir), b
         cr = c["a + 2 * d - 3 > 0"]
         nr = a[(a + 2 * b - 3) > 0]
         #print "ca[expr] ->", cr
@@ -1100,13 +1122,15 @@ class evalTest(unittest.TestCase):
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
-        self.assertRaises(ValueError, ca.eval, "a*3", depth=3)
-        self.assertRaises(ValueError, ca.eval, "b*3", depth=3)
+        self.assertRaises(ValueError, ca.eval, "a*3", depth=3,
+                          rootdir=self.rootdir)
+        self.assertRaises(ValueError, ca.eval, "b*3", depth=3,
+                          rootdir=self.rootdir)
 
     def test09(self):
         """Testing eval() via expression on __setitem__ (I)"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b
+        c, d = ca.carray(a, rootdir=self.rootdir), b
         c["a + 2 * d - 3 > 0"] = 3
         a[(a + 2 * b - 3) > 0] = 3
         #print "carray ->", c
@@ -1116,7 +1140,7 @@ class evalTest(unittest.TestCase):
     def test10(self):
         """Testing eval() via expression on __setitem__ (II)"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), b
+        c, d = ca.carray(a, rootdir=self.rootdir), b
         c["a + 2 * d - 3 > 1000"] = 0
         a[(a + 2 * b - 3) > 1000] = 0
         #print "carray ->", c
@@ -1126,7 +1150,7 @@ class evalTest(unittest.TestCase):
     def test11(self):
         """Testing eval() with functions like `np.sin()`"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), ca.carray(b)
+        c, d = ca.carray(a, rootdir=self.rootdir), ca.carray(b)
         if self.vm == "python":
             cr = ca.eval("np.sin(c) + 2 * np.log(d) - 3")
         else:
@@ -1139,7 +1163,7 @@ class evalTest(unittest.TestCase):
     def test12(self):
         """Testing eval() with `out_flavor` == 'numpy'"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c, d = ca.carray(a), ca.carray(b)
+        c, d = ca.carray(a), ca.carray(b, rootdir=self.rootdir)
         cr = ca.eval("c + 2 * d - 3", out_flavor='numpy')
         nr = a + 2 * b - 3
         #print "ca.eval ->", cr, type(cr)
@@ -1147,19 +1171,37 @@ class evalTest(unittest.TestCase):
         self.assert_(type(cr) == np.ndarray)
         assert_array_equal(cr, nr, "eval does not work correctly")
 
-class eval_small(evalTest):
+class evalSmall(evalTest):
     N = 10
 
-class eval_big(evalTest):
+class evalDiskSmall(evalTest):
+    N = 10
+    disk = True
+
+class evalBig(evalTest):
     N = 1e4
 
-class eval_small_ne(evalTest):
+class evalDiskBig(evalTest):
+    N = 1e4
+    disk = True
+
+class evalSmallNE(evalTest):
     N = 10
     vm = "numexpr"
 
-class eval_big_ne(evalTest):
+class evalDiskSmallNE(evalTest):
+    N = 10
+    vm = "numexpr"
+    disk = True
+
+class evalBigNE(evalTest):
     N = 1e4
     vm = "numexpr"
+
+class evalDiskBigNE(evalTest):
+    N = 1e4
+    vm = "numexpr"
+    disk = True
 
 
 class computeMethodsTest(unittest.TestCase):
@@ -1410,10 +1452,15 @@ def suite():
     theSuite.addTest(unittest.makeSuite(trimTest))
     theSuite.addTest(unittest.makeSuite(trimDiskTest))
     theSuite.addTest(unittest.makeSuite(resize_smallTest))
+    theSuite.addTest(unittest.makeSuite(resize_smallDiskTest))
     theSuite.addTest(unittest.makeSuite(resize_largeTest))
+    theSuite.addTest(unittest.makeSuite(resize_largeDiskTest))
     theSuite.addTest(unittest.makeSuite(miscTest))
+    theSuite.addTest(unittest.makeSuite(miscDiskTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
+    theSuite.addTest(unittest.makeSuite(copyDiskTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
+    theSuite.addTest(unittest.makeSuite(iterDiskTest))
     theSuite.addTest(unittest.makeSuite(wheretrueTest))
     theSuite.addTest(unittest.makeSuite(whereTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
@@ -1425,11 +1472,15 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructor_bigTest))
     theSuite.addTest(unittest.makeSuite(dtypesTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
-    theSuite.addTest(unittest.makeSuite(eval_small))
-    theSuite.addTest(unittest.makeSuite(eval_big))
+    theSuite.addTest(unittest.makeSuite(evalSmall))
+    theSuite.addTest(unittest.makeSuite(evalDiskSmall))
+    theSuite.addTest(unittest.makeSuite(evalBig))
+    theSuite.addTest(unittest.makeSuite(evalDiskBig))
     if ca.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(eval_small_ne))
-        theSuite.addTest(unittest.makeSuite(eval_big_ne))
+        theSuite.addTest(unittest.makeSuite(evalSmallNE))
+        theSuite.addTest(unittest.makeSuite(evalDiskSmallNE))
+        theSuite.addTest(unittest.makeSuite(evalBigNE))
+        theSuite.addTest(unittest.makeSuite(evalBigNE))
 
     # Only for 64-bit systems
     if is_64bit:
