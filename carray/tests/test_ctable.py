@@ -707,20 +707,20 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
         sl = np.random.randint(2, size=1000).astype('bool')
-        t[sl] = (-1, -2, -3)
-        ra[sl] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test02b(self):
-        """Testing fancy indexing (setitem) with a boolean array"""
+        """Testing fancy indexing (setitem) with a boolean array (II)"""
         N = 1000
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
         sl = np.random.randint(10, size=1000).astype('bool')
-        t[sl] = (-1, -2, -3)
-        ra[sl] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -731,8 +731,8 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
         sl = np.zeros(N, dtype="bool")
-        t[sl] = (-1, -2, -3)
-        ra[sl] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -743,8 +743,8 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, chunklen=10)
         sl = np.ones(N, dtype="bool")
-        t[sl] = (-1, -2, -3)
-        ra[sl] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -756,8 +756,8 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         t = ca.ctable(ra, chunklen=10)
         sl = "f0<0"
         sl2 = ra['f0'] < 0
-        t[sl] = (-1, -2, -3)
-        ra[sl2] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl2] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -769,8 +769,8 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         t = ca.ctable(ra, chunklen=10)
         sl = "f0>=0"
         sl2 = ra['f0'] >= 0
-        t[sl] = (-1, -2, -3)
-        ra[sl2] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl2] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -782,8 +782,8 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         t = ca.ctable(ra, chunklen=10)
         sl = "(f0>0) & (f1 < 10)"
         sl2 = (ra['f0'] > 0) & (ra['f1'] < 10)
-        t[sl] = (-1, -2, -3)
-        ra[sl2] = (-1, -2, -3)
+        t[sl] = [(-1, -2, -3)]
+        ra[sl2] = [(-1, -2, -3)]
         #print "t[%s] -> %r" % (sl, t)
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
