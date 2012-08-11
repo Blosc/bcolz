@@ -853,8 +853,11 @@ cdef class carray:
 
   def mkdirs(self, object rootdir):
     """Create the basic directory layout for persistent storage."""
+    overwrite = False
     self.rootdir = rootdir
     if os.path.exists(rootdir):
+      if not overwrite:
+        raise RuntimeError, "specified rootdir '%s' already exists" % rootdir
       if os.path.isdir(rootdir):
         shutil.rmtree(rootdir)
       else:

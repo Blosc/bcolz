@@ -11,6 +11,8 @@ import sys
 import os, os.path
 import tempfile
 import struct
+import glob
+import shutil
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
@@ -19,6 +21,25 @@ from carray.carrayExtension import chunk
 import unittest
 
 is_64bit = (struct.calcsize("P") == 8)
+
+
+# The next is useful as superclass for disk-based tests
+class MayBeDiskTest(unittest.TestCase):
+
+    disk = False
+
+    def setUp(self):
+        if self.disk:
+            self.rootdir = tempfile.mkdtemp(prefix=self.__class__.__name__)
+            os.rmdir(self.rootdir)  # tests needs this cleared
+        else:
+            self.rootdir = None
+
+    def tearDown(self):
+        if self.disk:
+            # Remove every directory starting with rootdir
+            for dir_ in glob.glob(self.rootdir+'*'):
+                shutil.rmtree(dir_)
 
 
 class chunkTest(unittest.TestCase):
@@ -50,30 +71,6 @@ class chunkTest(unittest.TestCase):
         b = chunk(a, atom=a.dtype, cparams=ca.cparams())
         #print "b[1:8000]->", `b[1:8000]`
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
-
-
-class MayBeDiskTest(unittest.TestCase):
-
-    disk = False
-
-    def setUp(self):
-        if self.disk:
-            self.rootdir = tempfile.mkdtemp(prefix=self.__class__.__name__)
-        else:
-            self.rootdir = None
-
-    def tearDown(self):
-        if self.disk:
-            self.remove_rootdir()
-
-    def remove_rootdir(self):
-        """Delete a temporary directory completely."""
-        for root, dirs, files in os.walk(self.rootdir, topdown=False):
-            for fname in files:
-                os.unlink(os.path.join(root, fname))
-            for dirname in dirs:
-                os.rmdir(os.path.join(root, dirname))
-        os.rmdir(self.rootdir)
 
 
 class getitemTest(MayBeDiskTest):
@@ -1050,8 +1047,12 @@ class evalTest(MayBeDiskTest):
     def test01(self):
         """Testing eval() with only carrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c = ca.carray(a, rootdir=self.rootdir)
-        d = ca.carray(b, rootdir=self.rootdir)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = ca.carray(a, rootdir=dirc)
+        d = ca.carray(b, rootdir=dird)
         cr = ca.eval("c * d")
         nr = a * b
         #print "ca.eval ->", cr
@@ -1070,8 +1071,12 @@ class evalTest(MayBeDiskTest):
     def test03(self):
         """Testing eval() with a mix of carrays and ndarrays"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c = ca.carray(a, rootdir=self.rootdir)
-        d = ca.carray(b, rootdir=self.rootdir)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = ca.carray(a, rootdir=dirc)
+        d = ca.carray(b, rootdir=dird)
         cr = ca.eval("a * d")
         nr = a * b
         #print "ca.eval ->", cr
@@ -1081,8 +1086,12 @@ class evalTest(MayBeDiskTest):
     def test04(self):
         """Testing eval() with a mix of carray, ndarray and scalars"""
         a, b = np.arange(self.N), np.arange(1, self.N+1)
-        c = ca.carray(a, rootdir=self.rootdir)
-        d = ca.carray(b, rootdir=self.rootdir)
+        if self.rootdir:
+            dirc, dird = self.rootdir+'.c', self.rootdir+'.d'
+        else:
+            dirc, dird = None, None
+        c = ca.carray(a, rootdir=dirc)
+        d = ca.carray(b, rootdir=dird)
         cr = ca.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
         #print "ca.eval ->", cr
