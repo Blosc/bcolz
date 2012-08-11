@@ -742,6 +742,11 @@ class ctable(object):
         # Call top-level eval with cols as user_dict
         return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
+    def flush(self):
+        """Flush all the buffers in columns."""
+        for name in self.names:
+            self.cols[name].flush()
+
     def __str__(self):
         if self.len > 100:
             return "[%s, %s, %s, ..., %s, %s, %s]\n" % \

@@ -20,6 +20,11 @@ import cython
 _KB = 1024
 _MB = 1024*_KB
 
+# Directories for saving the data and metadata for carray persistency
+DATADIR = 'data'
+METADIR = 'meta'
+SHAPEFILE = 'shape'
+
 # For the persistence layer
 EXTENSION = '.blp'
 MAGIC = 'blpk'
@@ -485,45 +490,33 @@ cdef decode_blosc_header(buffer_):
 
 cdef class Chunks(object):
   """Store the different carray chunks in a directory on-disk."""
-  cdef object datadir
+  cdef object datadir, metadir
   cdef object dtype, cparams, shape
   cdef int nchunks, chunksize
   cdef char *lastchunk
 
-  def __init__(self, object datadir, object metainfo=None, _new=False):
+  def __init__(self, object rootdir, object metainfo=None, _new=False):
     cdef ndarray lastchunkarr
     cdef void *decompressed, *compressed
     cdef int leftover
     cdef size_t chunksize
     cdef object scomp
 
-    self.datadir = datadir
+    self.datadir = os.path.join(rootdir, DATADIR)
+    self.metadir = os.path.join(rootdir, METADIR)
     self.nchunks = 0
     self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
+
     self.chunksize = len(lastchunkarr) * self.dtype.itemsize
     self.lastchunk = lastchunkarr.data
     leftover = np.prod(self.shape) % len(lastchunkarr)
+
     if not _new and leftover:
       # Fill lastchunk with data on disk
       last_chunk = np.prod(self.shape) / len(lastchunkarr)
       scomp = self.read_chunk(last_chunk)
       compressed = PyString_AsString(scomp)
       blosc_decompress(compressed, self.lastchunk, self.chunksize)
-
-  def __getitem__(self, object nchunk):
-    cdef object chunk_
-    cdef void *decompressed, *compressed
-    cdef object scomp, sdecomp, adecomp
-
-    scomp = self.read_chunk(nchunk)
-    compressed = PyString_AsString(scomp)
-    decompressed = malloc(self.chunksize)
-    blosc_decompress(compressed, decompressed, self.chunksize)
-    sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
-    adecomp = np.fromstring(sdecomp, dtype=self.dtype)
-    chunk_ = chunk(adecomp, self.dtype, self.cparams)
-    free(decompressed)
-    return chunk_
 
   cdef read_chunk(self, nchunk):
     """Read a chunk and return it in compressed form."""
@@ -544,6 +537,21 @@ cdef class Chunks(object):
       compressed = schunk.read(ctbytes)
     return compressed
 
+  def __getitem__(self, object nchunk):
+    cdef object chunk_
+    cdef void *decompressed, *compressed
+    cdef object scomp, sdecomp, adecomp
+
+    scomp = self.read_chunk(nchunk)
+    compressed = PyString_AsString(scomp)
+    decompressed = malloc(self.chunksize)
+    blosc_decompress(compressed, decompressed, self.chunksize)
+    sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
+    adecomp = np.fromstring(sdecomp, dtype=self.dtype)
+    chunk_ = chunk(adecomp, self.dtype, self.cparams)
+    free(decompressed)
+    return chunk_
+
   def __setitem__(self, object nchunk, object chunk_):
     self._save(nchunk, chunk_)
 
@@ -551,10 +559,19 @@ cdef class Chunks(object):
     return self.nchunks
 
   def append(self, object chunk_):
+    """Append an new chunk to the carray."""
     self._save(self.nchunks, chunk_)
     self.nchunks += 1
 
+  def flush(self, object chunk_, object shape):
+    """Flush the leftover chunk and update the shape on-disk."""
+    self._save(self.nchunks, chunk_)
+    rowsf = os.path.join(self.metadir, SHAPEFILE)
+    with open(rowsf, 'w') as rowsfh:
+      rowsfh.write("%s\n" % shape)
+
   cdef _save(self, nchunk, chunk_):
+    """Save the `chunk_` as chunk #`nchunk`. """
     cdef object data
     dname = "__%d%s" % (nchunk, EXTENSION)
     schunkfile = os.path.join(self.datadir, dname)
@@ -565,6 +582,7 @@ cdef class Chunks(object):
       schunk.write(data)
 
   def pop(self):
+    """Remove the last chunk and return it."""
     cdef object chunk_
     nchunk = self.nchunks - 1
     chunk_ = self.__getitem__(nchunk)
@@ -718,16 +736,16 @@ cdef class carray:
     # Check rootdir hierarchy
     if not os.path.isdir(self.rootdir):
       raise RuntimeError("root directory does not exist")
-    self.datadir = os.path.join(self.rootdir, 'data')
+    self.datadir = os.path.join(self.rootdir, DATADIR)
     if not os.path.isdir(self.datadir):
       raise RuntimeError("data directory does not exist")
-    self.metadir = os.path.join(self.rootdir, 'meta')
+    self.metadir = os.path.join(self.rootdir, METADIR)
     if not os.path.isdir(self.metadir):
       raise RuntimeError("meta directory does not exist")
 
     # Finally, open data directory
     metainfo = (dtype, cparams, shape, lastchunkarr)
-    self.chunks = Chunks(self.datadir, metainfo=metainfo, _new=False)
+    self.chunks = Chunks(self.rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
     self.leftover = np.product(shape) % chunklen
@@ -816,12 +834,15 @@ cdef class carray:
     else:
       self.mkdirs(rootdir)
       metainfo = (dtype, cparams, self.shape, lastchunkarr)
-      self.chunks = Chunks(self.datadir, metainfo=metainfo, _new=True)
+      self.chunks = Chunks(self.rootdir, metainfo=metainfo, _new=True)
 
     # Finally, fill the chunks
     self.fill_chunks(array_)
     if rootdir is not None:
       self.write_meta()
+
+    # Flush the data pending
+    self.flush()
 
   def fill_chunks(self, object array_):
     """Fill chunks, either in-memory or on-disk."""
@@ -863,9 +884,9 @@ cdef class carray:
       else:
         os.remove(rootdir)
     os.mkdir(rootdir)
-    self.datadir = os.path.join(rootdir, 'data')
+    self.datadir = os.path.join(rootdir, DATADIR)
     os.mkdir(self.datadir)
-    self.metadir = os.path.join(rootdir, 'meta')
+    self.metadir = os.path.join(rootdir, METADIR)
     os.mkdir(self.metadir)
 
   def write_meta(self):
@@ -887,8 +908,8 @@ cdef class carray:
   def read_meta(self):
     """Read persistent metadata."""
     # First read the shape
-    metadir = os.path.join(self.rootdir, "meta")
-    shapef = os.path.join(metadir, "shape")
+    metadir = os.path.join(self.rootdir, METADIR)
+    shapef = os.path.join(metadir, SHAPEFILE)
     with open(shapef, 'r') as shapefh:
       data = shapefh.read()
     if data.startswith('('):
@@ -1979,15 +2000,11 @@ cdef class carray:
     cdef chunk chunk_
     cdef int nchunks, leftover
 
-    if self.rootdir is not None:
-      if self.leftover:
+    if self.rootdir and self.leftover:
         nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
         leftover = self.len-nchunks*self._chunklen
         chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
-        self.chunks.append(chunk_)
-      rowsf = os.path.join(self.metadir, "shape")
-      with open(rowsf, 'w') as rowsfh:
-        rowsfh.write("%s"%self.shape)
+        self.chunks.flush(chunk_, self.shape)
 
 
 

@@ -162,6 +162,7 @@ def fromiter(iterable, dtype, count, **kwargs):
         # Check the end of the iterable
         if len(chunk) < chunklen:
             break
+    obj.flush()
     return obj
 
 def fill(shape, dflt=None, dtype=np.float, **kwargs):
@@ -221,6 +222,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     # without memory consumption
     chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
     obj.append(chunk)
+    obj.flush()
     return obj
 
 def zeros(shape, dtype=np.float, **kwargs):
@@ -360,6 +362,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
         obj.append(chunk)
         bstart = bstop
         bstop += incr
+    obj.flush()
     return obj
 
 def _getvars(expression, user_dict, depth, vm):
@@ -547,11 +550,13 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                     vars_[name] = var[:]
                 else:
                     vars_[name] = var
+
         # Perform the evaluation for this block
         if vm == "python":
             res_block = _eval(expression, vars_)
         else:
             res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
+
         if i == 0:
             # Detection of reduction operations
             scalar = False
@@ -579,10 +584,11 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             else:
                 result[i:i+bsize] = res_block
 
+    if isinstance(result, ca.carray):
+        result.flush()
     if scalar:
         return result[()]
-    else:
-        return result
+    return result
 
 
 class cparams(object):
