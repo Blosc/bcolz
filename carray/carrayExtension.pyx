@@ -208,38 +208,66 @@ cdef class chunk:
   cdef int nbytes, cbytes, cdbytes
   cdef int true_count
   cdef char *data
-  cdef object atom, constant
+  cdef object atom, constant, dobject
 
   property dtype:
     "The NumPy dtype for this chunk."
     def __get__(self):
       return self.atom
 
-  def __cinit__(self, ndarray array, object atom, object cparams):
+  def __cinit__(self, object dobject, object atom, object cparams,
+                object _compr=False):
     cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
-    cdef int clevel, shuffle
     cdef dtype dtype_
-    cdef char *dest
 
     self.atom = atom
     self.atomsize = atom.itemsize
-    dtype_ = array.dtype
+    dtype_ = atom.base
     self.itemsize = itemsize = dtype_.elsize
     self.typekind = dtype_.kind
-    # Compute the total number of bytes in this array
-    nbytes = itemsize * array.size
-    footprint = 128  # the (aprox) footprint of this instance in bytes
     self.isconstant = 0
+    self.constant = None
+    self.dobject = None
+    footprint = 0
 
+    if _compr:
+      # Data comes in an already compressed state inside a Python String
+      self.data = PyString_AsString(dobject)
+      self.dobject = dobject   # Increment the reference so that data don't go
+      # Set size info for the instance
+      blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+    else:
+      # Compress the data object (a NumPy object)
+      nbytes, cbytes, blocksize, footprint = self.compress_data(
+        dobject, cparams)
+    footprint += 128  # add the (aprox) footprint of this instance in bytes
+
+    # Fill instance data
+    self.nbytes = nbytes
+    self.cbytes = cbytes + footprint
+    self.cdbytes = cbytes
+    self.blocksize = blocksize
+    #print "nbytes, cbytes, cdbytes, blocksize:", self.nbytes, self.cbytes, self.cdbytes, self.blocksize
+
+  cdef compress_data(self, ndarray array, object cparams):
+    """Compress data in `array` and put it in ``self.data``"""
+    cdef size_t nbytes, cbytes, blocksize, itemsize, footprint
+    cdef int clevel, shuffle
+    cdef char *dest
+
+    # Compute the total number of bytes in this array
+    itemsize = array.itemsize
+    nbytes = itemsize * array.size
+    cbytes = 0
+    footprint = 0
     # Check whether incoming data is constant
     if array.strides[0] == 0 or check_zeros(array.data, nbytes):
       self.isconstant = 1
-      self.constant = constant = array[0]
+      self.constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
-      footprint += 64 + constant.size * constant.itemsize
+      footprint += 64 + self.constant.size * self.constant.itemsize
     if self.isconstant:
-      cbytes = 0
       blocksize = 4*1024  # use 4 KB as a cache for blocks
       # Make blocksize a multiple of itemsize
       if blocksize % itemsize > 0:
@@ -256,25 +284,15 @@ cdef class chunk:
       clevel = cparams.clevel
       shuffle = cparams.shuffle
       with nogil:
-        cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes, array.data,
-                                dest, nbytes+BLOSC_MAX_OVERHEAD)
+        cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                                array.data, dest, nbytes+BLOSC_MAX_OVERHEAD)
       if cbytes <= 0:
         raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
       # Free the unused data
-      # self.data = <char *>realloc(dest, cbytes)
-      # I think the next is safer (and the speed is barely the same)
-      # Copy the compressed data on a new tailored buffer
-      self.data = <char *>malloc(cbytes)
-      memcpy(self.data, dest, cbytes)
-      free(dest)
+      self.data = <char *>realloc(dest, cbytes)
       # Set size info for the instance
       blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
-
-    # Fill instance data
-    self.nbytes = nbytes
-    self.cbytes = cbytes + footprint
-    self.cdbytes = cbytes
-    self.blocksize = blocksize
+    return (nbytes, cbytes, blocksize, footprint)
 
   def getdata(self, object cparams):
     """Get a compressed String object out of this chunk (for persistence)."""
@@ -392,7 +410,10 @@ cdef class chunk:
 
   def __dealloc__(self):
     """Release C resources before destruction."""
-    free(self.data)
+    if self.dobject:
+      self.dobject = None  # DECREF pointer to data object
+    else:
+      free(self.data)   # explictly free the data area
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
@@ -488,7 +509,7 @@ cdef decode_blosc_header(buffer_):
             'ctbytes': decode_uint32(buffer_[12:16])}
 
 
-cdef class Chunks(object):
+cdef class chunks(object):
   """Store the different carray chunks in a directory on-disk."""
   cdef object datadir, metadir
   cdef object dtype, cparams, shape
@@ -536,8 +557,8 @@ cdef class Chunks(object):
       # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
       # position
       schunk.seek(-BLOSC_HEADER_LENGTH, 1)
-      compressed = schunk.read(ctbytes)
-    return compressed
+      scomp = schunk.read(ctbytes)
+    return scomp
 
   def __getitem__(self, nchunk):
     cdef object chunk_
@@ -549,13 +570,8 @@ cdef class Chunks(object):
       return self.chunk_cached
     else:
       scomp = self.read_chunk(nchunk)
-      compressed = PyString_AsString(scomp)
-      decompressed = malloc(self.chunksize)
-      blosc_decompress(compressed, decompressed, self.chunksize)
-      sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
-      adecomp = np.fromstring(sdecomp, dtype=self.dtype)
-      chunk_ = chunk(adecomp, self.dtype, self.cparams)
-      free(decompressed)
+      # Data chunk should be compressed already
+      chunk_ = chunk(scomp, self.dtype, self.cparams, _compr=True)
       # Fill cache
       self.nchunk_cached = nchunk
       self.chunk_cached = chunk_
@@ -757,7 +773,7 @@ cdef class carray:
 
     # Finally, open data directory
     metainfo = (dtype, cparams, shape, lastchunkarr)
-    self.chunks = Chunks(self.rootdir, metainfo=metainfo, _new=False)
+    self.chunks = chunks(self.rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
     self.leftover = np.product(shape) % chunklen
@@ -846,7 +862,7 @@ cdef class carray:
     else:
       self.mkdirs(rootdir)
       metainfo = (dtype, cparams, self.shape, lastchunkarr)
-      self.chunks = Chunks(self.rootdir, metainfo=metainfo, _new=True)
+      self.chunks = chunks(self.rootdir, metainfo=metainfo, _new=True)
 
     # Finally, fill the chunks
     self.fill_chunks(array_)
@@ -932,6 +948,7 @@ cdef class carray:
     storagef = os.path.join(metadir, "storage")
     with open(storagef, 'r') as storagefh:
       data = yaml.load(storagefh.read())
+    # XXX How the dtype is stored, as atom or item?
     dtype_ = np.dtype(data["dtype"])
     chunklen = data["chunklen"]
     cparams = ca.cparams(
@@ -1293,10 +1310,14 @@ cdef class carray:
     return self._cbytes
 
   cdef int getitem_cache(self, npy_intp pos, char *dest):
-    """Get a single item from self.  It can use an internal cache.
+    """Get a single item and put it in `dest`.  It caches a complete block.
 
     It returns 1 if asked `pos` can be copied to `dest`.  Else, this returns
     0.
+
+    NOTE: As Blosc supports decompressing just a block inside a chunk, the
+    data that is cached is a *block*, as it is the least amount of data that
+    can be decompressed.  This saves both time and memory.
 
     IMPORTANT: Any update operation (e.g. __setitem__) *must* disable this
     cache by setting self.idxcache = -2.
@@ -1317,7 +1338,7 @@ cdef class carray:
       memcpy(dest, self.lastchunk + posinbytes, atomsize)
       return 1
 
-    # Locate the block inside the chunk
+    # Locate the *block* inside the chunk
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
     blocklen = cython.cdiv(blocksize, atomsize)
@@ -1335,7 +1356,7 @@ cdef class carray:
       #   # Absolute first time.  Add the cache size to cbytes counter.
       #   self._cbytes += chunksize
 
-    # Check if data is cached
+    # Check if block is cached
     idxcache = cython.cdiv(pos, <npy_intp>blocklen) * blocklen
     if idxcache == self.idxcache:
       # Hit!
