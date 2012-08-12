@@ -1298,7 +1298,7 @@ cdef class carray:
       else:
         result += chunk_[:].sum(dtype=dtype)
     if self.leftover:
-      leftover = self.len-nchunks*self._chunklen
+      leftover = self.len - nchunks * self._chunklen
       result += self.lastchunkarr[:leftover].sum(dtype=dtype)
 
     return result
@@ -2033,11 +2033,11 @@ cdef class carray:
   def flush(self):
     """Flush lastchunk data."""
     cdef chunk chunk_
-    cdef int nchunks, leftover
+    cdef npy_intp nchunks, leftover
 
     if self.rootdir and self.leftover:
         nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
-        leftover = self.len-nchunks*self._chunklen
+        leftover = self.len - nchunks * self._chunklen
         chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
         self.chunks.flush(chunk_, self.shape)
 
