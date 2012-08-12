@@ -492,10 +492,11 @@ cdef class Chunks(object):
   """Store the different carray chunks in a directory on-disk."""
   cdef object datadir, metadir
   cdef object dtype, cparams, shape
-  cdef int nchunks, chunksize
+  cdef object chunk_cached
+  cdef int nchunks, chunksize, nchunk_cached
   cdef char *lastchunk
 
-  def __init__(self, object rootdir, object metainfo=None, _new=False):
+  def __cinit__(self,rootdir, metainfo=None, _new=False):
     cdef ndarray lastchunkarr
     cdef void *decompressed, *compressed
     cdef int leftover
@@ -505,6 +506,7 @@ cdef class Chunks(object):
     self.datadir = os.path.join(rootdir, DATADIR)
     self.metadir = os.path.join(rootdir, METADIR)
     self.nchunks = 0
+    self.nchunk_cached = -1    # no chunk cached initially
     self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
 
     self.chunksize = len(lastchunkarr) * self.dtype.itemsize
@@ -537,33 +539,40 @@ cdef class Chunks(object):
       compressed = schunk.read(ctbytes)
     return compressed
 
-  def __getitem__(self, object nchunk):
+  def __getitem__(self, nchunk):
     cdef object chunk_
     cdef void *decompressed, *compressed
     cdef object scomp, sdecomp, adecomp
 
-    scomp = self.read_chunk(nchunk)
-    compressed = PyString_AsString(scomp)
-    decompressed = malloc(self.chunksize)
-    blosc_decompress(compressed, decompressed, self.chunksize)
-    sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
-    adecomp = np.fromstring(sdecomp, dtype=self.dtype)
-    chunk_ = chunk(adecomp, self.dtype, self.cparams)
-    free(decompressed)
+    if nchunk == self.nchunk_cached:
+      # Hit!
+      return self.chunk_cached
+    else:
+      scomp = self.read_chunk(nchunk)
+      compressed = PyString_AsString(scomp)
+      decompressed = malloc(self.chunksize)
+      blosc_decompress(compressed, decompressed, self.chunksize)
+      sdecomp = PyString_FromStringAndSize(<char*>decompressed, self.chunksize)
+      adecomp = np.fromstring(sdecomp, dtype=self.dtype)
+      chunk_ = chunk(adecomp, self.dtype, self.cparams)
+      free(decompressed)
+      # Fill cache
+      self.nchunk_cached = nchunk
+      self.chunk_cached = chunk_
     return chunk_
 
-  def __setitem__(self, object nchunk, object chunk_):
+  def __setitem__(self, nchunk, chunk_):
     self._save(nchunk, chunk_)
 
   def __len__(self):
     return self.nchunks
 
-  def append(self, object chunk_):
+  def append(self, chunk_):
     """Append an new chunk to the carray."""
     self._save(self.nchunks, chunk_)
     self.nchunks += 1
 
-  def flush(self, object chunk_, object shape):
+  def flush(self, chunk_, shape):
     """Flush the leftover chunk and update the shape on-disk."""
     self._save(self.nchunks, chunk_)
     rowsf = os.path.join(self.metadir, SHAPEFILE)
@@ -580,6 +589,9 @@ cdef class Chunks(object):
       schunk.write(bloscpack_header)
       data = chunk_.getdata(self.cparams)
       schunk.write(data)
+    # Mark the cache as dirty if needed
+    if nchunk == self.nchunk_cached:
+      self.nchunk_cached = -1
 
   def pop(self):
     """Remove the last chunk and return it."""
@@ -644,7 +656,7 @@ cdef class carray:
   cdef object rootdir, datadir, metadir
   cdef ndarray iobuf, where_buf
   # For block cache
-  cdef int blocksize, idxcache
+  cdef int idxcache
   cdef ndarray blockcache
   cdef char *datacache
 
@@ -1305,6 +1317,7 @@ cdef class carray:
       memcpy(dest, self.lastchunk + posinbytes, atomsize)
       return 1
 
+    # Locate the block inside the chunk
     chunk_ = self.chunks[nchunk]
     blocksize = chunk_.blocksize
     blocklen = cython.cdiv(blocksize, atomsize)
@@ -1317,9 +1330,10 @@ cdef class carray:
     if self.idxcache < 0:
       self.blockcache = np.empty(shape=(blocklen,), dtype=self._dtype)
       self.datacache = self.blockcache.data
-      if self.idxcache == -1:
-        # Absolute first time.  Add the cache size to cbytes counter.
-        self._cbytes += self.blocksize
+      # We don't want this to contribute to cbytes counter!
+      # if self.idxcache == -1:
+      #   # Absolute first time.  Add the cache size to cbytes counter.
+      #   self._cbytes += chunksize
 
     # Check if data is cached
     idxcache = cython.cdiv(pos, <npy_intp>blocklen) * blocklen

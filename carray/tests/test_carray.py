@@ -1286,14 +1286,14 @@ class constructorTest(MayBeDiskTest):
         self.assert_(ac.dtype == np.dtype('i4'))
         a = a.astype('i4')
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test01a(self):
         """Testing zeros() constructor."""
         a = np.zeros(self.N)
         ac = ca.zeros(self.N, rootdir=self.rootdir)
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test01b(self):
         """Testing zeros() constructor, with a `dtype`."""
@@ -1301,7 +1301,7 @@ class constructorTest(MayBeDiskTest):
         ac = ca.zeros(self.N, dtype='i4', rootdir=self.rootdir)
         #print "dtypes-->", a.dtype, ac.dtype
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test01c(self):
         """Testing zeros() constructor, with a string type."""
@@ -1309,21 +1309,21 @@ class constructorTest(MayBeDiskTest):
         ac = ca.zeros(self.N, dtype='S5', rootdir=self.rootdir)
         #print "ac-->", `ac`
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test02a(self):
         """Testing ones() constructor."""
         a = np.ones(self.N)
         ac = ca.ones(self.N, rootdir=self.rootdir)
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test02b(self):
         """Testing ones() constructor, with a `dtype`."""
         a = np.ones(self.N, dtype='i4')
         ac = ca.ones(self.N, dtype='i4', rootdir=self.rootdir)
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test02c(self):
         """Testing ones() constructor, with a string type"""
@@ -1331,21 +1331,21 @@ class constructorTest(MayBeDiskTest):
         ac = ca.ones(self.N, dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test03a(self):
         """Testing fill() constructor."""
         a = np.ones(self.N)
         ac = ca.fill(self.N, 1, rootdir=self.rootdir)
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test03b(self):
         """Testing fill() constructor, with a `dtype`."""
         a = np.ones(self.N, dtype='i4')*3
         ac = ca.fill(self.N, 3, dtype='i4', rootdir=self.rootdir)
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
     def test03c(self):
         """Testing fill() constructor, with a string type"""
@@ -1353,7 +1353,7 @@ class constructorTest(MayBeDiskTest):
         ac = ca.fill(self.N, "1", dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
         self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assert_(np.all(a == ac[:]))
 
 
 class constructorSmallTest(constructorTest):
