@@ -134,7 +134,7 @@ The `meta` files
 ----------------
 
 Here there can be as many files as necessary.  The format for every
-file will tentatively be YAML.  There should be (at least) three
+file will tentatively be JSON.  There should be (at least) three
 files:
 
 The `shape` file

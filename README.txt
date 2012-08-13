@@ -31,7 +31,6 @@ Requisites
 - Python >= 2.6
 - NumPy >= 1.6
 - Cython >= 0.16
-- PyYAML >= 3.10
 
 Building
 --------

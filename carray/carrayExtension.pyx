@@ -14,7 +14,7 @@ from carray import utils
 import os, os.path
 import struct
 import shutil
-import yaml
+import json
 import cython
 
 _KB = 1024
@@ -907,7 +907,7 @@ cdef class carray:
       """Write metadata persistently."""
       storagef = os.path.join(self.metadir, STORAGE_FILE)
       with open(storagef, 'w') as storagefh:
-        storagefh.write(yaml.dump({
+        storagefh.write(json.dumps({
           "dtype": str(self.dtype),
           "cparams": {
             "clevel": self.cparams.clevel,
@@ -932,11 +932,10 @@ cdef class carray:
     else:
       # If not a tuple, then it could be an int
       shape = int(data)
-    # Then the other metadata the shape
+    # Then the rest of metadata
     storagef = os.path.join(metadir, STORAGE_FILE)
     with open(storagef, 'r') as storagefh:
-      data = yaml.load(storagefh.read())
-    # XXX How the dtype is stored, as atom or item?
+      data = json.loads(storagefh.read())
     dtype_ = np.dtype(data["dtype"])
     chunklen = data["chunklen"]
     cparams = ca.cparams(
