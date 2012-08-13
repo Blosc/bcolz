@@ -21,9 +21,10 @@ _KB = 1024
 _MB = 1024*_KB
 
 # Directories for saving the data and metadata for carray persistency
-DATADIR = 'data'
-METADIR = 'meta'
-SHAPEFILE = 'shape'
+DATA_DIR = 'data'
+META_DIR = 'meta'
+SHAPE_FILE = 'shape'
+STORAGE_FILE = 'storage'
 
 # For the persistence layer
 EXTENSION = '.blp'
@@ -216,7 +217,7 @@ cdef class chunk:
       return self.atom
 
   def __cinit__(self, object dobject, object atom, object cparams,
-                object _compr=False):
+                object _memory=True, object _compr=False):
     cdef int itemsize, footprint
     cdef size_t nbytes, cbytes, blocksize
     cdef dtype dtype_
@@ -226,8 +227,6 @@ cdef class chunk:
     dtype_ = atom.base
     self.itemsize = itemsize = dtype_.elsize
     self.typekind = dtype_.kind
-    self.isconstant = 0
-    self.constant = None
     self.dobject = None
     footprint = 0
 
@@ -240,7 +239,7 @@ cdef class chunk:
     else:
       # Compress the data object (a NumPy object)
       nbytes, cbytes, blocksize, footprint = self.compress_data(
-        dobject, cparams)
+        dobject, cparams, _memory)
     footprint += 128  # add the (aprox) footprint of this instance in bytes
 
     # Fill instance data
@@ -250,7 +249,7 @@ cdef class chunk:
     self.blocksize = blocksize
     #print "nbytes, cbytes, cdbytes, blocksize:", self.nbytes, self.cbytes, self.cdbytes, self.blocksize
 
-  cdef compress_data(self, ndarray array, object cparams):
+  cdef compress_data(self, ndarray array, object cparams, object _memory):
     """Compress data in `array` and put it in ``self.data``"""
     cdef size_t nbytes, cbytes, blocksize, itemsize, footprint
     cdef int clevel, shuffle
@@ -261,12 +260,19 @@ cdef class chunk:
     nbytes = itemsize * array.size
     cbytes = 0
     footprint = 0
-    # Check whether incoming data is constant
-    if array.strides[0] == 0 or check_zeros(array.data, nbytes):
+
+    # Check whether incoming data can be expressed as a constant or not.
+    # Disk-based chunks are not allowed to do this.
+    self.isconstant = 0
+    self.constant = None
+    if _memory and (array.strides[0] == 0
+                    or check_zeros(array.data, nbytes)):
+
       self.isconstant = 1
       self.constant = array[0]
       # Add overhead (64 bytes for the overhead of the numpy container)
       footprint += 64 + self.constant.size * self.constant.itemsize
+
     if self.isconstant:
       blocksize = 4*1024  # use 4 KB as a cache for blocks
       # Make blocksize a multiple of itemsize
@@ -278,9 +284,13 @@ cdef class chunk:
     else:
       if self.typekind == 'b':
         self.true_count = true_count(array.data, nbytes)
-      # Data is not constant, compress it
-      dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
+
+      if array.strides[0] == 0:
+        # The chunk is made of constants.  Regenerate the actual data.
+        array = array.copy()
+
       # Compress data
+      dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
       clevel = cparams.clevel
       shuffle = cparams.shuffle
       with nogil:
@@ -292,41 +302,16 @@ cdef class chunk:
       self.data = <char *>realloc(dest, cbytes)
       # Set size info for the instance
       blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+
     return (nbytes, cbytes, blocksize, footprint)
 
-  def getdata(self, object cparams):
+  def getdata(self):
     """Get a compressed String object out of this chunk (for persistence)."""
-    cdef size_t nbytes, cbytes
-    cdef char *cdata, *dest
-    cdef int clevel, shuffle
-    cdef ndarray constants
     cdef object string
 
-    if self.isconstant:
-      nbytes = self.nbytes
-      # The chunk is made of constants.  Regenerate the data and compress it.
-      constants = np.ndarray(shape=(cython.cdiv(nbytes, self.atomsize),),
-                             dtype=self.dtype,
-                             buffer=self.constant,
-                             strides=(0,)
-                             ).copy()
-      # Compress data
-      clevel = cparams.clevel
-      shuffle = cparams.shuffle
-      dest = <char *>malloc(nbytes+BLOSC_MAX_OVERHEAD)
-      with nogil:
-        cbytes = blosc_compress(clevel, shuffle, self.itemsize, nbytes,
-                                constants.data,
-                                dest, nbytes+BLOSC_MAX_OVERHEAD)
-      if cbytes <= 0:
-        raise RuntimeError, "fatal error during Blosc compression: %d" % cbytes
-      # Free the unused data in dest
-      cdata = <char *>realloc(dest, cbytes)
-      string = PyString_FromStringAndSize(cdata, <Py_ssize_t>cbytes)
-      # Free the compressed buffer
-      free(cdata)
-    else:
-      string = PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cdbytes)
+    assert (not self.isconstant,
+            "This function can only be used for persistency")
+    string = PyString_FromStringAndSize(self.data, <Py_ssize_t>self.cdbytes)
     return string
 
   cdef void _getitem(self, int start, int stop, char *dest):
@@ -524,8 +509,8 @@ cdef class chunks(object):
     cdef size_t chunksize
     cdef object scomp
 
-    self.datadir = os.path.join(rootdir, DATADIR)
-    self.metadir = os.path.join(rootdir, METADIR)
+    self.datadir = os.path.join(rootdir, DATA_DIR)
+    self.metadir = os.path.join(rootdir, META_DIR)
     self.nchunks = 0
     self.nchunk_cached = -1    # no chunk cached initially
     self.dtype, self.cparams, self.shape, lastchunkarr = metainfo
@@ -571,7 +556,8 @@ cdef class chunks(object):
     else:
       scomp = self.read_chunk(nchunk)
       # Data chunk should be compressed already
-      chunk_ = chunk(scomp, self.dtype, self.cparams, _compr=True)
+      chunk_ = chunk(scomp, self.dtype, self.cparams,
+                     _memory=False, _compr=True)
       # Fill cache
       self.nchunk_cached = nchunk
       self.chunk_cached = chunk_
@@ -591,7 +577,7 @@ cdef class chunks(object):
   def flush(self, chunk_, shape):
     """Flush the leftover chunk and update the shape on-disk."""
     self._save(self.nchunks, chunk_)
-    rowsf = os.path.join(self.metadir, SHAPEFILE)
+    rowsf = os.path.join(self.metadir, SHAPE_FILE)
     with open(rowsf, 'w') as rowsfh:
       rowsfh.write("%s\n" % shape)
 
@@ -603,7 +589,7 @@ cdef class chunks(object):
     bloscpack_header = create_bloscpack_header(1)
     with open(schunkfile, 'wb') as schunk:
       schunk.write(bloscpack_header)
-      data = chunk_.getdata(self.cparams)
+      data = chunk_.getdata()
       schunk.write(data)
     # Mark the cache as dirty if needed
     if nchunk == self.nchunk_cached:
@@ -764,10 +750,10 @@ cdef class carray:
     # Check rootdir hierarchy
     if not os.path.isdir(self.rootdir):
       raise RuntimeError("root directory does not exist")
-    self.datadir = os.path.join(self.rootdir, DATADIR)
+    self.datadir = os.path.join(self.rootdir, DATA_DIR)
     if not os.path.isdir(self.datadir):
       raise RuntimeError("data directory does not exist")
-    self.metadir = os.path.join(self.rootdir, METADIR)
+    self.metadir = os.path.join(self.rootdir, META_DIR)
     if not os.path.isdir(self.metadir):
       raise RuntimeError("meta directory does not exist")
 
@@ -890,7 +876,8 @@ cdef class carray:
     for i from 0 <= i < nchunks:
       assert i*chunklen < array_.size, "i, nchunks: %d, %d" % (i, nchunks)
       chunk_ = chunk(array_[i*chunklen:(i+1)*chunklen],
-                     self._dtype, self._cparams)
+                     self._dtype, self._cparams,
+                     _memory = self.rootdir is None)
       self.chunks.append(chunk_)
       cbytes += chunk_.cbytes
     self.leftover = leftover = nbytes % self._chunksize
@@ -912,14 +899,14 @@ cdef class carray:
       else:
         os.remove(rootdir)
     os.mkdir(rootdir)
-    self.datadir = os.path.join(rootdir, DATADIR)
+    self.datadir = os.path.join(rootdir, DATA_DIR)
     os.mkdir(self.datadir)
-    self.metadir = os.path.join(rootdir, METADIR)
+    self.metadir = os.path.join(rootdir, META_DIR)
     os.mkdir(self.metadir)
 
   def write_meta(self):
       """Write metadata persistently."""
-      storagef = os.path.join(self.metadir, "storage")
+      storagef = os.path.join(self.metadir, STORAGE_FILE)
       with open(storagef, 'w') as storagefh:
         storagefh.write(yaml.dump({
           "dtype": str(self.dtype),
@@ -936,8 +923,8 @@ cdef class carray:
   def read_meta(self):
     """Read persistent metadata."""
     # First read the shape
-    metadir = os.path.join(self.rootdir, METADIR)
-    shapef = os.path.join(metadir, SHAPEFILE)
+    metadir = os.path.join(self.rootdir, META_DIR)
+    shapef = os.path.join(metadir, SHAPE_FILE)
     with open(shapef, 'r') as shapefh:
       data = shapefh.read()
     if data.startswith('('):
@@ -945,7 +932,7 @@ cdef class carray:
     else:
       shape = int(data)
     # Then the other metadata the shape
-    storagef = os.path.join(metadir, "storage")
+    storagef = os.path.join(metadir, STORAGE_FILE)
     with open(storagef, 'r') as storagefh:
       data = yaml.load(storagefh.read())
     # XXX How the dtype is stored, as atom or item?
@@ -1018,7 +1005,8 @@ cdef class carray:
           stop = cython.cdiv((leftover+nbytesfirst), atomsize)
           self.lastchunkarr[start:stop] = arrcpy[start:stop]
         # Compress the last chunk and add it to the list
-        chunk_ = chunk(self.lastchunkarr, self._dtype, self._cparams)
+        chunk_ = chunk(self.lastchunkarr, self._dtype, self._cparams,
+                       _memory = self.rootdir is None)
         chunks.append(chunk_)
         cbytes = chunk_.cbytes
       else:
@@ -1032,7 +1020,8 @@ cdef class carray:
       remainder = arrcpy[cython.cdiv(nbytesfirst, atomsize):]
       for i from 0 <= i < nchunks:
         chunk_ = chunk(
-          remainder[i*chunklen:(i+1)*chunklen], self._dtype, self._cparams)
+          remainder[i*chunklen:(i+1)*chunklen], self._dtype, self._cparams,
+          _memory = self.rootdir is None)
         chunks.append(chunk_)
         cbytes += chunk_.cbytes
 
@@ -1657,7 +1646,8 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[startb:stopb:step] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._dtype, self._cparams)
+        chunk_ = chunk(cdata, self._dtype, self._cparams,
+                       _memory = self.rootdir is None)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -1746,7 +1736,8 @@ cdef class carray:
         # Overwrite it with data from value
         cdata[boolb] = value[nwrow:nwrow+blen]
         # Replace the chunk
-        chunk_ = chunk(cdata, self._dtype, self._cparams)
+        chunk_ = chunk(cdata, self._dtype, self._cparams,
+                       _memory = self.rootdir is None)
         self.chunks[nchunk] = chunk_
         # Update cbytes counter
         self._cbytes += chunk_.cbytes
@@ -2035,11 +2026,19 @@ cdef class carray:
     cdef chunk chunk_
     cdef npy_intp nchunks, leftover
 
-    if self.rootdir and self.leftover:
+    if self.rootdir is None:
+      return
+
+    if self.leftover:
         nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
         leftover = self.len - nchunks * self._chunklen
-        chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams)
+        chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams,
+                       _memory = self.rootdir is None)
         self.chunks.flush(chunk_, self.shape)
+        self._cbytes += chunk_.cbytes
+
+    # Update the metadata on disk
+    self.write_meta()
 
 
 

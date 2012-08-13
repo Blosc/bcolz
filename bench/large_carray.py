@@ -27,3 +27,6 @@ assert cn[-1] == 4
 t0 = time()
 assert cn.sum() == 10
 print "Sum time:", round(time() - t0, 3)
+
+print "str(carray):", str(cn)
+print "repr(carray):", repr(cn)
