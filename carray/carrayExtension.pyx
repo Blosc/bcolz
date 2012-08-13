@@ -536,7 +536,6 @@ cdef class chunks(object):
       bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
       blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
       blosc_header = decode_blosc_header(blosc_header_raw)
-      #print 'blosc_header: %s' % repr(blosc_header)
       ctbytes = blosc_header['ctbytes']
       nbytes = blosc_header['nbytes']
       # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
@@ -579,7 +578,7 @@ cdef class chunks(object):
     self._save(self.nchunks, chunk_)
     rowsf = os.path.join(self.metadir, SHAPE_FILE)
     with open(rowsf, 'w') as rowsfh:
-      rowsfh.write("%s\n" % shape)
+      rowsfh.write("%s\n" % str(shape))
 
   cdef _save(self, nchunk, chunk_):
     """Save the `chunk_` as chunk #`nchunk`. """
@@ -701,7 +700,7 @@ cdef class carray:
   property shape:
     "The shape of this object."
     def __get__(self):
-      return (self.len,) + self._dtype.shape
+      return tuple((self.len,) + self._dtype.shape)
 
   def __cinit__(self, object array=None, object cparams=None,
                 object dtype=None, object dflt=None,
@@ -917,7 +916,7 @@ cdef class carray:
           "chunklen": self._chunklen,
           "expectedlen": self.expectedlen,
           "cbytes": self.cbytes,
-          "dflt": self.dflt.item(),  # XXX Fix for dtype.shape != ()
+          "dflt": self.dflt.tolist(),
           }))
 
   def read_meta(self):
@@ -928,8 +927,10 @@ cdef class carray:
     with open(shapef, 'r') as shapefh:
       data = shapefh.read()
     if data.startswith('('):
-      shape = tuple(data)
+      # Convert into a tuple
+      shape = eval(data)
     else:
+      # If not a tuple, then it could be an int
       shape = int(data)
     # Then the other metadata the shape
     storagef = os.path.join(metadir, STORAGE_FILE)
