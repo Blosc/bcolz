@@ -2016,10 +2016,13 @@ cdef class carray:
     snbytes = utils.human_readable_size(self._nbytes)
     scbytes = utils.human_readable_size(self._cbytes)
     cratio = self._nbytes / float(self._cbytes)
-    fullrepr = """carray(%s, %s)  nbytes: %s; cbytes: %s; ratio: %.2f
-  cparams := %r
-%s""" % (self.shape, self.dtype, snbytes, scbytes, cratio,
-         self.cparams, str(self))
+    header = "carray(%s, %s)\n" % (self.shape, self.dtype)
+    header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
+      snbytes, scbytes, cratio)
+    header += "  cparams := %r\n" % self.cparams
+    if self.rootdir:
+      header += "  rootdir := '%s'\n" % self.rootdir
+    fullrepr = header + str(self)
     return fullrepr
 
   def flush(self):
