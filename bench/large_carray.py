@@ -5,13 +5,14 @@ from time import time
 
 t0 = time()
 #cn = ca.zeros(5e9, dtype="i1")
-cn = ca.zeros(5e9, dtype="i1", rootdir='large_carray-bench')
+cn = ca.zeros(5e9, dtype="i1", rootdir='large_carray-bench', mode='w')
 print "Creation time:", round(time() - t0, 3)
 assert len(cn) == int(5e9)
 
 t0 = time()
-cn = ca.carray(rootdir='large_carray-bench')
+cn = ca.carray(rootdir='large_carray-bench', mode='a')
 print "Re-open time:", round(time() - t0, 3)
+print "len(cn)", len(cn)
 assert len(cn) == int(5e9)
 
 # Now check some accesses

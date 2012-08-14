@@ -95,11 +95,10 @@ The layout of binary superchunk data files looks like this::
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
     |           file-size           |            nchunks            |
 
-The magic 'blpk' magic signature is the same than a forthcoming
-bloscpack format (see https://github.com/esc/bloscpack).  This new
-version of the format will allow to include indexes (offsets to where
-the data chunks begin) and checksums (probably using the adler32
-algorithm or similar).
+The magic 'blpk' signature is the same than the bloscpack format (see
+https://github.com/esc/bloscpack).  The new version of the format will
+allow to include indexes (offsets to where the data chunks begin) and
+checksums (probably using the adler32 algorithm or similar).
 
 After the above header, it will follow index data and the actual data
 in blosc chunks::

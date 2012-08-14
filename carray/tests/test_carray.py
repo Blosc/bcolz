@@ -1499,6 +1499,92 @@ class largeCarrayTest(MayBeDiskTest):
         self.assert_(cn.sum() == 10)
 
 
+class persistentTest(MayBeDiskTest):
+
+    disk = True
+
+    def test01a(self):
+        """Creating a carray in "r" mode."""
+
+        N = 10000
+        self.assertRaises(RuntimeError, ca.zeros, 
+                          N, dtype="i1", rootdir=self.rootdir, mode='r')
+
+    def test01b(self):
+        """Creating a carray in "w" mode."""
+
+        N = 10000
+        cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = ca.zeros(N-2, dtype="i1", rootdir=self.rootdir, mode='w')
+        self.assert_(len(cn) == N-2)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == N)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+
+    def test01c(self):
+        """Creating a carray in "a" mode."""
+
+        N = 10000
+        cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        self.assertRaises(RuntimeError, ca.zeros, 
+                          N-2, dtype="i1", rootdir=self.rootdir, mode='a')
+
+    def test02a(self):
+        """Opening a carray in "r" mode."""
+
+        N = 10000
+        cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = ca.carray(rootdir=self.rootdir, mode='r')
+        self.assert_(len(cn) == N)
+
+        # Now check some accesses
+        self.assertRaises(RuntimeError, cn.__setitem__, 1, 1)
+        self.assertRaises(RuntimeError, cn.append, 1)
+
+    def test02b(self):
+        """Opening a carray in "w" mode."""
+
+        N = 10000
+        cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = ca.carray(rootdir=self.rootdir, mode='w')
+        self.assert_(len(cn) == 0)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == 2)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+
+    def test02c(self):
+        """Opening a carray in "a" mode."""
+
+        N = 10000
+        cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
+        self.assert_(len(cn) == N)
+
+        cn = ca.carray(rootdir=self.rootdir, mode='a')
+        self.assert_(len(cn) == N)
+
+        # Now check some accesses (no errors should be raised)
+        cn.append([1,1])
+        self.assert_(len(cn) == N+2)
+        cn[1] = 2
+        self.assert_(cn[1] == 2)
+        cn[N+1] = 3
+        self.assert_(cn[N+1] == 3)
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -1538,6 +1624,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(evalDiskSmall))
     theSuite.addTest(unittest.makeSuite(evalBig))
     theSuite.addTest(unittest.makeSuite(evalDiskBig))
+    theSuite.addTest(unittest.makeSuite(persistentTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalSmallNE))
         theSuite.addTest(unittest.makeSuite(evalDiskSmallNE))
