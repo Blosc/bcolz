@@ -137,14 +137,14 @@ Here there can be as many files as necessary.  The format for every
 file will tentatively be JSON.  There should be (at least) three
 files:
 
-The `shape` file
+The `sizes` file
 ~~~~~~~~~~~~~~~~
 
-This contains the shape of the dataset.  It will be written as a
-regular text file.  For example::
+This contains the shape and compressed and uncompressed sizes of the
+dataset.  For example::
 
-    $ cat meta/shape
-    (300, 200)
+    $ cat meta/sizes
+    {"shape": [5000000000], "nbytes": 5000000000, "cbytes": 24328038}
 
 The `storage` file (may also be `dtype`, `dtype adaptor` or `domain`)
 ~~~~~~~~~~~~~~~~~~

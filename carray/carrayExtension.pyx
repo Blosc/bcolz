@@ -23,7 +23,7 @@ _MB = 1024*_KB
 # Directories for saving the data and metadata for carray persistency
 DATA_DIR = 'data'
 META_DIR = 'meta'
-SHAPE_FILE = 'shape'
+SIZES_FILE = 'sizes'
 STORAGE_FILE = 'storage'
 
 # For the persistence layer
@@ -573,12 +573,13 @@ cdef class chunks(object):
     self._save(self.nchunks, chunk_)
     self.nchunks += 1
 
-  def flush(self, chunk_, shape):
+  def flush(self, chunk_, sizes):
     """Flush the leftover chunk and update the shape on-disk."""
     self._save(self.nchunks, chunk_)
-    rowsf = os.path.join(self.metadir, SHAPE_FILE)
+    rowsf = os.path.join(self.metadir, SIZES_FILE)
     with open(rowsf, 'w') as rowsfh:
-      rowsfh.write("%s\n" % str(shape))
+      rowsfh.write(json.dumps(sizes))
+      rowsfh.write('\n')
 
   cdef _save(self, nchunk, chunk_):
     """Save the `chunk_` as chunk #`nchunk`. """
@@ -848,13 +849,13 @@ cdef class carray:
       self.mkdirs(rootdir)
       metainfo = (dtype, cparams, self.shape, lastchunkarr)
       self.chunks = chunks(self.rootdir, metainfo=metainfo, _new=True)
+      # We can write the metainfo already
+      self.write_meta()
 
     # Finally, fill the chunks
     self.fill_chunks(array_)
-    if rootdir is not None:
-      self.write_meta()
 
-    # Flush the data pending
+    # and flush the data pending...
     self.flush()
 
   def fill_chunks(self, object array_):
@@ -915,23 +916,24 @@ cdef class carray:
             },
           "chunklen": self._chunklen,
           "expectedlen": self.expectedlen,
-          "cbytes": self.cbytes,
           "dflt": self.dflt.tolist(),
           }))
+        storagefh.write("\n")
 
   def read_meta(self):
     """Read persistent metadata."""
-    # First read the shape
+
+    # First read the size info
     metadir = os.path.join(self.rootdir, META_DIR)
-    shapef = os.path.join(metadir, SHAPE_FILE)
+    shapef = os.path.join(metadir, SIZES_FILE)
     with open(shapef, 'r') as shapefh:
-      data = shapefh.read()
-    if data.startswith('('):
-      # Convert into a tuple
-      shape = eval(data)
-    else:
-      # If not a tuple, then it could be an int
-      shape = int(data)
+      sizes = json.loads(shapefh.read())
+    shape = sizes['shape']
+    if type(shape) == list:
+      shape = tuple(shape)
+    nbytes = sizes["nbytes"]
+    cbytes = sizes["cbytes"]
+
     # Then the rest of metadata
     storagef = os.path.join(metadir, STORAGE_FILE)
     with open(storagef, 'r') as storagefh:
@@ -943,7 +945,6 @@ cdef class carray:
       shuffle = data["cparams"]["shuffle"])
     expectedlen = data["expectedlen"]
     dflt = data["dflt"]
-    cbytes = data["cbytes"]
     return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
   def append(self, object array):
@@ -2028,6 +2029,7 @@ cdef class carray:
     """Flush lastchunk data."""
     cdef chunk chunk_
     cdef npy_intp nchunks, leftover
+    cdef object sizes = dict()
 
     if self.rootdir is None:
       return
@@ -2037,8 +2039,12 @@ cdef class carray:
         leftover = self.len - nchunks * self._chunklen
         chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams,
                        _memory = self.rootdir is None)
-        self.chunks.flush(chunk_, self.shape)
         self._cbytes += chunk_.cbytes
+        # Flush this chunk and sizes metadata to disk
+        sizes['shape'] = self.shape
+        sizes['nbytes'] = self.nbytes
+        sizes['cbytes'] = self.cbytes
+        self.chunks.flush(chunk_, sizes)
 
     # Update the metadata on disk
     self.write_meta()
