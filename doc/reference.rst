@@ -494,16 +494,16 @@ carray special methods
 The ctable class
 ================
 
-.. py:class:: ctable(cols, names=None, **kwargs)
+.. py:class:: ctable(columns, names=None, **kwargs)
 
     This class represents a compressed, column-wise, in-memory table.
 
-    Create a new ctable from `cols` with optional `names`.  The
+    Create a new ctable from `columns` with optional `names`.  The
     columns are carray objects.
 
     Parameters:
-      cols : tuple or list of carray/ndarray objects, or structured ndarray
-        The list of column data to build the ctable object.
+      columns : tuple or list of carray/ndarray objects, or structured
+        ndarray.  The list of column data to build the ctable object.
         This can also be a pure NumPy structured array.
       names : list of strings or string
         The list of names for the columns.  Alternatively, it can be

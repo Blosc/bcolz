@@ -9,38 +9,16 @@
 
 import sys
 import os, os.path
-import tempfile
 import struct
-import glob
-import shutil
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
+from carray.tests.utils import MayBeDiskTest
 from carray.carrayExtension import chunk
 import unittest
 
 is_64bit = (struct.calcsize("P") == 8)
-
-
-# The next is useful as superclass for disk-based tests
-class MayBeDiskTest(unittest.TestCase):
-
-    disk = False
-
-    def setUp(self):
-        if self.disk:
-            prefix = 'carray-' + self.__class__.__name__
-            self.rootdir = tempfile.mkdtemp(prefix=prefix)
-            os.rmdir(self.rootdir)  # tests needs this cleared
-        else:
-            self.rootdir = None
-
-    def tearDown(self):
-        if self.disk:
-            # Remove every directory starting with rootdir
-            for dir_ in glob.glob(self.rootdir+'*'):
-                shutil.rmtree(dir_)
 
 
 class chunkTest(unittest.TestCase):

@@ -12,16 +12,17 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
 import unittest
+from carray.tests.utils import MayBeDiskTest
 
 
-class createTest(unittest.TestCase):
+class createTest(MayBeDiskTest):
 
     def test00(self):
         """Testing ctable creation from a tuple of carrays"""
         N = 1e1
         a = ca.carray(np.arange(N, dtype='i4'))
         b = ca.carray(np.arange(N, dtype='f8')+1)
-        t = ca.ctable((a, b), ('f0', 'f1'))
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         #print "t->", `t`
         ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
         #print "ra[:]", ra[:]
@@ -32,7 +33,7 @@ class createTest(unittest.TestCase):
         N = 1e1
         a = np.arange(N, dtype='i4')
         b = np.arange(N, dtype='f8')+1
-        t = ca.ctable((a, b), ('f0', 'f1'))
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         #print "t->", `t`
         ra = np.rec.fromarrays([a,b]).view(np.ndarray)
         #print "ra[:]", ra[:]
@@ -42,7 +43,7 @@ class createTest(unittest.TestCase):
         """Testing ctable creation from an structured array"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -51,7 +52,8 @@ class createTest(unittest.TestCase):
         """Testing ctable creation from large iterator"""
         N = 10*1000
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8', count=N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8',
+                        count=N, rootdir=self.rootdir)
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -62,19 +64,140 @@ class createTest(unittest.TestCase):
         ra = np.fromiter(((i, i*2.) for i in xrange(N)),
                          dtype='i4,f8', count=N)
         t = ca.fromiter(((i, i*2.) for i in xrange(N)),
-                        dtype='i4,f8', count=N)
+                        dtype='i4,f8', count=N, rootdir=self.rootdir)
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+class createDiskTest(createTest):
+    disk = True
 
-class add_del_colTest(unittest.TestCase):
+
+class persistentTest(MayBeDiskTest):
+
+    disk = True
+
+    def test00a(self):
+        """Testing ctable opening in "r" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
+        # Open t
+        t = ca.ctable(rootdir=self.rootdir, mode='r')
+        #print "t->", `t`
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+        # Now check some accesses
+        self.assertRaises(RuntimeError, t.__setitem__, 1, (0, 0.0))
+        self.assertRaises(RuntimeError, t.append, (0, 0.0))
+
+    def test00b(self):
+        """Testing ctable opening in "w" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
+        # Open t
+        t = ca.ctable(rootdir=self.rootdir, mode='w')
+        #print "t->", `t`
+        N = 0
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+        # Now check some accesses
+        t.append((0, 0.0))
+        t.append((0, 0.0))
+        t[1] = (1, 2.0)
+        ra = np.rec.fromarrays([(0,1),(0.0, 2.0)], 'i4,f8').view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test00c(self):
+        """Testing ctable opening in "a" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
+        # Open t
+        t = ca.ctable(rootdir=self.rootdir, mode='a')
+        #print "t->", `t`
+
+        # Check values
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+        # Now check some accesses
+        t.append((10, 11.0))
+        t.append((10, 11.0))
+        t[-1] = (11, 12.0)
+
+        # Check values
+        N = 12
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01a(self):
+        """Testing ctable creation in "r" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        self.assertRaises(RuntimeError, ca.ctable, (a, b), ('f0', 'f1'),
+                          rootdir=self.rootdir, mode='r')
+
+    def test01b(self):
+        """Testing ctable creation in "w" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
+        # Overwrite the last ctable
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir, mode='w')
+        #print "t->", `t`
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+        # Now check some accesses
+        t.append((10, 11.0))
+        t.append((10, 11.0))
+        t[11] = (11, 12.0)
+
+        # Check values
+        N = 12
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01c(self):
+        """Testing ctable creation in "a" mode"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        b = ca.carray(np.arange(N, dtype='f8')+1)
+        t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
+        # Overwrite the last ctable
+        self.assertRaises(RuntimeError, ca.ctable, (a, b), ('f0', 'f1'),
+                          rootdir=self.rootdir, mode='a')
+
+
+class add_del_colTest(MayBeDiskTest):
 
     def test00(self):
         """Testing adding a new column (carray flavor)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(ca.carray(c), 'f2')
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -86,7 +209,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing adding a new column (numpy flavor)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(c, 'f2')
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -98,7 +221,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing cparams when adding a new column (numpy flavor)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, cparams=ca.cparams(1))
+        t = ca.ctable(ra, cparams=ca.cparams(1), rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(c, 'f2')
         self.assert_(t['f2'].cparams.clevel == 1, "Incorrect clevel")
@@ -107,7 +230,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing adding a new column (default naming)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(ca.carray(c))
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
@@ -119,7 +242,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing inserting a new column (at the beginning)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(c, name='c0', pos=0)
         ra = np.fromiter(((i*3, i, i*2.) for i in xrange(N)), dtype='i8,i4,f8')
@@ -132,7 +255,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing inserting a new column (in the middle)"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(c, name='c0', pos=1)
         ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
@@ -145,7 +268,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing removing an existing column (at the beginning)"""
         N = 10
         ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t.delcol(pos=0)
         # The next gives a segfault.  See:
         # http://projects.scipy.org/numpy/ticket/1598
@@ -161,7 +284,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing removing an existing column (at the end)"""
         N = 10
         ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t.delcol(pos=2)
         ra = np.fromiter(((i, i*3) for i in xrange(N)), dtype='i4,i8')
         ra.dtype.names = ('f0', 'f1')
@@ -173,7 +296,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing removing an existing column (in the middle)"""
         N = 10
         ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t.delcol(pos=1)
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         ra.dtype.names = ('f0', 'f2')
@@ -185,7 +308,7 @@ class add_del_colTest(unittest.TestCase):
         """Testing removing an existing column (by name)"""
         N = 10
         ra = np.fromiter(((i, i*3, i*2.) for i in xrange(N)), dtype='i4,i8,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t.delcol('f1')
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         ra.dtype.names = ('f0', 'f2')
@@ -193,14 +316,17 @@ class add_del_colTest(unittest.TestCase):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+class add_del_colDiskTest(add_del_colTest):
+    disk = True
 
-class getitemTest(unittest.TestCase):
+
+class getitemTest(MayBeDiskTest):
 
     def test00(self):
         """Testing __getitem__ with only a start"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         start = 9
         #print "t->", `t`
         #print "ra[:]", ra[:]
@@ -210,7 +336,7 @@ class getitemTest(unittest.TestCase):
         """Testing __getitem__ with start, stop"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         start, stop = 3, 9
         #print "t->", `t`
         #print "ra[:]", ra[:]
@@ -221,7 +347,7 @@ class getitemTest(unittest.TestCase):
         """Testing __getitem__ with start, stop, step"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         start, stop, step = 3, 9, 2
         #print "t->", `t[start:stop:step]`
         #print "ra->", ra[start:stop:step]
@@ -232,7 +358,7 @@ class getitemTest(unittest.TestCase):
         """Testing __getitem__ with a column name"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         colname = "f1"
         #print "t->", `t[colname]`
         #print "ra->", ra[colname]
@@ -243,21 +369,24 @@ class getitemTest(unittest.TestCase):
         """Testing __getitem__ with a list of column names"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         colnames = ["f0", "f2"]
         #print "t->", `t[colnames]`
         #print "ra->", ra[colnames]
         assert_array_equal(t[colnames][:], ra[colnames],
                            "ctable values are not correct")
 
+class getitemDiskTest(getitemTest):
+    disk = True
 
-class setitemTest(unittest.TestCase):
+
+class setitemTest(MayBeDiskTest):
 
     def test00(self):
         """Testing __setitem__ with only a start"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunklen=10)
+        t = ca.ctable(ra, chunklen=10, rootdir=self.rootdir)
         sl = slice(9, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -269,7 +398,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with only a stop"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunklen=10)
+        t = ca.ctable(ra, chunklen=10, rootdir=self.rootdir)
         sl = slice(None, 9, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -281,7 +410,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a start, stop"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunklen=10)
+        t = ca.ctable(ra, chunklen=10, rootdir=self.rootdir)
         sl = slice(1,90, None)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -293,7 +422,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a start, stop, step"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunklen=10)
+        t = ca.ctable(ra, chunklen=10, rootdir=self.rootdir)
         sl = slice(1,90, 2)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -305,7 +434,7 @@ class setitemTest(unittest.TestCase):
         """Testing __setitem__ with a large step"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra, chunklen=10)
+        t = ca.ctable(ra, chunklen=10, rootdir=self.rootdir)
         sl = slice(1,43, 20)
         t[sl] = (0, 1)
         ra[sl] = (0, 1)
@@ -313,15 +442,17 @@ class setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+class setitemDiskTest(setitemTest):
+    disk = True
 
 
-class appendTest(unittest.TestCase):
+class appendTest(MayBeDiskTest):
 
     def test00(self):
         """Testing append() with scalar values"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t.append((N, N*2))
         ra = np.fromiter(((i, i*2.) for i in xrange(N+1)), dtype='i4,f8')
         assert_array_equal(t[:], ra, "ctable values are not correct")
@@ -330,7 +461,7 @@ class appendTest(unittest.TestCase):
         """Testing append() with numpy arrays"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         a = np.arange(N, N+10, dtype='i4')
         b = np.arange(N, N+10, dtype='f8')*2.
         t.append((a, b))
@@ -341,7 +472,7 @@ class appendTest(unittest.TestCase):
         """Testing append() with carrays"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         a = np.arange(N, N+10, dtype='i4')
         b = np.arange(N, N+10, dtype='f8')*2.
         t.append((ca.carray(a), ca.carray(b)))
@@ -352,7 +483,7 @@ class appendTest(unittest.TestCase):
         """Testing append() with structured arrays"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         ra2 = np.fromiter(((i, i*2.) for i in xrange(N, N+10)), dtype='i4,f8')
         t.append(ra2)
         ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
@@ -362,21 +493,25 @@ class appendTest(unittest.TestCase):
         """Testing append() with another ctable"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         ra2 = np.fromiter(((i, i*2.) for i in xrange(N, N+10)), dtype='i4,f8')
         t2 = ca.ctable(ra2)
         t.append(t2)
         ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+class appendDiskTest(appendTest):
+    disk = True
 
-class trimTest(unittest.TestCase):
+
+class trimTest(MayBeDiskTest):
 
     def test00(self):
         """Testing trim() with Python scalar values"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N-2)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
+                       rootdir=self.rootdir)
         t.trim(2)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
@@ -384,7 +519,8 @@ class trimTest(unittest.TestCase):
         """Testing trim() with NumPy scalar values"""
         N = 10000
         ra = np.fromiter(((i, i*2.) for i in xrange(N-200)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
+                        rootdir=self.rootdir)
         t.trim(np.int(200))
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
@@ -392,18 +528,23 @@ class trimTest(unittest.TestCase):
         """Testing trim() with a complete trim"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(0)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
+                        rootdir=self.rootdir)
         t.trim(N)
         self.assert_(len(ra) == len(t), "Lengths are not equal")
 
+class trimDiskTest(trimTest):
+    disk = True
 
-class resizeTest(unittest.TestCase):
+
+class resizeTest(MayBeDiskTest):
 
     def test00(self):
         """Testing resize() (decreasing)"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N-2)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
+                        rootdir=self.rootdir)
         t.resize(N-2)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
@@ -411,21 +552,25 @@ class resizeTest(unittest.TestCase):
         """Testing resize() (increasing)"""
         N = 100
         ra = np.fromiter(((i, i*2.) for i in xrange(N+4)), dtype='i4,f8')
-        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N)
+        t = ca.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
+                        rootdir=self.rootdir)
         t.resize(N+4)
         ra['f0'][N:] = np.zeros(4)
         ra['f1'][N:] = np.zeros(4)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+class resizeDiskTest(resizeTest):
+    disk=True
 
-class copyTest(unittest.TestCase):
+
+class copyTest(MayBeDiskTest):
 
     def test00(self):
         """Testing copy() without params"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
-        t2 = t.copy()
+        t = ca.ctable(ra, rootdir=self.rootdir)
+        t2 = t.copy(rootdir=self.rootdir, mode='w')
         a = np.arange(N, N+10, dtype='i4')
         b = np.arange(N, N+10, dtype='f8')*2.
         t2.append((a, b))
@@ -438,8 +583,9 @@ class copyTest(unittest.TestCase):
         """Testing copy() with higher clevel"""
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
-        t2 = t.copy(cparams=ca.cparams(clevel=9))
+        t = ca.ctable(ra, rootdir=self.rootdir)
+        t2 = t.copy(cparams=ca.cparams(clevel=9),
+                    rootdir=self.rootdir, mode='w')
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t.cparams.clevel == ca.cparams().clevel)
         self.assert_(t2.cparams.clevel == 9)
@@ -449,7 +595,7 @@ class copyTest(unittest.TestCase):
         """Testing copy() with lower clevel"""
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         t2 = t.copy(cparams=ca.cparams(clevel=1))
         self.assert_(t.cparams.clevel == ca.cparams().clevel)
         self.assert_(t2.cparams.clevel == 1)
@@ -461,9 +607,13 @@ class copyTest(unittest.TestCase):
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra)
-        t2 = t.copy(cparams=ca.cparams(shuffle=False))
+        # print "t:", t, t.rootdir
+        t2 = t.copy(cparams=ca.cparams(shuffle=False), rootdir=self.rootdir)
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
+
+class copyDiskTest(copyTest):
+    disk = True
 
 
 class specialTest(unittest.TestCase):
@@ -1202,13 +1352,22 @@ def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(createTest))
+    theSuite.addTest(unittest.makeSuite(createDiskTest))
+    theSuite.addTest(unittest.makeSuite(persistentTest))
     theSuite.addTest(unittest.makeSuite(add_del_colTest))
+    theSuite.addTest(unittest.makeSuite(add_del_colDiskTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(getitemDiskTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
+    theSuite.addTest(unittest.makeSuite(setitemDiskTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(appendDiskTest))
     theSuite.addTest(unittest.makeSuite(trimTest))
+    theSuite.addTest(unittest.makeSuite(trimDiskTest))
     theSuite.addTest(unittest.makeSuite(resizeTest))
+    theSuite.addTest(unittest.makeSuite(resizeDiskTest))
     theSuite.addTest(unittest.makeSuite(copyTest))
+    theSuite.addTest(unittest.makeSuite(copyDiskTest))
     theSuite.addTest(unittest.makeSuite(specialTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))

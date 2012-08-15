@@ -888,7 +888,7 @@ cdef class carray:
     self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
-    self.leftover = np.product(shape) % chunklen
+    self.leftover = (np.product(shape) % chunklen) * dtype.itemsize
     self._cbytes = cbytes
     self._nbytes = np.product(shape) * dtype.itemsize
 

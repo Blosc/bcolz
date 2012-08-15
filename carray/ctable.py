@@ -14,11 +14,13 @@ from carray import utils
 import itertools as it
 from collections import namedtuple
 import json
+import os, os.path
+import shutil
 
 
 ROOTDIRS = '__rootdirs__'
 
-class columns(object):
+class _cols(object):
     """Class that keeps track of columns on the ctable object."""
 
     def __init__(self, rootdir, mode):
@@ -26,6 +28,36 @@ class columns(object):
         self.mode = mode
         self.names = []
         self.cols = {}
+
+    def read_meta_and_open(self):
+        """Read the meta-information and initialize structures."""
+        # Check that the rootdir exists
+        if not os.path.isdir(self.rootdir):
+            raise RuntimeError(
+                "the path '%s' is either not present or not a directory")
+        # Get the directories of the columns
+        rootsfile = os.path.join(self.rootdir, ROOTDIRS)
+        if not os.path.isfile(rootsfile):
+            raise RuntimeError(
+                "the file '%s' is not present")
+        with open(rootsfile, 'rb') as rfile:
+            data = json.loads(rfile.read())
+        # JSON returns unicode (?)
+        self.names = [str(name) for name in data['names']]
+        # Initialize the cols by instatiating the carrays
+        for name, dir_ in data['dirs'].items():
+            self.cols[str(name)] = ca.carray(rootdir=dir_, mode=self.mode)
+
+    def update_meta(self):
+        """Update metainfo about directories on-disk."""
+        if not self.rootdir:
+            return
+        dirs = dict((n, o.rootdir) for n,o in self.cols.items())
+        data = {'names': self.names, 'dirs': dirs}
+        rootsfile = os.path.join(self.rootdir, ROOTDIRS)
+        with open(rootsfile, 'w') as rfile:
+            rfile.write(json.dumps(data))
+            rfile.write("\n")
 
     def __getitem__(self, name):
         return self.cols[name]
@@ -38,26 +70,22 @@ class columns(object):
     def __iter__(self):
         return iter(self.cols)
 
+    def __len__(self):
+        return len(self.names)
+
     def insert(self, name, pos, carray):
+        """Insert carray in the specified pos and name."""
         self.names.insert(pos, name)
         self.cols[name] = carray
+        self.update_meta()
 
     def pop(self, name):
+        """Return the named column and remove it."""
         pos = self.names.index(name)
         name = self.names.pop(pos)
         col = self.cols[name]
         self.update_meta()
         return col
-
-    def update_meta(self):
-        if not self.rootdir:
-            return
-        dirs = dict((n, o.rootdir) for n,o in self.cols)
-        data = {'names': self.names, 'dirs': dirs}
-        rootsfile = os.path.join(self.rootdir, ROOTDIRS)
-        with open(rootsfile, 'rb') as rfile:
-            rfile.write(json.dumps(data))
-            rfile.write("\n")
         
 
 class ctable(object):
@@ -71,9 +99,9 @@ class ctable(object):
 
     Parameters
     ----------
-    cols : tuple or list of carray/ndarray objects, or structured ndarray
-        The list of column data to build the ctable object.
-        This can also be a pure NumPy structured array.
+    columns : tuple or list of carray/ndarray objects, or structured ndarray.
+        The list of column data to build the ctable object.  This can also be
+        a pure NumPy structured array.
     names : list of strings or string
         The list of names for the columns.  The names in this list must be
         valid Python identifiers, must not start with an underscore, and has
@@ -98,7 +126,7 @@ class ctable(object):
     @property
     def dtype(self):
         "The data type of this ctable (numpy dtype)."
-        names, cols = self.names, self.cols
+        names, cols = self.names, self._cols
         l = [(name, cols[name].dtype) for name in names]
         return np.dtype(l)
 
@@ -125,7 +153,12 @@ class ctable(object):
     @property
     def names(self):
         "The names of the columns (list)."
-        return self.cols.names
+        return self._cols.names
+
+    @property
+    def cols(self):
+        "The ctable columns (dict)."
+        return self._cols.cols
 
     def _get_stats(self):
         """
@@ -151,73 +184,123 @@ class ctable(object):
         cratio = nbytes / float(cbytes)
         return (nbytes, cbytes, cratio)
 
-    def __init__(self, cols, names=None, **kwargs):
-
-        self.len = 0
+    def __init__(self, columns=None, names=None, **kwargs):
 
         # Important optional params
+        self._cparams = kwargs.get('cparams', ca.cparams())
         self.rootdir = kwargs.get('rootdir', None)
         self.mode = kwargs.get('mode', 'a')
-
+        
         # Setup the columns accessor
-        self.cols = columns(self.rootdir, self.mode)
+        self._cols = _cols(self.rootdir, self.mode)
 
-        # Get the names of the cols
+        # The length counter of this array
+        self.len = 0
+
+        # Create a new ctable or open it from disk
+        if columns is not None:
+            self.create_ctable(columns, names, **kwargs)
+        else:
+            self.open_ctable()
+
+        # Cache a structured array of len 1 for ctable[int] acceleration
+        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+
+    def create_ctable(self, columns, names, **kwargs):
+        """Create a ctable anew."""
+
+        # Create the rootdir if necessary
+        if self.rootdir:
+            self.mkdir_rootdir()
+
+        # Get the names of the columns
         if names is None:
-            if isinstance(cols, np.ndarray):  # ratype case
-                names = list(cols.dtype.names)
+            if isinstance(columns, np.ndarray):  # ratype case
+                names = list(columns.dtype.names)
             else:
-                names = ["f%d"%i for i in range(len(cols))]
+                names = ["f%d"%i for i in range(len(columns))]
         else:
             if type(names) != list:
                 try:
                     names = list(names)
                 except:
                     raise ValueError, "cannot convert `names` into a list"
-            if len(names) != len(cols):
-                raise ValueError, "`cols` and `names` must have the same length"
-        # Check name validity
+            if len(names) != len(columns):
+                raise ValueError, "`columns` and `names` must have the same length"
+        # Check names validity
         nt = namedtuple('_nt', names, verbose=False)
         names = list(nt._fields)
 
-        # Guess the kind of cols input
+        # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
-        if type(cols) in (tuple, list):
-            calist = [type(v) for v in cols] == [ca.carray for v in cols]
-            nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
-        elif isinstance(cols, np.ndarray):
-            ratype = hasattr(cols.dtype, "names")
+        if type(columns) in (tuple, list):
+            calist = [type(v) for v in columns] == [ca.carray for v in columns]
+            nalist = [type(v) for v in columns] == [np.ndarray for v in columns]
+        elif isinstance(columns, np.ndarray):
+            ratype = hasattr(columns.dtype, "names")
             if ratype:
-                if len(cols.shape) != 1:
+                if len(columns.shape) != 1:
                     raise ValueError, "only unidimensional shapes supported"
         else:
-            raise ValueError, "`cols` input is not supported"
+            raise ValueError, "`columns` input is not supported"
         if not (calist or nalist or ratype):
-            raise ValueError, "`cols` input is not supported"
-
-        # The compression parameters
-        self._cparams = kwargs.get('cparams', ca.cparams())
+            raise ValueError, "`columns` input is not supported"
 
         # Populate the columns
         clen = -1
         for i, name in enumerate(names):
+            if self.rootdir:
+                # Put every carray under each own `name` subdirectory
+                kwargs['rootdir'] = os.path.join(self.rootdir, name)
             if calist:
-                column = cols[i]
+                column = columns[i]
+                if self.rootdir and column.rootdir is None:
+                    # This is not persistent yet.  Make it so.
+                    column = column.copy(**kwargs)
             elif nalist:
-                column = cols[i]
+                column = columns[i]
                 if column.dtype == np.void:
-                    raise ValueError, "`cols` elements cannot be of type void"
+                    raise ValueError,(
+                        "`columns` elements cannot be of type void")
                 column = ca.carray(column, **kwargs)
             elif ratype:
-                column = ca.carray(cols[name], **kwargs)
-            self.cols[name] = column
+                column = ca.carray(columns[name], **kwargs)
+            self._cols[name] = column
             if clen >= 0 and clen != len(column):
-                raise ValueError, "all `cols` must have the same length"
+                raise ValueError, "all `columns` must have the same length"
             clen = len(column)
-        self.len += clen
+ 
+        self.len = clen
 
-        # Cache a structured array of len 1 for ctable[int] acceleration
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # As a sanity measure, return the kwargs to its original state
+        kwargs['rootdir'] = self.rootdir
+
+    def open_ctable(self):
+        """Open an existing ctable on-disk."""
+
+        if self.rootdir is None:
+            raise ValueError(
+                "you need to pass either a `columns` or a `rootdir` param")
+
+        # Open the ctable by reading the metadata
+        self._cols.read_meta_and_open()
+
+        # Get the length out of the first column
+        self.len = len(self._cols[self.names[0]])
+
+    def mkdir_rootdir(self):
+        """Create the `self.rootdir` directory safely."""
+        rootdir, mode = self.rootdir, self.mode
+        if os.path.exists(rootdir):
+            if mode != "w":
+                raise RuntimeError(
+                    "specified rootdir path '%s' already exists "
+                    "and mode '%s' was selected" % (rootdir, mode))
+            if os.path.isdir(rootdir):
+                shutil.rmtree(rootdir)
+            else:
+                os.remove(rootdir)
+        os.mkdir(rootdir)
 
     def append(self, rows):
         """
@@ -265,7 +348,7 @@ class ctable(object):
             elif ratype:
                 column = rows[name]
             # Append the values to column
-            self.cols[name].append(column)
+            self._cols[name].append(column)
             if sclist:
                 clen2 = 1
             else:
@@ -289,7 +372,7 @@ class ctable(object):
         """
 
         for name in self.names:
-            self.cols[name].trim(nitems)
+            self._cols[name].trim(nitems)
         self.len -= nitems
 
     def resize(self, nitems):
@@ -308,7 +391,7 @@ class ctable(object):
         """
 
         for name in self.names:
-            self.cols[name].resize(nitems)
+            self._cols[name].resize(nitems)
         self.len = nitems
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):
@@ -350,7 +433,7 @@ class ctable(object):
             if pos and type(pos) != int:
                 raise ValueError, "`pos` must be an int"
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
+                raise ValueError, "`pos` must be >= 0 and <= len(self._cols)"
         if name is None:
             name = "f%d" % pos
         else:
@@ -367,7 +450,7 @@ class ctable(object):
             newcol = ca.carray(newcol, **kwargs)
 
         # Insert the column
-        self.cols.insert(name, pos, newcol)
+        self._cols.insert(name, pos, newcol)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -410,11 +493,11 @@ class ctable(object):
             if type(pos) != int:
                 raise ValueError, "`pos` must be an int"
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
+                raise ValueError, "`pos` must be >= 0 and <= len(self._cols)"
             name = self.names[pos]
 
         # Remove the column
-        self.cols.pop(name)
+        self._cols.pop(name)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -439,7 +522,7 @@ class ctable(object):
         # Remove possible unsupported args for columns
         names = kwargs.pop('names', self.names)
         # Copy the columns
-        cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
+        cols = [ self._cols[name].copy(**kwargs) for name in self.names ]
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
@@ -512,7 +595,7 @@ class ctable(object):
                 icols.append(boolarr.wheretrue(limit=limit, skip=skip))
                 dtypes.append((name, np.int_))
             else:
-                col = self.cols[name]
+                col = self._cols[name]
                 icols.append(col.where(boolarr, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
@@ -586,7 +669,7 @@ class ctable(object):
                 icols.append(it.islice(xrange(start, stop, step), skip, istop))
                 dtypes.append((name, np.int_))
             else:
-                col = self.cols[name]
+                col = self._cols[name]
                 icols.append(
                     col.iter(start, stop, step, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
@@ -610,8 +693,8 @@ class ctable(object):
 
         if colnames is None:
             colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
+        cols = [self._cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self._cols[name].dtype) for name in colnames])
         result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
 
         return result
@@ -644,7 +727,7 @@ class ctable(object):
             # Get a copy of the len-1 array
             ra = self._arr1.copy()
             # Fill it
-            ra[0] = tuple([self.cols[name][key] for name in self.names])
+            ra[0] = tuple([self._cols[name][key] for name in self.names])
             return ra[0]
         # Slices
         elif type(key) == slice:
@@ -663,7 +746,7 @@ class ctable(object):
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
-                cols = [self.cols[name] for name in key]
+                cols = [self._cols[name] for name in key]
                 return ctable(cols, key)
             # Try to convert to a integer array
             try:
@@ -693,7 +776,7 @@ class ctable(object):
                           "`key` %s does not represent a boolean expression" %\
                           key
                 return self._where(arr)
-            return self.cols[key]
+            return self._cols[key]
         # All the rest not implemented
         else:
             raise NotImplementedError, "key not supported: %s" % repr(key)
@@ -707,7 +790,7 @@ class ctable(object):
         ra = np.empty(shape=(n,), dtype=self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self.cols[name][start:stop:step]
+            ra[name][:] = self._cols[name][start:stop:step]
 
         return ra
 
@@ -745,15 +828,15 @@ class ctable(object):
                 nrow = nrow[0]
                 if len(value) == 1:
                     for name in self.names:
-                        self.cols[name][nrow] = value[name]
+                        self._cols[name][nrow] = value[name]
                 else:
                     for name in self.names:
-                        self.cols[name][nrow] = value[name][rowval]
+                        self._cols[name][nrow] = value[name][rowval]
                     rowval += 1
             return
         # Then, modify the rows
         for name in self.names:
-            self.cols[name][key] = value[name]
+            self._cols[name][key] = value[name]
         return
 
     def eval(self, expression, **kwargs):
@@ -788,12 +871,12 @@ class ctable(object):
         # Get the desired frame depth
         depth = kwargs.pop('depth', 3)
         # Call top-level eval with cols as user_dict
-        return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
+        return ca.eval(expression, user_dict=self._cols, depth=depth, **kwargs)
 
     def flush(self):
         """Flush all the buffers in columns."""
         for name in self.names:
-            self.cols[name].flush()
+            self._cols[name].flush()
 
     def __str__(self):
         if self.len > 100:
