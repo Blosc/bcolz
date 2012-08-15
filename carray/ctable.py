@@ -13,7 +13,52 @@ import carray as ca
 from carray import utils
 import itertools as it
 from collections import namedtuple
+import json
 
+
+ROOTDIRS = '__rootdirs__'
+
+class columns(object):
+    """Class that keeps track of columns on the ctable object."""
+
+    def __init__(self, rootdir, mode):
+        self.rootdir = rootdir
+        self.mode = mode
+        self.names = []
+        self.cols = {}
+
+    def __getitem__(self, name):
+        return self.cols[name]
+
+    def __setitem__(self, name, carray):
+        self.names.append(name)
+        self.cols[name] = carray
+        self.update_meta()
+
+    def __iter__(self):
+        return iter(self.cols)
+
+    def insert(self, name, pos, carray):
+        self.names.insert(pos, name)
+        self.cols[name] = carray
+
+    def pop(self, name):
+        pos = self.names.index(name)
+        name = self.names.pop(pos)
+        col = self.cols[name]
+        self.update_meta()
+        return col
+
+    def update_meta(self):
+        if not self.rootdir:
+            return
+        dirs = dict((n, o.rootdir) for n,o in self.cols)
+        data = {'names': self.names, 'dirs': dirs}
+        rootsfile = os.path.join(self.rootdir, ROOTDIRS)
+        with open(rootsfile, 'rb') as rfile:
+            rfile.write(json.dumps(data))
+            rfile.write("\n")
+        
 
 class ctable(object):
     """
@@ -77,6 +122,10 @@ class ctable(object):
         "The compression parameters for this object."
         return self._cparams
 
+    @property
+    def names(self):
+        "The names of the columns (list)."
+        return self.cols.names
 
     def _get_stats(self):
         """
@@ -104,12 +153,14 @@ class ctable(object):
 
     def __init__(self, cols, names=None, **kwargs):
 
-        self.names = []
-        """The names of the columns (list)."""
-        self.cols = {}
-        """The ctable columns (dict)."""
         self.len = 0
-        """The number of rows (int)."""
+
+        # Important optional params
+        self.rootdir = kwargs.get('rootdir', None)
+        self.mode = kwargs.get('mode', 'a')
+
+        # Setup the columns accessor
+        self.cols = columns(self.rootdir, self.mode)
 
         # Get the names of the cols
         if names is None:
@@ -128,7 +179,6 @@ class ctable(object):
         # Check name validity
         nt = namedtuple('_nt', names, verbose=False)
         names = list(nt._fields)
-        self.names = names
 
         # Guess the kind of cols input
         calist, nalist, ratype = False, False, False
@@ -317,8 +367,7 @@ class ctable(object):
             newcol = ca.carray(newcol, **kwargs)
 
         # Insert the column
-        self.names.insert(pos, name)
-        self.cols[name] = newcol
+        self.cols.insert(name, pos, newcol)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -365,8 +414,7 @@ class ctable(object):
             name = self.names[pos]
 
         # Remove the column
-        self.names.pop(pos)
-        del self.cols[name]
+        self.cols.pop(name)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
