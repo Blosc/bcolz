@@ -14,9 +14,11 @@ import struct
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
-from carray.tests.utils import MayBeDiskTest
+from carray.tests import common
+from common import MayBeDiskTest
 from carray.carrayExtension import chunk
 import unittest
+
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -1610,7 +1612,7 @@ def suite():
         theSuite.addTest(unittest.makeSuite(evalBigNE))
 
     # Only for 64-bit systems
-    if is_64bit:
+    if is_64bit and common.heavy:
         theSuite.addTest(unittest.makeSuite(largeCarrayTest))
 
     return theSuite

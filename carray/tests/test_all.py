@@ -15,10 +15,11 @@ import unittest
 
 import numpy
 import carray
-import carray.tests
+from carray.tests import common
+
 
 # Recommended minimum versions
-min_numpy_version = "1.3"
+min_numpy_version = "1.5"
 
 
 def suite():
@@ -58,13 +59,45 @@ def print_versions():
     print("-=" * 38)
 
 
-def test():
+def print_heavy(heavy):
+    if heavy:
+        print """\
+Performing the complete test suite!"""
+    else:
+        print """\
+Performing only a light (yet comprehensive) subset of the test suite.
+If you want a more complete test, try passing the --heavy flag to this script
+(or set the 'heavy' parameter in case you are using carray.test() call).
+The whole suite will take more than 30 seconds to complete on a relatively
+modern CPU and around 100 MB of disk.
+"""
+    print '-=' * 38
+
+def test(verbose=False, heavy=False):
     """
+    test(verbose=False, heavy=False)
+
     Run all the tests in the test suite.
+
+    If `verbose` is set, the test suite will emit messages with full
+    verbosity (not recommended unless you are looking into a certain
+    problem).
+
+    If `heavy` is set, the test suite will be run in *heavy* mode (you
+    should be careful with this because it can take a lot of time and
+    resources from your computer).
     """
     print_versions()
-    unittest.TextTestRunner().run(suite())
+    print_heavy(heavy)
 
+    # What a context this is!
+    oldverbose, common.verbose = common.verbose, verbose
+    oldheavy, common.heavy = common.heavy, heavy
+    try:
+        unittest.TextTestRunner().run(suite())
+    finally:
+        common.verbose = oldverbose
+        common.heavy = oldheavy  # there are pretty young heavies, too ;)
 
 if __name__ == '__main__':
 
@@ -79,9 +112,16 @@ if __name__ == '__main__':
         if arg in ['--print-versions']:
             only_versions = True
             sys.argv.remove(arg)
+        if arg in ['--verbose']:
+            common.verbose = True
+            sys.argv.remove(arg)
+        if arg in ['--heavy']:
+            common.heavy = True
+            sys.argv.remove(arg)
 
     print_versions()
     if not only_versions:
+        print_heavy(common.heavy)
         unittest.main(defaultTest='carray.tests.suite')
 
 

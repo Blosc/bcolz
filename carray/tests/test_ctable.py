@@ -12,7 +12,8 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
 import unittest
-from carray.tests.utils import MayBeDiskTest
+from carray.tests import common
+from common import MayBeDiskTest
 
 
 class createTest(MayBeDiskTest):

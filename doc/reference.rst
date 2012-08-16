@@ -257,9 +257,17 @@ Utility functions
       :py:func:`blosc_set_nthreads`
 
 
-.. py:function:: test()
+.. py:function:: test(verbose=False, heavy=False)
 
     Run all the tests in the test suite.
+
+    If `verbose` is set, the test suite will emit messages with full
+    verbosity (not recommended unless you are looking into a certain
+    problem).
+
+    If `heavy` is set, the test suite will be run in *heavy* mode (you
+    should be careful with this because it can take a lot of time and
+    resources from your computer).
 
 
 The carray class

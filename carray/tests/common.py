@@ -14,6 +14,11 @@ import glob
 import shutil
 
 
+# Global variables for the tests
+verbose = False
+heavy = False
+
+
 # Useful superclass for disk-based tests
 class MayBeDiskTest(unittest.TestCase):
 
