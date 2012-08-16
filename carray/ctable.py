@@ -86,7 +86,19 @@ class _cols(object):
         col = self.cols[name]
         self.update_meta()
         return col
-        
+    
+    def __str__(self):
+        fullrepr = ""
+        for name in self.names:
+            fullrepr += "%s : %s" % (name, str(self.cols[name])) 
+        return fullrepr
+
+    def __repr__(self):
+        fullrepr = ""
+        for name in self.names:
+            fullrepr += "%s : %s\n" % (name, repr(self.cols[name])) 
+        return fullrepr
+
 
 class ctable(object):
     """
@@ -870,7 +882,7 @@ class ctable(object):
         """
 
         nbytes, cbytes, ratio = 0, 0, 0.0
-        names, cols = self.names, self.cols
+        names, cols = self.names, self._cols
         for name in names:
             column = cols[name]
             nbytes += column.nbytes

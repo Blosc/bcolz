@@ -2098,7 +2098,7 @@ cdef class carray:
       return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
                                                   self[-3], self[-2], self[-1])
     else:
-      return str(self[:])
+      return "%s\n" % str(self[:])
 
   def __repr__(self):
     snbytes = utils.human_readable_size(self._nbytes)
