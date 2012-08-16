@@ -14,60 +14,97 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import carray as ca
 from carray.carrayExtension import chunk
+from carray.tests.utils import MayBeDiskTest
 import unittest
 
 
-class constructorTest(unittest.TestCase):
+class constructorTest(MayBeDiskTest):
+
+    open = False
 
     def test00(self):
         """Testing `carray` constructor"""
+        if self.disk:
+            # XXX This does not work because reshaping on-disk cannot be
+            # used yet
+            return
         a = np.arange(16).reshape((2,2,4))
-        b = ca.arange(16).reshape((2,2,4))
+        b = ca.arange(16, rootdir=self.rootdir).reshape((2,2,4))
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test01a(self):
         """Testing `zeros` constructor (I)"""
         a = np.zeros((2,2,4), dtype='i4')
-        b = ca.zeros((2,2,4), dtype='i4')
+        b = ca.zeros((2,2,4), dtype='i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test01b(self):
         """Testing `zeros` constructor (II)"""
         a = np.zeros(2, dtype='(2,4)i4')
-        b = ca.zeros(2, dtype='(2,4)i4')
+        b = ca.zeros(2, dtype='(2,4)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test01c(self):
         """Testing `zeros` constructor (III)"""
         a = np.zeros((2,2), dtype='(4,)i4')
-        b = ca.zeros((2,2), dtype='(4,)i4')
+        b = ca.zeros((2,2), dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test02(self):
         """Testing `ones` constructor"""
         a = np.ones((2,2), dtype='(4,)i4')
-        b = ca.ones((2,2), dtype='(4,)i4')
+        b = ca.ones((2,2), dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test03a(self):
         """Testing `fill` constructor (scalar default)"""
         a = np.ones((2,2), dtype='(4,)i4')*3
-        b = ca.fill((2,2), 3, dtype='(4,)i4')
+        b = ca.fill((2,2), 3, dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test03b(self):
         """Testing `fill` constructor (array default)"""
         a = np.ones((2,2), dtype='(4,)i4')*3
-        b = ca.fill((2,2), [3,3,3,3], dtype='(4,)i4')
+        b = ca.fill((2,2), [3,3,3,3], dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
+    def test04(self):
+        """Testing `fill` constructor with open and resize (array default)"""
+        a = np.ones((3,2), dtype='(4,)i4')*3
+        b = ca.fill((2,2), [3,3,3,3], dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
+        c = np.ones((1,2), dtype='(4,)i4')*3
+        b.append(c)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+class constructorDiskTest(constructorTest):
+    disk = True
+    open = False
+
+class constructorOpenTest(constructorTest):
+    disk = True
+    open = True
 
 class getitemTest(unittest.TestCase):
 
@@ -622,6 +659,8 @@ def suite():
     theSuite = unittest.TestSuite()
 
     theSuite.addTest(unittest.makeSuite(constructorTest))
+    theSuite.addTest(unittest.makeSuite(constructorDiskTest))
+    theSuite.addTest(unittest.makeSuite(constructorOpenTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(appendTest))

@@ -859,8 +859,17 @@ cdef class carray:
     cdef ndarray lastchunkarr
     cdef object array_, _dflt
 
+    if len(shape) == 1:
+        self._dtype = dtype
+    else:
+      # Multidimensional array.  The atom will have array_.shape[1:] dims.
+      # atom dimensions will be stored in `self._dtype`, which is different
+      # than `self.dtype` in that `self._dtype` dimensions are borrowed
+      # from `self.shape`.  `self.dtype` will always be scalar (NumPy
+      # convention).
+      self._dtype = dtype = np.dtype((dtype.base, shape[1:]))
+
     self._cparams = cparams
-    self._dtype = dtype
     self.atomsize = dtype.itemsize
     self.itemsize = dtype.base.itemsize
     self._chunklen = chunklen
@@ -884,13 +893,13 @@ cdef class carray:
       raise RuntimeError("meta directory does not exist")
 
     # Finally, open data directory
-    metainfo = (dtype, cparams, shape, lastchunkarr, self._mode)
+    metainfo = (dtype.base, cparams, shape, lastchunkarr, self._mode)
     self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
-    self.leftover = (np.product(shape) % chunklen) * dtype.itemsize
+    self.leftover = (np.product(shape) % chunklen) * dtype.base.itemsize
     self._cbytes = cbytes
-    self._nbytes = np.product(shape) * dtype.itemsize
+    self._nbytes = np.product(shape) * dtype.base.itemsize
 
     if self._mode == "w":
       # Remove all entries when mode is 'w'
@@ -1204,6 +1213,10 @@ cdef class carray:
     """
     cdef npy_intp newlen, ilen, isize, osize, newsize, rsize, i
     cdef object ishape, oshape, pos, newdtype, out
+
+    if self._rootdir:
+      raise NotImplementedError(
+        "cannot currently do a reshape of a disk-based carray")
 
     # Enforce newshape as tuple
     if isinstance(newshape, (int, long)):
