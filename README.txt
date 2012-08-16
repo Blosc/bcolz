@@ -1,11 +1,11 @@
-carray: A chunked data container that can be compressed in-memory
-=================================================================
+carray: A chunked, compressed, data container (for memory and disk)
+===================================================================
 
 carray is a chunked container for numerical data.  Chunking allows for
 efficient enlarging/shrinking of data container.  In addition, it can
-also be compressed for reducing memory needs.  The compression process
-is carried out internally by Blosc, a high-performance compressor that
-is optimized for binary data.
+also be compressed for reducing memory/disk needs.  The compression
+process is carried out internally by Blosc, a high-performance
+compressor that is optimized for binary data.
 
 Rational
 --------

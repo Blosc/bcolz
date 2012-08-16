@@ -1,26 +1,25 @@
 ########################################################################
 #
-#       License: BSD
-#       Created: December 14, 2010
+#       License: MIT
+#       Created: August 16, 2012
 #       Author:  Francesc Alted - faltet@pytables.org
 #
 ########################################################################
 
-import sys, os, glob
-import textwrap
-import subprocess
+import sys, os
 
-from paver.easy import *
-from paver.setuputils import setup, install_distutils_tasks
 from distutils.core import Extension
-from distutils.dep_util import newer
+from distutils.core import setup
+
+
+########### Some utils for version checking ################
 
 # Some functions for showing errors and warnings.
 def _print_admonition(kind, head, body):
     tw = textwrap.TextWrapper(
         initial_indent='   ', subsequent_indent='   ')
 
-    print(".. %s:: %s" % (kind.upper(), head))
+    print ".. %s:: %s" % (kind.upper(), head)
     for line in tw.wrap(body):
         print line
 
@@ -51,10 +50,6 @@ def check_import(pkgname, pkgver):
 
 ########### Check versions ##########
 
-# Check for Python
-if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
-    exit_with_error("You need Python 2.6 or greater to install carray!")
-
 # The minimum version of Cython required for generating extensions
 min_cython_version = '0.16'
 # The minimum version of NumPy required
@@ -62,16 +57,32 @@ min_numpy_version = '1.5'
 # The minimum version of Numexpr (optional)
 min_numexpr_version = '1.4.1'
 
-# Check for Cython
-cython = False
+# Check for Python
+if sys.version_info[0] == 2:
+    if sys.version_info[1] < 6:
+        exit_with_error("You need Python 2.6 or greater to run carray!")
+elif sys.version_info[0] == 3:
+    if sys.version_info[1] < 1:
+        exit_with_error("You need Python 3.1 or greater to run carray!")
+else:
+    exit_with_error("You need Python 2.6/3.1 or greater to run carray!")
+
+# Check if Cython is installed or not (requisite)
 try:
+    from Cython.Distutils import build_ext
     from Cython.Compiler.Main import Version
-    if Version.version < min_cython_version:
-        cython = False
-    else:
-        cython = True
 except:
-    pass
+    exit_with_error(
+        "You need %(pkgname)s %(pkgver)s or greater to compile carray!"
+        % {'pkgname': 'Cython', 'pkgver': min_cython_version} )
+
+if Version.version < min_cython_version:
+    exit_with_error(
+        "At least Cython %s is needed so as to generate extensions!"
+        % (min_cython_version) )
+else:
+    print ( "* Found %(pkgname)s %(pkgver)s package installed."
+            % {'pkgname': 'Cython', 'pkgver': Version.version} )
 
 # Check for NumPy
 check_import('numpy', min_numpy_version)
@@ -95,7 +106,8 @@ else:
             "Disabling support for it." % (
             numexpr.__version__, min_numexpr_version))
 
-########### End of version checks ##########
+########### End of checks ##########
+
 
 # carray version
 VERSION = open('VERSION').read().strip()
@@ -108,13 +120,11 @@ CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
 lib_dirs = []
 libs = []
-inc_dirs = ['carray', 'blosc']
+inc_dirs = ['blosc']
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
 inc_dirs.extend(get_numpy_include_dirs())
-cython_pyxfiles = glob.glob('carray/*.pyx')
-cython_cfiles = [fn.split('.')[0] + '.c' for fn in cython_pyxfiles]
-blosc_files = glob.glob('blosc/*.c')
+optional_libs = []
 
 # Handle --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
@@ -126,67 +136,12 @@ for arg in args:
         CFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
 
-# Add -msse2 flag for optimizing shuffle in Blosc
+# Add -msse2 flag for optimizing shuffle in include Blosc
 if os.name == 'posix':
     CFLAGS.append("-msse2")
 
-
-# Paver tasks
-@task
-def cythonize():
-    for fn in glob.glob('carray/*.pyx'):
-         dest = fn.split('.')[0] + '.c'
-         if newer(fn, dest):
-             if not cython:
-                 exit_with_error(
-                     "Need Cython >= %s to generate extensions."
-                     % min_cython_version)
-             sh("cython " + fn)
-
-@task
-@needs('generate_setup', 'minilib', 'cythonize', 'html', 'pdf',
-       'setuptools.command.sdist')
-def sdist():
-    """Generate a source distribution for the package."""
-    pass
-
-@task
-@needs(['cythonize', 'setuptools.command.build'])
-def build():
-     pass
-
-@task
-@needs(['cythonize', 'setuptools.command.build_ext'])
-def build_ext():
-     pass
-
-@task
-@needs('paver.doctools.html')
-def html(options):
-    """Build the docs in HTML format."""
-    destdir = path("doc/html")
-    destdir.rmtree()
-    builtdocs = path("doc") / options.builddir / "html"
-    builtdocs.move(destdir)
-
-@task
-def pdf(options):
-    """Build the docs in PDF format."""
-    dest = path("doc") / "carray-manual.pdf"
-    sh("cd doc; make latexpdf")
-    builtdocs = path("doc") / options.builddir / "latex" / "carray.pdf"
-    builtdocs.move(dest)
-
-
-# Options for Paver tasks
-options(
-
-    sphinx = Bunch(
-        docroot = "doc",
-        builddir = "_build"
-    ),
-
-)
+# Add some macros here for debugging purposes, if needed
+def_macros = []
 
 
 classifiers = """\
@@ -200,37 +155,44 @@ Topic :: Software Development :: Libraries :: Python Modules
 Operating System :: Microsoft :: Windows
 Operating System :: Unix
 """
+setup(name = "carray",
+      version = VERSION,
+      description = 'carray: a compressed data container',
+      long_description = """\
 
-# Package options
-setup(
-    name = 'carray',
-    version = VERSION,
-    description = "A chunked data container that can be compressed in-memory.",
-    long_description = """\
 carray is a chunked container for numerical data.  Chunking allows for
 efficient enlarging/shrinking of data container.  In addition, it can
-also be compressed for reducing memory needs.  The compression process
-is carried out internally by Blosc, a high-performance compressor that
-is optimized for binary data.""",
-    classifiers = filter(None, classifiers.split("\n")),
-    author = 'Francesc Alted',
-    author_email = 'faltet@pytables.org',
-    url = "https://github.com/FrancescAlted/carray",
-    license = 'http://www.opensource.org/licenses/bsd-license.php',
-    download_url = "http://carray.pytables.org/download/carray-%s/carray-%s.tar.gz" % (VERSION, VERSION),
-    platforms = ['any'],
-    ext_modules = [
-    Extension( "carray.carrayExtension",
-               include_dirs=inc_dirs,
-               sources = cython_cfiles + blosc_files,
-               depends = ["carray/definitions.pxd"] + blosc_files,
-               library_dirs=lib_dirs,
-               libraries=libs,
-               extra_link_args=LFLAGS,
-               extra_compile_args=CFLAGS ),
-    ],
-    packages = ['carray', 'carray.tests'],
-    include_package_data = True,
+also be compressed for reducing memory/disk needs.  The compression
+process is carried out internally by Blosc, a high-performance
+compressor that is optimized for binary data.
+
+""",
+      classifiers = filter(None, classifiers.split("\n")),
+      author = 'Francesc Alted',
+      author_email = 'faltet@pytables.org',
+      maintainer = 'Francesc Alted',
+      maintainer_email = 'faltet@pytables.org',
+      url = 'https://github.com/FrancescAlted/carray',
+      license = 'http://www.opensource.org/licenses/bsd-license.php',
+      # It is better to upload manually to PyPI
+      #download_url = 'http://github.com/downloads/FrancescAlted/carray/python-carray-%s.tar.gz' % (VERSION,),
+      platforms = ['any'],
+      cmdclass = {'build_ext': build_ext},
+      ext_modules = [
+        Extension( "carray.carrayExtension",
+                   include_dirs=inc_dirs,
+                   define_macros=def_macros,
+                   sources = [ "carray/carrayExtension.pyx",
+                               "blosc/blosc.c", "blosc/blosclz.c",
+                               "blosc/shuffle.c" ],
+                   depends = [ "blosc/blosc.h", "blosc/blosclz.h",
+                               "blosc/shuffle.h" ],
+                   library_dirs=lib_dirs,
+                   libraries=libs,
+                   extra_link_args=LFLAGS,
+                   extra_compile_args=CFLAGS ),
+        ],
+      packages = ['carray'],
 
 )
 
