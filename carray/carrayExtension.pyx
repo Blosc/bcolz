@@ -618,7 +618,7 @@ cdef class chunks(object):
 
 cdef class carray:
   """
-  carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None, rootdir=None, mode="a")
+  carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None, rootdir=None, mode='a')
 
   A compressed and enlargeable in-memory data container.
 
@@ -650,15 +650,15 @@ cdef class carray:
       The directory where all the data and metada will be stored.  If
       specified, then the carray object will be disk-based (i.e. all chunks
       will live on-disk, not in memory) and persistent (i.e. it can be
-      restored in other session).
+      restored in other session, e.g. via the `open()` top-level function).
   mode : str, optional
       The mode that a *persistent* carray should be created/opened.  The
       values can be:
-        * "r" for read-only
-        * "w" for read/write.  During carray creation, the `rootdir` will be
+        * 'r' for read-only
+        * 'w' for read/write.  During carray creation, the `rootdir` will be
           removed if it exists.  During carray opening, the carray will be
           resized to 0.
-        * "a" for append (possible data inside `rootdir` will not be removed).
+        * 'a' for append (possible data inside `rootdir` will not be removed).
 
   """
 

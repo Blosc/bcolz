@@ -186,8 +186,10 @@ First level functions
         The directory hosting the carray/ctable object.
     mode : the open mode (string)
         Specifies the mode in which the object is opened.  The supported
-        values are 'r' for read-only, 'w' for emptying the underlying data and
-        'a' (the default) for allow read/write on top of existing data.
+        values are:
+          * 'r' for read-only
+          * 'w' for emptying the previous underlying data
+          * 'a' for allowing read/write on top of existing data
 
     Returns
     -------
@@ -263,7 +265,7 @@ Utility functions
 The carray class
 ================
 
-.. py:class:: carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None)
+.. py:class:: carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None, chunklen=None, rootdir=None, mode='a')
 
   A compressed and enlargeable in-memory data container.
 
@@ -290,6 +292,19 @@ The carray class
       The number of items that fits on a chunk.  By specifying it you can
       explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
+  rootdir : str, optional
+      The directory where all the data and metada will be stored.  If
+      specified, then the carray object will be disk-based (i.e. all chunks
+      will live on-disk, not in memory) and persistent (i.e. it can be
+      restored in other session, e.g. via the `open()` top-level function).
+  mode : str, optional
+      The mode that a *persistent* carray should be created/opened.  The
+      values can be:
+        * 'r' for read-only
+        * 'w' for read/write.  During carray creation, the `rootdir` will be
+          removed if it exists.  During carray opening, the carray will be
+          resized to 0.
+        * 'a' for append (possible data inside `rootdir` will not be removed).
 
 
 carray attributes

@@ -83,8 +83,10 @@ def open(rootdir, mode='a'):
         The directory hosting the carray/ctable object.
     mode : the open mode (string)
         Specifies the mode in which the object is opened.  The supported
-        values are 'r' for read-only, 'w' for emptying the underlying data and
-        'a' (the default) for allow read/write on top of existing data.
+        values are:
+          * 'r' for read-only
+          * 'w' for emptying the previous underlying data
+          * 'a' for allowing read/write on top of existing data
 
     Returns
     -------
