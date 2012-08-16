@@ -84,7 +84,7 @@ class persistentTest(MayBeDiskTest):
         b = ca.carray(np.arange(N, dtype='f8')+1)
         t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         # Open t
-        t = ca.ctable(rootdir=self.rootdir, mode='r')
+        t = ca.open(rootdir=self.rootdir, mode='r')
         #print "t->", `t`
         ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
         #print "ra[:]", ra[:]
@@ -101,7 +101,7 @@ class persistentTest(MayBeDiskTest):
         b = ca.carray(np.arange(N, dtype='f8')+1)
         t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         # Open t
-        t = ca.ctable(rootdir=self.rootdir, mode='w')
+        t = ca.open(rootdir=self.rootdir, mode='w')
         #print "t->", `t`
         N = 0
         a = ca.carray(np.arange(N, dtype='i4'))
@@ -125,7 +125,7 @@ class persistentTest(MayBeDiskTest):
         b = ca.carray(np.arange(N, dtype='f8')+1)
         t = ca.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
         # Open t
-        t = ca.ctable(rootdir=self.rootdir, mode='a')
+        t = ca.open(rootdir=self.rootdir, mode='a')
         #print "t->", `t`
 
         # Check values

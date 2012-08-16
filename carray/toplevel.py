@@ -71,6 +71,39 @@ def set_nthreads(nthreads):
         ca.numexpr.set_num_threads(nthreads)
     return nthreads_old
 
+def open(rootdir, mode='a'):
+    """
+    open(rootdir, mode='a')
+
+    Open a disk-based carray/ctable.
+
+    Parameters
+    ----------
+    rootdir : pathname (string)
+        The directory hosting the carray/ctable object.
+    mode : the open mode (string)
+        Specifies the mode in which the object is opened.  The supported
+        values are 'r' for read-only, 'w' for emptying the underlying data and
+        'a' (the default) for allow read/write on top of existing data.
+
+    Returns
+    -------
+    out : a carray/ctable object or None (if not objects are found)
+
+    """
+    # First try with a carray
+    obj = None
+    try:
+        obj = ca.carray(rootdir=rootdir, mode=mode)
+    except IOError:
+        # Not a carray.  Now with a ctable
+        try:
+            obj = ca.ctable(rootdir=rootdir, mode=mode)
+        except IOError:
+            # Not a ctable
+            pass
+    return obj
+
 def fromiter(iterable, dtype, count, **kwargs):
     """
     fromiter(iterable, dtype, count, **kwargs)

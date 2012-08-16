@@ -56,7 +56,7 @@ from carray.carrayExtension import (
 from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads,
-    fromiter, arange, zeros, ones, fill,
+    open, fromiter, arange, zeros, ones, fill,
     cparams, eval )
 from carray.version import __version__
 from carray.tests import test

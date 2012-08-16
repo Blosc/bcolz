@@ -31,15 +31,8 @@ class cols(object):
 
     def read_meta_and_open(self):
         """Read the meta-information and initialize structures."""
-        # Check that the rootdir exists
-        if not os.path.isdir(self.rootdir):
-            raise RuntimeError(
-                "the path '%s' is either not present or not a directory")
         # Get the directories of the columns
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
-        if not os.path.isfile(rootsfile):
-            raise RuntimeError(
-                "the file '%s' is not present")
         with open(rootsfile, 'rb') as rfile:
             data = json.loads(rfile.read())
         # JSON returns unicode (?)

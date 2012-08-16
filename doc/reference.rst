@@ -176,6 +176,23 @@ First level functions
     See Also:
       :py:func:`fill`, :py:func:`ones`
 
+.. py:function:: open(rootdir, mode='a')
+
+    Open a disk-based carray/ctable.
+
+    Parameters
+    ----------
+    rootdir : pathname (string)
+        The directory hosting the carray/ctable object.
+    mode : the open mode (string)
+        Specifies the mode in which the object is opened.  The supported
+        values are 'r' for read-only, 'w' for emptying the underlying data and
+        'a' (the default) for allow read/write on top of existing data.
+
+    Returns
+    -------
+    out : a carray/ctable object or None (if not objects are found)
+
 .. py:function:: zeros(shape, dtype=float, **kwargs)
 
     Return a new carray object of given shape and type, filled with zeros.
