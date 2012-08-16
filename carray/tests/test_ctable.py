@@ -657,22 +657,24 @@ class specialTest(unittest.TestCase):
                      "ctable compress too much??")
 
 
-class evalTest(unittest.TestCase):
+class evalTest(MayBeDiskTest):
 
     vm = "python"
 
     def setUp(self):
         self.prev_vm = ca.defaults.eval_vm
         ca.defaults.eval_vm = self.vm
+        MayBeDiskTest.setUp(self)
 
     def tearDown(self):
         ca.defaults.eval_vm = self.prev_vm
+        MayBeDiskTest.tearDown(self)
 
     def test00a(self):
         """Testing eval() with only columns"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         ctr = t.eval("f0 * f1 * f2")
         rar = ra['f0'] * ra['f1'] * ra['f2']
         #print "ctable ->", ctr
@@ -694,7 +696,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with columns and constants"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         ctr = t.eval("f0 * f1 * 3")
         rar = ra['f0'] * ra['f1'] * 3
         #print "ctable ->", ctr
@@ -705,7 +707,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with columns, constants and other variables"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         var_ = 10.
         ctr = t.eval("f0 * f2 * var_")
         rar = ra['f0'] * ra['f2'] * var_
@@ -717,7 +719,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with columns and numexpr functions"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         if not ca.defaults.eval_vm == "numexpr":
             # Populate the name space with functions from numpy
             from numpy import sin
@@ -732,7 +734,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with a boolean as output"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         ctr = t.eval("f0 >= f1")
         rar = ra['f0'] >= ra['f1']
         #print "ctable ->", ctr
@@ -743,7 +745,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with a mix of columns and numpy arrays"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         a = np.arange(N)
         b = np.arange(N)
         ctr = t.eval("f0 + f1 - a + b")
@@ -756,7 +758,7 @@ class evalTest(unittest.TestCase):
         """Testing eval() with a mix of columns, numpy arrays and carrays"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         a = np.arange(N)
         b = ca.arange(N)
         ctr = t.eval("f0 + f1 - a + b")
@@ -765,8 +767,15 @@ class evalTest(unittest.TestCase):
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
+class evalDiskTest(evalTest):
+    disk = True
+
 class eval_ne(evalTest):
     vm = "numexpr"
+
+class eval_neDisk(evalTest):
+    vm = "numexpr"
+    disk = True
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):
@@ -964,13 +973,13 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
 
-class iterTest(unittest.TestCase):
+class iterTest(MayBeDiskTest):
 
     def test00(self):
         """Testing ctable.__iter__"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t]
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
@@ -981,7 +990,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() without params"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter()]
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
@@ -992,7 +1001,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with start,stop,step"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,3)]
         nl = [r['f1'] for r in ra[1:9:3]]
         #print "cl ->", cl
@@ -1003,7 +1012,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with outcols"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [tuple(r) for r in t.iter(outcols='f2, nrow__, f0')]
         nl = [(r['f2'], i, r['f0']) for i, r in enumerate(ra)]
         #print "cl ->", cl
@@ -1014,7 +1023,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with start,stop,step and outcols"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r for r in t.iter(1,9,3, 'f2, nrow__ f0')]
         nl = [(r['f2'], r['f0'], r['f0']) for r in ra[1:9:3]]
         #print "cl ->", cl
@@ -1025,7 +1034,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with start, stop, step and limit"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, limit=3)]
         nl = [r['f1'] for r in ra[1:9:2][:3]]
         #print "cl ->", cl
@@ -1036,7 +1045,7 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with start, stop, step and skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, skip=3)]
         nl = [r['f1'] for r in ra[1:9:2][3:]]
         #print "cl ->", cl
@@ -1047,21 +1056,24 @@ class iterTest(unittest.TestCase):
         """Testing ctable.iter() with start, stop, step and limit, skip"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra, chunklen=4)
+        t = ca.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, limit=2, skip=1)]
         nl = [r['f1'] for r in ra[1:9:2][1:3]]
         #print "cl ->", cl
         #print "nl ->", nl
         self.assert_(cl == nl, "iter not working correctily")
 
+class iterDiskTest(iterTest):
+    disk = True
 
-class eval_getitemTest(unittest.TestCase):
+
+class eval_getitemTest(MayBeDiskTest):
 
     def test00(self):
         """Testing __getitem__ with an expression (all false values)"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = t['f1 > f2']
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
                           dtype='i4,f8,i8')
@@ -1073,7 +1085,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an expression (all true values)"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = t['f1 <= f2']
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i <= i*2.),
                           dtype='i4,f8,i8')
@@ -1085,7 +1097,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an expression (true/false values)"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = t['f1*4 >= f2*2']
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
                           dtype='i4,f8,i8')
@@ -1097,7 +1109,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an invalid expression"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         # In t['f1*4 >= ppp'], 'ppp' variable name should be found
         self.assertRaises(NameError, t.__getitem__, 'f1*4 >= ppp')
 
@@ -1105,7 +1117,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an expression with columns and ndarrays"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c2 = t['f2'][:]
         rt = t['f1*4 >= c2*2']
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
@@ -1118,7 +1130,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an expression with columns and carrays"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         c2 = t['f2']
         rt = t['f1*4 >= c2*2']
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
@@ -1131,7 +1143,7 @@ class eval_getitemTest(unittest.TestCase):
         """Testing __getitem__ with an expression with overwritten vars"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         f1 = t['f2']
         f2 = t['f1']
         rt = t['f2*4 >= f1*2']
@@ -1141,14 +1153,17 @@ class eval_getitemTest(unittest.TestCase):
         #print "rar->", rar
         assert_array_equal(rt, rar, "ctable values are not correct")
 
+class eval_getitemDiskTest(eval_getitemTest):
+    disk = True
 
-class bool_getitemTest(unittest.TestCase):
+
+class bool_getitemTest(MayBeDiskTest):
 
     def test00(self):
         """Testing __getitem__ with a boolean array (all false values)"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = t.eval('f1 > f2')
         rt = t[barr]
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i > i*2.),
@@ -1161,7 +1176,7 @@ class bool_getitemTest(unittest.TestCase):
         """Testing __getitem__ with a boolean array (mixed values)"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = t.eval('f1*4 >= f2*2')
         rt = t[barr]
         rar = np.fromiter(((i, i*2., i*3) for i in xrange(N) if i*4 >= i*2.*2),
@@ -1174,18 +1189,21 @@ class bool_getitemTest(unittest.TestCase):
         """Testing __getitem__ with a short boolean array"""
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = np.zeros(len(t)-1, dtype=np.bool_)
         self.assertRaises(IndexError, t.__getitem__, barr)
 
+class bool_getitemDiskTest(bool_getitemTest):
+    disk = True
 
-class whereTest(unittest.TestCase):
+
+class whereTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing where() with a boolean array (all false values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = t.eval('f1 > f2')
         rt = [r.f0 for r in t.where(barr)]
         rl = [i for i in xrange(N) if i > i*2]
@@ -1197,7 +1215,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with a boolean array (all true values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = t.eval('f1 <= f2')
         rt = [r.f0 for r in t.where(barr)]
         rl = [i for i in xrange(N) if i <= i*2]
@@ -1209,7 +1227,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with a boolean array (mix values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         barr = t.eval('4+f1 > f2')
         rt = [r.f0 for r in t.where(barr)]
         rl = [i for i in xrange(N) if 4+i > i*2]
@@ -1221,7 +1239,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (all false values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r.f0 for r in t.where('f1 > f2')]
         rl = [i for i in xrange(N) if i > i*2]
         #print "rt->", rt
@@ -1232,7 +1250,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (all true values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r.f0 for r in t.where('f1 <= f2')]
         rl = [i for i in xrange(N) if i <= i*2]
         #print "rt->", rt
@@ -1243,7 +1261,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (mix values)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r.f0 for r in t.where('4+f1 > f2')]
         rl = [i for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
@@ -1254,7 +1272,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (with outcols)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r.f1 for r in t.where('4+f1 > f2', outcols='f1')]
         rl = [i*2. for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
@@ -1265,7 +1283,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (with outcols II)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [(r.f1, r.f2) for r in t.where('4+f1 > f2', outcols=['f1','f2'])]
         rl = [(i*2., i*3) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
@@ -1276,7 +1294,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (with outcols III)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [(f2, f0) for f0,f2 in t.where('4+f1 > f2', outcols='f0,f2')]
         rl = [(i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
@@ -1288,7 +1306,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (with outcols IV)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         where = t.where('f1 > f2', outcols='f3,  f0')
         self.assertRaises(ValueError, where.next)
 
@@ -1296,7 +1314,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with an expression (with nrow__ in outcols)"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'])]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt, type(rt[0][0])
@@ -1307,7 +1325,7 @@ class whereTest(unittest.TestCase):
         """Testing where() after an iter()"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         tmp = [r for r in t.iter(1,10,3)]
         rt = [tuple(r) for r in t.where('4+f1 > f2',
                                         outcols=['nrow__','f2','f0'])]
@@ -1320,7 +1338,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with limit"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
                                  limit=3)]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][:3]
@@ -1332,7 +1350,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with skip"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
                                  skip=3)]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][3:]
@@ -1344,7 +1362,7 @@ class whereTest(unittest.TestCase):
         """Testing where() with limit & skip"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
-        t = ca.ctable(ra)
+        t = ca.ctable(ra, rootdir=self.rootdir)
         rt = [r for r in t.where('4+f1 > f2', outcols=['nrow__','f2','f0'],
                                  limit=1, skip=2)]
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][2:3]
@@ -1357,6 +1375,14 @@ class where_smallTest(whereTest):
 
 class where_largeTest(whereTest):
     N = 10*1000
+
+class where_smallDiskTest(whereTest):
+    N = 10
+    disk = True
+
+class where_largeDiskTest(whereTest):
+    N = 10*1000
+    disk = True
 
 
 def suite():
@@ -1383,13 +1409,20 @@ def suite():
     theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
     theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
+    theSuite.addTest(unittest.makeSuite(iterDiskTest))
     theSuite.addTest(unittest.makeSuite(evalTest))
+    theSuite.addTest(unittest.makeSuite(evalDiskTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_ne))
+        theSuite.addTest(unittest.makeSuite(eval_neDisk))
     theSuite.addTest(unittest.makeSuite(eval_getitemTest))
+    theSuite.addTest(unittest.makeSuite(eval_getitemDiskTest))
     theSuite.addTest(unittest.makeSuite(bool_getitemTest))
+    theSuite.addTest(unittest.makeSuite(bool_getitemDiskTest))
     theSuite.addTest(unittest.makeSuite(where_smallTest))
+    theSuite.addTest(unittest.makeSuite(where_smallDiskTest))
     theSuite.addTest(unittest.makeSuite(where_largeTest))
+    theSuite.addTest(unittest.makeSuite(where_largeDiskTest))
 
     return theSuite
 
