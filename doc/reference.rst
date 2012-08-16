@@ -529,7 +529,7 @@ ctable attributes
 
   .. py:attribute:: cols
 
-    The ctable columns (dict).
+    The ctable columns accessor.
 
   .. py:attribute:: cparams
 

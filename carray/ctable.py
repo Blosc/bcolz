@@ -20,14 +20,14 @@ import shutil
 
 ROOTDIRS = '__rootdirs__'
 
-class _cols(object):
-    """Class that keeps track of columns on the ctable object."""
+class cols(object):
+    """Class for accessing the columns on the ctable object."""
 
     def __init__(self, rootdir, mode):
         self.rootdir = rootdir
         self.mode = mode
         self.names = []
-        self.cols = {}
+        self._cols = {}
 
     def read_meta_and_open(self):
         """Read the meta-information and initialize structures."""
@@ -46,13 +46,13 @@ class _cols(object):
         self.names = [str(name) for name in data['names']]
         # Initialize the cols by instatiating the carrays
         for name, dir_ in data['dirs'].items():
-            self.cols[str(name)] = ca.carray(rootdir=dir_, mode=self.mode)
+            self._cols[str(name)] = ca.carray(rootdir=dir_, mode=self.mode)
 
     def update_meta(self):
         """Update metainfo about directories on-disk."""
         if not self.rootdir:
             return
-        dirs = dict((n, o.rootdir) for n,o in self.cols.items())
+        dirs = dict((n, o.rootdir) for n,o in self._cols.items())
         data = {'names': self.names, 'dirs': dirs}
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
         with open(rootsfile, 'w') as rfile:
@@ -60,15 +60,15 @@ class _cols(object):
             rfile.write("\n")
 
     def __getitem__(self, name):
-        return self.cols[name]
+        return self._cols[name]
 
     def __setitem__(self, name, carray):
         self.names.append(name)
-        self.cols[name] = carray
+        self._cols[name] = carray
         self.update_meta()
 
     def __iter__(self):
-        return iter(self.cols)
+        return iter(self._cols)
 
     def __len__(self):
         return len(self.names)
@@ -76,27 +76,27 @@ class _cols(object):
     def insert(self, name, pos, carray):
         """Insert carray in the specified pos and name."""
         self.names.insert(pos, name)
-        self.cols[name] = carray
+        self._cols[name] = carray
         self.update_meta()
 
     def pop(self, name):
         """Return the named column and remove it."""
         pos = self.names.index(name)
         name = self.names.pop(pos)
-        col = self.cols[name]
+        col = self._cols[name]
         self.update_meta()
         return col
     
     def __str__(self):
         fullrepr = ""
         for name in self.names:
-            fullrepr += "%s : %s" % (name, str(self.cols[name])) 
+            fullrepr += "%s : %s" % (name, str(self._cols[name])) 
         return fullrepr
 
     def __repr__(self):
         fullrepr = ""
         for name in self.names:
-            fullrepr += "%s : %s\n" % (name, repr(self.cols[name])) 
+            fullrepr += "%s : %s\n" % (name, repr(self._cols[name])) 
         return fullrepr
 
 
@@ -138,7 +138,7 @@ class ctable(object):
     @property
     def dtype(self):
         "The data type of this ctable (numpy dtype)."
-        names, cols = self.names, self._cols
+        names, cols = self.names, self.cols
         l = [(name, cols[name].dtype) for name in names]
         return np.dtype(l)
 
@@ -165,22 +165,20 @@ class ctable(object):
     @property
     def names(self):
         "The names of the columns (list)."
-        return self._cols.names
-
-    @property
-    def cols(self):
-        "The ctable columns (dict)."
-        return self._cols.cols
+        return self.cols.names
 
     def __init__(self, columns=None, names=None, **kwargs):
 
         # Important optional params
         self._cparams = kwargs.get('cparams', ca.cparams())
         self.rootdir = kwargs.get('rootdir', None)
+        "The directory where this object is saved."
         self.mode = kwargs.get('mode', 'a')
+        "The mode in which the object is created/opened."
         
         # Setup the columns accessor
-        self._cols = _cols(self.rootdir, self.mode)
+        self.cols = cols(self.rootdir, self.mode)
+        "The ctable columns accessor."
 
         # The length counter of this array
         self.len = 0
@@ -253,7 +251,7 @@ class ctable(object):
                 column = ca.carray(column, **kwargs)
             elif ratype:
                 column = ca.carray(columns[name], **kwargs)
-            self._cols[name] = column
+            self.cols[name] = column
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `columns` must have the same length"
             clen = len(column)
@@ -271,10 +269,10 @@ class ctable(object):
                 "you need to pass either a `columns` or a `rootdir` param")
 
         # Open the ctable by reading the metadata
-        self._cols.read_meta_and_open()
+        self.cols.read_meta_and_open()
 
         # Get the length out of the first column
-        self.len = len(self._cols[self.names[0]])
+        self.len = len(self.cols[self.names[0]])
 
     def mkdir_rootdir(self):
         """Create the `self.rootdir` directory safely."""
@@ -336,7 +334,7 @@ class ctable(object):
             elif ratype:
                 column = rows[name]
             # Append the values to column
-            self._cols[name].append(column)
+            self.cols[name].append(column)
             if sclist:
                 clen2 = 1
             else:
@@ -360,7 +358,7 @@ class ctable(object):
         """
 
         for name in self.names:
-            self._cols[name].trim(nitems)
+            self.cols[name].trim(nitems)
         self.len -= nitems
 
     def resize(self, nitems):
@@ -379,7 +377,7 @@ class ctable(object):
         """
 
         for name in self.names:
-            self._cols[name].resize(nitems)
+            self.cols[name].resize(nitems)
         self.len = nitems
 
     def addcol(self, newcol, name=None, pos=None, **kwargs):
@@ -421,7 +419,7 @@ class ctable(object):
             if pos and type(pos) != int:
                 raise ValueError, "`pos` must be an int"
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self._cols)"
+                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
         if name is None:
             name = "f%d" % pos
         else:
@@ -438,7 +436,7 @@ class ctable(object):
             newcol = ca.carray(newcol, **kwargs)
 
         # Insert the column
-        self._cols.insert(name, pos, newcol)
+        self.cols.insert(name, pos, newcol)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -481,11 +479,11 @@ class ctable(object):
             if type(pos) != int:
                 raise ValueError, "`pos` must be an int"
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self._cols)"
+                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
             name = self.names[pos]
 
         # Remove the column
-        self._cols.pop(name)
+        self.cols.pop(name)
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -510,7 +508,7 @@ class ctable(object):
         # Remove possible unsupported args for columns
         names = kwargs.pop('names', self.names)
         # Copy the columns
-        cols = [ self._cols[name].copy(**kwargs) for name in self.names ]
+        cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
@@ -583,7 +581,7 @@ class ctable(object):
                 icols.append(boolarr.wheretrue(limit=limit, skip=skip))
                 dtypes.append((name, np.int_))
             else:
-                col = self._cols[name]
+                col = self.cols[name]
                 icols.append(col.where(boolarr, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
@@ -657,7 +655,7 @@ class ctable(object):
                 icols.append(it.islice(xrange(start, stop, step), skip, istop))
                 dtypes.append((name, np.int_))
             else:
-                col = self._cols[name]
+                col = self.cols[name]
                 icols.append(
                     col.iter(start, stop, step, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
@@ -681,8 +679,8 @@ class ctable(object):
 
         if colnames is None:
             colnames = self.names
-        cols = [self._cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self._cols[name].dtype) for name in colnames])
+        cols = [self.cols[name][boolarr] for name in colnames]
+        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
         result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
 
         return result
@@ -715,7 +713,7 @@ class ctable(object):
             # Get a copy of the len-1 array
             ra = self._arr1.copy()
             # Fill it
-            ra[0] = tuple([self._cols[name][key] for name in self.names])
+            ra[0] = tuple([self.cols[name][key] for name in self.names])
             return ra[0]
         # Slices
         elif type(key) == slice:
@@ -734,7 +732,7 @@ class ctable(object):
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
-                cols = [self._cols[name] for name in key]
+                cols = [self.cols[name] for name in key]
                 return ctable(cols, key)
             # Try to convert to a integer array
             try:
@@ -764,7 +762,7 @@ class ctable(object):
                           "`key` %s does not represent a boolean expression" %\
                           key
                 return self._where(arr)
-            return self._cols[key]
+            return self.cols[key]
         # All the rest not implemented
         else:
             raise NotImplementedError, "key not supported: %s" % repr(key)
@@ -778,7 +776,7 @@ class ctable(object):
         ra = np.empty(shape=(n,), dtype=self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self._cols[name][start:stop:step]
+            ra[name][:] = self.cols[name][start:stop:step]
 
         return ra
 
@@ -816,15 +814,15 @@ class ctable(object):
                 nrow = nrow[0]
                 if len(value) == 1:
                     for name in self.names:
-                        self._cols[name][nrow] = value[name]
+                        self.cols[name][nrow] = value[name]
                 else:
                     for name in self.names:
-                        self._cols[name][nrow] = value[name][rowval]
+                        self.cols[name][nrow] = value[name][rowval]
                     rowval += 1
             return
         # Then, modify the rows
         for name in self.names:
-            self._cols[name][key] = value[name]
+            self.cols[name][key] = value[name]
         return
 
     def eval(self, expression, **kwargs):
@@ -859,12 +857,12 @@ class ctable(object):
         # Get the desired frame depth
         depth = kwargs.pop('depth', 3)
         # Call top-level eval with cols as user_dict
-        return ca.eval(expression, user_dict=self._cols, depth=depth, **kwargs)
+        return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
     def flush(self):
         """Flush all the buffers in columns."""
         for name in self.names:
-            self._cols[name].flush()
+            self.cols[name].flush()
 
     def _get_stats(self):
         """
@@ -882,7 +880,7 @@ class ctable(object):
         """
 
         nbytes, cbytes, ratio = 0, 0, 0.0
-        names, cols = self.names, self._cols
+        names, cols = self.names, self.cols
         for name in names:
             column = cols[name]
             nbytes += column.nbytes
