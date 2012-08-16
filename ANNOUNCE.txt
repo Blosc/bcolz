@@ -1,49 +1,35 @@
-Announcing carray 0.4
+Announcing carray 0.5
 =====================
 
 What's new
 ----------
 
-The most prominent feature in 0.4 is the support of multidimensional
-carrays.  Than means that, for example, you can do::
+carray 0.5 supports completely transparent storage on-disk in addition
+to memory.  That means that everything that can be done with an
+in-memory container can be done using the disk instead.
 
-    >>> a = ca.arange(6).reshape((2,3))
+The format chosen for the persistence layer is based on the 'bloscpack'
+library (thanks to Valentin Haenel for his inspiration) and described in
+'persistence.rst', although not everything has been implemented yet.
+You may want to contribute by proposing enhancements to it.  See:
+https://github.com/FrancescAlted/carray/wiki/persistence
 
-Now, you can access any element in any dimension::
-
-    >>> a[:]
-    array([[0, 1, 2],
-           [3, 4, 5]])
-    >>> a[1]
-    array([3, 4, 5])
-    >>> a[1,::2]
-    array([3, 5])
-    >>> a[1,1]
-    4
-
-Also, all the iterators in carray have received a couple of new
-parameters that allows to `limit` or `skip` selected elements in
-queries.
-
-Finally, many performance improvements have been implemented (mainly
-related with efficient zero-detection code).  This allows for improved
-query times when using iterators.
-
-See:
-https://github.com/FrancescAlted/carray/wiki/query-compress
-for an example on how fast the new iterators can do.
+CAVEAT: The bloscpack format is still evolving, so don't trust on
+forward compatibility of the format, at least until 1.0, where the
+internal format will be declared frozen.
 
 For more detailed info, see the release notes in:
-https://github.com/FrancescAlted/carray/wiki/Release-0.3.2
+https://github.com/FrancescAlted/carray/wiki/Release-0.5
+
 
 What it is
 ----------
 
 carray is a chunked container for numerical data.  Chunking allows for
 efficient enlarging/shrinking of data container.  In addition, it can
-also be compressed for reducing memory needs.  The compression process
-is carried out internally by Blosc, a high-performance compressor that
-is optimized for binary data.
+also be compressed for reducing memory/disk needs.  The compression
+process is carried out internally by Blosc, a high-performance
+compressor that is optimized for binary data.
 
 carray comes with an exhaustive test suite and fully supports both
 32-bit and 64-bit platforms.  Also, it is typically tested on both UNIX

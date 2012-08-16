@@ -9,6 +9,19 @@ Release notes for carray
 Changes from 0.4 to 0.5
 =======================
 
+- Introduced support for persistent objects.  Now, every carray and
+  ctable constructor support a new `rootdir` parameter where you can
+  specify the path where you want to make the data stored.
+
+  The format chosen is explained in the 'persistence.rst' file, except
+  that the blockpack format is still version 1 (that will probably
+  change in future versions).  Also, JSON is used for storing metadata
+  instead of YAML.  This is mainly for avoiding a new library
+  dependency.
+
+- New `open(rootdir, mode='a')` top level function so as to open on-disk
+  carray objects.
+
 - Reductions (`sum` and `prod`) work now, even with the `axis` parameter
   (when using the Numexpr virtual machine).
 

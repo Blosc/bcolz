@@ -109,6 +109,10 @@ in blosc chunks::
 The index part above stores the offsets on where each chunk starts, so
 it is is easy to access the different chunks in the superchunk file.
 
+CAVEAT: The bloscpack format is still evolving, so don't trust on
+forward compatibility of the format, at least until 1.0, where the
+internal format will be declared frozen.
+
 And each blosc chunk has this format (Blosc 1.0 on)::
 
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|

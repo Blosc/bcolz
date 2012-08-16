@@ -26,7 +26,7 @@ Instrucctions for releasing a new version of carray
 
 - Upload the next packages in the download area
   + $ scp carray-$VERSION.tar.gz carray-manual* xano.pytables.com:/tmp
-  + Logar-in in xano as user carray
+  + Log-in in xano as user carray
   + Go to download area:
     $ cd ~/srv/www/carray.org/download
   + Create another directory for the new version and copy the files there:

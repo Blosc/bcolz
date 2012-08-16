@@ -7,6 +7,12 @@ also be compressed for reducing memory/disk needs.  The compression
 process is carried out internally by Blosc, a high-performance
 compressor that is optimized for binary data.
 
+From version 0.5 it supports completely transparent storage on-disk in
+addition to memory.  That means that everything that can be done with
+an in-memory container can be done using the disk instead.  The format
+chosen for the persistence layer is described in 'persistence.rst',
+although not everything has been implemented yet.
+
 Rational
 --------
 
@@ -20,10 +26,9 @@ memory can reduce the stress of the memory subsystem.
 In other words, the ultimate goal for carray is not only reducing the
 memory needs of large arrays, but also making carray operations to go
 faster than using a traditional ndarray object from NumPy.  That is
-already the case for some special cases now (2011), but will happen
-more generally in a short future, when carray will be able to take
-advantage of newer CPUs integrating more cores and wider vector units
-(256 bit and more).
+already the case for some special cases now, but will happen more
+generally in a short future, when carray will be able to take
+advantage of newer CPUs integrating more cores and wider vector units.
 
 Requisites
 ----------
