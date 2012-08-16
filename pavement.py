@@ -144,8 +144,7 @@ def cythonize():
              sh("cython " + fn)
 
 @task
-@needs('generate_setup', 'minilib', 'cythonize', 'html', 'pdf',
-       'setuptools.command.sdist')
+@needs('html', 'setuptools.command.sdist')
 def sdist():
     """Generate a source distribution for the package."""
     pass

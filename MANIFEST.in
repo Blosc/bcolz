@@ -1,9 +1,10 @@
 include MANIFEST.in
 include *.txt
+exclude post-release.txt  releasing.txt
+include persistence.rst
 include VERSION
 include pavement.py
 include setup.py
-include paver-minilib.zip
 
 recursive-include carray *.py *.pyx *.pxd *.c
 recursive-include blosc *.c *.h

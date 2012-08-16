@@ -16,7 +16,6 @@ import carray as ca
 from carray.carrayExtension import chunk
 from carray.tests import common
 from common import MayBeDiskTest
-from carray.tests.utils import MayBeDiskTest
 import unittest
 
 
