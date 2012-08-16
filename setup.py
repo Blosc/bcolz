@@ -10,6 +10,7 @@ import sys, os
 
 from distutils.core import Extension
 from distutils.core import setup
+import textwrap
 
 
 ########### Some utils for version checking ################

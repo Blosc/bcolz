@@ -954,7 +954,7 @@ cdef class carray:
   def write_meta(self):
       """Write metadata persistently."""
       storagef = os.path.join(self.metadir, STORAGE_FILE)
-      with open(storagef, 'w') as storagefh:
+      with open(storagef, 'wb') as storagefh:
         storagefh.write(json.dumps({
           "dtype": str(self.dtype),
           "cparams": {
@@ -973,7 +973,7 @@ cdef class carray:
     # First read the size info
     metadir = os.path.join(self._rootdir, META_DIR)
     shapef = os.path.join(metadir, SIZES_FILE)
-    with open(shapef, 'r') as shapefh:
+    with open(shapef, 'rb') as shapefh:
       sizes = json.loads(shapefh.read())
     shape = sizes['shape']
     if type(shape) == list:
@@ -983,7 +983,7 @@ cdef class carray:
 
     # Then the rest of metadata
     storagef = os.path.join(metadir, STORAGE_FILE)
-    with open(storagef, 'r') as storagefh:
+    with open(storagef, 'rb') as storagefh:
       data = json.loads(storagefh.read())
     dtype_ = np.dtype(data["dtype"])
     chunklen = data["chunklen"]
@@ -2080,7 +2080,7 @@ cdef class carray:
       sizes['nbytes'] = self.nbytes
       sizes['cbytes'] = self.cbytes
       rowsf = os.path.join(self.metadir, SIZES_FILE)
-      with open(rowsf, 'w') as rowsfh:
+      with open(rowsf, 'wb') as rowsfh:
         rowsfh.write(json.dumps(sizes))
         rowsfh.write('\n')
 

@@ -48,7 +48,7 @@ class cols(object):
         dirs = dict((n, o.rootdir) for n,o in self._cols.items())
         data = {'names': self.names, 'dirs': dirs}
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
-        with open(rootsfile, 'w') as rfile:
+        with open(rootsfile, 'wb') as rfile:
             rfile.write(json.dumps(data))
             rfile.write("\n")
 
