@@ -10,7 +10,7 @@
 import sys
 import numpy as np
 import carray as ca
-from carray import utils
+from carray import utils, attrs
 import os, os.path
 import struct
 import shutil
@@ -497,15 +497,16 @@ cdef decode_blosc_header(buffer_):
 cdef class chunks(object):
   """Store the different carray chunks in a directory on-disk."""
   cdef object datadir, metadir
-  cdef object dtype, cparams, shape, lastchunkarr, mode
+  cdef object dtype, cparams, lastchunkarr, mode
   cdef object chunk_cached
-  cdef int nchunks, chunksize, nchunk_cached
-  cdef char *lastchunk
+  cdef int nchunks, nchunk_cached
+  cdef npy_intp len
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
     cdef ndarray lastchunkarr
     cdef void *decompressed, *compressed
     cdef int leftover
+    cdef char *lastchunk
     cdef size_t chunksize
     cdef object scomp
 
@@ -513,20 +514,18 @@ cdef class chunks(object):
     self.metadir = os.path.join(rootdir, META_DIR)
     self.nchunks = 0
     self.nchunk_cached = -1    # no chunk cached initially
-    self.dtype, self.cparams, self.shape, lastchunkarr, self.mode = metainfo
-
-    self.chunksize = len(lastchunkarr) * self.dtype.itemsize
-    self.lastchunk = lastchunkarr.data
-    leftover = np.prod(self.shape) % len(lastchunkarr)
+    self.dtype, self.cparams, self.len, lastchunkarr, self.mode = metainfo
 
     if not _new:
-      self.nchunks = cython.cdiv(np.prod(self.shape), len(lastchunkarr))
+      self.nchunks = cython.cdiv(self.len, len(lastchunkarr))
+      chunksize = len(lastchunkarr) * self.dtype.base.itemsize
+      lastchunk = lastchunkarr.data
+      leftover = self.len % len(lastchunkarr)
       if leftover:
         # Fill lastchunk with data on disk
-        last_chunk = np.prod(self.shape) / len(lastchunkarr)
-        scomp = self.read_chunk(last_chunk)
+        scomp = self.read_chunk(self.nchunks)
         compressed = PyString_AsString(scomp)
-        blosc_decompress(compressed, self.lastchunk, self.chunksize)
+        blosc_decompress(compressed, lastchunk, chunksize)
 
   cdef read_chunk(self, nchunk):
     """Read a chunk and return it in compressed form."""
@@ -676,11 +675,17 @@ cdef class carray:
   cdef object _cparams, _dflt
   cdef object _dtype, chunks
   cdef object _rootdir, datadir, metadir, _mode
+  cdef object _attrs
   cdef ndarray iobuf, where_buf
   # For block cache
   cdef int idxcache
   cdef ndarray blockcache
   cdef char *datacache
+
+  property attrs:
+    "The attribute accessor."
+    def __get__(self):
+      return self._attrs
 
   property cbytes:
     "The compressed size of this object (in bytes)."
@@ -746,11 +751,17 @@ cdef class carray:
     if array is not None:
       self.create_carray(array, cparams, dtype, dflt,
                          expectedlen, chunklen, rootdir, mode)
+      _new = True
     elif rootdir is not None:
       meta_info = self.read_meta()
       self.open_carray(*meta_info)
+      _new = False
     else:
       raise ValueError("You need at least to pass an array or/and a rootdir")
+
+    if self.rootdir:
+      # Attach the attrs to this object
+      self._attrs = attrs.attrs(self._rootdir, self.mode, _new=_new)
 
     # Cache a len-1 array for accelerating self[int] case
     self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
@@ -842,7 +853,7 @@ cdef class carray:
       self.chunks = []
     else:
       self.mkdirs(rootdir, mode)
-      metainfo = (dtype, cparams, self.shape, lastchunkarr, self._mode)
+      metainfo = (dtype, cparams, self.shape[0], lastchunkarr, self._mode)
       self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=True)
       # We can write the metainfo already
       self.write_meta()
@@ -893,13 +904,13 @@ cdef class carray:
       raise RuntimeError("meta directory does not exist")
 
     # Finally, open data directory
-    metainfo = (dtype.base, cparams, shape, lastchunkarr, self._mode)
+    metainfo = (dtype, cparams, shape[0], lastchunkarr, self._mode)
     self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
-    self.leftover = (np.product(shape) % chunklen) * dtype.base.itemsize
+    self.leftover = (np.product(shape) % chunklen) * self.itemsize
     self._cbytes = cbytes
-    self._nbytes = np.product(shape) * dtype.base.itemsize
+    self._nbytes = np.product(shape) * self.itemsize
 
     if self._mode == "w":
       # Remove all entries when mode is 'w'

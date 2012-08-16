@@ -10,7 +10,7 @@ import sys, math
 
 import numpy as np
 import carray as ca
-from carray import utils
+from carray import utils, attrs
 import itertools as it
 from collections import namedtuple
 import json
@@ -179,9 +179,15 @@ class ctable(object):
         # Create a new ctable or open it from disk
         if columns is not None:
             self.create_ctable(columns, names, **kwargs)
+            _new = True
         else:
             self.open_ctable()
+            _new = False
 
+        if self.rootdir:
+            # Attach the attrs to this object
+            self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
+            
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
