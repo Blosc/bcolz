@@ -570,7 +570,11 @@ class copyTest(MayBeDiskTest):
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra, rootdir=self.rootdir)
-        t2 = t.copy(rootdir=self.rootdir, mode='w')
+        if self.disk:
+            rootdir = self.rootdir + "-test00"
+        else:
+            rootdir = self.rootdir
+        t2 = t.copy(rootdir=rootdir, mode='w')
         a = np.arange(N, N+10, dtype='i4')
         b = np.arange(N, N+10, dtype='f8')*2.
         t2.append((a, b))
@@ -584,8 +588,15 @@ class copyTest(MayBeDiskTest):
         N = 10*1000
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = ca.ctable(ra, rootdir=self.rootdir)
-        t2 = t.copy(cparams=ca.cparams(clevel=9),
-                    rootdir=self.rootdir, mode='w')
+        if self.disk:
+            # Copy over the same location should give an error
+            self.assertRaises(RuntimeError,
+                              t.copy,cparams=ca.cparams(clevel=9),
+                              rootdir=self.rootdir, mode='w')
+            return
+        else:
+            t2 = t.copy(cparams=ca.cparams(clevel=9),
+                        rootdir=self.rootdir, mode='w')
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assert_(t.cparams.clevel == ca.cparams().clevel)
         self.assert_(t2.cparams.clevel == 9)

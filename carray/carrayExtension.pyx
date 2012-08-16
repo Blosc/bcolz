@@ -931,7 +931,7 @@ cdef class carray:
       if self._mode != "w":
         raise RuntimeError(
           "specified rootdir path '%s' already exists "
-          "and mode '%s' was selected" % (rootdir, mode))
+          "and creation mode is '%s'" % (rootdir, mode))
       if os.path.isdir(rootdir):
         shutil.rmtree(rootdir)
       else:

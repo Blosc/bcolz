@@ -197,7 +197,7 @@ class ctable(object):
 
         # Create the rootdir if necessary
         if self.rootdir:
-            self.mkdir_rootdir()
+            self.mkdir_rootdir(self.rootdir, self.mode)
 
         # Get the names of the columns
         if names is None:
@@ -240,8 +240,8 @@ class ctable(object):
                 kwargs['rootdir'] = os.path.join(self.rootdir, name)
             if calist:
                 column = columns[i]
-                if self.rootdir and column.rootdir is None:
-                    # This is not persistent yet.  Make it so.
+                if self.rootdir:
+                    # Store this in destination
                     column = column.copy(**kwargs)
             elif nalist:
                 column = columns[i]
@@ -258,9 +258,6 @@ class ctable(object):
  
         self.len = clen
 
-        # As a sanity measure, return the kwargs to its original state
-        kwargs['rootdir'] = self.rootdir
-
     def open_ctable(self):
         """Open an existing ctable on-disk."""
 
@@ -274,14 +271,13 @@ class ctable(object):
         # Get the length out of the first column
         self.len = len(self.cols[self.names[0]])
 
-    def mkdir_rootdir(self):
+    def mkdir_rootdir(self, rootdir, mode):
         """Create the `self.rootdir` directory safely."""
-        rootdir, mode = self.rootdir, self.mode
         if os.path.exists(rootdir):
             if mode != "w":
                 raise RuntimeError(
                     "specified rootdir path '%s' already exists "
-                    "and mode '%s' was selected" % (rootdir, mode))
+                    "and creation mode is '%s'" % (rootdir, mode))
             if os.path.isdir(rootdir):
                 shutil.rmtree(rootdir)
             else:
@@ -505,10 +501,20 @@ class ctable(object):
 
         """
 
+        # Check that origin and destination do not overlap
+        rootdir = kwargs.get('rootdir', None)
+        if rootdir and self.rootdir and  rootdir == self.rootdir:
+                raise RuntimeError("rootdir cannot be the same during copies")
+
         # Remove possible unsupported args for columns
         names = kwargs.pop('names', self.names)
+
         # Copy the columns
-        cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
+        if rootdir:
+            # A copy is always made during creation with a rootdir
+            cols = [ self.cols[name] for name in self.names ]
+        else:
+            cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
