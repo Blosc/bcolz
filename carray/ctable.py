@@ -160,30 +160,6 @@ class ctable(object):
         "The ctable columns (dict)."
         return self._cols.cols
 
-    def _get_stats(self):
-        """
-        _get_stats()
-
-        Get some stats (nbytes, cbytes and ratio) about this object.
-
-        Returns
-        -------
-        out : a (nbytes, cbytes, ratio) tuple
-            nbytes is the number of uncompressed bytes in ctable.
-            cbytes is the number of compressed bytes.  ratio is the
-            compression ratio.
-
-        """
-
-        nbytes, cbytes, ratio = 0, 0, 0.0
-        names, cols = self.names, self.cols
-        for name in names:
-            column = cols[name]
-            nbytes += column.nbytes
-            cbytes += column.cbytes
-        cratio = nbytes / float(cbytes)
-        return (nbytes, cbytes, cratio)
-
     def __init__(self, columns=None, names=None, **kwargs):
 
         # Important optional params
@@ -878,6 +854,30 @@ class ctable(object):
         for name in self.names:
             self._cols[name].flush()
 
+    def _get_stats(self):
+        """
+        _get_stats()
+
+        Get some stats (nbytes, cbytes and ratio) about this object.
+
+        Returns
+        -------
+        out : a (nbytes, cbytes, ratio) tuple
+            nbytes is the number of uncompressed bytes in ctable.
+            cbytes is the number of compressed bytes.  ratio is the
+            compression ratio.
+
+        """
+
+        nbytes, cbytes, ratio = 0, 0, 0.0
+        names, cols = self.names, self.cols
+        for name in names:
+            column = cols[name]
+            nbytes += column.nbytes
+            cbytes += column.cbytes
+        cratio = nbytes / float(cbytes)
+        return (nbytes, cbytes, cratio)
+
     def __str__(self):
         if self.len > 100:
             return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
@@ -889,10 +889,13 @@ class ctable(object):
         nbytes, cbytes, cratio = self._get_stats()
         snbytes = utils.human_readable_size(nbytes)
         scbytes = utils.human_readable_size(cbytes)
-        fullrepr = """ctable(%s, %s) nbytes: %s; cbytes: %s; ratio: %.2f
-  cparams := %r
-%s""" % (self.shape, self.dtype.str, snbytes, scbytes, cratio,
-         self.cparams, str(self))
+        header = "ctable(%s, %s)\n" % (self.shape, self.dtype)
+        header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
+            snbytes, scbytes, cratio)
+        header += "  cparams := %r\n" % self.cparams
+        if self.rootdir:
+            header += "  rootdir := '%s'\n" % self.rootdir
+        fullrepr = header + str(self)
         return fullrepr
 
 

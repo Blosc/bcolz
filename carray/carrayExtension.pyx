@@ -2059,26 +2059,6 @@ cdef class carray:
         return 1
     return 0
 
-  def __str__(self):
-    if self.len > 100:
-      return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
-                                                  self[-3], self[-2], self[-1])
-    else:
-      return str(self[:])
-
-  def __repr__(self):
-    snbytes = utils.human_readable_size(self._nbytes)
-    scbytes = utils.human_readable_size(self._cbytes)
-    cratio = self._nbytes / float(self._cbytes)
-    header = "carray(%s, %s)\n" % (self.shape, self.dtype)
-    header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
-      snbytes, scbytes, cratio)
-    header += "  cparams := %r\n" % self.cparams
-    if self._rootdir:
-      header += "  rootdir := '%s'\n" % self._rootdir
-    fullrepr = header + str(self)
-    return fullrepr
-
   def update_disk_sizes(self):
     """Update the sizes on-disk."""
     sizes = dict()
@@ -2112,6 +2092,26 @@ cdef class carray:
 
     # Finally, update the sizes on-disk
     self.update_disk_sizes()
+
+  def __str__(self):
+    if self.len > 100:
+      return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
+                                                  self[-3], self[-2], self[-1])
+    else:
+      return str(self[:])
+
+  def __repr__(self):
+    snbytes = utils.human_readable_size(self._nbytes)
+    scbytes = utils.human_readable_size(self._cbytes)
+    cratio = self._nbytes / float(self._cbytes)
+    header = "carray(%s, %s)\n" % (self.shape, self.dtype)
+    header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
+      snbytes, scbytes, cratio)
+    header += "  cparams := %r\n" % self.cparams
+    if self._rootdir:
+      header += "  rootdir := '%s'\n" % self._rootdir
+    fullrepr = header + str(self)
+    return fullrepr
 
 
 
