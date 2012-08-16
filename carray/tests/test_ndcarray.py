@@ -106,12 +106,12 @@ class constructorOpenTest(constructorTest):
     disk = True
     open = True
 
-class getitemTest(unittest.TestCase):
+class getitemTest(MayBeDiskTest):
 
     def test00(self):
         """Testing `__getitem()__` method with only a start"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((2,3), 3, dtype="i4")
+        b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -119,7 +119,7 @@ class getitemTest(unittest.TestCase):
     def test01(self):
         """Testing `__getitem()__` method with a start and a stop"""
         a = np.ones((5,2), dtype="i4")*3
-        b = ca.fill((5,2), 3, dtype="i4")
+        b = ca.fill((5,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,4)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -127,7 +127,7 @@ class getitemTest(unittest.TestCase):
     def test02(self):
         """Testing `__getitem()__` method with a start, stop, step"""
         a = np.ones((10,2), dtype="i4")*3
-        b = ca.fill((10,2), 3, dtype="i4")
+        b = ca.fill((10,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,9,2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -135,7 +135,7 @@ class getitemTest(unittest.TestCase):
     def test03a(self):
         """Testing `__getitem()__` method with several slices (I)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -143,7 +143,7 @@ class getitemTest(unittest.TestCase):
     def test03b(self):
         """Testing `__getitem()__` method with several slices (II)"""
         a = np.arange(24).reshape((4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,2), slice(1,4,2), slice(None))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -151,7 +151,7 @@ class getitemTest(unittest.TestCase):
     def test03c(self):
         """Testing `__getitem()__` method with several slices (III)"""
         a = np.arange(120).reshape((5,4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(None,None,3), slice(1,3,2), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -159,7 +159,7 @@ class getitemTest(unittest.TestCase):
     def test04a(self):
         """Testing `__getitem()__` method with shape reduction (I)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -167,7 +167,7 @@ class getitemTest(unittest.TestCase):
     def test04b(self):
         """Testing `__getitem()__` method with shape reduction (II)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -175,18 +175,21 @@ class getitemTest(unittest.TestCase):
     def test04c(self):
         """Testing `__getitem()__` method with shape reduction (III)"""
         a = np.arange(60).reshape((5,4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,slice(1,4,2),2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
+class getitemDiskTest(getitemTest):
+    disk = True
 
-class setitemTest(unittest.TestCase):
+
+class setitemTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing `__setitem()__` method with only a start (scalar)"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((2,3), 3, dtype="i4")
+        b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1)
         a[sl,:] = 0
         b[sl] = 0
@@ -196,7 +199,7 @@ class setitemTest(unittest.TestCase):
     def test00b(self):
         """Testing `__setitem()__` method with only a start (vector)"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((2,3), 3, dtype="i4")
+        b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1)
         a[sl,:] = range(3)
         b[sl] = range(3)
@@ -206,7 +209,7 @@ class setitemTest(unittest.TestCase):
     def test01a(self):
         """Testing `__setitem()__` method with start,stop (scalar)"""
         a = np.ones((5,2), dtype="i4")*3
-        b = ca.fill((5,2), 3, dtype="i4")
+        b = ca.fill((5,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,4)
         a[sl,:] = 0
         b[sl] = 0
@@ -216,7 +219,7 @@ class setitemTest(unittest.TestCase):
     def test01b(self):
         """Testing `__setitem()__` method with start,stop (vector)"""
         a = np.ones((5,2), dtype="i4")*3
-        b = ca.fill((5,2), 3, dtype="i4")
+        b = ca.fill((5,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,4)
         a[sl,:] = range(2)
         b[sl] = range(2)
@@ -226,7 +229,7 @@ class setitemTest(unittest.TestCase):
     def test02a(self):
         """Testing `__setitem()__` method with start,stop,step (scalar)"""
         a = np.ones((10,2), dtype="i4")*3
-        b = ca.fill((10,2), 3, dtype="i4")
+        b = ca.fill((10,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,8,3)
         a[sl,:] = 0
         b[sl] = 0
@@ -236,7 +239,7 @@ class setitemTest(unittest.TestCase):
     def test02b(self):
         """Testing `__setitem()__` method with start,stop,step (scalar)"""
         a = np.ones((10,2), dtype="i4")*3
-        b = ca.fill((10,2), 3, dtype="i4")
+        b = ca.fill((10,2), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1,8,3)
         a[sl,:] = range(2)
         b[sl] = range(2)
@@ -246,7 +249,7 @@ class setitemTest(unittest.TestCase):
     def test03a(self):
         """Testing `__setitem()__` method with several slices (I)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,None,2))
         #print "before->", `b[sl]`
         a[sl] = [[1],[2]]
@@ -257,7 +260,7 @@ class setitemTest(unittest.TestCase):
     def test03b(self):
         """Testing `__setitem()__` method with several slices (II)"""
         a = np.arange(24).reshape((4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,None,2), slice(1))
         #print "before->", `b[sl]`
         a[sl] = [[[1]],[[2]]]
@@ -268,7 +271,7 @@ class setitemTest(unittest.TestCase):
     def test03c(self):
         """Testing `__setitem()__` method with several slices (III)"""
         a = np.arange(120).reshape((5,4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3), slice(1,3,1), slice(1,None,2), slice(1))
         #print "before->", `b[sl]`
         a[sl] = [[[[1]],[[2]]]]*2
@@ -279,7 +282,7 @@ class setitemTest(unittest.TestCase):
     def test03d(self):
         """Testing `__setitem()__` method with several slices (IV)"""
         a = np.arange(120).reshape((5,4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3), slice(1,3,1), slice(1,None,2), slice(1))
         #print "before->", `b[sl]`
         a[sl] = 2
@@ -290,7 +293,7 @@ class setitemTest(unittest.TestCase):
     def test04a(self):
         """Testing `__setitem()__` method with shape reduction (I)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,1)
         #print "before->", `b[sl]`
         a[sl] = 2
@@ -301,7 +304,7 @@ class setitemTest(unittest.TestCase):
     def test04b(self):
         """Testing `__setitem()__` method with shape reduction (II)"""
         a = np.arange(12).reshape((4,3))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,slice(1,4,2))
         #print "before->", `b[sl]`
         a[sl] = 2
@@ -312,7 +315,7 @@ class setitemTest(unittest.TestCase):
     def test04c(self):
         """Testing `__setitem()__` method with shape reduction (III)"""
         a = np.arange(24).reshape((4,3,2))
-        b = ca.carray(a)
+        b = ca.carray(a, rootdir=self.rootdir)
         sl = (1,2,slice(None,None,None))
         #print "before->", `b[sl]`
         a[sl] = 2
@@ -320,13 +323,16 @@ class setitemTest(unittest.TestCase):
         #print "after->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
+class setitemDiskTest(setitemTest):
+    disk = True
 
-class appendTest(unittest.TestCase):
+
+class appendTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing `append()` method (correct shape)"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4")
+        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
         b.append([(3,3,3)])
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
@@ -334,7 +340,7 @@ class appendTest(unittest.TestCase):
     def test00b(self):
         """Testing `append()` method (correct shape, single row)"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4")
+        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
         b.append((3,3,3))
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
@@ -342,24 +348,27 @@ class appendTest(unittest.TestCase):
     def test01(self):
         """Testing `append()` method (incorrect shape)"""
         a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4")
+        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
         self.assertRaises(ValueError, b.append, [(3,3)])
 
     def test02(self):
         """Testing `append()` method (several rows)"""
         a = np.ones((4,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4")
+        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
         b.append([(3,3,3)]*3)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
+class appendDiskTest(appendTest):
+    disk = True
 
-class resizeTest(unittest.TestCase):
+
+class resizeTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing `resize()` (trim)"""
         a = np.ones((2,3), dtype="i4")
-        b = ca.ones((3,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4", rootdir=self.rootdir)
         b.resize(2)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
@@ -367,7 +376,7 @@ class resizeTest(unittest.TestCase):
     def test00b(self):
         """Testing `resize()` (trim to zero)"""
         a = np.ones((0,3), dtype="i4")
-        b = ca.ones((3,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4", rootdir=self.rootdir)
         b.resize(0)
         #print "b->", `b`
         # The next does not work well for carrays with shape (0,)
@@ -378,10 +387,13 @@ class resizeTest(unittest.TestCase):
     def test01(self):
         """Testing `resize()` (enlarge)"""
         a = np.ones((4,3), dtype="i4")
-        b = ca.ones((3,3), dtype="i4")
+        b = ca.ones((3,3), dtype="i4", rootdir=self.rootdir)
         b.resize(4)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
+
+class resizeDiskTest(resizeTest):
+    disk = True
 
 
 class iterTest(unittest.TestCase):
@@ -662,9 +674,13 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructorDiskTest))
     theSuite.addTest(unittest.makeSuite(constructorOpenTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
+    theSuite.addTest(unittest.makeSuite(getitemDiskTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
+    theSuite.addTest(unittest.makeSuite(setitemDiskTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
+    theSuite.addTest(unittest.makeSuite(appendDiskTest))
     theSuite.addTest(unittest.makeSuite(resizeTest))
+    theSuite.addTest(unittest.makeSuite(resizeDiskTest))
     theSuite.addTest(unittest.makeSuite(iterTest))
     theSuite.addTest(unittest.makeSuite(reshapeTest))
     theSuite.addTest(unittest.makeSuite(plainCompoundTest))
