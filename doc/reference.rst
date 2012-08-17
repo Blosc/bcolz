@@ -318,6 +318,30 @@ The carray class
 carray attributes
 -----------------
 
+  .. py:attribute:: attrs
+
+    Accessor for attributes in carray objects.
+
+    This class behaves very similarly to a dictionary, and attributes
+    can be appended in the typical way::
+
+       attrs['myattr'] = value
+
+    And can be retrived similarly::
+
+       value = attrs['myattr']
+
+    Attributes can be removed with::
+
+       del attrs['myattr']
+
+    This class also honors the `__iter__` and `__len__` special
+    functions.  Moreover, a `getall()` method returns all the
+    attributes as a dictionary.
+
+    CAVEAT: The values should be able to be serialized with JSON for
+    persistence.
+
   .. py:attribute:: cbytes
 
     The compressed size of this object (in bytes).
@@ -562,6 +586,12 @@ The ctable class
 
 ctable attributes
 -----------------
+
+  .. py:attribute:: attrs
+
+    Accessor for attributes in ctable objects.
+
+    See :py:attr:`carray.attrs` for a full description.
 
   .. py:attribute:: cbytes
 

@@ -14,7 +14,29 @@ import json
 ATTRSDIR = "__attrs__"
 
 class attrs(object):
-    """Accessor for attributes in carray objects."""
+    """Accessor for attributes in carray objects.
+
+    This class behaves very similarly to a dictionary, and attributes
+    can be appended in the typical way::
+
+       attrs['myattr'] = value
+
+    And can be retrived similarly::
+
+       value = attrs['myattr']
+
+    Attributes can be removed with::
+
+       del attrs['myattr']
+
+    This class also honors the `__iter__` and `__len__` special
+    functions.  Moreover, a `getall()` method returns all the
+    attributes as a dictionary.
+
+    CAVEAT: The values should be able to be serialized with JSON for
+    persistence.
+
+    """
 
     def __init__(self, rootdir, mode, _new=False):
         self.rootdir = rootdir
@@ -26,18 +48,18 @@ class attrs(object):
 
         if self.rootdir:
             if _new:
-                self.create()
+                self._create()
             else:
-                self.open()
+                self._open()
 
-    def create(self):
+    def _create(self):
         if self.mode != 'r':
             # Empty the underlying file
             with open(self.attrsfile, 'wb') as rfile:
                 rfile.write(json.dumps({}))
                 rfile.write("\n")
 
-    def open(self):
+    def _open(self):
         if not os.path.isfile(self.attrsfile):
             if self.mode != 'r':
                 # Create a new empty file
@@ -52,7 +74,7 @@ class attrs(object):
                     "Attribute file is not readable")
         self.attrs = data
 
-    def update_meta(self):
+    def _update_meta(self):
         """Update attributes on-disk."""
         if not self.rootdir:
             return
@@ -71,7 +93,7 @@ class attrs(object):
             raise IOError(
                 "Cannot modify an attribute when in 'r'ead-only mode")
         self.attrs[name] = carray
-        self.update_meta()
+        self._update_meta()
 
     def __delitem__(self, name):
         """Remove the `name` attribute."""
@@ -79,7 +101,7 @@ class attrs(object):
             raise IOError(
                 "Cannot remove an attribute when in 'r'ead-only mode")
         del self.attrs[name]
-        self.update_meta()
+        self._update_meta()
     
     def __iter__(self):
         return self.attrs.iteritems()
