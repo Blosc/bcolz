@@ -1479,7 +1479,7 @@ class largeCarrayTest(MayBeDiskTest):
         self.assert_(cn.sum() == 10)
 
 
-class persistentTest(MayBeDiskTest):
+class persistenceTest(MayBeDiskTest):
 
     disk = True
 
@@ -1604,7 +1604,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(evalDiskSmall))
     theSuite.addTest(unittest.makeSuite(evalBig))
     theSuite.addTest(unittest.makeSuite(evalDiskBig))
-    theSuite.addTest(unittest.makeSuite(persistentTest))
+    theSuite.addTest(unittest.makeSuite(persistenceTest))
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(evalSmallNE))
         theSuite.addTest(unittest.makeSuite(evalDiskSmallNE))

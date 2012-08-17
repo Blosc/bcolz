@@ -184,9 +184,8 @@ class ctable(object):
             self.open_ctable()
             _new = False
 
-        if self.rootdir:
-            # Attach the attrs to this object
-            self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
+        # Attach the attrs to this object
+        self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
             
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)

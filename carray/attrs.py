@@ -20,12 +20,15 @@ class attrs(object):
         self.rootdir = rootdir
         self.mode = mode
         self.attrs = {}
-        self.attrsfile = os.path.join(self.rootdir, ATTRSDIR)
-        
-        if _new:
-            self.create()
-        else:
-            self.open()
+
+        if self.rootdir:
+            self.attrsfile = os.path.join(self.rootdir, ATTRSDIR)
+
+        if self.rootdir:
+            if _new:
+                self.create()
+            else:
+                self.open()
 
     def create(self):
         if self.mode != 'r':
@@ -42,13 +45,17 @@ class attrs(object):
                     rfile.write("\n")
         # Get the serialized attributes
         with open(self.attrsfile, 'rb') as rfile:
-            data = json.loads(rfile.read())
-        # JSON returns unicode (?)
-        for name, attr in data.items():
-            self.attrs[str(name)] = attr
+            try:
+                data = json.loads(rfile.read())
+            except:
+                raise IOError(
+                    "Attribute file is not readable")
+        self.attrs = data
 
     def update_meta(self):
         """Update attributes on-disk."""
+        if not self.rootdir:
+            return
         with open(self.attrsfile, 'wb') as rfile:
             rfile.write(json.dumps(self.attrs))
             rfile.write("\n")
@@ -60,17 +67,17 @@ class attrs(object):
         return self.attrs[name]
 
     def __setitem__(self, name, carray):
-        if self.mode == 'r':
+        if self.rootdir and self.mode == 'r':
             raise IOError(
-                "Cannot modify an attribute in 'r'ead-only mode")
+                "Cannot modify an attribute when in 'r'ead-only mode")
         self.attrs[name] = carray
         self.update_meta()
 
     def __delitem__(self, name):
         """Remove the `name` attribute."""
-        if self.mode == 'r':
+        if self.rootdir and self.mode == 'r':
             raise IOError(
-                "Cannot remove an attribute in 'r'ead-only mode")
+                "Cannot remove an attribute when in 'r'ead-only mode")
         del self.attrs[name]
         self.update_meta()
     

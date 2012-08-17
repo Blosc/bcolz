@@ -28,6 +28,7 @@ def suite():
         'carray.tests.test_ctable',
         'carray.tests.test_ndcarray',
         'carray.tests.test_queries',
+        'carray.tests.test_attrs',
         ]
     alltests = unittest.TestSuite()
     for name in test_modules:

@@ -759,9 +759,8 @@ cdef class carray:
     else:
       raise ValueError("You need at least to pass an array or/and a rootdir")
 
-    if self.rootdir:
-      # Attach the attrs to this object
-      self._attrs = attrs.attrs(self._rootdir, self.mode, _new=_new)
+    # Attach the attrs to this object
+    self._attrs = attrs.attrs(self._rootdir, self.mode, _new=_new)
 
     # Cache a len-1 array for accelerating self[int] case
     self.arr1 = np.empty(shape=(1,), dtype=self._dtype)
