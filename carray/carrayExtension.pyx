@@ -2110,8 +2110,9 @@ cdef class carray:
   def flush(self):
     """Flush data in internal buffers to disk.
 
-    This call should typically be done after performing appends in persistence
-    mode.
+    This call should typically be done after performing modifications
+    (__settitem__(), append()) in persistence mode.  If you don't do this, you
+    risk loosing part of your modifications.
 
     """
     cdef chunk chunk_

@@ -405,8 +405,9 @@ carray methods
 
     Flush data in internal buffers to disk.
 
-    This call should typically be done after performing appends in
-    persistence mode.
+    This call should typically be done after performing modifications
+    (__settitem__(), append()) in persistence mode.  If you don't do this, you
+    risk loosing part of your modifications.
 
 
   .. py:method:: iter(start=0, stop=None, step=1, limit=None, skip=0)
@@ -731,8 +732,9 @@ ctable methods
 
     Flush data in internal buffers to disk.
 
-    This call should typically be done after performing appends in
-    persistence mode.
+    This call should typically be done after performing modifications
+    (__settitem__(), append()) in persistence mode.  If you don't do this, you
+    risk loosing part of your modifications.
 
 
   .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)

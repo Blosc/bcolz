@@ -864,7 +864,13 @@ class ctable(object):
         return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
 
     def flush(self):
-        """Flush all the buffers in columns."""
+        """Flush data in internal buffers to disk.
+
+        This call should typically be done after performing modifications
+        (__settitem__(), append()) in persistence mode.  If you don't do this,
+        you risk loosing part of your modifications.
+
+        """
         for name in self.names:
             self.cols[name].flush()
 
