@@ -1,6 +1,6 @@
 ########################################################################
 #
-#       License: MIT
+#       License: BSD
 #       Created: August 16, 2012
 #       Author:  Francesc Alted - faltet@pytables.org
 #
