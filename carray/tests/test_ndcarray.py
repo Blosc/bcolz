@@ -96,9 +96,21 @@ class constructorTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         c = np.ones((1,200), dtype='(4,)i4')*3
         b.append(c)
-        b.flush()
-        #print "b->", `b`
+        #print "b->", `b`, len(b), b[1]
         assert_array_equal(a, b, "Arrays are not equal")
+
+    def test05(self):
+        """Testing `fill` constructor with open and resize (nchunks>1)"""
+        a = np.ones((3,2000), dtype='(4,)i4')*3
+        b = ca.fill((2,2000), [3,3,3,3], dtype='(4,)i4', rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
+        c = np.ones((1,2000), dtype='(4,)i4')*3
+        b.append(c)
+        #print "b->", `b`
+        # We need to use the b[:] here to overcome a problem with the
+        # assert_array_equal() function
+        assert_array_equal(a, b[:], "Arrays are not equal")
 
 class constructorDiskTest(constructorTest):
     disk = True
@@ -110,10 +122,14 @@ class constructorOpenTest(constructorTest):
 
 class getitemTest(MayBeDiskTest):
 
+    open = False
+
     def test00(self):
         """Testing `__getitem()__` method with only a start"""
         a = np.ones((2,3), dtype="i4")*3
         b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = slice(1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -122,6 +138,8 @@ class getitemTest(MayBeDiskTest):
         """Testing `__getitem()__` method with a start and a stop"""
         a = np.ones((5,2), dtype="i4")*3
         b = ca.fill((5,2), 3, dtype="i4", rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = slice(1,4)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -130,6 +148,8 @@ class getitemTest(MayBeDiskTest):
         """Testing `__getitem()__` method with a start, stop, step"""
         a = np.ones((10,2), dtype="i4")*3
         b = ca.fill((10,2), 3, dtype="i4", rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = slice(1,9,2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -138,6 +158,8 @@ class getitemTest(MayBeDiskTest):
         """Testing `__getitem()__` method with several slices (I)"""
         a = np.arange(12).reshape((4,3))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -146,6 +168,8 @@ class getitemTest(MayBeDiskTest):
         """Testing `__getitem()__` method with several slices (II)"""
         a = np.arange(24).reshape((4,3,2))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (slice(1,3,2), slice(1,4,2), slice(None))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
@@ -154,39 +178,54 @@ class getitemTest(MayBeDiskTest):
         """Testing `__getitem()__` method with several slices (III)"""
         a = np.arange(120).reshape((5,4,3,2))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (slice(None,None,3), slice(1,3,2), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04a(self):
         """Testing `__getitem()__` method with shape reduction (I)"""
-        a = np.arange(12).reshape((4,3))
+        a = np.arange(12000).reshape((40,300))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (1,1)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04b(self):
         """Testing `__getitem()__` method with shape reduction (II)"""
-        a = np.arange(12).reshape((4,3))
+        a = np.arange(12000).reshape((400,30))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2))
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04c(self):
         """Testing `__getitem()__` method with shape reduction (III)"""
-        a = np.arange(60).reshape((5,4,3))
+        a = np.arange(6000).reshape((50,40,3))
         b = ca.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2),2)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 class getitemDiskTest(getitemTest):
     disk = True
+    open = False
+
+class getitemOpenTest(getitemTest):
+    disk = True
+    open = True
 
 
 class setitemTest(MayBeDiskTest):
+
+    open = False
 
     def test00a(self):
         """Testing `__setitem()__` method with only a start (scalar)"""
@@ -195,28 +234,39 @@ class setitemTest(MayBeDiskTest):
         sl = slice(1)
         a[sl,:] = 0
         b[sl] = 0
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test00b(self):
         """Testing `__setitem()__` method with only a start (vector)"""
-        a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
+        a = np.ones((200,300), dtype="i4")*3
+        b = ca.fill((200,300), 3, dtype="i4", rootdir=self.rootdir)
         sl = slice(1)
-        a[sl,:] = range(3)
-        b[sl] = range(3)
+        a[sl,:] = range(300)
+        b[sl] = range(300)
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01a(self):
         """Testing `__setitem()__` method with start,stop (scalar)"""
-        a = np.ones((5,2), dtype="i4")*3
-        b = ca.fill((5,2), 3, dtype="i4", rootdir=self.rootdir)
-        sl = slice(1,4)
+        a = np.ones((500,200), dtype="i4")*3
+        b = ca.fill((500,200), 3, dtype="i4", rootdir=self.rootdir,
+                    cparams=ca.cparams())
+        sl = slice(100,400)
         a[sl,:] = 0
         b[sl] = 0
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+        #assert_array_equal(a[:], b[:], "Arrays are not equal")
 
     def test01b(self):
         """Testing `__setitem()__` method with start,stop (vector)"""
@@ -225,16 +275,22 @@ class setitemTest(MayBeDiskTest):
         sl = slice(1,4)
         a[sl,:] = range(2)
         b[sl] = range(2)
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02a(self):
         """Testing `__setitem()__` method with start,stop,step (scalar)"""
-        a = np.ones((10,2), dtype="i4")*3
-        b = ca.fill((10,2), 3, dtype="i4", rootdir=self.rootdir)
-        sl = slice(1,8,3)
+        a = np.ones((1000,200), dtype="i4")*3
+        b = ca.fill((1000,200), 3, dtype="i4", rootdir=self.rootdir)
+        sl = slice(100,800,3)
         a[sl,:] = 0
         b[sl] = 0
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
@@ -245,28 +301,37 @@ class setitemTest(MayBeDiskTest):
         sl = slice(1,8,3)
         a[sl,:] = range(2)
         b[sl] = range(2)
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "b[sl]->", `b[sl]`, `b`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03a(self):
         """Testing `__setitem()__` method with several slices (I)"""
-        a = np.arange(12).reshape((4,3))
+        a = np.arange(12000).reshape((400,30))
         b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,None,2))
         #print "before->", `b[sl]`
         a[sl] = [[1],[2]]
         b[sl] = [[1],[2]]
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[:], b[:], "Arrays are not equal")
 
     def test03b(self):
         """Testing `__setitem()__` method with several slices (II)"""
-        a = np.arange(24).reshape((4,3,2))
+        a = np.arange(24000).reshape((400,3,20))
         b = ca.carray(a, rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,None,2), slice(1))
         #print "before->", `b[sl]`
         a[sl] = [[[1]],[[2]]]
         b[sl] = [[[1]],[[2]]]
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[:], b[:], "Arrays are not equal")
 
@@ -278,6 +343,9 @@ class setitemTest(MayBeDiskTest):
         #print "before->", `b[sl]`
         a[sl] = [[[[1]],[[2]]]]*2
         b[sl] = [[[[1]],[[2]]]]*2
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[:], b[:], "Arrays are not equal")
 
@@ -289,6 +357,9 @@ class setitemTest(MayBeDiskTest):
         #print "before->", `b[sl]`
         a[sl] = 2
         b[sl] = 2
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[:], b[:], "Arrays are not equal")
 
@@ -300,6 +371,9 @@ class setitemTest(MayBeDiskTest):
         #print "before->", `b[sl]`
         a[sl] = 2
         b[sl] = 2
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
@@ -311,6 +385,9 @@ class setitemTest(MayBeDiskTest):
         #print "before->", `b[sl]`
         a[sl] = 2
         b[sl] = 2
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
@@ -322,11 +399,18 @@ class setitemTest(MayBeDiskTest):
         #print "before->", `b[sl]`
         a[sl] = 2
         b[sl] = 2
+        if self.open:
+            b.flush()
+            b = ca.open(rootdir=self.rootdir)
         #print "after->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 class setitemDiskTest(setitemTest):
     disk = True
+
+class setitemOpenTest(setitemTest):
+    disk = True
+    open = True
 
 
 class appendTest(MayBeDiskTest):
@@ -677,8 +761,10 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructorOpenTest))
     theSuite.addTest(unittest.makeSuite(getitemTest))
     theSuite.addTest(unittest.makeSuite(getitemDiskTest))
+    theSuite.addTest(unittest.makeSuite(getitemOpenTest))
     theSuite.addTest(unittest.makeSuite(setitemTest))
     theSuite.addTest(unittest.makeSuite(setitemDiskTest))
+    theSuite.addTest(unittest.makeSuite(setitemOpenTest))
     theSuite.addTest(unittest.makeSuite(appendTest))
     theSuite.addTest(unittest.makeSuite(appendDiskTest))
     theSuite.addTest(unittest.makeSuite(resizeTest))

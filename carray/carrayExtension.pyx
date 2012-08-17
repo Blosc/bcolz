@@ -247,7 +247,6 @@ cdef class chunk:
     self.cbytes = cbytes + footprint
     self.cdbytes = cbytes
     self.blocksize = blocksize
-    #print "nbytes, cbytes, cdbytes, blocksize:", self.nbytes, self.cbytes, self.cdbytes, self.blocksize
 
   cdef compress_data(self, ndarray array, object cparams, object _memory):
     """Compress data in `array` and put it in ``self.data``"""
@@ -316,11 +315,13 @@ cdef class chunk:
 
   cdef void _getitem(self, int start, int stop, char *dest):
     """Read data from `start` to `stop` and return it as a numpy array."""
-    cdef int ret, bsize, blen
+    cdef int ret, bsize, blen, nitems, nstart
     cdef ndarray constants
 
     blen = stop - start
     bsize = blen * self.atomsize
+    nitems = cython.cdiv(bsize, self.itemsize)
+    nstart = cython.cdiv(start * self.atomsize, self.itemsize)
 
     if self.isconstant:
       # The chunk is made of constants
@@ -334,7 +335,7 @@ cdef class chunk:
       if bsize == self.nbytes:
         ret = blosc_decompress(self.data, dest, bsize)
       else:
-        ret = blosc_getitem(self.data, start, blen, dest)
+        ret = blosc_getitem(self.data, nstart, nitems, dest)
     if ret < 0:
       raise RuntimeError, "fatal error during Blosc decompression: %d" % ret
 
@@ -499,8 +500,7 @@ cdef class chunks(object):
   cdef object datadir, metadir
   cdef object dtype, cparams, lastchunkarr, mode
   cdef object chunk_cached
-  cdef int nchunks, nchunk_cached
-  cdef npy_intp len
+  cdef npy_intp nchunks, nchunk_cached, len
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
     cdef ndarray lastchunkarr
@@ -509,23 +509,31 @@ cdef class chunks(object):
     cdef char *lastchunk
     cdef size_t chunksize
     cdef object scomp
+    cdef int ret
+    cdef int itemsize, atomsize
 
     self.datadir = os.path.join(rootdir, DATA_DIR)
     self.metadir = os.path.join(rootdir, META_DIR)
     self.nchunks = 0
     self.nchunk_cached = -1    # no chunk cached initially
     self.dtype, self.cparams, self.len, lastchunkarr, self.mode = metainfo
+    atomsize = self.dtype.itemsize
+    itemsize = self.dtype.base.itemsize
 
     if not _new:
       self.nchunks = cython.cdiv(self.len, len(lastchunkarr))
-      chunksize = len(lastchunkarr) * self.dtype.base.itemsize
+      chunksize = len(lastchunkarr) * atomsize
       lastchunk = lastchunkarr.data
-      leftover = self.len % len(lastchunkarr)
+      leftover = (self.len % len(lastchunkarr)) * atomsize
       if leftover:
         # Fill lastchunk with data on disk
         scomp = self.read_chunk(self.nchunks)
         compressed = PyString_AsString(scomp)
-        blosc_decompress(compressed, lastchunk, chunksize)
+        with nogil:
+          ret = blosc_decompress(compressed, lastchunk, chunksize)
+        if ret < 0:
+          raise RuntimeError(
+            "error decompressing the last chunk (error code: %d)" % ret)
 
   cdef read_chunk(self, nchunk):
     """Read a chunk and return it in compressed form."""
@@ -842,7 +850,8 @@ cdef class carray:
     self._chunklen = chunklen
 
     # Book memory for last chunk (uncompressed)
-    lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
+    # Use np.zeros here because they compress better
+    lastchunkarr = np.zeros(dtype=dtype, shape=(chunklen,))
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
@@ -868,6 +877,7 @@ cdef class carray:
     """Open an existing array."""
     cdef ndarray lastchunkarr
     cdef object array_, _dflt
+    cdef npy_intp calen
 
     if len(shape) == 1:
         self._dtype = dtype
@@ -888,7 +898,8 @@ cdef class carray:
     self.expectedlen = expectedlen
 
     # Book memory for last chunk (uncompressed)
-    lastchunkarr = np.empty(dtype=dtype, shape=(chunklen,))
+    # Use np.zeros here because they compress better
+    lastchunkarr = np.zeros(dtype=dtype, shape=(chunklen,))
     self.lastchunk = lastchunkarr.data
     self.lastchunkarr = lastchunkarr
 
@@ -902,14 +913,15 @@ cdef class carray:
     if not os.path.isdir(self.metadir):
       raise RuntimeError("meta directory does not exist")
 
+    calen = shape[0]    # the length ot the carray
     # Finally, open data directory
-    metainfo = (dtype, cparams, shape[0], lastchunkarr, self._mode)
+    metainfo = (dtype, cparams, calen, lastchunkarr, self._mode)
     self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
 
     # Update some counters
-    self.leftover = (np.product(shape) % chunklen) * self.itemsize
+    self.leftover = (calen % chunklen) * self.atomsize
     self._cbytes = cbytes
-    self._nbytes = np.product(shape) * self.itemsize
+    self._nbytes = calen * self.atomsize
 
     if self._mode == "w":
       # Remove all entries when mode is 'w'
@@ -917,7 +929,8 @@ cdef class carray:
 
   def fill_chunks(self, object array_):
     """Fill chunks, either in-memory or on-disk."""
-    cdef int i, leftover, nchunks, chunklen
+    cdef int leftover, chunklen
+    cdef npy_intp i, nchunks
     cdef npy_intp nbytes, cbytes
     cdef chunk chunk_
     cdef ndarray remainder
@@ -2102,23 +2115,18 @@ cdef class carray:
 
     """
     cdef chunk chunk_
-    cdef npy_intp nchunks, leftover
+    cdef npy_intp nchunks
 
     if self._rootdir is None:
       return
 
     if self.leftover:
-        nchunks = cython.cdiv(self._nbytes, <npy_intp>self._chunksize)
-        leftover = self.len - nchunks * self._chunklen
-        chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams,
-                       _memory = self._rootdir is None)
-        # The last chunk does not enter in the cbytes count, as it is already
-        # taken in account (in decompressed mode)
-        #self._cbytes += chunk_.cbytes
-        # Flush this chunk and sizes metadata to disk
-        self.chunks.flush(chunk_)
+      chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams,
+                     _memory = self._rootdir is None)
+      # Flush this chunk to disk
+      self.chunks.flush(chunk_)
 
-    # Finally, update the sizes on-disk
+    # Finally, update the sizes metadata on-disk
     self._update_disk_sizes()
 
   def __str__(self):
