@@ -401,6 +401,14 @@ carray methods
         The copy of this object.
 
 
+  .. py:method:: flush()
+
+    Flush data in internal buffers to disk.
+
+    This call should typically be done after performing appends in
+    persistence mode.
+
+
   .. py:method:: iter(start=0, stop=None, step=1, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
@@ -717,6 +725,14 @@ ctable methods
 
     See Also:
       :py:func:`eval` (first level function)
+
+
+  .. py:method:: flush()
+
+    Flush data in internal buffers to disk.
+
+    This call should typically be done after performing appends in
+    persistence mode.
 
 
   .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)

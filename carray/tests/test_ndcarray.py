@@ -72,8 +72,8 @@ class constructorTest(MayBeDiskTest):
 
     def test03a(self):
         """Testing `fill` constructor (scalar default)"""
-        a = np.ones((2,2), dtype='(4,)i4')*3
-        b = ca.fill((2,2), 3, dtype='(4,)i4', rootdir=self.rootdir)
+        a = np.ones((2,200), dtype='(4,)i4')*3
+        b = ca.fill((2,200), 3, dtype='(4,)i4', rootdir=self.rootdir)
         if self.open:
             b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
@@ -90,12 +90,13 @@ class constructorTest(MayBeDiskTest):
 
     def test04(self):
         """Testing `fill` constructor with open and resize (array default)"""
-        a = np.ones((3,2), dtype='(4,)i4')*3
-        b = ca.fill((2,2), [3,3,3,3], dtype='(4,)i4', rootdir=self.rootdir)
+        a = np.ones((3,200), dtype='(4,)i4')*3
+        b = ca.fill((2,200), [3,3,3,3], dtype='(4,)i4', rootdir=self.rootdir)
         if self.open:
             b = ca.open(rootdir=self.rootdir)
-        c = np.ones((1,2), dtype='(4,)i4')*3
+        c = np.ones((1,200), dtype='(4,)i4')*3
         b.append(c)
+        b.flush()
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
@@ -332,17 +333,17 @@ class appendTest(MayBeDiskTest):
 
     def test00a(self):
         """Testing `append()` method (correct shape)"""
-        a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
-        b.append([(3,3,3)])
+        a = np.ones((2,300), dtype="i4")*3
+        b = ca.fill((1,300), 3, dtype="i4", rootdir=self.rootdir)
+        b.append([(3,)*300])
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
     def test00b(self):
         """Testing `append()` method (correct shape, single row)"""
-        a = np.ones((2,3), dtype="i4")*3
-        b = ca.fill((1,3), 3, dtype="i4", rootdir=self.rootdir)
-        b.append((3,3,3))
+        a = np.ones((2,300), dtype="i4")*3
+        b = ca.fill((1,300), 3, dtype="i4", rootdir=self.rootdir)
+        b.append((3,)*300)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 

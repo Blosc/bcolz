@@ -2082,7 +2082,7 @@ cdef class carray:
         return 1
     return 0
 
-  def update_disk_sizes(self):
+  def _update_disk_sizes(self):
     """Update the sizes on-disk."""
     sizes = dict()
     if self._rootdir:
@@ -2095,7 +2095,12 @@ cdef class carray:
         rowsfh.write('\n')
 
   def flush(self):
-    """Flush lastchunk data."""
+    """Flush data in internal buffers to disk.
+
+    This call should typically be done after performing appends in persistence
+    mode.
+
+    """
     cdef chunk chunk_
     cdef npy_intp nchunks, leftover
 
@@ -2114,7 +2119,7 @@ cdef class carray:
         self.chunks.flush(chunk_)
 
     # Finally, update the sizes on-disk
-    self.update_disk_sizes()
+    self._update_disk_sizes()
 
   def __str__(self):
     if self.len > 100:
