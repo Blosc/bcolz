@@ -663,6 +663,7 @@ cdef class carray:
   mode : str, optional
       The mode that a *persistent* carray should be created/opened.  The
       values can be:
+
         * 'r' for read-only
         * 'w' for read/write.  During carray creation, the `rootdir` will be
           removed if it exists.  During carray opening, the carray will be
@@ -1960,6 +1961,7 @@ cdef class carray:
     Parameters
     ----------
     boolarr : a carray or NumPy array of boolean type
+        The boolean values.
     limit : int
         A maximum number of elements to return.  The default is return
         everything.

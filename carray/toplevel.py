@@ -84,6 +84,7 @@ def open(rootdir, mode='a'):
     mode : the open mode (string)
         Specifies the mode in which the object is opened.  The supported
         values are:
+
           * 'r' for read-only
           * 'w' for emptying the previous underlying data
           * 'a' for allowing read/write on top of existing data

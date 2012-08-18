@@ -203,24 +203,23 @@ First level functions
 
     Open a disk-based carray/ctable.
 
-    Parameters
-    ----------
-    rootdir : pathname (string)
+    Parameters:
+      rootdir : pathname (string)
         The directory hosting the carray/ctable object.
-    mode : the open mode (string)
+      mode : the open mode (string)
         Specifies the mode in which the object is opened.  The supported
         values are:
+
           * 'r' for read-only
           * 'w' for emptying the previous underlying data
           * 'a' for allowing read/write on top of existing data
 
-    Returns
-    -------
-    out : a carray/ctable object or None (if not objects are found)
+    Returns:
+      out : a carray/ctable object or None (if not objects are found)
 
 
 .. py:function:: set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None)
-    """
+
     Set printing options.
 
     These options determine the way floating point numbers in carray
@@ -344,12 +343,14 @@ The carray class
   mode : str, optional
       The mode that a *persistent* carray should be created/opened.  The
       values can be:
+
         * 'r' for read-only
-        * 'w' for read/write.  During carray creation, the `rootdir` will be
-          removed if it exists.  During carray opening, the carray will be
-          resized to 0.
+        * 'w' for read/write.  During carray creation, the `rootdir`
+          will be removed if it exists.  During carray opening, the
+          carray will be resized to 0.
         * 'a' for append (possible data inside `rootdir` will not be removed).
 
+.. _carray-attributes:
 
 carray attributes
 -----------------
@@ -538,6 +539,7 @@ carray methods
 
     Parameters:
       boolarr : a carray or NumPy array of boolean type
+        The boolean values.
       limit : int
         A maximum number of elements to return.  The default is return
         everything.
