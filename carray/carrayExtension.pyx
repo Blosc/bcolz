@@ -10,7 +10,7 @@
 import sys
 import numpy as np
 import carray as ca
-from carray import utils, attrs
+from carray import utils, attrs, array2string
 import os, os.path
 import struct
 import shutil
@@ -731,10 +731,20 @@ cdef class carray:
     def __get__(self):
       return self._nbytes
 
+  property ndim:
+    "The number of dimensions of this object."
+    def __get__(self):
+      return len(self.shape)
+
   property shape:
     "The shape of this object."
     def __get__(self):
       return tuple((self.len,) + self._dtype.shape)
+
+  property size:
+    "The size of this object."
+    def __get__(self):
+      return np.prod(self.shape)
 
   property rootdir:
     "The on-disk directory used for persistency."
@@ -831,7 +841,11 @@ cdef class carray:
     # Compute the chunklen/chunksize
     if expectedlen is None:
       # Try a guess
-      expectedlen = len(array_)
+      try:
+        expectedlen = len(array_)
+      except TypeError:
+        raise NotImplementedError(
+          "creating carrays from scalar objects not supported")
     self.expectedlen = expectedlen
     if chunklen is None:
       # Try a guess
@@ -2117,12 +2131,15 @@ cdef class carray:
     """
     cdef chunk chunk_
     cdef npy_intp nchunks
+    cdef int leftover_atoms
 
     if self._rootdir is None:
       return
 
     if self.leftover:
-      chunk_ = chunk(self.lastchunkarr[:leftover], self.dtype, self.cparams,
+      leftover_atoms = cython.cdiv(self.leftover, self.atomsize)
+      chunk_ = chunk(self.lastchunkarr[:leftover_atoms], self.dtype,
+                     self.cparams,
                      _memory = self._rootdir is None)
       # Flush this chunk to disk
       self.chunks.flush(chunk_)
@@ -2131,11 +2148,7 @@ cdef class carray:
     self._update_disk_sizes()
 
   def __str__(self):
-    if self.len > 100:
-      return "[%s, %s, %s, ..., %s, %s, %s]\n" % (self[0], self[1], self[2],
-                                                  self[-3], self[-2], self[-1])
-    else:
-      return "%s\n" % str(self[:])
+    return array2string(self)
 
   def __repr__(self):
     snbytes = utils.human_readable_size(self._nbytes)

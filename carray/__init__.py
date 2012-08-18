@@ -51,6 +51,10 @@ else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
 
+# Print array functions (imported from NumPy)
+from carray.arrayprint import (
+    array2string, set_printoptions, get_printoptions)
+
 from carray.carrayExtension import (
     carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads )
 from carray.ctable import ctable
@@ -61,7 +65,6 @@ from carray.toplevel import (
 from carray.version import __version__
 from carray.tests import test
 from defaults import defaults
-
 
 # Initialize Blosc
 ncores = detect_number_of_cores()

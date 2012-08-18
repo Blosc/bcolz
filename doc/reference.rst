@@ -46,6 +46,17 @@ Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 First level functions
 =====================
 
+.. py:function:: array2string(a, max_line_width=None, precision=None, suppress_small=None, separator=' ', prefix="", style=repr, formatter=None)
+
+    Return a string representation of a carray/ctable object.
+
+    This is the same function than in NumPy.  Please refer to NumPy
+    documentation for more info.
+
+    See Also:
+      :py:func:`set_printoptions`, :py:func:`get_printoptions`
+
+
 .. py:function:: arange([start,] stop[, step,], dtype=None, **kwargs)
 
     Return evenly spaced values within a given interval.
@@ -83,7 +94,7 @@ First level functions
         this rule may result in the last element of `out` being greater
         than `stop`.
 
-.. py:function::  eval(expression, vm=None, out_flavor=None, **kwargs)
+.. py:function:: eval(expression, vm=None, out_flavor=None, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -176,6 +187,18 @@ First level functions
     See Also:
       :py:func:`fill`, :py:func:`ones`
 
+
+.. py:function:: get_printoptions()
+
+    Return the current print options.
+
+    This is the same function than in NumPy.  For more info, please
+    refer to the NumPy documentation.
+
+    See Also:
+      :py:func:`array2string`, :py:func:`set_printoptions`
+
+
 .. py:function:: open(rootdir, mode='a')
 
     Open a disk-based carray/ctable.
@@ -194,6 +217,19 @@ First level functions
     Returns
     -------
     out : a carray/ctable object or None (if not objects are found)
+
+
+.. py:function:: set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None)
+    """
+    Set printing options.
+
+    These options determine the way floating point numbers in carray
+    objects are displayed.  This is the same function than in NumPy.
+    For more info, please refer to the NumPy documentation.
+
+    See Also:
+      :py:func:`array2string`, :py:func:`get_printoptions`
+
 
 .. py:function:: zeros(shape, dtype=float, **kwargs)
 
@@ -370,9 +406,17 @@ carray attributes
 
     The original (uncompressed) size of this object (in bytes).
 
+  .. py:attribute:: ndim
+
+    The number of dimensions of this object (in bytes).
+
   .. py:attribute:: shape
 
     The shape of this object.
+
+  .. py:attribute:: size
+
+    The size of this object.
 
 
 carray methods
@@ -630,9 +674,17 @@ ctable attributes
 
     The original (uncompressed) size of this object (in bytes).
 
+  .. py:attribute:: ndim
+
+    The number of dimensions of this object (in bytes).
+
   .. py:attribute:: shape
 
     The shape of this object.
+
+  .. py:attribute:: size
+
+    The size of this object.
 
 
 ctable methods

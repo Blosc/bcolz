@@ -10,7 +10,7 @@ import sys, math
 
 import numpy as np
 import carray as ca
-from carray import utils, attrs
+from carray import utils, attrs, array2string
 import itertools as it
 from collections import namedtuple
 import json
@@ -129,23 +129,6 @@ class ctable(object):
     # ``````````
 
     @property
-    def dtype(self):
-        "The data type of this ctable (numpy dtype)."
-        names, cols = self.names, self.cols
-        l = [(name, cols[name].dtype) for name in names]
-        return np.dtype(l)
-
-    @property
-    def shape(self):
-        "The shape of this ctable."
-        return (self.len,)
-
-    @property
-    def nbytes(self):
-        "The original (uncompressed) size of this object (in bytes)."
-        return self._get_stats()[0]
-
-    @property
     def cbytes(self):
         "The compressed size of this object (in bytes)."
         return self._get_stats()[1]
@@ -156,9 +139,37 @@ class ctable(object):
         return self._cparams
 
     @property
+    def dtype(self):
+        "The data type of this object (numpy dtype)."
+        names, cols = self.names, self.cols
+        l = [(name, cols[name].dtype) for name in names]
+        return np.dtype(l)
+
+    @property
     def names(self):
-        "The names of the columns (list)."
+        "The names of the object (list)."
         return self.cols.names
+
+    @property
+    def ndim(self):
+        "The number of dimensions of this object."
+        return len(self.shape)
+
+    @property
+    def nbytes(self):
+        "The original (uncompressed) size of this object (in bytes)."
+        return self._get_stats()[0]
+
+    @property
+    def shape(self):
+        "The shape of this object."
+        return (self.len,)
+
+    @property
+    def size(self):
+        "The size of this object."
+        return np.prod(self.shape)
+
 
     def __init__(self, columns=None, names=None, **kwargs):
 
@@ -899,11 +910,7 @@ class ctable(object):
         return (nbytes, cbytes, cratio)
 
     def __str__(self):
-        if self.len > 100:
-            return "[%s, %s, %s, ..., %s, %s, %s]\n" % \
-                   (self[0], self[1], self[2], self[-3], self[-2], self[-1])
-        else:
-            return str(self[:])
+        return array2string(self)
 
     def __repr__(self):
         nbytes, cbytes, cratio = self._get_stats()
