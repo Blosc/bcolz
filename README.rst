@@ -7,11 +7,12 @@ also be compressed for reducing memory/disk needs.  The compression
 process is carried out internally by Blosc, a high-performance
 compressor that is optimized for binary data.
 
-From version 0.5 it supports completely transparent storage on-disk in
-addition to memory.  That means that everything that can be done with
-an in-memory container can be done using the disk instead.  The format
-chosen for the persistence layer is described in 'persistence.rst',
-although not everything has been implemented yet.
+carray can use numexpr internally so as to accelerate many vector and
+query operations (although it can use pure NumPy for doing so too).
+numexpr can use optimize the memory usage and use several cores for
+doing the computations, so it is blazing fast.  Moreover, with the
+introduction of a carray/ctable disk-based container (in version 0.5),
+it can be used for seamlessly performing out-of-core computations.
 
 Rational
 --------

@@ -1,9 +1,14 @@
 Proposal for a persistence layer for carray
 -------------------------------------------
 
-The original carray container consists on basically a list of
-compressed in-memory blocks.  This document explains how to extend
-this to allow to store the data blocks on disk too.
+:Author: Francesc Alted
+:Date: August 18, 2012
+
+
+The original carray container (up to version 0.4) consisted on
+basically a list of compressed in-memory blocks.  This document
+explains how to extend this to allow to store the data blocks on disk
+too.
 
 The goals of this proposal are:
 
