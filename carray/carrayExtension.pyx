@@ -268,7 +268,9 @@ cdef class chunk:
                     or check_zeros(array.data, nbytes)):
 
       self.isconstant = 1
-      self.constant = array[0]
+      # Avoid this NumPy quirk: np.array(['1'], dtype='S3').dtype != s[0].dtype
+      # self.constant = array[0]
+      self.constant = np.array(array[0], dtype=array.dtype)
       # Add overhead (64 bytes for the overhead of the numpy container)
       footprint += 64 + self.constant.size * self.constant.itemsize
 

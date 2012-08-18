@@ -1344,10 +1344,10 @@ class constructorSmallDiskTest(constructorTest):
     disk = True
 
 class constructorBigTest(constructorTest):
-    N = 10000
+    N = 50000
 
 class constructorBigDiskTest(constructorTest):
-    N = 10000
+    N = 50000
     disk = True
 
 
@@ -1374,7 +1374,7 @@ class dtypesTest(unittest.TestCase):
     def test02(self):
         """Testing carray constructor with a plain compound `dtype`."""
         dtype = np.dtype("f4,f8")
-        a = np.ones(3, dtype=dtype)
+        a = np.ones(30000, dtype=dtype)
         ac = ca.carray(a, dtype=dtype)
         self.assert_(ac.dtype == dtype)
         self.assert_(a.dtype == ac.dtype)
@@ -1384,7 +1384,7 @@ class dtypesTest(unittest.TestCase):
     def test03(self):
         """Testing carray constructor with a nested compound `dtype`."""
         dtype = np.dtype([('f1', [('f1', 'i2'), ('f2', 'i4')])])
-        a = np.ones(3, dtype=dtype)
+        a = np.ones(3000, dtype=dtype)
         ac = ca.carray(a, dtype=dtype)
         self.assert_(ac.dtype == dtype)
         self.assert_(a.dtype == ac.dtype)
@@ -1493,7 +1493,7 @@ class persistenceTest(MayBeDiskTest):
     def test01b(self):
         """Creating a carray in "w" mode."""
 
-        N = 10000
+        N = 50000
         cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
@@ -1509,7 +1509,7 @@ class persistenceTest(MayBeDiskTest):
     def test01c(self):
         """Creating a carray in "a" mode."""
 
-        N = 10000
+        N = 30003
         cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
@@ -1519,7 +1519,7 @@ class persistenceTest(MayBeDiskTest):
     def test02a(self):
         """Opening a carray in "r" mode."""
 
-        N = 10000
+        N = 10001
         cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
@@ -1533,7 +1533,7 @@ class persistenceTest(MayBeDiskTest):
     def test02b(self):
         """Opening a carray in "w" mode."""
 
-        N = 10000
+        N = 100001
         cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
@@ -1549,7 +1549,7 @@ class persistenceTest(MayBeDiskTest):
     def test02c(self):
         """Opening a carray in "a" mode."""
 
-        N = 10000
+        N = 1000-1
         cn = ca.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
