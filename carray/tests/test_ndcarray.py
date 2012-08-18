@@ -166,7 +166,7 @@ class getitemTest(MayBeDiskTest):
 
     def test03b(self):
         """Testing `__getitem()__` method with several slices (II)"""
-        a = np.arange(24).reshape((4,3,2))
+        a = np.arange(24*1000).reshape((4*1000,3,2))
         b = ca.carray(a, rootdir=self.rootdir)
         if self.open:
             b = ca.open(rootdir=self.rootdir)
@@ -176,7 +176,7 @@ class getitemTest(MayBeDiskTest):
 
     def test03c(self):
         """Testing `__getitem()__` method with several slices (III)"""
-        a = np.arange(120).reshape((5,4,3,2))
+        a = np.arange(120*1000).reshape((5*1000,4,3,2))
         b = ca.carray(a, rootdir=self.rootdir)
         if self.open:
             b = ca.open(rootdir=self.rootdir)
