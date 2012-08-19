@@ -1,19 +1,21 @@
-Proposal for a persistence layer for carray
--------------------------------------------
+======================================
+RFC for a persistence layer for carray
+======================================
 
 :Author: Francesc Alted
-:Date: August 18, 2012
+:Contact: francesc@continuum.com
+:Version: 0.1 (August 19, 2012)
 
 
 The original carray container (up to version 0.4) consisted on
 basically a list of compressed in-memory blocks.  This document
-explains how to extend this to allow to store the data blocks on disk
+explains how to extend it to allow to store the data blocks on disk
 too.
 
 The goals of this proposal are:
 
 1. Allow to work with data directly on disk, exactly on the same way
-that data in memory.
+than data in memory.
 
 2. Must support the same access capabilities than carray objects
 including: append data, modying data and direct access to data.
@@ -22,17 +24,16 @@ including: append data, modying data and direct access to data.
 
 4. User metadata addition must be possible too.
 
-5. And last but not least, the data should be easily 'shardeable' for
-optimal behaviour in a distributed storage environment.
+5. The data should be easily 'shardeable' for optimal behaviour in a
+distributed storage environment.
 
 This, in combination with a distributed filesystem, and combined with
 a system that would be aware of the physical topology of the
 underlying infraestructure would allow to almost replace the need for
-a Disco/Hadoop infraestructure.
-
+a distributed infrastructure for data (e.g. Disco/Hadoop).
 
 The layout
-----------
+==========
 
 For every dataset, it will be created a directory, with a
 user-provided name that, for generality, we will call it `root` here.
@@ -91,28 +92,31 @@ leveraging its blocking and multithreading capabilities.
 The layout of binary superchunk data files looks like this::
 
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
-    | b   l   p   k | ^ | ^ | ^ | R |   chunk-size  |   RESERVED    |
-                      |   |   |
-                      |   |   +- indexes
-                      |   + ---- checksums
-                      +--------- version
+    | b   l   p   k | ^ | ^ | ^ | ^ |   chunk-size  |  last-chunk   |
+                      |   |   |   |
+          version ----+   |   |   |
+          options --------+   |   |
+         checksum ------------+   |
+         typesize ----------------+
 
     |-0-|-1-|-2-|-3-|-4-|-5-|-6-|-7-|-8-|-9-|-A-|-B-|-C-|-D-|-E-|-F-|
-    |           file-size           |            nchunks            |
+    |            nchunks            |            RESERVED           |
 
-The magic 'blpk' signature is the same than the bloscpack format (see
-https://github.com/esc/bloscpack).  The new version of the format will
-allow to include indexes (offsets to where the data chunks begin) and
-checksums (probably using the adler32 algorithm or similar).
+
+The magic 'blpk' signature is the same than the bloscpack_ format.
+The new version (2) of the format will allow to include indexes
+(offsets to where the data chunks begin) and checksums (probably using
+the adler32 algorithm or similar).
+
+.. _blosckpack: https://github.com/esc/bloscpack/blob/feature/new_format/header_rfc.rst
 
 After the above header, it will follow index data and the actual data
 in blosc chunks::
 
-    offset1 | offset 2 | offset N | ...   | ...   | ... | ...
-                index             | chunk | chunk | ... | chunk
+    |-bloscpack-header-|-offset-|-offset-|...|-chunk-|-chunk-|...|
 
-The index part above stores the offsets on where each chunk starts, so
-it is is easy to access the different chunks in the superchunk file.
+The index part above stores the offsets where each chunk starts, so it
+is is easy to access the different chunks in the superchunk file.
 
 CAVEAT: The bloscpack format is still evolving, so don't trust on
 forward compatibility of the format, at least until 1.0, where the
@@ -142,8 +146,8 @@ The `meta` files
 ----------------
 
 Here there can be as many files as necessary.  The format for every
-file will tentatively be JSON.  There should be (at least) three
-files:
+file will tentatively be YAML (although initial implementations are
+using JSON).  There should be (at least) three files:
 
 The `sizes` file
 ~~~~~~~~~~~~~~~~
@@ -152,9 +156,11 @@ This contains the shape and compressed and uncompressed sizes of the
 dataset.  For example::
 
     $ cat meta/sizes
-    {"shape": [5000000000], "nbytes": 5000000000, "cbytes": 24328038}
+    shape: (5000000000,)
+    nbytes: 5000000000
+    cbytes: 24328038
 
-The `storage` file (may also be `dtype`, `dtype adaptor` or `domain`)
+The `storage` file
 ~~~~~~~~~~~~~~~~~~
 
 Here comes the information about how data has to be stored and its
