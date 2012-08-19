@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 16, 2012
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@continuum.com
 #
 ########################################################################
 
@@ -170,9 +170,9 @@ compressor that is optimized for binary data.
 """,
       classifiers = filter(None, classifiers.split("\n")),
       author = 'Francesc Alted',
-      author_email = 'faltet@pytables.org',
+      author_email = 'francesc@continuum.com',
       maintainer = 'Francesc Alted',
-      maintainer_email = 'faltet@pytables.org',
+      maintainer_email = 'francesc@continuum.com',
       url = 'https://github.com/FrancescAlted/carray',
       license = 'http://www.opensource.org/licenses/bsd-license.php',
       # It is better to upload manually to PyPI
