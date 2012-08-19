@@ -5,7 +5,7 @@ Defaults for carray operation
 -----------------------------
 
 You can tailor the behaviour of carray by changing the values of
-certain some special first level variables whose defaults are listed
+certain some special top level variables whose defaults are listed
 here.  You can change these values in two ways:
 
 * In your program: the changes will be temporary.

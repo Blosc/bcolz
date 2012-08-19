@@ -15,7 +15,7 @@ constructor::
   >>> b = ca.carray(a)
 
 Or, you can also create it by using one of its multiple constructors
-(see :ref:`first-level-constructors` for the complete list)::
+(see :ref:`top-level-constructors` for the complete list)::
 
   >>> c = ca.arange(10)
 

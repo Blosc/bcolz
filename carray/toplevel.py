@@ -9,7 +9,9 @@
 """Top level functions and classes.
 """
 
-import sys, os
+import sys
+import os, os.path
+import glob
 import itertools as it
 import numpy as np
 import carray as ca
@@ -625,6 +627,54 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
     if scalar:
         return result[()]
     return result
+
+
+def walk(dir, classname=None, mode='a'):
+    """walk(dir, classname=None, mode='a')
+
+    Recursively iterate over carray/ctable objects hanging from `dir`.
+
+    Parameters
+    ----------
+    dir : string
+        The directory from which the listing starts.
+    classname : string
+        If specified, only object of this class are returned.  The values
+        supported are 'carray' and 'ctable'.
+    mode : string
+        The mode in which the object should be opened.
+
+    Returns
+    -------
+    out : iterator
+        Iterator over the objects found.
+
+    """
+
+    # First, iterate over the carray objects in current dir
+    names = os.path.join(dir, '*')
+    dirs = []
+    for node in glob.glob(names):
+        if os.path.isdir(node):
+            try:
+                obj = ca.carray(rootdir=node, mode=mode)
+            except:
+                try:
+                    obj = ca.ctable(rootdir=node, mode=mode)
+                except:
+                    obj = None
+                    dirs.append(node)
+            if obj:
+                if classname:
+                    if obj.__class__.__name__ == classname:
+                        yield obj
+                else:
+                    yield obj
+
+    # Then recurse into the true directories
+    for dir_ in dirs:
+        for node in walk(dir_, classname, mode):
+            yield node
 
 
 class cparams(object):

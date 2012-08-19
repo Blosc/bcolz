@@ -22,7 +22,7 @@ First level variables
     Whether minimum version of numexpr has been detected.
 
 
-First level classes
+Top level classes
 ===================
 
 .. py:class:: cparams(clevel=5, shuffle=True)
@@ -41,9 +41,9 @@ First level classes
 
 Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 
-.. _first-level-constructors:
+.. _top-level-constructors:
 
-First level functions
+Top level functions
 =====================
 
 .. py:function:: array2string(a, max_line_width=None, precision=None, suppress_small=None, separator=' ', prefix="", style=repr, formatter=None)
@@ -251,6 +251,25 @@ First level functions
       :py:func:`fill`, :py:func:`zeros`
 
 
+.. py:function:: walk(dir, classname=None, mode='a')
+
+    Recursively iterate over carray/ctable objects hanging from `dir`.
+
+    Parameters:
+      dir : string
+        The directory from which the listing starts.
+      classname : string
+        If specified, only object of this class are returned.  The values
+        supported are 'carray' and 'ctable'.
+      mode : string
+        The mode in which the object should be opened.
+
+    Returns:
+      out : iterator
+        Iterator over the objects found.
+
+
+
 Utility functions
 =================
 
@@ -339,7 +358,7 @@ The carray class
       The directory where all the data and metada will be stored.  If
       specified, then the carray object will be disk-based (i.e. all chunks
       will live on-disk, not in memory) and persistent (i.e. it can be
-      restored in other session, e.g. via the `open()` top-level function).
+      restored in other session, e.g. via the `open()` top level function).
   mode : str, optional
       The mode that a *persistent* carray should be created/opened.  The
       values can be:
@@ -627,7 +646,7 @@ The ctable class
       names : list of strings or string
         The list of names for the columns.  Alternatively, it can be
         specified as a string such as 'f0 f1' or 'f0, f1'.  If not
-        passed, the names will be chosen as 'f0' for the first column,
+        passed, the names will be chosen as 'f0' for the top column,
         'f1' for the second and so on so forth (NumPy convention).
       kwargs : list of parameters or dictionary
         Allows to pass additional arguments supported by carray
@@ -770,7 +789,7 @@ ctable methods
         calling function's frame.  These variables may be column
         names in this table, scalars, carrays or NumPy arrays.
       kwargs : list of parameters or dictionary
-        Any parameter supported by the `eval()` first level function.
+        Any parameter supported by the `eval()` top level function.
 
     Returns:
       out : carray object
@@ -779,7 +798,7 @@ ctable methods
         supported by carray constructor in `kwargs`.
 
     See Also:
-      :py:func:`eval` (first level function)
+      :py:func:`eval` (top level function)
 
 
   .. py:method:: flush()
