@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 05, 2010
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@continuum.com
 #
 ########################################################################
 
@@ -61,7 +61,7 @@ from carray.ctable import ctable
 from carray.toplevel import (
     detect_number_of_cores, set_nthreads,
     open, fromiter, arange, zeros, ones, fill,
-    cparams, eval )
+    cparams, eval, walk )
 from carray.version import __version__
 from carray.tests import test
 from defaults import defaults

@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 05, 2010
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted -  francesc@continuum.com
 #
 ########################################################################
 
@@ -14,8 +14,10 @@ from carray import utils, attrs, array2string
 import os, os.path
 import struct
 import shutil
+import tempfile
 import json
 import cython
+
 
 _KB = 1024
 _MB = 1024*_KB
@@ -268,9 +270,12 @@ cdef class chunk:
                     or check_zeros(array.data, nbytes)):
 
       self.isconstant = 1
-      # Avoid this NumPy quirk: np.array(['1'], dtype='S3').dtype != s[0].dtype
-      # self.constant = array[0]
-      self.constant = np.array(array[0], dtype=array.dtype)
+      # Get the NumPy constant.  Avoid this NumPy quirk:
+      # np.array(['1'], dtype='S3').dtype != s[0].dtype
+      if array.dtype.kind != 'S':
+        self.constant = array[0]
+      else:
+        self.constant = np.array(array[0], dtype=array.dtype)
       # Add overhead (64 bytes for the overhead of the numpy container)
       footprint += 64 + self.constant.size * self.constant.itemsize
 
@@ -499,10 +504,29 @@ cdef decode_blosc_header(buffer_):
 
 cdef class chunks(object):
   """Store the different carray chunks in a directory on-disk."""
-  cdef object datadir, metadir
-  cdef object dtype, cparams, lastchunkarr, mode
+  cdef object _rootdir, _mode
+  cdef object dtype, cparams, lastchunkarr
   cdef object chunk_cached
   cdef npy_intp nchunks, nchunk_cached, len
+
+  property mode:
+    "The mode used to create/open the `mode`."
+    def __get__(self):
+      return self._mode
+    def __set__(self, value):
+      self._mode = value
+
+  property rootdir:
+    "The on-disk directory used for persistency."
+    def __get__(self):
+      return self._rootdir
+    def __set__(self, value):
+      self._rootdir = value
+
+  property datadir:
+    """The directory for data files."""
+    def __get__(self):
+      return os.path.join(self.rootdir, DATA_DIR)
 
   def __cinit__(self, rootdir, metainfo=None, _new=False):
     cdef ndarray lastchunkarr
@@ -514,11 +538,10 @@ cdef class chunks(object):
     cdef int ret
     cdef int itemsize, atomsize
 
-    self.datadir = os.path.join(rootdir, DATA_DIR)
-    self.metadir = os.path.join(rootdir, META_DIR)
+    self._rootdir = rootdir
     self.nchunks = 0
     self.nchunk_cached = -1    # no chunk cached initially
-    self.dtype, self.cparams, self.len, lastchunkarr, self.mode = metainfo
+    self.dtype, self.cparams, self.len, lastchunkarr, self._mode = metainfo
     atomsize = self.dtype.itemsize
     itemsize = self.dtype.base.itemsize
 
@@ -729,6 +752,14 @@ cdef class carray:
       # Important to do the cast in order to get a npy_intp result
       return cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
 
+  property mode:
+    "The mode used to create/open the `mode`."
+    def __get__(self):
+      return self._mode
+    def __set__(self, value):
+      self._mode = value
+      self.chunks.mode = value
+
   property nbytes:
     "The original (uncompressed) size of this object (in bytes)."
     def __get__(self):
@@ -753,11 +784,12 @@ cdef class carray:
     "The on-disk directory used for persistency."
     def __get__(self):
       return self._rootdir
-
-  property mode:
-    "The mode used to create/open the `rootdir`."
-    def __get__(self):
-      return self._mode
+    def __set__(self, value):
+      if not self.rootdir:
+        raise ValueError(
+          "cannot modify the rootdir value of an in-memory carray")
+      self._rootdir = value
+      self.chunks.rootdir = value
 
   def __cinit__(self, object array=None, object cparams=None,
                 object dtype=None, object dflt=None,
@@ -1254,10 +1286,6 @@ cdef class carray:
     cdef npy_intp newlen, ilen, isize, osize, newsize, rsize, i
     cdef object ishape, oshape, pos, newdtype, out
 
-    if self._rootdir:
-      raise NotImplementedError(
-        "cannot currently do a reshape of a disk-based carray")
-
     # Enforce newshape as tuple
     if isinstance(newshape, (int, long)):
       newshape = (newshape,)
@@ -1292,9 +1320,16 @@ cdef class carray:
       out = self.reshape(-1)
       return out.reshape(newshape)
 
+    if self._rootdir:
+      # If persistent, do the copy to a temporary dir
+      absdir = os.path.dirname(self._rootdir)
+      rootdir = tempfile.mkdtemp(suffix='__temp__', dir=absdir)
+    else:
+      rootdir = None
+
     # Create the final container and fill it
     out = carray([], dtype=newdtype, cparams=self.cparams, expectedlen=newlen,
-                 rootdir=self._rootdir, mode=self._mode)
+                 rootdir=rootdir, mode='w')
     if newlen < ilen:
       rsize = isize / newlen
       for i from 0 <= i < newlen:
@@ -1303,6 +1338,14 @@ cdef class carray:
       for i from 0 <= i < ilen:
         out.append(self[i].reshape(-1))
     out.flush()
+
+    # Finally, rename the temporary data directory to self._rootdir
+    if self._rootdir:
+      shutil.rmtree(self._rootdir)
+      os.rename(rootdir, self._rootdir)
+      # Restore the rootdir and mode
+      out.rootdir = self._rootdir
+      out.mode = self._mode
 
     return out
 
@@ -2150,6 +2193,12 @@ cdef class carray:
 
     # Finally, update the sizes metadata on-disk
     self._update_disk_sizes()
+
+  # XXX This does not work.  Will have to realize how to properly
+  # flush buffers before self going away...
+  # def __del__(self):
+  #   # Make a flush to disk if this object get disposed
+  #   self.flush()
 
   def __str__(self):
     return array2string(self)

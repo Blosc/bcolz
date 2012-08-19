@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 5, 2010
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@continuum.com
 #
 ########################################################################
 

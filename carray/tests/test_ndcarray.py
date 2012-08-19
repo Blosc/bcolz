@@ -3,7 +3,7 @@
 #
 #       License: BSD
 #       Created: January 11, 2011
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@continuum.com
 #
 ########################################################################
 
@@ -23,14 +23,21 @@ class constructorTest(MayBeDiskTest):
 
     open = False
 
-    def test00(self):
-        """Testing `carray` constructor"""
-        if self.disk:
-            # XXX This does not work because reshaping on-disk cannot be
-            # used yet
-            return
+    def test00a(self):
+        """Testing `carray` reshape"""
         a = np.arange(16).reshape((2,2,4))
         b = ca.arange(16, rootdir=self.rootdir).reshape((2,2,4))
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
+        #print "b->", `b`
+        assert_array_equal(a, b, "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `carray` reshape (large shape)"""
+        a = np.arange(16000).reshape((20,20,40))
+        b = ca.arange(16000, rootdir=self.rootdir).reshape((20,20,40))
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 

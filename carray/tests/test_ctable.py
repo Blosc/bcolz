@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: September 1, 2010
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@continuum.com
 #
 ########################################################################
 
@@ -1386,6 +1386,85 @@ class where_largeDiskTest(whereTest):
     disk = True
 
 
+# This test goes here until a new test_toplevel.py would be created
+class walkTest(MayBeDiskTest):
+    disk = True
+    ncas = 3  # the number of carrays per level
+    ncts = 4  # the number of ctables per level
+    nlevels = 5 # the number of levels
+
+    def setUp(self):
+        import os, os.path
+        N = 10
+
+        MayBeDiskTest.setUp(self)
+        base = self.rootdir
+        os.mkdir(base)
+
+        # Create a small object hierarchy on-disk
+        for nlevel in range(self.nlevels):
+            newdir = os.path.join(base, 'level%s' % nlevel) 
+            os.mkdir(newdir)
+            for nca in range(self.ncas):
+                newca = os.path.join(newdir, 'ca%s' % nca) 
+                ca.zeros(N, rootdir=newca)
+            for nct in range(self.ncts):
+                newca = os.path.join(newdir, 'ct%s' % nct) 
+                ca.fromiter(((i, i*2) for i in range(N)), count=N,
+                            dtype='i2,f4',
+                            rootdir=newca)
+            base = newdir
+
+    def test00(self):
+        """Checking the walk toplevel function (no classname)"""
+
+        ncas_, ncts_, others = (0, 0, 0)
+        for node in ca.walk(self.rootdir):
+            if type(node) == ca.carray:
+                ncas_ += 1
+            elif type(node) == ca.ctable:
+                ncts_ += 1
+            else:
+                others += 1
+
+        self.assert_(ncas_ == self.ncas * self.nlevels)
+        self.assert_(ncts_ == self.ncts * self.nlevels)
+        self.assert_(others == 0)
+
+    def test01(self):
+        """Checking the walk toplevel function (classname='carray')"""
+
+        ncas_, ncts_, others = (0, 0, 0)
+        for node in ca.walk(self.rootdir, classname='carray'):
+            if type(node) == ca.carray:
+                ncas_ += 1
+            elif type(node) == ca.ctable:
+                ncts_ += 1
+            else:
+                others += 1
+
+        self.assert_(ncas_ == self.ncas * self.nlevels)
+        self.assert_(ncts_ == 0)
+        self.assert_(others == 0)
+
+    def test02(self):
+        """Checking the walk toplevel function (classname='ctable')"""
+
+        ncas_, ncts_, others = (0, 0, 0)
+        for node in ca.walk(self.rootdir, classname='ctable'):
+            if type(node) == ca.carray:
+                ncas_ += 1
+            elif type(node) == ca.ctable:
+                ncts_ += 1
+            else:
+                others += 1
+
+        self.assert_(ncas_ == 0)
+        self.assert_(ncts_ == self.ncts * self.nlevels)
+        self.assert_(others == 0)
+
+
+
 def suite():
     theSuite = unittest.TestSuite()
 
@@ -1424,6 +1503,7 @@ def suite():
     theSuite.addTest(unittest.makeSuite(where_smallDiskTest))
     theSuite.addTest(unittest.makeSuite(where_largeTest))
     theSuite.addTest(unittest.makeSuite(where_largeDiskTest))
+    theSuite.addTest(unittest.makeSuite(walkTest))
 
     return theSuite
 

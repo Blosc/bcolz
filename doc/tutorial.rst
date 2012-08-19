@@ -12,12 +12,19 @@ A carray can be created from any NumPy ndarray by using its `carray`
 constructor::
 
   >>> a = np.arange(10)
-  >>> b = ca.carray(a)
+  >>> b = ca.carray(a)                   # for in-memory storage
+  >>> c = ca.carray(a, rootdir='mydir')  # for on-disk storage
 
 Or, you can also create it by using one of its multiple constructors
-(see :ref:`first-level-constructors` for the complete list)::
+(see :ref:`top-level-constructors` for the complete list)::
 
-  >>> c = ca.arange(10)
+  >>> d = ca.arange(10, rootdir='mydir')
+
+Please note that carray allows to create disk-based arrays by just
+specifying the `rootdir` parameter in all the constructors.
+Disk-based arrays fully support all the operations of in-memory
+counterparts, so depending on your needs, you may want to use one or
+another (or even a combination of both).
 
 Now, `b` is a carray object.  Just check this::
 
@@ -721,7 +728,7 @@ iterate over the rows whose fields fulfill some conditions (without
 the need to put the results in a NumPy container, as described in the
 "Accessing and setting rows" section above).  This can be very useful
 for performing operations on very large ctables without consuming lots
-of memory.
+of storage space.
 
 Here it is an example of use::
 
@@ -760,4 +767,4 @@ Here, one can see an exception in ctable methods behaviour: the
 resulting output is a ctable, and not a NumPy structured array.  This
 is so because the output of `eval()` is of the same length than the
 ctable, and thus it can be pretty large, so compression maybe of help
-to reduce its memory needs.
+to reduce its storage needs.
