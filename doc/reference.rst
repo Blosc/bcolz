@@ -636,13 +636,13 @@ The ctable class
 
     This class represents a compressed, column-wise, in-memory table.
 
-    Create a new ctable from `columns` with optional `names`.  The
-    columns are carray objects.
+    Create a new ctable from `columns` with optional `names`.
 
     Parameters:
-      columns : tuple or list of carray/ndarray objects, or structured
-        ndarray.  The list of column data to build the ctable object.
-        This can also be a pure NumPy structured array.
+      columns : tuple or list of column objects
+        The list of column data to build the ctable object.  This can also be
+        a pure NumPy structured array.  A list of lists or tuples is valid
+        too, as long as they can be converted into carray objects.
       names : list of strings or string
         The list of names for the columns.  Alternatively, it can be
         specified as a string such as 'f0 f1' or 'f0, f1'.  If not

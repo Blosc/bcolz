@@ -30,6 +30,14 @@ class createTest(MayBeDiskTest):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test00b(self):
+        """Testing ctable creation from a tuple of lists"""
+        t = ca.ctable(([1,2,3],[4,5,6]), ('f0', 'f1'), rootdir=self.rootdir)
+        #print "t->", `t`
+        ra = np.rec.fromarrays([[1,2,3],[4,5,6]]).view(np.ndarray)
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test00c(self):
         """Testing ctable creation from a tuple of carrays (single column)"""
         N = 1e1
         a = ca.carray(np.arange(N, dtype='i4'))

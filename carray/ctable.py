@@ -99,14 +99,14 @@ class ctable(object):
 
     This class represents a compressed, column-wise, in-memory table.
 
-    Create a new ctable from `cols` with optional `names`.  The
-    columns are carray objects.
+    Create a new ctable from `cols` with optional `names`.
 
     Parameters
     ----------
-    columns : tuple or list of carray/ndarray objects, or structured ndarray.
+    columns : tuple or list of column objects
         The list of column data to build the ctable object.  This can also be
-        a pure NumPy structured array.
+        a pure NumPy structured array.  A list of lists or tuples is valid
+        too, as long as they can be converted into carray objects.
     names : list of strings or string
         The list of names for the columns.  The names in this list must be
         valid Python identifiers, must not start with an underscore, and has
@@ -240,7 +240,12 @@ class ctable(object):
         else:
             raise ValueError, "`columns` input is not supported"
         if not (calist or nalist or ratype):
-            raise ValueError, "`columns` input is not supported"
+            # Try to convert the elements to carrays
+            try:
+                columns = [ca.carray(col) for col in columns]
+                calist = True
+            except:
+                raise ValueError, "`columns` input is not supported"
 
         # Populate the columns
         clen = -1
