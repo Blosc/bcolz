@@ -25,6 +25,7 @@ cdef extern from "string.h":
   char *strcpy(char *dest, char *src)
   char *strncpy(char *dest, char *src, size_t n)
   int strcmp(char *s1, char *s2)
+  int strncmp(char *s1, char *s2, size_t n)
   char *strdup(char *s)
   void *memcpy(void *dest, void *src, size_t n)
   void *memset(void *s, int c, size_t n)
@@ -62,6 +63,8 @@ cdef extern from "Python.h":
   object PyString_FromString(char *)
   object PyString_FromStringAndSize(char *s, int len)
   char *PyString_AsString(object string)
+  object PyBytes_FromStringAndSize(char *s, int len)
+  char *PyBytes_AS_STRING(object bytes)
 
   # Functions for lists
   int PyList_Append(object list, object item)

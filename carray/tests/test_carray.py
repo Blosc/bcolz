@@ -1398,6 +1398,31 @@ class dtypesTest(unittest.TestCase):
         self.assertRaises(TypeError, ca.carray, a)
 
 
+class streamTest(unittest.TestCase):
+    
+    def test00(self):
+        """Testing carray streaming with medium array"""
+        c = ca.arange(1e5, dtype=int)
+        s = c.tostring()
+        assert_array_equal(ca.fromstring(s), c)
+
+    def test01(self):
+        """Testing carray streaming with multiple dimensions"""
+        # dimensions >2 and indexing is not fully supported by carray right now..
+        #shape = (27,27,729)
+        shape = (27,56)
+        c = ca.zeros(shape, dtype='f4')
+        for i in range(10):
+            c[i,i] = float(i)
+        s = c.tostring()
+        assert_array_equal(ca.fromstring(s), c)
+    
+    def test03(self):
+        """Testing tostring/fromstring for carray"""
+        c = ca.carray(["ale", "e", "aco"], dtype='S4')
+        s = c.tostring()
+        assert_array_equal(ca.fromstring(s), c)
+
 class largeCarrayTest(unittest.TestCase):
 
     def test00(self):
@@ -1442,9 +1467,11 @@ def suite():
     theSuite.addTest(unittest.makeSuite(constructor_smallTest))
     theSuite.addTest(unittest.makeSuite(constructor_bigTest))
     theSuite.addTest(unittest.makeSuite(dtypesTest))
+    theSuite.addTest(unittest.makeSuite(streamTest))
     theSuite.addTest(unittest.makeSuite(computeMethodsTest))
     theSuite.addTest(unittest.makeSuite(eval_small))
     theSuite.addTest(unittest.makeSuite(eval_big))
+    
     if ca.numexpr_here:
         theSuite.addTest(unittest.makeSuite(eval_small_ne))
         theSuite.addTest(unittest.makeSuite(eval_big_ne))

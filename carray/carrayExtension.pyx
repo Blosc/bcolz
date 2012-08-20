@@ -28,6 +28,7 @@ IntType = np.dtype(np.int_)
 from definitions cimport import_array, ndarray, dtype, \
      malloc, realloc, free, memcpy, memset, strdup, strcmp, \
      PyString_AsString, PyString_FromString, \
+     PyBytes_AS_STRING, PyBytes_FromStringAndSize, \
      Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
      PyArray_GETITEM, PyArray_SETITEM, \
      npy_intp
@@ -1729,7 +1730,22 @@ cdef class carray:
          self.cparams, str(self))
     return fullrepr
 
+  def tostring(self):
+    """Return bytestring representation of carray"""
+    return to_stream(self)
 
+
+def fromstring(object string):
+  """
+  fromstring(string)
+  
+  Return carray object from input string
+  
+  Note: this will only work for bytestrings that were created with `carray.tostring()`
+  """
+  return from_stream(string)
+
+include "streaming.pxi"
 
 
 ## Local Variables:
