@@ -704,12 +704,20 @@ class evalTest(unittest.TestCase):
     def tearDown(self):
         ca.defaults.eval_vm = self.prev_vm
 
-    def test00(self):
+    def test00a(self):
         """Testing evaluation of ndcarrays (bool out)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = ca.arange(np.prod(self.shape)).reshape(self.shape)
         outa = eval("a>0")
         outb = ca.eval("b>0")
+        assert_array_equal(outa, outb, "Arrays are not equal")
+
+    def test00b(self):
+        """Testing evaluation of ndcarrays (bool out, NumPy)"""
+        a = np.arange(np.prod(self.shape)).reshape(self.shape)
+        b = ca.arange(np.prod(self.shape)).reshape(self.shape)
+        outa = eval("a>0")
+        outb = ca.eval("b>0", out_flavor='numpy')
         assert_array_equal(outa, outb, "Arrays are not equal")
 
     def test01(self):

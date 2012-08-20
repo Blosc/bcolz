@@ -612,7 +612,9 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 nrows = kwargs.pop('expectedlen', vlen)
                 result = ca.carray(res_block, expectedlen=nrows, **kwargs)
             else:
-                result = np.empty((vlen,), dtype=res_block.dtype)
+                out_shape = list(res_block.shape)
+                out_shape[0] = vlen
+                result = np.empty(out_shape, dtype=res_block.dtype)
                 result[:bsize] = res_block
         else:
             if scalar or dim_reduction:
