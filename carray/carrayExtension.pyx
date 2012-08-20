@@ -1468,10 +1468,6 @@ cdef class carray:
     chunklen = self._chunklen
     nchunk = cython.cdiv(pos, <npy_intp>chunklen)
 
-    if pos + atomsize > chunklen:
-      # The cache cannot work for this case
-      return 0
-
     # Check whether pos is in the last chunk
     if nchunk == nchunks and self.leftover:
       posinbytes = (pos % chunklen) * atomsize
@@ -1560,7 +1556,7 @@ cdef class carray:
         else:
           return arr1[0]
       # Fallback action: use the slice code
-      return self[slice(key, None, 1)][0]
+      return np.squeeze(self[slice(key, None, 1)])
     # Slices
     elif isinstance(key, slice):
       (start, stop, step) = key.start, key.stop, key.step
