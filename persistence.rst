@@ -15,17 +15,17 @@ too.
 The goals of this proposal are:
 
 1. Allow to work with data directly on disk, exactly on the same way
-than data in memory.
+  than data in memory.
 
 2. Must support the same access capabilities than carray objects
-including: append data, modying data and direct access to data.
+   including: append data, modying data and direct access to data.
 
 3. Transparent data compression must be possible.
 
 4. User metadata addition must be possible too.
 
 5. The data should be easily 'shardeable' for optimal behaviour in a
-distributed storage environment.
+   distributed storage environment.
 
 This, in combination with a distributed filesystem, and combined with
 a system that would be aware of the physical topology of the
