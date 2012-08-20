@@ -713,10 +713,10 @@ ctable methods
 
   .. py:method:: addcol(newcol, name=None, pos=None, **kwargs)
 
-    Add a new `newcol` carray or ndarray as column.
+    Add a new `newcol` object as column.
 
     Parameters:
-      newcol : carray or ndarray
+      newcol : carray, ndarray, list or tuple
         If a carray is passed, no conversion will be carried out.
         If conversion to a carray has to be done, `kwargs` will
         apply.

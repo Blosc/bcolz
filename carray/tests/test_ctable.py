@@ -200,6 +200,18 @@ class persistentTest(MayBeDiskTest):
 
 class add_del_colTest(MayBeDiskTest):
 
+    def test00a(self):
+        """Testing adding a new column (list flavor)"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = ca.ctable(ra, rootdir=self.rootdir)
+        c = np.arange(N, dtype='i8')*3
+        t.addcol(c.tolist(), 'f2')
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        #print "t->", `t`
+        #print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
     def test00(self):
         """Testing adding a new column (carray flavor)"""
         N = 10

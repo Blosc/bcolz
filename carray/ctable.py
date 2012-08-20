@@ -390,11 +390,11 @@ class ctable(object):
         """
         addcol(newcol, name=None, pos=None, **kwargs)
 
-        Add a new `newcol` carray or ndarray as column.
+        Add a new `newcol` object as column.
 
         Parameters
         ----------
-        newcol : carray or ndarray
+        newcol : carray, ndarray, list or tuple
             If a carray is passed, no conversion will be carried out.
             If conversion to a carray has to be done, `kwargs` will
             apply.
@@ -440,6 +440,13 @@ class ctable(object):
             if 'cparams' not in kwargs:
                 kwargs['cparams'] = self.cparams
             newcol = ca.carray(newcol, **kwargs)
+        elif type(newcol) in (list, tuple):
+            if 'cparams' not in kwargs:
+                kwargs['cparams'] = self.cparams
+            newcol = ca.carray(newcol, **kwargs)
+        elif type(newcol) != ca.carray:
+            raise ValueError(
+                """`newcol` type not supported""")
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
