@@ -574,7 +574,7 @@ carray methods
   .. py:method:: wheretrue(limit=None, skip=0)
 
     Iterator that returns indices where this object is true.  Only useful for
-    boolean carrays.
+    boolean carrays that are unidimensional.
 
     Parameters:
       limit : int

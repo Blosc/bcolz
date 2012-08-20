@@ -17,7 +17,7 @@ import unittest
 
 class with_listTest(unittest.TestCase):
 
-    def test00(self):
+    def test00a(self):
         """Testing wheretrue() in combination with a list constructor"""
         a = ca.zeros(self.N, dtype="bool")
         a[30:40] = ca.ones(10, dtype="bool")
@@ -26,6 +26,12 @@ class with_listTest(unittest.TestCase):
         self.assert_(blist1 == range(30,40))
         alist2 = list(a)
         self.assert_(alist == alist2, "wheretrue() not working correctly")
+
+    def test00b(self):
+        """Testing wheretrue() with a multidimensional array"""
+        a = ca.zeros((self.N, 10), dtype="bool")
+        a[30:40] = ca.ones(10, dtype="bool")
+        self.assertRaises(NotImplementedError, a.wheretrue)
 
     def test01(self):
         """Testing where() in combination with a list constructor"""
@@ -46,6 +52,7 @@ class with_listTest(unittest.TestCase):
         self.assert_(blist1 == range(3,10))
         blist2 = list(b)
         self.assert_(blist == blist2, "where() not working correctly")
+
 
 class small_with_listTest(with_listTest):
     N = 100

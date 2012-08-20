@@ -1966,7 +1966,7 @@ cdef class carray:
     wheretrue(limit=None, skip=0)
 
     Iterator that returns indices where this object is true.  Only useful for
-    boolean carrays.
+    boolean carrays that are unidimensional.
 
     Parameters
     ----------
@@ -1986,8 +1986,10 @@ cdef class carray:
 
     """
     # Check self
-    if self._dtype.type != np.bool_:
+    if self._dtype.base.type != np.bool_:
       raise ValueError, "`self` is not an array of booleans"
+    if self.ndim > 1:
+      raise NotImplementedError, "`self` is not unidimensional"
     self.reset_sentinels()
     self.wheretrue_mode = True
     if limit is not None:
