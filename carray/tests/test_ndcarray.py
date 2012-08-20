@@ -131,14 +131,25 @@ class getitemTest(MayBeDiskTest):
 
     open = False
 
-    def test00(self):
-        """Testing `__getitem()__` method with only a start"""
+    def test00a(self):
+        """Testing `__getitem()__` method with only a start (scalar)"""
         a = np.ones((2,3), dtype="i4")*3
         b = ca.fill((2,3), 3, dtype="i4", rootdir=self.rootdir)
         if self.open:
             b = ca.open(rootdir=self.rootdir)
-        sl = slice(1)
+        sl = 1
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test00b(self):
+        """Testing `__getitem()__` method with only a start (slice)"""
+        a = np.ones((27,2700), dtype="i4")*3
+        b = ca.fill((27,2700), 3, dtype="i4", rootdir=self.rootdir)
+        if self.open:
+            b = ca.open(rootdir=self.rootdir)
+        sl = slice(1)
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01(self):
@@ -149,6 +160,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = slice(1,4)
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02(self):
@@ -159,6 +171,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = slice(1,9,2)
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03a(self):
@@ -169,6 +182,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03b(self):
@@ -179,6 +193,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (slice(1,3,2), slice(1,4,2), slice(None))
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03c(self):
@@ -189,6 +204,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (slice(None,None,3), slice(1,3,2), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04a(self):
@@ -199,6 +215,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (1,1)
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04b(self):
@@ -209,6 +226,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2))
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04c(self):
@@ -219,6 +237,7 @@ class getitemTest(MayBeDiskTest):
             b = ca.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2),2)
         #print "b[sl]->", `b[sl]`
+        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 class getitemDiskTest(getitemTest):
