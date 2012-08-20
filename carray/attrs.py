@@ -110,12 +110,16 @@ class attrs(object):
         return len(self.attrs)
 
     def __str__(self):
+        if len(self.attrs) == 0:
+            return "*no attrs*"
         fullrepr = ""
         for name in self.attrs:
             fullrepr += "%s : %s" % (name, self.attrs[name]) 
         return fullrepr
 
     def __repr__(self):
+        if len(self.attrs) == 0:
+            return str(self)
         fullrepr = ""
         for name in self.attrs:
             fullrepr += "%s : %r\n" % (name, self.attrs[name]) 

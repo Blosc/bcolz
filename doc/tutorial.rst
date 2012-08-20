@@ -376,7 +376,7 @@ You can create multidimensional carrays too.  Look at this example::
   [[ 0.  0.  0.]
    [ 0.  0.  0.]]
 
-So, you can only access any element in any dimension::
+So, you can access any element in any dimension::
 
   >>> a[1]
   array([ 0.,  0.,  0.])
@@ -409,13 +409,13 @@ And you can select columns there by using another indirection level::
   >>> [r[2] for r in b]
   [2, 6, 10]
 
-Above, the third column has been selected.  And, although for this
-case the indexing is easier::
+Above, the third column has been selected.  Although for this case the
+indexing is easier::
 
   >>> b[:,2]
   array([ 2,  6, 10])
 
-the iterator approach might consume less memory resources.
+the iterator approach typically consumes less memory resources.
 
 Operating with carrays
 ----------------------
@@ -455,9 +455,9 @@ compression for the output::
   [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
 
 By default, `eval` will use Numexpr virtual machine if it is installed
-and if not, it will default to use the Python one.  You can use the
-`vm` parameter to select the desired virtual machine ("numexpr" or
-"python")::
+and if not, it will default to use the Python one (via NumPy).  You
+can use the `vm` parameter to select the desired virtual machine
+("numexpr" or "python")::
 
   >>> %timeit ca.eval(".5*x**3 + 2.1*x**2", vm="numexpr")
   10 loops, best of 3: 303 ms per loop
@@ -468,20 +468,16 @@ As can be seen, using the "numexpr" virtual machine is generally
 (much) faster, but there are situations that the "python" one is
 desirable because it offers much more functionality::
 
-  >>> ca.eval("np.diff(x)", vm="numexpr")
+  >>> ca.eval("diff(x)", vm="numexpr")
   NameError: variable name ``diff`` not found
   >>> ca.eval("np.diff(x)", vm="python")
   carray((9999389,), float64)  nbytes: 76.29 MB; cbytes: 814.25 KB; ratio: 95.94
     cparams := cparams(clevel=5, shuffle=True)
   [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]
 
-Finally, `eval` lets you select the type of the outcome of the
-evaluation by using the `out_flavor` argument::
+Finally, `eval` lets you select the type of the outcome to be a NumPy
+array by using the `out_flavor` argument::
 
-  >>> ca.eval("x**3", out_flavor="carray")
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 37.85 MB; ratio: 2.02
-    cparams := cparams(clevel=5, shuffle=True)
-  [0.0, 1.0, 8.0, ..., 9.999991e+20, 9.999994e+20, 9.999997e+20]
   >>> ca.eval("x**3", out_flavor="numpy")
   array([  0.00000000e+00,   1.00000000e+00,   8.00000000e+00, ...,
            9.99999100e+20,   9.99999400e+20,   9.99999700e+20])
@@ -492,8 +488,8 @@ For setting permanently your own defaults for the `vm` and
 carray metadata
 ---------------
 
-carray implements a couple of attributes, `dtype` and `shape` that
-makes it to 'quack' like a NumPy array::
+carray implements several attributes, like `dtype`, `shape` and `ndim`
+that makes it to 'quack' like a NumPy array::
 
   >>> a = np.arange(1e7)
   >>> b = ca.carray(a)
@@ -508,14 +504,13 @@ bytes in memory uses the carray object::
   >>> b.cbytes
   2691722
 
-This figure is approximate (the real one is a little larger) and it is
-generally lower than the original (uncompressed) datasize can be
-accessed by using `nbytes` attribute::
+This figure is approximate and it is generally lower than the original
+(uncompressed) datasize can be accessed by using `nbytes` attribute::
 
   >>> b.nbytes
   80000000
 
-which is the same than the original NumPy array::
+which is the same than the equivalent NumPy array::
 
   >>> a.size*a.dtype.itemsize
   80000000
@@ -526,20 +521,97 @@ the `cparams` read-only attribute::
   >>> b.cparams
   cparams(clevel=5, shuffle=True)
 
-Also, you can check which is default value (remember, used when
+Also, you can check which the default value is (remember, used when
 `resize` -ing the carray)::
 
   >>> b.dflt
   0.0
 
-Finally, you can access the `chunklen` (the length for each chunk) for
-this carray::
+You can access the `chunklen` (the length for each chunk) for this
+carray::
 
   >>> b.chunklen
   16384
 
 For a complete list of public attributes of carray, see section on
-:ref:`carray-attributes`.
+:ref:`carray-attributes`.  Also, there is another attribute space that
+is available for the user, and that is accessible through the special
+`attrs` attribute.  Look into the :ref:`carray-attrs` section for more
+info.
+
+.. _carray-attrs:
+
+carray user attrs
+-----------------
+
+Besides the regular attributes like `shape`, `dtype` or `chunklen`,
+there is another set of attributes that can be added (and removed) by
+the user in another name space.  This space is accessible via the
+special `attrs` attribute::
+
+  >>> a = ca.carray([1,2], rootdir='mydata')
+  >>> a.attrs
+  *no attrs*
+
+As you see, by default there are no attributes attached to `attrs`.
+Also, notice that the carray that we have created is persistent and
+stored on the 'mydata' directory.  Let's add one attribute here::
+
+  >>> a.attrs['myattr'] = 234
+  >>> a.attrs
+  myattr : 234
+
+So, we have attached the 'myattr' attribute with the value 234.  Let's
+add a couple of attributes more::
+
+  >>> a.attrs['temp'] = 23 
+  >>> a.attrs['unit'] = "Celsius"
+  >>> a.attrs
+  unit : 'Celsius'
+  myattr : 234
+  temp : 23
+
+good, we have three of them now.  You can attach as many as you want,
+and the only current limitation is that they have to be serializable
+via JSON.  For example, NumPy are not::
+
+  >>> a.attrs['myarray'] = np.array([1,2])
+  [clip]
+  TypeError: array([1, 2]) is not JSON serializable
+
+but that should be solved in future releases.
+
+As the 'a' carray is persistent it can re-opened in other Python session::
+
+  >>> a.flush()
+  >>> ^D 
+  $ python
+  Python 2.7.3rc2 (default, Apr 22 2012, 22:30:17) 
+  [GCC 4.6.3] on linux2
+  Type "help", "copyright", "credits" or "license" for more information.
+  >>> import carray as ca
+  >>> a = ca.open(rootdir="mydata")
+  >>> a
+  carray((2,), int64)
+    nbytes: 16; cbytes: 4.00 KB; ratio: 0.00
+    cparams := cparams(clevel=5, shuffle=True)
+    rootdir := 'mydata'
+  [1 2]
+  >>> a.attrs
+  temp : 23
+  myattr : 234
+  unit : u'Celsius'
+
+Now, let's remove a couple of user attrs::
+
+  >>> del a.attrs['myattr']                           
+  >>> del a.attrs['unit']
+  >>> a.attrs
+  temp : 23
+
+So, it is really easy to make use of this feature so as to complement
+your data with (potentially persistent) metadata of your choice.  Of
+course, the `ctable` object also wears this capability.
 
 
 Tutorial on ctable objects
