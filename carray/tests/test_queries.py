@@ -33,7 +33,7 @@ class with_listTest(unittest.TestCase):
         a[30:40] = ca.ones(10, dtype="bool")
         self.assertRaises(NotImplementedError, a.wheretrue)
 
-    def test01(self):
+    def test01a(self):
         """Testing where() in combination with a list constructor"""
         a = ca.zeros(self.N, dtype="bool")
         a[30:40] = ca.ones(10, dtype="bool")
@@ -43,6 +43,18 @@ class with_listTest(unittest.TestCase):
         self.assert_(blist1 == range(30,40))
         blist2 = list(b)
         self.assert_(blist == blist2, "where() not working correctly")
+
+    def test01b(self):
+        """Testing where() with a multidimensional array"""
+        a = ca.zeros((self.N, 10), dtype="bool")
+        a[30:40] = ca.ones(10, dtype="bool")
+        b = ca.arange(self.N*10, dtype="f4").reshape((self.N, 10))
+        self.assertRaises(NotImplementedError, b.where, a)
+        # blist1 = [r for r in b.where(a)]
+        # print "blist1 ->", blist1
+        # self.assert_(blist1 == range(30,40))
+        # blist2 = list(b)
+        # self.assert_(blist == blist2, "where() not working correctly")
 
     def test02(self):
         """Testing iter() in combination with a list constructor"""

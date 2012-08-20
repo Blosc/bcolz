@@ -559,6 +559,8 @@ carray methods
 
     Iterator that returns values of this object where `boolarr` is true.
 
+    This is currently only useful for boolean carrays that are unidimensional.
+
     Parameters:
       boolarr : a carray or NumPy array of boolean type
         The boolean values.
@@ -576,8 +578,9 @@ carray methods
 
   .. py:method:: wheretrue(limit=None, skip=0)
 
-    Iterator that returns indices where this object is true.  Only useful for
-    boolean carrays that are unidimensional.
+    Iterator that returns indices where this object is true.
+
+    This is currently only useful for boolean carrays that are unidimensional.
 
     Parameters:
       limit : int

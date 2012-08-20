@@ -1669,7 +1669,6 @@ cdef class carray:
     eval
 
     """
-
     cdef int chunklen
     cdef npy_intp startb, stopb
     cdef npy_intp nchunk, keychunk, nchunks
@@ -1963,8 +1962,9 @@ cdef class carray:
     """
     wheretrue(limit=None, skip=0)
 
-    Iterator that returns indices where this object is true.  Only useful for
-    boolean carrays that are unidimensional.
+    Iterator that returns indices where this object is true.
+
+    This is currently only useful for boolean carrays that are unidimensional.
 
     Parameters
     ----------
@@ -2001,6 +2001,8 @@ cdef class carray:
 
     Iterator that returns values of this object where `boolarr` is true.
 
+    This is currently only useful for boolean carrays that are unidimensional.
+
     Parameters
     ----------
     boolarr : a carray or NumPy array of boolean type
@@ -2021,6 +2023,8 @@ cdef class carray:
 
     """
     # Check input
+    if self.ndim > 1:
+      raise NotImplementedError, "`self` is not unidimensional"
     if not hasattr(boolarr, "dtype"):
       raise ValueError, "`boolarr` is not an array"
     if boolarr.dtype.type != np.bool_:
