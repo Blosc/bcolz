@@ -215,13 +215,14 @@ class ctable(object):
             else:
                 names = ["f%d"%i for i in range(len(columns))]
         else:
+            if type(names) == tuple:
+                names = list(names)
             if type(names) != list:
-                try:
-                    names = list(names)
-                except:
-                    raise ValueError, "cannot convert `names` into a list"
+                raise ValueError(
+                    "`names` can only be a list or tuple")
             if len(names) != len(columns):
-                raise ValueError, "`columns` and `names` must have the same length"
+                raise ValueError(
+                    "`columns` and `names` must have the same length")
         # Check names validity
         nt = namedtuple('_nt', names, verbose=False)
         names = list(nt._fields)

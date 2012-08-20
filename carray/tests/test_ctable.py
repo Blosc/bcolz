@@ -18,7 +18,7 @@ from common import MayBeDiskTest
 
 class createTest(MayBeDiskTest):
 
-    def test00(self):
+    def test00a(self):
         """Testing ctable creation from a tuple of carrays"""
         N = 1e1
         a = ca.carray(np.arange(N, dtype='i4'))
@@ -28,6 +28,12 @@ class createTest(MayBeDiskTest):
         ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test00b(self):
+        """Testing ctable creation from a tuple of carrays (single column)"""
+        N = 1e1
+        a = ca.carray(np.arange(N, dtype='i4'))
+        self.assertRaises(ValueError, ca.ctable, a, 'f0', rootdir=self.rootdir)
 
     def test01(self):
         """Testing ctable creation from a tuple of numpy arrays"""
