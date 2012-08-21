@@ -38,7 +38,8 @@ Go to the carray main directory and do the typical distutils dance::
 Installing from the git repository
 ==================================
 
-If you have cloned the carray repository, you will need Paver
+If you have cloned the carray repository, you can follow the same
+produre than for the tarball above, but you may also want to use Paver
 (http://paver.github.com/paver/) for compiling and generating docs.
 So, first install Paver and then::
 
