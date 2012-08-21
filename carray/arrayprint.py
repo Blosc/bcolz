@@ -17,9 +17,11 @@ import sys
 import numpy as np
 from numpy.core import numerictypes as _nt
 from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
-from numpy.core.multiarray import (
-    format_longfloat, datetime_as_string, datetime_data)
+from numpy.core.multiarray import format_longfloat
 from numpy.core.fromnumeric import ravel
+
+if np.__version__ >= "1.7":
+    from numpy.core.multiarray import datetime_as_string, datetime_data
 
 
 def product(x, y): return x*y
