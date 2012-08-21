@@ -398,9 +398,13 @@ class getitemTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = ca.ctable(ra, rootdir=self.rootdir)
         colnames = ["f0", "f2"]
+        # For some version of NumPy (> 1.7) I cannot make use of
+        # ra[colnames]   :-/
+        ra2 = np.fromiter(((i, i*3) for i in xrange(N)), dtype='i4,i8')
+        ra2.dtype.names = ('f0', 'f2')
         #print "t->", `t[colnames]`
-        #print "ra->", ra[colnames]
-        assert_array_equal(t[colnames][:], ra[colnames],
+        #print "ra2->", ra2
+        assert_array_equal(t[colnames][:], ra2,
                            "ctable values are not correct")
 
 class getitemDiskTest(getitemTest):
