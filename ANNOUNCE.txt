@@ -5,15 +5,13 @@ What's new
 ----------
 
 carray 0.5 supports completely transparent storage on-disk in addition
-to memory.  That means that everything that can be done with an
+to memory.  That means that *everything* that can be done with the
 in-memory container can be done using the disk instead.
 
-The advantages of a disk-based container is that your addressable space
+The advantages of a disk-based container is that the addressable space
 is much larger than just your available memory.  Also, as carray is
 based on a chunked and compressed data layout based on the super-fast
-Blosc compression library, and the different cache levels existing in
-both modern operating systems and the internal carray machinery, the
-data access speed is very good.
+Blosc compression library, the data access speed is very good.
 
 The format chosen for the persistence layer is based on the 'bloscpack'
 library (thanks to Valentin Haenel for his inspiration) and described in
@@ -21,9 +19,14 @@ library (thanks to Valentin Haenel for his inspiration) and described in
 You may want to contribute by proposing enhancements to it.  See:
 https://github.com/FrancescAlted/carray/wiki/PersistenceProposal
 
+Moreover, a new `attrs` accessor is provided, so that users can store
+its own metadata (in a persistent way, if desired).
+
 CAVEAT: The bloscpack format is still evolving, so don't trust on
 forward compatibility of the format, at least until 1.0, where the
 internal format will be declared frozen.
+
+Also, many bugs have been fixed, providing a much smoother experience.
 
 For more detailed info, see the release notes in:
 https://github.com/FrancescAlted/carray/wiki/Release-0.5
