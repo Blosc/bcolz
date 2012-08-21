@@ -2,7 +2,7 @@
 Installation
 ------------
 
-carray depends on NumPy (>= 1.4.1) and, optionally, Numexpr (>= 1.4).
+carray depends on NumPy (>= 1.5) and, optionally, Numexpr (>= 1.4).
 Also, if you are going to install from sources, and a C compiler (both
 GCC and MSVC 2008 have been tested).
 
