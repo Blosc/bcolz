@@ -881,7 +881,11 @@ cdef class carray:
       except TypeError:
         raise NotImplementedError(
           "creating carrays from scalar objects not supported")
-    self.expectedlen = expectedlen
+    try:
+      self.expectedlen = expectedlen
+    except OverflowError:
+      raise OverflowError(
+        "The size cannot be larger than 2**31 on 32-bit platforms")
     if chunklen is None:
       # Try a guess
       chunksize = utils.calc_chunksize((expectedlen * atomsize) / float(_MB))

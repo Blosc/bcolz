@@ -70,7 +70,7 @@ Performing only a light (yet comprehensive) subset of the test suite.
 If you want a more complete test, try passing the --heavy flag to this script
 (or set the 'heavy' parameter in case you are using carray.test() call).
 The whole suite will take more than 30 seconds to complete on a relatively
-modern CPU and around 100 MB of disk.
+modern CPU and around 100 MB of disk [32-bit platforms runs more lightly].
 """
     print '-=' * 38
 
