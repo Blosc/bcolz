@@ -70,7 +70,7 @@ on how much space it takes your carray by using `sys.getsizeof()`::
   24520482
 
 That moral here is that you can create very large arrays without the
-need to create a NumPy array first (that could not fit in memory).
+need to create a NumPy array first (that may not fit in memory).
 
 Finally, you can get a copy of your created carrays by using the
 `copy()` method::
@@ -141,8 +141,8 @@ You can also enlarge your arrays by using the `resize()` method::
   [0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]
 
 Note how the append values are filled with zeros.  This is because the
-default value for filling is 0.  But you can choose another different
-value too::
+default value for filling is 0.  But you can choose a different value
+too::
 
   >>> b = ca.arange(10, dflt=1)
   >>> b.resize(20)
@@ -151,7 +151,7 @@ value too::
     cparams := cparams(clevel=5, shuffle=True)
   [0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]
 
-And you can trim carrays too::
+Also, you can trim carrays::
 
   >>> b = ca.arange(10)
   >>> b.resize(5)
@@ -257,8 +257,8 @@ Or, with a list of indices::
 Querying carrays
 ----------------
 
-carrays can be queried in different ways.  The most easy, yet powerful
-way is using its set of iterators.  The most common way is::
+carrays can be queried in different ways.  The most easy (yet
+powerful) way is by using its set of iterators::
 
   >>> a = np.arange(1e7)
   >>> b = ca.carray(a)
@@ -314,15 +314,16 @@ the leading elements respectively::
 The advantage of the carray iterators is that you can use them in
 generator contexts and hence, you don't need to waste memory for
 creating temporaries, which can be important when dealing with large
-arrays.  Also, we have seen that all these iterators are very fast, so
-try to express your problems in a way that you can use them
-extensively.
+arrays.
+
+We have seen that this iterator toolset is very fast, so try to
+express your problems in a way that you can use them extensively.
 
 Modifying carrays
 -----------------
 
-Although it is not a very efficient operation, carrays can be modified
-too.  You can do it by specifying scalar or slice indices::
+Although it is a somewhat slow operation, carrays can be modified too.
+You can do it by specifying scalar or slice indices::
 
   >>> a = np.arange(10)
   >>> b = ca.arange(10)
@@ -336,7 +337,7 @@ too.  You can do it by specifying scalar or slice indices::
   >>> print b
   [ 0 10 10 10 10  5  6 10  8  9]
 
-Modifying using fancy indexing is supported too::
+Modification by using fancy indexing is supported too::
 
   >>> barr = np.array([True]*5+[False]*5)
   >>> b[barr] = -5
@@ -436,7 +437,7 @@ Rather, you should use the `eval` function::
     cparams := cparams(clevel=5, shuffle=True)
   [0.0, 2.0, 4.0, ..., 19999994.0, 19999996.0, 19999998.0]
 
-You can also compute arbitrarily complex expressions in one go::
+You can also compute arbitrarily complex expressions in one shot::
 
   >>> y = ca.eval(".5*x**3 + 2.1*x**2")
   >>> y
@@ -499,7 +500,7 @@ that makes it to 'quack' like a NumPy array::
   (10000000,)
 
 In addition, it implements the `cbytes` attribute that tells how many
-bytes in memory uses the carray object::
+bytes in memory (or on-disk) uses the carray object::
 
   >>> b.cbytes
   2691722
@@ -534,10 +535,7 @@ carray::
   16384
 
 For a complete list of public attributes of carray, see section on
-:ref:`carray-attributes`.  Also, there is another attribute space that
-is available for the user, and that is accessible through the special
-`attrs` attribute.  Look into the :ref:`carray-attrs` section for more
-info.
+:ref:`carray-attributes`.
 
 .. _carray-attrs:
 
@@ -565,7 +563,7 @@ So, we have attached the 'myattr' attribute with the value 234.  Let's
 add a couple of attributes more::
 
   >>> a.attrs['temp'] = 23 
-  >>> a.attrs['unit'] = "Celsius"
+  >>> a.attrs['unit'] = 'Celsius'
   >>> a.attrs
   unit : 'Celsius'
   myattr : 234
@@ -573,15 +571,9 @@ add a couple of attributes more::
 
 good, we have three of them now.  You can attach as many as you want,
 and the only current limitation is that they have to be serializable
-via JSON.  For example, NumPy are not::
+via JSON.
 
-  >>> a.attrs['myarray'] = np.array([1,2])
-  [clip]
-  TypeError: array([1, 2]) is not JSON serializable
-
-but that should be solved in future releases.
-
-As the 'a' carray is persistent it can re-opened in other Python session::
+As the 'a' carray is persistent, it can re-opened in other Python session::
 
   >>> a.flush()
   >>> ^D 
@@ -591,13 +583,13 @@ As the 'a' carray is persistent it can re-opened in other Python session::
   Type "help", "copyright", "credits" or "license" for more information.
   >>> import carray as ca
   >>> a = ca.open(rootdir="mydata")
-  >>> a
+  >>> a                            # yeah, our data is back
   carray((2,), int64)
     nbytes: 16; cbytes: 4.00 KB; ratio: 0.00
     cparams := cparams(clevel=5, shuffle=True)
     rootdir := 'mydata'
   [1 2]
-  >>> a.attrs
+  >>> a.attrs                      # and so is user attrs!
   temp : 23
   myattr : 234
   unit : u'Celsius'
@@ -792,8 +784,8 @@ parameter::
 Please note the use of the special 'nrow__' label for referring to
 the current row.
 
-Iterating over output of conditions along columns
--------------------------------------------------
+Iterating over the output of conditions along columns
+-----------------------------------------------------
 
 One of the most powerful capabilities of the ctable is the ability to
 iterate over the rows whose fields fulfill some conditions (without

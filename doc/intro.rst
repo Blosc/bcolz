@@ -6,53 +6,61 @@ carray at glance
 ================
 
 carray is a Python package that provides containers (called `carray`
-and `ctable`) for numerical data that can be compressed in-memory and
-on-disk.  It is highly based on NumPy, and uses it as the standard
-data container to communicate with carray objects.
+and `ctable`) for numerical data that can be compressed either
+in-memory and on-disk.  It is based on NumPy, and uses it as the
+standard data container to communicate with carray objects.
 
 The building blocks of carray objects are the so-called ``chunks``
 that are bits of data compressed as a whole, but that can be
 decompressed partially in order to improve the fetching of small parts
 of the array.  This ``chunked`` nature of the carray objects, together
 with a buffered I/O, makes appends very cheap and fetches reasonably
-fast (although modification of values is an expensive operation).
+fast (although the modification of values can be an expensive
+operation).
 
 The compression/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
 data.  That ensures maximum performance for I/O operation.
+
+carray can use numexpr internally (it does if it detects numexpr
+installed) so as to accelerate many vector and query operations
+(although it can use pure NumPy for doing so too).  numexpr can use
+optimize the memory usage and use several cores for doing the
+computations, so it is blazing fast.  Moreover, with the introduction
+of a carray/ctable disk-based container (in version 0.5), it can be
+used for seamlessly performing out-of-core computations.
+
 
 carray and ctable objects
 -------------------------
 
 The main objects in the carray package are:
 
-  * `carray`: container for homogeneous data
-  * `ctable`: container for heterogeneous data
+  * `carray`: container for homogeneous & heterogeneous (row-wise) data
+  * `ctable`: container for heterogeneous (column-wise) data
 
 `carray` is very similar to a NumPy `ndarray` in that it supports the
 same types and data access interface.  The main difference between
 them is that a `carray` can keep data compressed (both in-memory and
 on-disk), allowing to deal with larger datasets with the same amount
-of RAM.  And another important difference is the chunked nature of the
-`carray` that allows data to be appended much more efficiently.
+of RAM/disk.  And another important difference is the chunked nature
+of the `carray` that allows data to be appended much more efficiently.
 
 On his hand, a `ctable` is also similar to a NumPy ``structured
 array``, that shares the same properties with its `carray` brother,
-namely, compression and chunking.  In addition, data is stored in a
-column-wise order and not on a row-wise order, as the ``structured
-array``, allowing for very cheap column handling.  This is of
-paramount importance when you need to add and remove columns in wide
-(and possibly large) in-memory and on-disk tables --doing this with
-regular ``structured arrays`` in NumPy is exceedingly slow.
+namely, compression and chunking.  Another difference is that data is
+stored in a column-wise order (and not on a row-wise, like the
+``structured array``), allowing for very cheap column handling.  This
+is of paramount importance when you need to add and remove columns in
+wide (and possibly large) in-memory and on-disk tables --doing this
+with regular ``structured arrays`` in NumPy is exceedingly slow.
 
 Also, column-wise ordering turns out that this gives the `ctable` a
 huge opportunity to improve compression ratio.  This is because data
-tends to expose more similarity in elements that are contiguous in
-columns rather than those in the same row, so compressors generally do
-a much better job when data is aligned column-wise.  This is specially
-true with Blosc because its special ``shuffle`` filter does a much
-better job with homogeneous data (columns) than with heterogeneous data
-(rows).
+tends to expose more similarity in elements that sit in the same
+column rather than those in the same row, so compressors generally do
+a much better job when data is aligned column-wise.
+
 
 carray main features
 --------------------
@@ -61,8 +69,13 @@ carray objects bring several advantages over plain NumPy objects:
 
   * Data is compressed: they take less storage space.
 
-  * Efficient appends: you can append more data at the end of the
-    objects very quickly.
+  * Efficient shrinks and appends: you can shrink or append more data
+    at the end of the objects very efficiently (i.e. copies of the
+    whole array are not needed).
+
+  * Persistence comes seamlessly integrated, so you can work with
+    on-disk arrays almost in the same way than with in-memory ones
+    (bar some special attention to flush data being required).
 
   * `ctable` objects have the data arranged column-wise.  This allows
     for much better performance when working with big tables, as well
@@ -72,11 +85,22 @@ carray objects bring several advantages over plain NumPy objects:
     and convenient way.  Blosc ensures that the additional overhead of
     handling compressed data natively is very low.
 
+  * Advanced query capabilities.  The ability of a `ctable` object to
+    iterate over the rows whose fields fulfill some conditions (and
+    evaluated via numexpr) allows to perform queries very efficiently.
+
+
 
 carray limitations
 ------------------
 
-carray also comes with drawbacks:
+carray does not currently come with good support in the next areas:
+
+  * Reduced number of operations, at least when compared with NumPy.
+    The supported operations are basically vectorized ones (i.e. does
+    that are made element-by-element).  But this will change in the
+    future, when support for more powerful computational kernels would
+    be implemented.
 
   * Limited broadcast support.  For example, NumPy lets you operate
     seamlessly with arrays of different shape (as long as they are
@@ -84,9 +108,8 @@ carray also comes with drawbacks:
     that can be bradcasted currently are scalars
     (e.g. ``ca.eval("x+3")``).
 
-  * Serialization is not supported yet.  If you want to serialize a
-    carray, you will have to convert carray objects to NumPy objects
-    first.
+  * Some methods (namely `carray.where()` and `carray.wheretrue()`)
+    does not have support for multidimensional arrays.
 
   * Multidimensional `ctable` objects are not supported.  However, as
     the columns of these objects can be fully multidimensional, this

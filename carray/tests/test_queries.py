@@ -50,11 +50,6 @@ class with_listTest(unittest.TestCase):
         a[30:40] = ca.ones(10, dtype="bool")
         b = ca.arange(self.N*10, dtype="f4").reshape((self.N, 10))
         self.assertRaises(NotImplementedError, b.where, a)
-        # blist1 = [r for r in b.where(a)]
-        # print "blist1 ->", blist1
-        # self.assert_(blist1 == range(30,40))
-        # blist2 = list(b)
-        # self.assert_(blist == blist2, "where() not working correctly")
 
     def test02(self):
         """Testing iter() in combination with a list constructor"""
@@ -63,7 +58,7 @@ class with_listTest(unittest.TestCase):
         blist1 = [r for r in b.iter(3,10)]
         self.assert_(blist1 == range(3,10))
         blist2 = list(b)
-        self.assert_(blist == blist2, "where() not working correctly")
+        self.assert_(blist == blist2, "iter() not working correctly")
 
 
 class small_with_listTest(with_listTest):
