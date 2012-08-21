@@ -305,7 +305,7 @@ class appendTest(MayBeDiskTest):
 
     def test00(self):
         """Testing `append()` method"""
-        a = np.arange(1e3)
+        a = np.arange(1000)
         b = ca.carray(a, rootdir=self.rootdir)
         b.append(a)
         #print "b->", `b`
@@ -314,14 +314,41 @@ class appendTest(MayBeDiskTest):
 
     def test01(self):
         """Testing `append()` method (small chunklen)"""
-        a = np.arange(1e3)
+        a = np.arange(1000)
         b = ca.carray(a, chunklen=1, rootdir=self.rootdir)
         b.append(a)
         #print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
-    def test02(self):
+    def test02a(self):
+        """Testing `append()` method (large chunklen I)"""
+        a = np.arange(1000)
+        b = ca.carray(a, chunklen=10*1000, rootdir=self.rootdir)
+        b.append(a)
+        #print "b->", `b`
+        c = np.concatenate((a, a))
+        assert_array_equal(c, b[:], "Arrays are not equal")
+
+    def test02b(self):
+        """Testing `append()` method (large chunklen II)"""
+        a = np.arange(100*1000)
+        b = ca.carray(a, chunklen=10*1000, rootdir=self.rootdir)
+        b.append(a)
+        #print "b->", `b`
+        c = np.concatenate((a, a))
+        assert_array_equal(c, b[:], "Arrays are not equal")
+
+    def test02c(self):
+        """Testing `append()` method (large chunklen III)"""
+        a = np.arange(1000*1000)
+        b = ca.carray(a, chunklen=100*1000-1, rootdir=self.rootdir)
+        b.append(a)
+        #print "b->", `b`
+        c = np.concatenate((a, a))
+        assert_array_equal(c, b[:], "Arrays are not equal")
+
+    def test03(self):
         """Testing `append()` method (large append)"""
         a = np.arange(1e4)
         c = np.arange(2e5)
