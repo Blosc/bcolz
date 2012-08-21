@@ -105,7 +105,7 @@ carray does not currently come with good support in the next areas:
   * Limited broadcast support.  For example, NumPy lets you operate
     seamlessly with arrays of different shape (as long as they are
     compatible), but you cannot do that with carray.  The only object
-    that can be bradcasted currently are scalars
+    that can be broadcasted currently are scalars
     (e.g. ``ca.eval("x+3")``).
 
   * Some methods (namely `carray.where()` and `carray.wheretrue()`)

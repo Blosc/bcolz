@@ -21,7 +21,7 @@ class attrs(object):
 
        attrs['myattr'] = value
 
-    And can be retrived similarly::
+    And can be retrieved similarly::
 
        value = attrs['myattr']
 

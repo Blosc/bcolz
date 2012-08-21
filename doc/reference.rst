@@ -358,7 +358,7 @@ The carray class
       explicitly set the chunk size used for compression and memory I/O.
       Only use it if you know what are you doing.
   rootdir : str, optional
-      The directory where all the data and metada will be stored.  If
+      The directory where all the data and metadata will be stored.  If
       specified, then the carray object will be disk-based (i.e. all chunks
       will live on-disk, not in memory) and persistent (i.e. it can be
       restored in other session, e.g. via the `open()` top level function).
@@ -386,7 +386,7 @@ carray attributes
 
        attrs['myattr'] = value
 
-    And can be retrived similarly::
+    And can be retrieved similarly::
 
        value = attrs['myattr']
 
