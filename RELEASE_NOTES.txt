@@ -22,6 +22,18 @@ Changes from 0.4 to 0.5
 - New `open(rootdir, mode='a')` top level function so as to open on-disk
   carray objects.
 
+- New `flush()` method for `carray` and `ctable` objects.  This is
+  useful for flushing data to disk in persistent objects.
+
+- New `walk(dir, classname=None, mode='a')` top level function for
+  listing carray/ctable objects handing from `dir`.
+
+- New `attrs` accessor is provided, so that users can store
+  its own metadata (in a persistent way, if desired).
+
+- Representation of carray/ctable objects is based now on the same code
+  than NumPy.
+
 - Reductions (`sum` and `prod`) work now, even with the `axis` parameter
   (when using the Numexpr virtual machine).
 
