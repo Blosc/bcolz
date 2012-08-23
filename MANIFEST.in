@@ -6,6 +6,7 @@ include pavement.py
 include setup.py
 
 recursive-include carray *.py *.pyx *.pxd *.c
+recursive-include carray/tests *.py
 recursive-include blosc *.c *.h
 recursive-include blosc/win32 *.c *.h
 recursive-include bench *.py *.txt

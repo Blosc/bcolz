@@ -6,6 +6,12 @@ Release notes for carray
 :Contact: francesc@continuum.com
 
 
+Changes from 0.5 to 0.5.1
+=========================
+
+- Added the missing carray/tests in MANIFEST.in
+
+
 Changes from 0.4 to 0.5
 =======================
 
