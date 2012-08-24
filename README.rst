@@ -53,7 +53,7 @@ running:
 
 $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
 $ export PYTHONPATH    (not needed on Windows)
-$ python carray/tests/tests_all.py
+$ python carray/tests/test_all.py
 
 Installing
 ----------
