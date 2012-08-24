@@ -20,8 +20,10 @@ from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
 from numpy.core.multiarray import format_longfloat
 from numpy.core.fromnumeric import ravel
 
-if np.__version__ >= "1.7":
+try:
     from numpy.core.multiarray import datetime_as_string, datetime_data
+except ImportError:
+    pass
 
 
 def product(x, y): return x*y
