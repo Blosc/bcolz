@@ -294,7 +294,8 @@ def _array2string(a, max_line_width, precision, suppress_small, separator=' ',
         if issubclass(dtypeobj, _nt.bool_):
             format_function = formatdict['bool']
         elif issubclass(dtypeobj, _nt.integer):
-            if issubclass(dtypeobj, _nt.timedelta64):
+            if (hasattr(_nt, "timedelta64") and
+                issubclass(dtypeobj, _nt.timedelta64)):
                 format_function = formatdict['timedelta']
             else:
                 format_function = formatdict['int']
