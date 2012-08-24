@@ -313,7 +313,8 @@ def _array2string(a, max_line_width, precision, suppress_small, separator=' ',
                 format_function = formatdict['complexfloat']
         elif issubclass(dtypeobj, (_nt.unicode_, _nt.string_)):
             format_function = formatdict['numpystr']
-        elif issubclass(dtypeobj, _nt.datetime64):
+        elif(hasattr(_nt, "datetime64") and
+                issubclass(dtypeobj, _nt.datetime64)):
             format_function = formatdict['datetime']
         else:
             format_function = formatdict['str']
