@@ -9,7 +9,7 @@ Release notes for carray
 Changes from 0.5 to 0.5.1
 =========================
 
-- Added the missing carray/tests in MANIFEST.in
+- Added the missing carray.tests module in setup.py
 
 
 Changes from 0.4 to 0.5
