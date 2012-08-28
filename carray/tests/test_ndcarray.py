@@ -3,7 +3,7 @@
 #
 #       License: BSD
 #       Created: January 11, 2011
-#       Author:  Francesc Alted - francesc@continuum.com
+#       Author:  Francesc Alted - francesc@continuum.io
 #
 ########################################################################
 

@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: December 14, 2010
-#       Author:  Francesc Alted - francesc@continuum.com
+#       Author:  Francesc Alted - francesc@continuum.io
 #
 ########################################################################
 
@@ -213,7 +213,7 @@ is carried out internally by Blosc, a high-performance compressor that
 is optimized for binary data.""",
     classifiers = filter(None, classifiers.split("\n")),
     author = 'Francesc Alted',
-    author_email = 'francesc@continuum.com',
+    author_email = 'francesc@continuum.io',
     url = "https://github.com/FrancescAlted/carray",
     license = 'http://www.opensource.org/licenses/bsd-license.php',
     download_url = "http://carray.pytables.org/download/carray-%s/carray-%s.tar.gz" % (VERSION, VERSION),

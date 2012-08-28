@@ -3,7 +3,7 @@ Release notes for carray
 ========================
 
 :Author: Francesc Alted
-:Contact: francesc@continuum.com
+:Contact: francesc@continuum.io
 
 
 Changes from 0.5 to 0.5.1
