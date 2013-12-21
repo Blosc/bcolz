@@ -1,6 +1,12 @@
 carray: A chunked, compressed, data container (for memory and disk)
 ===================================================================
 
+
+**Note:** This project is currently being developed as a persistent
+layer for Blaze, with the BLZ codename.  You can find the sources
+for BLZ over here:
+https://github.com/ContinuumIO/blaze/tree/master/blaze/io/blz 
+
 carray is a chunked container for numerical data.  Chunking allows for
 efficient enlarging/shrinking of data container.  In addition, it can
 also be compressed for reducing memory/disk needs.  The compression
