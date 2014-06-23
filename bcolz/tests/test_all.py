@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 5, 2010
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -14,8 +14,8 @@ import sys, os
 import unittest
 
 import numpy
-import carray
-from carray.tests import common
+import bcolz
+from bcolz.tests import common
 
 
 # Recommended minimum versions
@@ -24,11 +24,11 @@ min_numpy_version = "1.5"
 
 def suite():
     test_modules = [
-        'carray.tests.test_carray',
-        'carray.tests.test_ctable',
-        'carray.tests.test_ndcarray',
-        'carray.tests.test_queries',
-        'carray.tests.test_attrs',
+        'bcolz.tests.test_carray',
+        'bcolz.tests.test_ctable',
+        'bcolz.tests.test_ndcarray',
+        'bcolz.tests.test_queries',
+        'bcolz.tests.test_attrs',
         ]
     alltests = unittest.TestSuite()
     for name in test_modules:
@@ -40,15 +40,15 @@ def suite():
 def print_versions():
     """Print all the versions of software that carray relies on."""
     print("-=" * 38)
-    print("carray version:    %s" % carray.__version__)
+    print("carray version:    %s" % bcolz.__version__)
     print("NumPy version:     %s" % numpy.__version__)
-    tinfo = carray.blosc_version()
+    tinfo = bcolz.blosc_version()
     print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
-    if carray.numexpr_here:
-        print("Numexpr version:   %s" % carray.numexpr.__version__)
+    if bcolz.numexpr_here:
+        print("Numexpr version:   %s" % bcolz.numexpr.__version__)
     else:
         print("Numexpr version:   not available "
-              "(version >= %s not detected)" %  carray.min_numexpr_version)
+              "(version >= %s not detected)" %  bcolz.min_numexpr_version)
     from Cython.Compiler.Main import Version as Cython_Version
     print("Cython version:    %s" % Cython_Version.version)
     print("Python version:    %s" % sys.version)
@@ -56,7 +56,7 @@ def print_versions():
         (sysname, nodename, release, version, machine) = os.uname()
         print("Platform:          %s-%s" % (sys.platform, machine))
     print("Byte-ordering:     %s" % sys.byteorder)
-    print("Detected cores:    %s" % carray.detect_number_of_cores())
+    print("Detected cores:    %s" % bcolz.detect_number_of_cores())
     print("-=" * 38)
 
 
@@ -68,7 +68,7 @@ Performing the complete test suite!"""
         print """\
 Performing only a light (yet comprehensive) subset of the test suite.
 If you want a more complete test, try passing the --heavy flag to this
-script (or set the 'heavy' parameter in case you are using carray.test()
+script (or set the 'heavy' parameter in case you are using bcolz.test()
 call).  The whole suite will take more than 30 seconds to complete on a
 relatively modern CPU and around 300 MB of RAM and 500 MB of disk
 [32-bit platforms will always run significantly more lightly].
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     print_versions()
     if not only_versions:
         print_heavy(common.heavy)
-        unittest.main(defaultTest='carray.tests.suite')
+        unittest.main(defaultTest='bcolz.tests.suite')
 
 
 ## Local Variables:

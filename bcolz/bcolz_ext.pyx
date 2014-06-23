@@ -2,15 +2,15 @@
 #
 #       License: BSD
 #       Created: August 05, 2010
-#       Author:  Francesc Alted -  francesc@continuum.io
+#       Author:  Francesc Alted -  francesc@blosc.org
 #
 ########################################################################
 
 
 import sys
 import numpy as np
-import carray as ca
-from carray import utils, attrs, array2string
+import bcolz
+from bcolz import utils, attrs, array2string
 import os, os.path
 import struct
 import shutil
@@ -833,9 +833,9 @@ cdef class carray:
 
     # Check defaults for cparams
     if cparams is None:
-      cparams = ca.cparams()
+      cparams = bcolz.cparams()
 
-    if not isinstance(cparams, ca.cparams):
+    if not isinstance(cparams, bcolz.cparams):
       raise ValueError, "`cparams` param must be an instance of `cparams` class"
 
     # Convert input to an appropriate type
@@ -1063,7 +1063,7 @@ cdef class carray:
       data = json.loads(storagefh.read())
     dtype_ = np.dtype(data["dtype"])
     chunklen = data["chunklen"]
-    cparams = ca.cparams(
+    cparams = bcolz.cparams(
       clevel = data["cparams"]["clevel"],
       shuffle = data["cparams"]["shuffle"])
     expectedlen = data["expectedlen"]
@@ -1612,7 +1612,7 @@ cdef class carray:
     # An boolean expression (case of fancy indexing)
     elif type(key) is str:
       # Evaluate
-      result = ca.eval(key)
+      result = bcolz.eval(key)
       if result.dtype.type != np.bool_:
         raise IndexError, "only boolean expressions supported"
       if len(result) != self.len:
@@ -1753,7 +1753,7 @@ cdef class carray:
     # An boolean expression (case of fancy indexing)
     elif type(key) is str:
       # Evaluate
-      result = ca.eval(key)
+      result = bcolz.eval(key)
       if result.dtype.type != np.bool_:
         raise IndexError, "only boolean expressions supported"
       if len(result) != self.len:

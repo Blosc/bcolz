@@ -2,15 +2,15 @@
 #
 #       License: BSD
 #       Created: September 01, 2010
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
 import sys, math
 
 import numpy as np
-import carray as ca
-from carray import utils, attrs, array2string
+import bcolz
+from bcolz import utils, attrs, array2string
 import itertools as it
 from collections import namedtuple
 import json
@@ -37,9 +37,9 @@ class cols(object):
             data = json.loads(rfile.read())
         # JSON returns unicode (?)
         self.names = [str(name) for name in data['names']]
-        # Initialize the cols by instatiating the carrays
+        # Initialize the cols by instantiating the carrays
         for name, dir_ in data['dirs'].items():
-            self._cols[str(name)] = ca.carray(rootdir=dir_, mode=self.mode)
+            self._cols[str(name)] = bcolz.carray(rootdir=dir_, mode=self.mode)
 
     def update_meta(self):
         """Update metainfo about directories on-disk."""
@@ -174,12 +174,18 @@ class ctable(object):
     def __init__(self, columns=None, names=None, **kwargs):
 
         # Important optional params
-        self._cparams = kwargs.get('cparams', ca.cparams())
+        self._cparams = kwargs.get('cparams', bcolz.cparams())
         self.rootdir = kwargs.get('rootdir', None)
         "The directory where this object is saved."
-        self.mode = kwargs.get('mode', 'a')
+        if self.rootdir is None and columns is None:
+            raise ValueError(
+                "For creating a new ctable you should pass a `columns` param")
+        if os.path.exists(self.rootdir):
+            self.mode = kwargs.setdefault('mode', 'a')
+        else:
+            self.mode = kwargs.setdefault('mode', 'w')
         "The mode in which the object is created/opened."
-        
+
         # Setup the columns accessor
         self.cols = cols(self.rootdir, self.mode)
         "The ctable columns accessor."
@@ -188,12 +194,12 @@ class ctable(object):
         self.len = 0
 
         # Create a new ctable or open it from disk
-        if columns is not None:
-            self.create_ctable(columns, names, **kwargs)
-            _new = True
-        else:
+        if self.mode in ('r', 'a'):
             self.open_ctable()
             _new = False
+        elif columns is not None:
+            self.create_ctable(columns, names, **kwargs)
+            _new = True
 
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
@@ -230,8 +236,10 @@ class ctable(object):
         # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
         if type(columns) in (tuple, list):
-            calist = [type(v) for v in columns] == [ca.carray for v in columns]
-            nalist = [type(v) for v in columns] == [np.ndarray for v in columns]
+            calist = [type(v) for v in columns] == \
+                     [bcolz.carray for v in columns]
+            nalist = [type(v) for v in columns] == \
+                     [np.ndarray for v in columns]
         elif isinstance(columns, np.ndarray):
             ratype = hasattr(columns.dtype, "names")
             if ratype:
@@ -242,7 +250,7 @@ class ctable(object):
         if not (calist or nalist or ratype):
             # Try to convert the elements to carrays
             try:
-                columns = [ca.carray(col) for col in columns]
+                columns = [bcolz.carray(col) for col in columns]
                 calist = True
             except:
                 raise ValueError, "`columns` input is not supported"
@@ -252,7 +260,7 @@ class ctable(object):
         for i, name in enumerate(names):
             if self.rootdir:
                 # Put every carray under each own `name` subdirectory
-                kwargs['rootdir'] = os.path.join(self.rootdir, name)
+                rootdir = os.path.join(self.rootdir, name)
             if calist:
                 column = columns[i]
                 if self.rootdir:
@@ -263,9 +271,9 @@ class ctable(object):
                 if column.dtype == np.void:
                     raise ValueError,(
                         "`columns` elements cannot be of type void")
-                column = ca.carray(column, **kwargs)
+                column = bcolz.carray(column, **kwargs)
             elif ratype:
-                column = ca.carray(columns[name], **kwargs)
+                column = bcolz.carray(columns[name], **kwargs)
             self.cols[name] = column
             if clen >= 0 and clen != len(column):
                 raise ValueError, "all `columns` must have the same length"
@@ -316,14 +324,14 @@ class ctable(object):
         # Guess the kind of rows input
         calist, nalist, sclist, ratype = False, False, False, False
         if type(rows) in (tuple, list):
-            calist = [type(v) for v in rows] == [ca.carray for v in rows]
+            calist = [type(v) for v in rows] == [bcolz.carray for v in rows]
             nalist = [type(v) for v in rows] == [np.ndarray for v in rows]
             if not (calist or nalist):
                 # Try with a scalar list
                 sclist = True
         elif isinstance(rows, np.ndarray):
             ratype = hasattr(rows.dtype, "names")
-        elif isinstance(rows, ca.ctable):
+        elif isinstance(rows, bcolz.ctable):
             # Convert int a list of carrays
             rows = [rows[name] for name in self.names]
             calist = True
@@ -444,12 +452,12 @@ class ctable(object):
         if isinstance(newcol, np.ndarray):
             if 'cparams' not in kwargs:
                 kwargs['cparams'] = self.cparams
-            newcol = ca.carray(newcol, **kwargs)
+            newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
             if 'cparams' not in kwargs:
                 kwargs['cparams'] = self.cparams
-            newcol = ca.carray(newcol, **kwargs)
-        elif type(newcol) != ca.carray:
+            newcol = bcolz.carray(newcol, **kwargs)
+        elif type(newcol) != bcolz.carray:
             raise ValueError(
                 """`newcol` type not supported""")
 
@@ -885,7 +893,8 @@ class ctable(object):
         # Get the desired frame depth
         depth = kwargs.pop('depth', 3)
         # Call top-level eval with cols as user_dict
-        return ca.eval(expression, user_dict=self.cols, depth=depth, **kwargs)
+        return bcolz.eval(expression, user_dict=self.cols, depth=depth,
+                          **kwargs)
 
     def flush(self):
         """Flush data in internal buffers to disk.

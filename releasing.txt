@@ -1,23 +1,23 @@
-Instrucctions for releasing a new version of carray
-===================================================
+Instructions for releasing a new version of bcolz
+=================================================
 
-- Verify that the version number is correct in ``VERSION`` 
-  as well as in ``ANNOUCE.txt`` and ``doc/conf.py``.
+- Verify that the version number is correct in ``VERSION``
+  as well as in ``ANNOUNCE.txt`` and ``doc/conf.py``.
 
 - Make sure that ``ANNOUNCE.txt`` and ``RELEASE-NOTES.txt``
   do contain the most relevant notes for the release.
 
 - Generate a tarball of the version to release:
   + $ cd /tmp
-  + $ git clone git://github.com/FrancescAlted/carray.git
-  + $ cd carray
+  + $ git clone git://github.com/Blosc/bcolz.git
+  + $ cd bcolz
   + $ paver sdist
   + $ export VERSION="x.y.z"    # x.y.z is the version to release
-  + $ mv doc/carray-manual.pdf ../carray-manual-$VERSION.pdf
-  + $ mv dist/carray-$VERSION.tar.gz ..
+  + $ mv doc/bcolz-manual.pdf ../bcolz-manual-$VERSION.pdf
+  + $ mv dist/bcolz-$VERSION.tar.gz ..
   + $ cd ..
-  + $ tar xvfz carray-$VERSION.tar.gz
-  + $ tar cvfz carray-manual-$VERSION-html.tar.gz carray-$VERSION/doc/html/
+  + $ tar xvfz bcolz-$VERSION.tar.gz
+  + $ tar cvfz bcolz-manual-$VERSION-html.tar.gz bcolz-$VERSION/doc/html/
 
 - Generate binaries for Windows
   + Generate for Python 2.6 and 2.7 (using MSVC 2008 and distutils)
@@ -25,38 +25,38 @@ Instrucctions for releasing a new version of carray
   + Put the resulting .exe in the same directory than the tarball and docs
 
 - Upload the next packages in the download area
-  + $ scp carray-$VERSION.tar.gz carray-manual* xano.pytables.com:/tmp
-  + Log-in in xano as user carray
+  + $ scp bcolz-$VERSION.tar.gz bcolz-manual* xodo.blosc.org:/tmp
+  + Log-in in xodo as user bcolz
   + Go to download area:
-    $ cd ~/srv/www/carray.org/download
+    $ cd ~/srv/www/bcolz.blosc.org/download
   + Create another directory for the new version and copy the files there:
     $ export VERSION="x.y.z"    # x.y.z is the version to release
-    $ mkdir carray-$VERSION
-    $ cd carray-$VERSION
-    $ cp /tmp/carray-$VERSION.tar.gz /tmp/carray-manual* /tmp/carray*.exe .
+    $ mkdir bcolz-$VERSION
+    $ cd bcolz-$VERSION
+    $ cp /tmp/bcolz-$VERSION.tar.gz /tmp/bcolz-manual* /tmp/bcolz*.exe .
   + Compute and save the MD5 of new files:
-    $ cfv -C -t md5 -f carray-$VERSION.md5 *
+    $ cfv -C -t md5 -f bcolz-$VERSION.md5 *
   + Point the 'stable' the symbolic link to the new version
     $ cd ..
-    $ rm stable; ln -s carray-$VERSION stable
+    $ rm stable; ln -s bcolz-$VERSION stable
     Check that the new packages are accessible at:
-    http://carray.pytables.org/download/carray-$VERSION/
+    http://bcolz.blosc.org/download/bcolz-$VERSION/
 
 - Update on-line HTML manual
-  $ cd ~/srv/www/carray.org/docs
-  $ tar xvfz ../download/carray-$VERSION/carray-manual-$VERSION-html.tar.gz
-  $ mv carray-$VERSION/doc/html manual-$VERSION
-  $ rmdir carray-$VERSION/doc ; rmdir carray-$VERSION
+  $ cd ~/srv/www/bcolz.blosc.org/docs
+  $ tar xvfz ../download/bcolz-$VERSION/bcolz-manual-$VERSION-html.tar.gz
+  $ mv bcolz-$VERSION/doc/html manual-$VERSION
+  $ rmdir bcolz-$VERSION/doc ; rmdir bcolz-$VERSION
   $ rm manual; ln -sf manual-$VERSION manual
   Check that the manual is accessible at:
-    http://carray.pytables.org/docs/manual/
+    http://bcolz.blosc.org/docs/manual/
 - Add the 'RELEASE_NOTES' to::
-    https://github.com/FrancescAlted/carray/wiki/Release-$VERSION
+    https://github.com/Blosc/bcolz/wiki/Release-$VERSION
 
 - Announcing
   + Register the new package in PyPI::
     $ paver register
-  + Announce to carray@googlegroups.com with copy to pytables-users
+  + Announce to bcolz@googlegroups.com with copy to pytables-users
   + Wait about 24 hours to give time to people there to test the package
   + If everything goes well, do the post-release actions ("post-release.txt")
   + Do a more general annoucement to:

@@ -3,7 +3,7 @@ RFC for a persistence layer for carray
 ======================================
 
 :Author: Francesc Alted
-:Contact: francesc@continuum.io
+:Contact: francesc@blosc.org
 :Version: 0.1 (August 19, 2012)
 
 

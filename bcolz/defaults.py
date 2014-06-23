@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: February 1, 2011
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -13,7 +13,7 @@ Feel free to change them for better adapting to your needs.
 
 """
 
-import carray as ca
+import bcolz
 
 
 class Defaults(object):
@@ -41,7 +41,7 @@ class Defaults(object):
     @eval_vm.setter
     def eval_vm(self, value):
         self.check_choices('eval_vm', value)
-        if value == "numexpr" and not ca.numexpr_here:
+        if value == "numexpr" and not bcolz.numexpr_here:
             raise (ValueError,
                    "cannot use `numexpr` virtual machine "
                    "(minimum required version is probably not installed)")
@@ -78,6 +78,6 @@ not, then the default is 'python'.
 """
 
 # If numexpr is available, use it as default
-if ca.numexpr_here:
+if bcolz.numexpr_here:
     defaults.eval_vm = "numexpr"
 

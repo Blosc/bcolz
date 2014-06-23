@@ -1,24 +1,22 @@
-carray: A chunked, compressed, data container (for memory and disk)
-===================================================================
+bcolz: A columnar data container
+================================
 
 
-**Note:** This project is currently being developed as a persistent
-layer for Blaze, with the BLZ codename.  You can find the sources
-for BLZ over here:
-https://github.com/ContinuumIO/blaze/tree/master/blaze/io/blz 
+**Note:** This is a renaming of the original **carray** project.
 
-carray is a chunked container for numerical data.  Chunking allows for
-efficient enlarging/shrinking of data container.  In addition, it can
-also be compressed for reducing memory/disk needs.  The compression
-process is carried out internally by Blosc, a high-performance
+bcolz is a columnar and compressed data container.  Column storage allows
+for efficiently querying tables with a large number of columns.  It also
+allows for cheap addition and removal of column.  In addition, bcolz objects
+are compressed by default for reducing memory/disk I/O needs.  The
+compression process is carried out internally by Blosc, a high-performance
 compressor that is optimized for binary data.
 
-carray can use numexpr internally so as to accelerate many vector and
+bcolz can use numexpr internally so as to accelerate many vector and
 query operations (although it can use pure NumPy for doing so too).
 numexpr can use optimize the memory usage and use several cores for
 doing the computations, so it is blazing fast.  Moreover, with the
 introduction of a carray/ctable disk-based container (in version 0.5),
-it can be used for seamlessly performing out-of-core computations.
+it can be used for doing out-of-core computations transparently.
 
 Rational
 --------
@@ -30,19 +28,19 @@ the most common bottleneck in many computational scenarios, and CPUs
 spend most of its time waiting for data, and having data compressed in
 memory can reduce the stress of the memory subsystem.
 
-In other words, the ultimate goal for carray is not only reducing the
-memory needs of large arrays, but also making carray operations to go
+In other words, the ultimate goal for bcolz is not only reducing the
+memory needs of large arrays, but also making bcolz operations to go
 faster than using a traditional ndarray object from NumPy.  That is
 already the case for some special cases now, but will happen more
-generally in a short future, when carray will be able to take
+generally in a short future, when bcolz will be able to take
 advantage of newer CPUs integrating more cores and wider vector units.
 
 Requisites
 ----------
 
 - Python >= 2.6
-- NumPy >= 1.5
-- Cython >= 0.16
+- NumPy >= 1.7
+- Cython >= 0.20
 
 Building
 --------
@@ -59,7 +57,7 @@ running:
 
 $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
 $ export PYTHONPATH    (not needed on Windows)
-$ python carray/tests/test_all.py
+$ python bcolz/tests/test_all.py
 
 Installing
 ----------
@@ -72,8 +70,8 @@ Documentation
 -------------
 
 Please refer to the doc/ directory.  The HTML manual is in doc/html/,
-and the PDF version is in doc/carray-manual.pdf.  Of course, you can
-always access docstrings from the console (i.e. help(carray.ctable)).
+and the PDF version is in doc/bcolz-manual.pdf.  Of course, you can
+always access docstrings from the console (i.e. help(bcolz.ctable)).
 
 Also, you may want to look at the bench/ directory for some examples
 of use.
@@ -81,26 +79,23 @@ of use.
 Resources
 ---------
 
-Visit the main carray site repository at:
-http://github.com/FrancescAlted/carray
-
-You can download a source package from:
-http://carray.pytables.org/download
+Visit the main bcolz site repository at:
+http://github.com/Blosc/bcolz
 
 Manual:
-http://carray.pytables.org/docs/manual
+http://bcolz.blosc.org/docs/manual
 
 Home of Blosc compressor:
-http://blosc.pytables.org
+http://blosc.org
 
 User's mail list:
-carray@googlegroups.com
-http://groups.google.com/group/carray
+bcolz@googlegroups.com
+http://groups.google.com/group/bcolz
 
 License
 -------
 
-Please see CARRAY.txt in LICENSES/ directory.
+Please see BCOLZ.txt in LICENSES/ directory.
 
 Share your experience
 ---------------------

@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 15, 2012
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -26,7 +26,7 @@ class MayBeDiskTest(unittest.TestCase):
 
     def setUp(self):
         if self.disk:
-            prefix = 'carray-' + self.__class__.__name__
+            prefix = 'bcolz-' + self.__class__.__name__
             self.rootdir = tempfile.mkdtemp(prefix=prefix)
             os.rmdir(self.rootdir)  # tests needs this cleared
         else:

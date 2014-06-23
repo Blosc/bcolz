@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: December 14, 2010
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -36,12 +36,12 @@ def check_import(pkgname, pkgver):
         mod = __import__(pkgname)
     except ImportError:
             exit_with_error(
-                "You need %(pkgname)s %(pkgver)s or greater to run carray!"
+                "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver} )
     else:
         if mod.__version__ < pkgver:
             exit_with_error(
-                "You need %(pkgname)s %(pkgver)s or greater to run carray!"
+                "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver} )
 
     print ( "* Found %(pkgname)s %(pkgver)s package installed."
@@ -53,7 +53,7 @@ def check_import(pkgname, pkgver):
 
 # Check for Python
 if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
-    exit_with_error("You need Python 2.6 or greater to install carray!")
+    exit_with_error("You need Python 2.6 or greater to install bcolz!")
 
 # The minimum version of Cython required for generating extensions
 min_cython_version = '0.16'
@@ -82,7 +82,7 @@ try:
     import numexpr
 except ImportError:
     print_warning(
-        "Numexpr is not installed.  For faster carray operation, "
+        "Numexpr is not installed.  For faster bcolz operation, "
         "please consider installing it.")
 else:
     if numexpr.__version__ >= min_numexpr_version:
@@ -97,10 +97,10 @@ else:
 
 ########### End of version checks ##########
 
-# carray version
+# bcolz version
 VERSION = open('VERSION').read().strip()
 # Create the version.py file
-open('carray/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
+open('bcolz/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 
 
 # Global variables
@@ -108,11 +108,11 @@ CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
 lib_dirs = []
 libs = []
-inc_dirs = ['carray', 'blosc']
+inc_dirs = ['bcolz', 'blosc']
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
 inc_dirs.extend(get_numpy_include_dirs())
-cython_pyxfiles = glob.glob('carray/*.pyx')
+cython_pyxfiles = glob.glob('bcolz/*.pyx')
 cython_cfiles = [fn.split('.')[0] + '.c' for fn in cython_pyxfiles]
 blosc_files = glob.glob('blosc/*.c')
 
@@ -134,7 +134,7 @@ if os.name == 'posix':
 # Paver tasks
 @task
 def cythonize():
-    for fn in glob.glob('carray/*.pyx'):
+    for fn in glob.glob('bcolz/*.pyx'):
          dest = fn.split('.')[0] + '.c'
          if newer(fn, dest):
              if not cython:
@@ -171,9 +171,9 @@ def html(options):
 @task
 def pdf(options):
     """Build the docs in PDF format."""
-    dest = path("doc") / "carray-manual.pdf"
+    dest = path("doc") / "bcolz-manual.pdf"
     sh("cd doc; make latexpdf")
-    builtdocs = path("doc") / options.builddir / "latex" / "carray.pdf"
+    builtdocs = path("doc") / options.builddir / "latex" / "bcolz.pdf"
     builtdocs.move(dest)
 
 
@@ -202,33 +202,38 @@ Operating System :: Unix
 
 # Package options
 setup(
-    name = 'carray',
+    name = 'bcolz',
     version = VERSION,
-    description = "A chunked data container that can be compressed in-memory.",
+    description = 'A columnar and compressed data container.',
     long_description = """\
-carray is a chunked container for numerical data.  Chunking allows for
-efficient enlarging/shrinking of data container.  In addition, it can
-also be compressed for reducing memory needs.  The compression process
-is carried out internally by Blosc, a high-performance compressor that
-is optimized for binary data.""",
+
+bcolz is a columnar and compressed data container.  Column storage allows
+for efficiently querying tables with a large number of columns.  It also
+allows for cheap addition and removal of column.  In addition, bcolz objects
+are compressed by default for reducing memory/disk I/O needs.  The
+compression process is carried out internally by Blosc, a high-performance
+compressor that is optimized for binary data.
+
+""",
     classifiers = filter(None, classifiers.split("\n")),
     author = 'Francesc Alted',
-    author_email = 'francesc@continuum.io',
-    url = "https://github.com/FrancescAlted/carray",
+    author_email = 'francesc@blosc.org',
+    url = "https://github.com/Blosc/bcolz",
     license = 'http://www.opensource.org/licenses/bsd-license.php',
-    download_url = "http://carray.pytables.org/download/carray-%s/carray-%s.tar.gz" % (VERSION, VERSION),
+    # It is better to upload manually to PyPI
+    #download_url = "http://bcolz.blosc.org/download/bcolz-%s/bcolz-%s.tar.gz" % (VERSION, VERSION),
     platforms = ['any'],
     ext_modules = [
-    Extension( "carray.carrayExtension",
+    Extension( "bcolz.bcolz_ext",
                include_dirs=inc_dirs,
                sources = cython_cfiles + blosc_files,
-               depends = ["carray/definitions.pxd"] + blosc_files,
+               depends = ["bcolz/definitions.pxd"] + blosc_files,
                library_dirs=lib_dirs,
                libraries=libs,
                extra_link_args=LFLAGS,
                extra_compile_args=CFLAGS ),
     ],
-    packages = ['carray', 'carray.tests'],
+    packages = ['bcolz', 'bcolz.tests'],
     include_package_data = True,
 
 )

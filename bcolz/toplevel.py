@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: September 10, 2010
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -14,10 +14,10 @@ import os, os.path
 import glob
 import itertools as it
 import numpy as np
-import carray as ca
+import bcolz
 import math
 
-if ca.numexpr_here:
+if bcolz.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
 
@@ -68,9 +68,9 @@ def set_nthreads(nthreads):
     blosc_set_nthreads
 
     """
-    nthreads_old = ca.blosc_set_nthreads(nthreads)
-    if ca.numexpr_here:
-        ca.numexpr.set_num_threads(nthreads)
+    nthreads_old = bcolz.blosc_set_nthreads(nthreads)
+    if bcolz.numexpr_here:
+        bcolz.numexpr.set_num_threads(nthreads)
     return nthreads_old
 
 def open(rootdir, mode='a'):
@@ -99,11 +99,11 @@ def open(rootdir, mode='a'):
     # First try with a carray
     obj = None
     try:
-        obj = ca.carray(rootdir=rootdir, mode=mode)
+        obj = bcolz.carray(rootdir=rootdir, mode=mode)
     except IOError:
         # Not a carray.  Now with a ctable
         try:
-            obj = ca.ctable(rootdir=rootdir, mode=mode)
+            obj = bcolz.ctable(rootdir=rootdir, mode=mode)
         except IOError:
             # Not a ctable
             pass
@@ -166,16 +166,16 @@ def fromiter(iterable, dtype, count, **kwargs):
     dtype = np.dtype(dtype)
     if dtype.kind == "V":
         # A ctable
-        obj = ca.ctable(np.array([], dtype=dtype),
-                        expectedlen=expectedlen,
-                        **kwargs)
+        obj = bcolz.ctable(np.array([], dtype=dtype),
+                           expectedlen=expectedlen,
+                           **kwargs)
         chunklen = sum(obj.cols[name].chunklen
                        for name in obj.names) // len(obj.names)
     else:
         # A carray
-        obj = ca.carray(np.array([], dtype=dtype),
-                        expectedlen=expectedlen,
-                        **kwargs)
+        obj = bcolz.carray(np.array([], dtype=dtype),
+                           expectedlen=expectedlen,
+                           **kwargs)
         chunklen = obj.chunklen
 
     # Then fill it
@@ -249,8 +249,8 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     expectedlen = kwargs.pop("expectedlen", length)
     if dtype.kind == "V" and dtype.shape == ():
         raise ValueError, "fill does not support ctables objects"
-    obj = ca.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
-                    **kwargs)
+    obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
+                       **kwargs)
     chunklen = obj.chunklen
 
     # Then fill it
@@ -384,9 +384,9 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     if dtype.kind == "V":
         raise ValueError, "arange does not support ctables yet."
     else:
-        obj = ca.carray(np.array([], dtype=dtype),
-                        expectedlen=expectedlen,
-                        **kwargs)
+        obj = bcolz.carray(np.array([], dtype=dtype),
+                           expectedlen=expectedlen,
+                           **kwargs)
         chunklen = obj.chunklen
 
     # Then fill it
@@ -493,12 +493,12 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
 
     if vm is None:
-        vm = ca.defaults.eval_vm
+        vm = bcolz.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raiseValue, "`vm` must be either 'numexpr' or 'python'"
 
     if out_flavor is None:
-        out_flavor = ca.defaults.eval_out_flavor
+        out_flavor = bcolz.defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
         raiseValue, "`out_flavor` must be either 'carray' or 'numpy'"
 
@@ -517,7 +517,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         if hasattr(var, "dtype"):  # numpy/carray arrays
             if isinstance(var, np.ndarray):  # numpy array
                 typesize += var.dtype.itemsize * np.prod(var.shape[1:])
-            elif isinstance(var, ca.carray):  # carray array
+            elif isinstance(var, bcolz.carray):  # carray array
                 typesize += var.dtype.itemsize
             else:
                 raise ValueError, "only numpy/carray objects supported"
@@ -531,7 +531,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         if vm == "python":
             return _eval(expression, vars)
         else:
-            return ca.numexpr.evaluate(expression, local_dict=vars)
+            return bcolz.numexpr.evaluate(expression, local_dict=vars)
 
     return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                         **kwargs)
@@ -595,7 +595,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
         if vm == "python":
             res_block = _eval(expression, vars_)
         else:
-            res_block = ca.numexpr.evaluate(expression, local_dict=vars_)
+            res_block = bcolz.numexpr.evaluate(expression, local_dict=vars_)
 
         if i == 0:
             # Detection of reduction operations
@@ -612,7 +612,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             # Get a decent default for expectedlen
             if out_flavor == "carray":
                 nrows = kwargs.pop('expectedlen', vlen)
-                result = ca.carray(res_block, expectedlen=nrows, **kwargs)
+                result = bcolz.carray(res_block, expectedlen=nrows, **kwargs)
             else:
                 out_shape = list(res_block.shape)
                 out_shape[0] = vlen
@@ -626,7 +626,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             else:
                 result[i:i+bsize] = res_block
 
-    if isinstance(result, ca.carray):
+    if isinstance(result, bcolz.carray):
         result.flush()
     if scalar:
         return result[()]
@@ -661,10 +661,10 @@ def walk(dir, classname=None, mode='a'):
     for node in glob.glob(names):
         if os.path.isdir(node):
             try:
-                obj = ca.carray(rootdir=node, mode=mode)
+                obj = bcolz.carray(rootdir=node, mode=mode)
             except:
                 try:
-                    obj = ca.ctable(rootdir=node, mode=mode)
+                    obj = bcolz.ctable(rootdir=node, mode=mode)
                 except:
                     obj = None
                     dirs.append(node)

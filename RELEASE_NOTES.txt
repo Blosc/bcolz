@@ -1,15 +1,21 @@
 ========================
-Release notes for carray
+Release notes for bcolz
 ========================
 
 :Author: Francesc Alted
-:Contact: francesc@continuum.io
+:Contact: francesc@blosc.org
+
+
+Changes from 0.5.1 to 0.6
+=========================
+
+- Renamed the package to `bcolz`.
 
 
 Changes from 0.5 to 0.5.1
 =========================
 
-- Added the missing carray.tests module in setup.py
+- Added the missing bcolz.tests module in setup.py
 
 
 Changes from 0.4 to 0.5
@@ -26,7 +32,7 @@ Changes from 0.4 to 0.5
   dependency.
 
 - New `open(rootdir, mode='a')` top level function so as to open on-disk
-  carray objects.
+  bcolz objects.
 
 - New `flush()` method for `carray` and `ctable` objects.  This is
   useful for flushing data to disk in persistent objects.
@@ -80,14 +86,14 @@ Changes from 0.3.1 to 0.3.2
   detected, the default will be 'python'.
 
   That means that you can use any function available in Python for
-  evaluating carray expressions and that numexpr is not necessary
+  evaluating bcolz expressions and that numexpr is not necessary
   anymore for using `eval()`.
 
 - New `out_flavor` parameter for `eval()` that allows to choose the
-  output type.  It can be 'carray' or 'numpy'.
+  output type.  It can be 'bcolz' or 'numpy'.
 
 - New `defaults.py` module that enables the user to modify the defaults
-  for internal carray operation.  Defaults that are currently
+  for internal bcolz operation.  Defaults that are currently
   implemented: `eval_out_flavor` and `eval_vm`.
 
 - Fixed a bug with `carray.sum()` for multidimensional types.
@@ -187,7 +193,7 @@ Changes from 0.2 to 0.3
   ``carray[:]`` idiom.
 
 - Renamed `setBloscMaxThreads()` to `blosc_set_num_threads()` and
-  `whichLibVersion()` to `blosc_version()` to follow carray name
+  `whichLibVersion()` to `blosc_version()` to follow bcolz name
   conventions more closely.
 
 - Added a new `set_num_threads()` to set the number of threads in both
@@ -203,7 +209,7 @@ Changes from 0.2 to 0.3
   modes present in NumPy are supported now, including fancy indexing.
   The only exception are negative steps in ``carray[start:stop:-step]``.
 
-- Added support for `carray.__setitem__()`.  All indexing modes present
+- Added support for `bcolz.__setitem__()`.  All indexing modes present
   in NumPy are supported, including fancy indexing.  The only exception
   are negative steps in ``carray[start:stop:-step] = values``.
 

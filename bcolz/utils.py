@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: August 5, 2010
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -12,7 +12,6 @@
 import sys, os, os.path, subprocess, math
 from time import time, clock
 import numpy as np
-import carray as ca
 
 
 def show_stats(explain, tref):

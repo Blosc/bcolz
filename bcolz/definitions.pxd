@@ -2,13 +2,11 @@
 #
 #       License: BSD
 #       Created: August 05, 2010
-#       Author:  Francesc Alted - faltet@pytables.org
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
-"""Here are some definitions for some C headers dependencies.
-
-"""
+"""Here are some definitions for some C headers dependencies."""
 
 import sys
 

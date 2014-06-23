@@ -3,7 +3,7 @@
 #
 #       License: BSD
 #       Created: August 17, 2012
-#       Author:  Francesc Alted - francesc@continuum.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -13,8 +13,8 @@ import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-import carray as ca
-from carray.tests import common
+import bcolz
+from bcolz.tests import common
 from common import MayBeDiskTest
 import unittest
 
@@ -23,12 +23,12 @@ class basicTest(MayBeDiskTest):
 
     def getobject(self):
         if self.flavor == 'carray':
-            obj = ca.zeros(10, dtype="i1", rootdir=self.rootdir)
-            assert type(obj) == ca.carray
+            obj = bcolz.zeros(10, dtype="i1", rootdir=self.rootdir)
+            assert type(obj) == bcolz.carray
         elif self.flavor == 'ctable':
-            obj = ca.fromiter(((i,i*2) for i in range(10)), dtype='i2,f4',
-                              count=10, rootdir=self.rootdir)
-            assert type(obj) == ca.ctable
+            obj = bcolz.fromiter(((i,i*2) for i in range(10)), dtype='i2,f4',
+                                 count=10, rootdir=self.rootdir)
+            assert type(obj) == bcolz.ctable
         return obj
 
     def test00a(self):
@@ -54,7 +54,7 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr3'] = 'val3'
         # Re-open the carray
         if self.rootdir:
-            cn = ca.open(rootdir=self.rootdir)
+            cn = bcolz.open(rootdir=self.rootdir)
         self.assert_(cn.attrs['attr1'] == 'val1')
         self.assert_(cn.attrs['attr2'] == 'val2')
         self.assert_(cn.attrs['attr3'] == 'val3')
@@ -85,7 +85,7 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr3'] = 'val3'
         # Reopen
         if self.rootdir:
-            cn = ca.open(rootdir=self.rootdir)
+            cn = bcolz.open(rootdir=self.rootdir)
         # Remove one of them
         del cn.attrs['attr2']
         self.assert_(cn.attrs['attr1'] == 'val1')
@@ -101,7 +101,7 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr1'] = 'val1'
         # Reopen
         if self.rootdir:
-            cn = ca.open(rootdir=self.rootdir)
+            cn = bcolz.open(rootdir=self.rootdir)
         # Append attrs
         cn.attrs['attr2'] = 'val2'
         cn.attrs['attr3'] = 'val3'
