@@ -45,26 +45,26 @@ Requisites
 Building
 --------
 
-Assuming that you have the requisites and a C compiler installed, do:
+Assuming that you have the requisites and a C compiler installed, do::
 
-$ python setup.py build_ext --inplace
+    $ python setup.py build_ext --inplace
 
 Testing
 -------
 
 After compiling, you can quickly check that the package is sane by
-running:
+running::
 
-$ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
-$ export PYTHONPATH    (not needed on Windows)
-$ python bcolz/tests/test_all.py
+    $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
+    $ export PYTHONPATH    (not needed on Windows)
+    $ python bcolz/tests/test_all.py
 
 Installing
 ----------
 
-Install it as a typical Python package:
+Install it as a typical Python package::
 
-$ python setup.py install
+    $ python setup.py install
 
 Documentation
 -------------
