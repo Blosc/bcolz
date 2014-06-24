@@ -2,7 +2,7 @@
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-import carray as ca
+import bcolz
 import itertools as it
 from time import time
 
@@ -23,12 +23,12 @@ out = np.fromiter(x, dtype='f8', count=N)
 print "Time for array--> %.3f" % (time()-t0,)
 print "out-->", len(out)
 
-#ca.set_num_threads(ca.ncores//2)
+#bcolz.set_num_threads(bcolz.ncores//2)
 
 # Create a carray
 #x = (i for i in xrange(N))    # true iterable
 t0 = time()
-cout = ca.fromiter(x, dtype='f8', count=N, cparams=ca.cparams(clevel))
+cout = bcolz.fromiter(x, dtype='f8', count=N, cparams=bcolz.cparams(clevel))
 print "Time for carray--> %.3f" % (time()-t0,)
 print "cout-->", len(cout)
 assert_array_equal(out, cout, "Arrays are not equal")
@@ -36,7 +36,7 @@ assert_array_equal(out, cout, "Arrays are not equal")
 # Create a carray (with unknown size)
 #x = (i for i in xrange(N))    # true iterable
 t0 = time()
-cout = ca.fromiter(x, dtype='f8', count=-1, cparams=ca.cparams(clevel))
+cout = bcolz.fromiter(x, dtype='f8', count=-1, cparams=bcolz.cparams(clevel))
 print "Time for carray (count=-1)--> %.3f" % (time()-t0,)
 print "cout-->", len(cout)
 assert_array_equal(out, cout, "Arrays are not equal")
@@ -51,7 +51,7 @@ print "out-->", len(out)
 # Retrieve from a ctable
 gen = ((i,j,k) for i,j,k in it.izip(x,y,z))
 t0 = time()
-cout = ca.fromiter(gen, dtype="f8,f8,f8", count=N)
+cout = bcolz.fromiter(gen, dtype="f8,f8,f8", count=N)
 print "Time for ctable--> %.3f" % (time()-t0,)
 print "out-->", len(cout)
 assert_array_equal(out, cout[:], "Arrays are not equal")
@@ -59,7 +59,7 @@ assert_array_equal(out, cout[:], "Arrays are not equal")
 # Retrieve from a ctable (with unknown size)
 gen = ((i,j,k) for i,j,k in it.izip(x,y,z))
 t0 = time()
-cout = ca.fromiter(gen, dtype="f8,f8,f8", count=-1)
+cout = bcolz.fromiter(gen, dtype="f8,f8,f8", count=-1)
 print "Time for ctable (count=-1)--> %.3f" % (time()-t0,)
 print "out-->", len(cout)
 assert_array_equal(out, cout[:], "Arrays are not equal")

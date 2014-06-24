@@ -1,5 +1,5 @@
 export PYTHONPATH=..
-python concat.py carray
+python concat.py bcolz
 python expression.py
 python fromiter.py
 python getitem.py

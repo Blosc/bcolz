@@ -1,5 +1,5 @@
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
 N = 1e8
@@ -11,7 +11,7 @@ sa = a.sum()
 print "Time sum() numpy --> %.3f" % (time()-t0)
 
 t0 = time()
-ac = ca.carray(a, cparams=ca.cparams(9))
+ac = bcolz.carray(a, cparams=bcolz.cparams(9))
 print "Time carray conv --> %.3f" % (time()-t0)
 print "ac-->", `ac`
 

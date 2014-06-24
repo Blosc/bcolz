@@ -1,5 +1,5 @@
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
 N = 1e8
@@ -10,8 +10,8 @@ a = np.ones(N, dtype=dtype)
 print "Time numpy.ones() --> %.4f" % (time()-t0)
 
 t0 = time()
-ac = ca.fill(N, dtype=dtype, dflt=1)
-#ac = ca.carray(a)
+ac = bcolz.fill(N, dtype=dtype, dflt=1)
+#ac = bcolz.carray(a)
 print "Time carray.fill(dflt=1) --> %.4f" % (time()-t0)
 
 print "ac-->", `ac`

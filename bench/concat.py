@@ -6,7 +6,7 @@
 #
 # python bench/concat.py style
 #
-# where `style` can be any of 'numpy', 'concat' or 'carray'
+# where `style` can be any of 'numpy', 'concat' or 'bcolsz'
 #
 # You can modify other parameters from the command line if you want:
 #
@@ -16,7 +16,7 @@
 import sys, math
 import numpy
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-import carray as ca
+import bcolz
 import time
 
 def concat(data):
@@ -31,14 +31,14 @@ def concat(data):
     return alldata
 
 def append(data, clevel):
-    alldata = ca.carray(data[0], cparams=ca.cparams(clevel))
+    alldata = bcolz.carray(data[0], cparams=bcolz.cparams(clevel))
     for carr in data[1:]:
         alldata.append(carr)
 
     return alldata
 
 if len(sys.argv) < 2:
-    print "Pass at least one of these styles: 'numpy', 'concat' or 'carray' "
+    print "Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' "
     sys.exit(1)
 
 style = sys.argv[1]
@@ -62,14 +62,14 @@ if style == 'numpy':
 elif style == 'concat':
     for _ in xrange(T):
         r = concat(a)
-elif style == 'carray':
+elif style == 'bcolz':
     for _ in xrange(T):
         r = append(a, clevel)
 
 t = time.time() - t
 print('time for concat: %.3fs' % (t / T))
 
-if style == 'carray':
+if style == 'bcolz':
     size = r.cbytes
 else:
     size = r.size*r.dtype.itemsize

@@ -1,7 +1,7 @@
 # Benchmark for getitem
 
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
 N = 1e7       # the number of elements in x
@@ -10,16 +10,16 @@ clevel = 1    # the compression level
 
 print "Creating inputs with %d elements..." % N
 
-cparams = ca.cparams(clevel)
+cparams = bcolz.cparams(clevel)
 
 #x = np.arange(N)
 x = np.zeros(N, dtype="f8")
 y = x.copy()
 z = x.copy()
-cx = ca.carray(x, cparams=cparams)
+cx = bcolz.carray(x, cparams=cparams)
 cy = cx.copy()
 cz = cx.copy()
-ct = ca.ctable((cx, cy, cz), names=['x','y','z'])
+ct = bcolz.ctable((cx, cy, cz), names=['x','y','z'])
 t = ct[:]
 
 print "Starting benchmark now for getting %d elements..." % M
@@ -29,7 +29,7 @@ vals = [x[i] for i in xrange(0, M, 3)]
 print "Time for array--> %.3f" % (time()-t0,)
 print "vals-->", len(vals)
 
-#ca.set_num_threads(ca.ncores//2)
+#bcolz.set_num_threads(bcolz.ncores//2)
 
 # Retrieve from a carray
 t0 = time()

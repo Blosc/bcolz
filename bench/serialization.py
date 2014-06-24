@@ -1,19 +1,20 @@
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
-N = 10 * 1000 * 1000
+N = int(1e7)
 CLEVEL = 5
 
 a = np.linspace(0, 1, N)
 
 t0 = time()
-ac = ca.carray(a, cparams=ca.cparams(clevel=CLEVEL))
+ac = bcolz.carray(a, cparams=bcolz.cparams(clevel=CLEVEL))
 print "time creation (memory) ->", round(time()-t0, 3)
 print "data (memory):", repr(ac)
 
 t0 = time()
-b = ca.carray(a, cparams=ca.cparams(clevel=CLEVEL), rootdir='myarray')
+b = bcolz.carray(a, cparams=bcolz.cparams(clevel=CLEVEL),
+                 rootdir='myarray', mode='w')
 b.flush()
 print "time creation (disk) ->", round(time()-t0, 3)
 #print "meta (disk):", b.read_meta()
@@ -23,7 +24,7 @@ an = np.array(a)
 print "time creation (numpy) ->", round(time()-t0, 3)
 
 t0 = time()
-c = ca.carray(rootdir='myarray')
+c = bcolz.carray(rootdir='myarray')
 print "time open (disk) ->", round(time()-t0, 3)
 #print "meta (disk):", c.read_meta()
 print "data (disk):", repr(c)
@@ -37,11 +38,11 @@ print sum(c)
 print "time sum (disk, iter) ->", round(time()-t0, 3)
 
 t0 = time()
-print ca.eval('sum(ac)')
+print bcolz.eval('sum(ac)')
 print "time sum (memory, eval) ->", round(time()-t0, 3)
 
 t0 = time()
-print ca.eval('sum(c)')
+print bcolz.eval('sum(c)')
 print "time sum (disk, eval) ->", round(time()-t0, 3)
 
 t0 = time()

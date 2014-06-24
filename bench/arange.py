@@ -1,5 +1,5 @@
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
 N = 1e8
@@ -12,8 +12,8 @@ a = np.arange(start, stop, step, dtype=dtype)
 print "Time numpy.arange() --> %.3f" % (time()-t0)
 
 t0 = time()
-ac = ca.arange(start, stop, step, dtype=dtype)
-print "Time carray.arange() --> %.3f" % (time()-t0)
+ac = bcolz.arange(start, stop, step, dtype=dtype)
+print "Time bcolsz.arange() --> %.3f" % (time()-t0)
 
 print "ac-->", `ac`
 

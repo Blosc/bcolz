@@ -750,7 +750,7 @@ cdef class carray:
     "The length (leading dimension) of this object."
     def __get__(self):
       # Important to do the cast in order to get a npy_intp result
-      return cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
+      return <npy_intp>cython.cdiv(self._nbytes, <npy_intp>self.atomsize)
 
   property mode:
     "The mode used to create/open the `mode`."

@@ -9,11 +9,11 @@ import getopt
 
 import sqlite3
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
-NR = 1e6      # the number of rows
-NC = 1000     # the number of columns
+NR = 1e5      # the number of rows
+NC = 500     # the number of columns
 mv = 1e10     # the mean value for entries (sig digits = 17 - log10(mv))
 clevel = 3    # the compression level
 show = False  # show statistics
@@ -85,9 +85,9 @@ def test_numexpr():
 
 def test_ctable(clevel):
     enter()
-    tc = ca.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
+    tc = bcolz.fromiter((mv+np.random.rand(NC)-mv for i in xrange(int(NR))),
                      dtype=dt,
-                     cparams=ca.cparams(clevel),
+                     cparams=bcolz.cparams(clevel),
                      count=int(NR))
     after_create()
 

@@ -2,13 +2,13 @@
 # using carrays vs plain numpy arrays.
 
 import numpy as np
-import carray as ca
+import bcolz
 from time import time
 
 N = 1e6
 
 a = np.arange(N)
-b = ca.carray(a)
+b = bcolz.carray(a)
 
 t0 = time()
 #sum1 = sum(a)

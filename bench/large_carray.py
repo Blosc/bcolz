@@ -1,16 +1,17 @@
 ## Benchmark to check the creation of an array of length > 2**32 (5e9)
 
-import carray as ca
+import bcolz
 from time import time
 
 t0 = time()
-#cn = ca.zeros(5e9, dtype="i1")
-cn = ca.zeros(5e9, dtype="i1", rootdir='large_carray-bench', mode='w')
+#cn = bcolz.zeros(5e9, dtype="i1")
+cn = bcolz.zeros(5e9, dtype="i1", rootdir='large_carray-bench', mode='w')
 print "Creation time:", round(time() - t0, 3)
+print "len:", len(cn)
 assert len(cn) == int(5e9)
 
 t0 = time()
-cn = ca.carray(rootdir='large_carray-bench', mode='a')
+cn = bcolz.carray(rootdir='large_carray-bench', mode='a')
 print "Re-open time:", round(time() - t0, 3)
 print "len(cn)", len(cn)
 assert len(cn) == int(5e9)
