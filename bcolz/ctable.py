@@ -179,8 +179,9 @@ class ctable(object):
         "The directory where this object is saved."
         if self.rootdir is None and columns is None:
             raise ValueError(
-                "For creating a new ctable you should pass a `columns` param")
-        if os.path.exists(self.rootdir):
+                "You should pass either a `columns` or a `rootdir` param"
+                "at very least")
+        if self.rootdir is not None and os.path.exists(self.rootdir):
             self.mode = kwargs.setdefault('mode', 'a')
         else:
             self.mode = kwargs.setdefault('mode', 'w')
@@ -260,7 +261,7 @@ class ctable(object):
         for i, name in enumerate(names):
             if self.rootdir:
                 # Put every carray under each own `name` subdirectory
-                rootdir = os.path.join(self.rootdir, name)
+                kwargs['rootdir'] = os.path.join(self.rootdir, name)
             if calist:
                 column = columns[i]
                 if self.rootdir:
