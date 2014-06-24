@@ -107,8 +107,8 @@ class persistentTest(MayBeDiskTest):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
         # Now check some accesses
-        self.assertRaises(RuntimeError, t.__setitem__, 1, (0, 0.0))
-        self.assertRaises(RuntimeError, t.append, (0, 0.0))
+        self.assertRaises(IOError, t.__setitem__, 1, (0, 0.0))
+        self.assertRaises(IOError, t.append, (0, 0.0))
 
     def test00b(self):
         """Testing ctable opening in "w" mode"""
@@ -116,23 +116,8 @@ class persistentTest(MayBeDiskTest):
         a = bcolz.carray(np.arange(N, dtype='i4'))
         b = bcolz.carray(np.arange(N, dtype='f8')+1)
         t = bcolz.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
-        # Open t
-        t = bcolz.open(rootdir=self.rootdir, mode='w')
-        #print "t->", `t`
-        N = 0
-        a = bcolz.carray(np.arange(N, dtype='i4'))
-        b = bcolz.carray(np.arange(N, dtype='f8')+1)
-        ra = np.rec.fromarrays([a[:],b[:]]).view(np.ndarray)
-        #print "ra[:]", ra[:]
-        assert_array_equal(t[:], ra, "ctable values are not correct")
-
-        # Now check some accesses
-        t.append((0, 0.0))
-        t.append((0, 0.0))
-        t[1] = (1, 2.0)
-        ra = np.rec.fromarrays([(0,1),(0.0, 2.0)], 'i4,f8').view(np.ndarray)
-        #print "ra[:]", ra[:]
-        assert_array_equal(t[:], ra, "ctable values are not correct")
+        # Opening in 'w'rite mode is not allowed.  First remove the file.
+        self.assertRaises(ValueError, bcolz.open, rootdir=self.rootdir, mode='w')
 
     def test00c(self):
         """Testing ctable opening in "a" mode"""
@@ -167,8 +152,9 @@ class persistentTest(MayBeDiskTest):
         N = 1e1
         a = bcolz.carray(np.arange(N, dtype='i4'))
         b = bcolz.carray(np.arange(N, dtype='f8')+1)
-        self.assertRaises(RuntimeError, bcolz.ctable, (a, b), ('f0', 'f1'),
-                          rootdir=self.rootdir, mode='r')
+        t = bcolz.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir, mode='w')
+        t2 = bcolz.ctable(rootdir=self.rootdir, mode='r')
+        self.assertRaises(IOError, t2.append, (a, b))
 
     def test01b(self):
         """Testing ctable creation in "w" mode"""
@@ -197,14 +183,15 @@ class persistentTest(MayBeDiskTest):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test01c(self):
-        """Testing ctable creation in "a" mode"""
+        """Testing ctable re-opening in "a" mode"""
         N = 1e1
         a = bcolz.carray(np.arange(N, dtype='i4'))
         b = bcolz.carray(np.arange(N, dtype='f8')+1)
         t = bcolz.ctable((a, b), ('f0', 'f1'), rootdir=self.rootdir)
-        # Overwrite the last ctable
-        self.assertRaises(RuntimeError, bcolz.ctable, (a, b), ('f0', 'f1'),
-                          rootdir=self.rootdir, mode='a')
+        # Append to the last ctable
+        bcolz.ctable(rootdir=self.rootdir, mode='a')
+        ra = np.rec.fromarrays([a[:], b[:]]).view(np.ndarray)
+        assert_array_equal(t[:], ra, "ctable values are not correct")
 
 
 class add_del_colTest(MayBeDiskTest):
@@ -622,7 +609,7 @@ class copyTest(MayBeDiskTest):
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         if self.disk:
             # Copy over the same location should give an error
-            self.assertRaises(RuntimeError,
+            self.assertRaises(IOError,
                               t.copy,cparams=bcolz.cparams(clevel=9),
                               rootdir=self.rootdir, mode='w')
             return

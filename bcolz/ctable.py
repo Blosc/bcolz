@@ -180,12 +180,15 @@ class ctable(object):
         if self.rootdir is None and columns is None:
             raise ValueError(
                 "You should pass either a `columns` or a `rootdir` param"
-                "at very least")
+                " at very least")
+        # The mode in which the object is created/opened
         if self.rootdir is not None and os.path.exists(self.rootdir):
             self.mode = kwargs.setdefault('mode', 'a')
+            if columns is not None and self.mode == 'a':
+                raise ValueError(
+                    "You cannot pass a `columns` param in 'a'ppend mode")
         else:
             self.mode = kwargs.setdefault('mode', 'w')
-        "The mode in which the object is created/opened."
 
         # Setup the columns accessor
         self.cols = cols(self.rootdir, self.mode)
@@ -195,12 +198,16 @@ class ctable(object):
         self.len = 0
 
         # Create a new ctable or open it from disk
+        _new = False
         if self.mode in ('r', 'a'):
             self.open_ctable()
-            _new = False
         elif columns is not None:
             self.create_ctable(columns, names, **kwargs)
             _new = True
+        else:
+            raise ValueError(
+                "You cannot open a ctable in 'w'rite mode"
+                " without a `columns` param")
 
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
@@ -285,10 +292,6 @@ class ctable(object):
     def open_ctable(self):
         """Open an existing ctable on-disk."""
 
-        if self.rootdir is None:
-            raise ValueError(
-                "you need to pass either a `columns` or a `rootdir` param")
-
         # Open the ctable by reading the metadata
         self.cols.read_meta_and_open()
 
@@ -299,7 +302,7 @@ class ctable(object):
         """Create the `self.rootdir` directory safely."""
         if os.path.exists(rootdir):
             if mode != "w":
-                raise RuntimeError(
+                raise IOError(
                     "specified rootdir path '%s' already exists "
                     "and creation mode is '%s'" % (rootdir, mode))
             if os.path.isdir(rootdir):
@@ -535,7 +538,7 @@ class ctable(object):
         # Check that origin and destination do not overlap
         rootdir = kwargs.get('rootdir', None)
         if rootdir and self.rootdir and  rootdir == self.rootdir:
-                raise RuntimeError("rootdir cannot be the same during copies")
+                raise IOError("rootdir cannot be the same during copies")
 
         # Remove possible unsupported args for columns
         names = kwargs.pop('names', self.names)

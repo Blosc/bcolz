@@ -1514,7 +1514,7 @@ class persistenceTest(MayBeDiskTest):
         """Creating a carray in "r" mode."""
 
         N = 10000
-        self.assertRaises(RuntimeError, bcolz.zeros,
+        self.assertRaises(IOError, bcolz.zeros,
                           N, dtype="i1", rootdir=self.rootdir, mode='r')
 
     def test01b(self):
@@ -1540,7 +1540,7 @@ class persistenceTest(MayBeDiskTest):
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
         self.assert_(len(cn) == N)
 
-        self.assertRaises(RuntimeError, bcolz.zeros,
+        self.assertRaises(IOError, bcolz.zeros,
                           N-2, dtype="i1", rootdir=self.rootdir, mode='a')
 
     def test02a(self):
@@ -1554,8 +1554,8 @@ class persistenceTest(MayBeDiskTest):
         self.assert_(len(cn) == N)
 
         # Now check some accesses
-        self.assertRaises(RuntimeError, cn.__setitem__, 1, 1)
-        self.assertRaises(RuntimeError, cn.append, 1)
+        self.assertRaises(IOError, cn.__setitem__, 1, 1)
+        self.assertRaises(IOError, cn.append, 1)
 
     def test02b(self):
         """Opening a carray in "w" mode."""
