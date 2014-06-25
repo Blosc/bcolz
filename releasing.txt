@@ -7,51 +7,30 @@ Instructions for releasing a new version of bcolz
 - Make sure that ``ANNOUNCE.txt`` and ``RELEASE-NOTES.txt``
   do contain the most relevant notes for the release.
 
-- Generate a tarball of the version to release:
+- Generate a tarball of manual of the version to release:
   + $ cd /tmp
   + $ git clone git://github.com/Blosc/bcolz.git
   + $ cd bcolz
   + $ paver sdist
   + $ export VERSION="x.y.z"    # x.y.z is the version to release
-  + $ mv doc/bcolz-manual.pdf ../bcolz-manual-$VERSION.pdf
   + $ mv dist/bcolz-$VERSION.tar.gz ..
   + $ cd ..
   + $ tar xvfz bcolz-$VERSION.tar.gz
   + $ tar cvfz bcolz-manual-$VERSION-html.tar.gz bcolz-$VERSION/doc/html/
 
-- Generate binaries for Windows
-  + Generate for Python 2.6 and 2.7 (using MSVC 2008 and distutils)
-  + *Test* Windows packages
-  + Put the resulting .exe in the same directory than the tarball and docs
-
-- Upload the next packages in the download area
-  + $ scp bcolz-$VERSION.tar.gz bcolz-manual* xodo.blosc.org:/tmp
-  + Log-in in xodo as user bcolz
-  + Go to download area:
-    $ cd ~/srv/www/bcolz.blosc.org/download
-  + Create another directory for the new version and copy the files there:
-    $ export VERSION="x.y.z"    # x.y.z is the version to release
-    $ mkdir bcolz-$VERSION
-    $ cd bcolz-$VERSION
-    $ cp /tmp/bcolz-$VERSION.tar.gz /tmp/bcolz-manual* /tmp/bcolz*.exe .
-  + Compute and save the MD5 of new files:
-    $ cfv -C -t md5 -f bcolz-$VERSION.md5 *
-  + Point the 'stable' the symbolic link to the new version
-    $ cd ..
-    $ rm stable; ln -s bcolz-$VERSION stable
-    Check that the new packages are accessible at:
-    http://bcolz.blosc.org/download/bcolz-$VERSION/
-
-- Update on-line HTML manual
-  $ cd ~/srv/www/bcolz.blosc.org/docs
-  $ tar xvfz ../download/bcolz-$VERSION/bcolz-manual-$VERSION-html.tar.gz
-  $ mv bcolz-$VERSION/doc/html manual-$VERSION
-  $ rmdir bcolz-$VERSION/doc ; rmdir bcolz-$VERSION
-  $ rm manual; ln -sf manual-$VERSION manual
-  Check that the manual is accessible at:
-    http://bcolz.blosc.org/docs/manual/
+- Update the on-line HTML manual
+  + $ scp bcolz-manual* xodo.blosc.org:/tmp
+  + Log-in in xodo as user blosc
+  + $ cd ~/srv/www/bcolz.blosc.org/docs
+  + $ export VERSION="x.y.z"    # x.y.z is the version to release
+  + $ tar xvfz /tmp/bcolz-manual-$VERSION-html.tar.gz
+  + $ mv bcolz-$VERSION/doc/html bcolz-$VERSION
+  + $ rm -r bcolz-$VERSION
+  + $ rm manual; ln -sf manual-$VERSION manual
+  + Check that the manual is accessible at:
+      http://bcolz.blosc.org/
 - Add the 'RELEASE_NOTES' to::
-    https://github.com/Blosc/bcolz/wiki/Release-$VERSION
+    https://github.com/Blosc/bcolz/wiki/Release-Notes
 
 - Announcing
   + Register the new package in PyPI::
@@ -60,6 +39,7 @@ Instructions for releasing a new version of bcolz
   + Wait about 24 hours to give time to people there to test the package
   + If everything goes well, do the post-release actions ("post-release.txt")
   + Do a more general annoucement to:
+    - blosc@googlegroups.com (https://groups.google.com/forum/#!forum/blosc)
     - numpy-discussion@scipy.org (with copy to scipy-user@scipy.org)
     - python-announce@python.org
     (remember to put a prefix ANN: in the mail subject).

@@ -1,15 +1,15 @@
-bcolz: A columnar data container
-================================
-
+bcolz: columnar and compressed data containers
+==============================================
 
 **Note:** This is a renaming of the original **carray** project.
 
-bcolz is a columnar and compressed data container.  Column storage allows
-for efficiently querying tables with a large number of columns.  It also
-allows for cheap addition and removal of column.  In addition, bcolz objects
-are compressed by default for reducing memory/disk I/O needs.  The
-compression process is carried out internally by Blosc, a high-performance
-compressor that is optimized for binary data.
+bcolz provides columnar and compressed data containers.  Column
+storage allows for efficiently querying tables with a large number of
+columns.  It also allows for cheap addition and removal of column.  In
+addition, bcolz objects are compressed by default for reducing
+memory/disk I/O needs.  The compression process is carried out
+internally by Blosc, a high-performance compressor that is optimized
+for binary data.
 
 bcolz can use numexpr internally so as to accelerate many vector and
 query operations (although it can use pure NumPy for doing so too).
@@ -32,8 +32,8 @@ In other words, the ultimate goal for bcolz is not only reducing the
 memory needs of large arrays, but also making bcolz operations to go
 faster than using a traditional ndarray object from NumPy.  That is
 already the case for some special cases now, but will happen more
-generally in a short future, when bcolz will be able to take
-advantage of newer CPUs integrating more cores and wider vector units.
+generally in a short future, when bcolz will be able to take advantage
+of newer CPUs integrating more cores and wider vector units.
 
 Requisites
 ----------
@@ -69,9 +69,9 @@ Install it as a typical Python package::
 Documentation
 -------------
 
-Please refer to the doc/ directory.  The HTML manual is in doc/html/,
-and the PDF version is in doc/bcolz-manual.pdf.  Of course, you can
-always access docstrings from the console (i.e. help(bcolz.ctable)).
+Please refer to the doc/ directory.  The HTML manual is in doc/html,
+but of course, you can always access docstrings from the console
+(i.e. help(bcolz.ctable)).
 
 Also, you may want to look at the bench/ directory for some examples
 of use.
@@ -83,7 +83,7 @@ Visit the main bcolz site repository at:
 http://github.com/Blosc/bcolz
 
 Manual:
-http://bcolz.blosc.org/docs/manual
+http://bcolz.blosc.org
 
 Home of Blosc compressor:
 http://blosc.org
@@ -103,5 +103,6 @@ Share your experience
 Let us know of any bugs, suggestions, gripes, kudos, etc. you may
 have.
 
+**Enjoy Data!**
 
 Francesc Alted

@@ -158,7 +158,7 @@ Operating System :: Unix
 """
 setup(name = "bcolz",
       version = VERSION,
-      description = 'A columnar and compressed data container.',
+      description = 'columnar and compressed data containers.',
       long_description = """\
 
 bcolz provides columnar and compressed data containers.  Column storage
