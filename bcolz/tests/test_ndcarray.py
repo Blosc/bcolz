@@ -3,7 +3,7 @@
 #
 #       License: BSD
 #       Created: January 11, 2011
-#       Author:  Francesc Alted - francesc@blosc.org
+#       Author:  Francesc Alted - francesc@blosc.io
 #
 ########################################################################
 

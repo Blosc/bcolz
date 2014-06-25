@@ -3,7 +3,7 @@ Release notes for bcolz
 ========================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.org
+:Contact: francesc@blosc.io
 
 
 Changes from 0.5.1 to 0.6
