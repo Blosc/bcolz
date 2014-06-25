@@ -2,39 +2,37 @@
 Introduction
 ------------
 
-carray at glance
-================
+bcolz at glance
+===============
 
-carray is a Python package that provides containers (called `carray`
+bcolz is a Python package that provides containers (called `carray`
 and `ctable`) for numerical data that can be compressed either
 in-memory and on-disk.  It is based on NumPy, and uses it as the
-standard data container to communicate with carray objects.
+standard data container to communicate with bcolz objects.
 
-The building blocks of carray objects are the so-called ``chunks``
-that are bits of data compressed as a whole, but that can be
-decompressed partially in order to improve the fetching of small parts
-of the array.  This ``chunked`` nature of the carray objects, together
-with a buffered I/O, makes appends very cheap and fetches reasonably
-fast (although the modification of values can be an expensive
-operation).
+The building blocks of bcolz objects are the so-called ``chunks`` that
+are bits of data compressed as a whole, but that can be decompressed
+partially in order to improve the fetching of small parts of the
+array.  This ``chunked`` nature of the bcolz objects, together with a
+buffered I/O, makes appends very cheap and fetches reasonably fast
+(although the modification of values can be an expensive operation).
 
 The compression/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
 data.  That ensures maximum performance for I/O operation.
 
-carray can use numexpr internally (it does if it detects numexpr
-installed) so as to accelerate many vector and query operations
-(although it can use pure NumPy for doing so too).  numexpr can use
-optimize the memory usage and use several cores for doing the
+bcolz can use numexpr internally (it does that by default if it
+detects numexpr installed) so as to accelerate many vector and query
+operations (although it can use pure NumPy for doing so too).  numexpr
+can use optimize the memory usage and use several cores for doing the
 computations, so it is blazing fast.  Moreover, with the introduction
 of a carray/ctable disk-based container (in version 0.5), it can be
 used for seamlessly performing out-of-core computations.
 
-
 carray and ctable objects
 -------------------------
 
-The main objects in the carray package are:
+The main objects in the bcolz package are:
 
   * `carray`: container for homogeneous & heterogeneous (row-wise) data
   * `ctable`: container for heterogeneous (column-wise) data
@@ -62,10 +60,10 @@ column rather than those in the same row, so compressors generally do
 a much better job when data is aligned column-wise.
 
 
-carray main features
+bcolz main features
 --------------------
 
-carray objects bring several advantages over plain NumPy objects:
+bcolz objects bring several advantages over plain NumPy objects:
 
   * Data is compressed: they take less storage space.
 
@@ -91,10 +89,10 @@ carray objects bring several advantages over plain NumPy objects:
 
 
 
-carray limitations
+bcolz limitations
 ------------------
 
-carray does not currently come with good support in the next areas:
+bcolz does not currently come with good support in the next areas:
 
   * Reduced number of operations, at least when compared with NumPy.
     The supported operations are basically vectorized ones (i.e. does
@@ -104,12 +102,12 @@ carray does not currently come with good support in the next areas:
 
   * Limited broadcast support.  For example, NumPy lets you operate
     seamlessly with arrays of different shape (as long as they are
-    compatible), but you cannot do that with carray.  The only object
+    compatible), but you cannot do that with bcolz.  The only object
     that can be broadcasted currently are scalars
-    (e.g. ``ca.eval("x+3")``).
+    (e.g. ``bcolz.eval("x+3")``).
 
   * Some methods (namely `carray.where()` and `carray.wheretrue()`)
-    does not have support for multidimensional arrays.
+    do not have support for multidimensional arrays.
 
   * Multidimensional `ctable` objects are not supported.  However, as
     the columns of these objects can be fully multidimensional, this

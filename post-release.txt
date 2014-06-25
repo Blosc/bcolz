@@ -24,5 +24,3 @@ Post-release actions to be done after a new release
 
 - For a major release, update versions if necessary (see
   ``releasing.txt`` for the list of files to change).
-
-

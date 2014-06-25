@@ -7,7 +7,7 @@ First level variables
 
 .. py:attribute:: __version__
 
-    The version of the carray package.
+    The version of the bcolz package.
 
 .. py:attribute:: min_numexpr_version
 
@@ -298,13 +298,13 @@ Utility functions
 
 .. py:function:: set_nthreads(nthreads)
 
-    Sets the number of threads to be used during carray operation.
+    Sets the number of threads to be used during bcolz operation.
 
     This affects to both Blosc and Numexpr (if available).
 
     Parameters:
       nthreads : int
-        The number of threads to be used during carray operation.
+        The number of threads to be used during bcolz operation.
 
     Returns:
       out : int
@@ -671,7 +671,7 @@ ctable attributes
 
     Accessor for attributes in ctable objects.
 
-    See :py:attr:`carray.attrs` for a full description.
+    See :py:attr:`bcolz.attrs` for a full description.
 
   .. py:attribute:: cbytes
 

@@ -12,13 +12,13 @@ A carray can be created from any NumPy ndarray by using its `carray`
 constructor::
 
   >>> a = np.arange(10)
-  >>> b = ca.carray(a)                   # for in-memory storage
-  >>> c = ca.carray(a, rootdir='mydir')  # for on-disk storage
+  >>> b = bcolz.carray(a)                   # for in-memory storage
+  >>> c = bcolz.carray(a, rootdir='mydir')  # for on-disk storage
 
 Or, you can also create it by using one of its multiple constructors
 (see :ref:`top-level-constructors` for the complete list)::
 
-  >>> d = ca.arange(10, rootdir='mydir')
+  >>> d = bcolz.arange(10, rootdir='mydir')
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
@@ -55,7 +55,7 @@ However, when creating carrays larger than 1 MB (its natural
 scenario), the size of the I/O buffer is generally negligible in
 comparison::
 
-  >>> b = ca.arange(1e8)
+  >>> b = bcolz.arange(1e8)
   >>> b
   carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
     cparams := cparams(clevel=5, shuffle=True)
@@ -83,7 +83,7 @@ Finally, you can get a copy of your created carrays by using the
 
 and you can control parameters for the newly created copy::
 
-  >>> b.copy(cparams=ca.cparams(clevel=9))
+  >>> b.copy(cparams=bcolz.cparams(clevel=9))
   carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78
     cparams := cparams(clevel=9, shuffle=True)
   [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
@@ -113,7 +113,7 @@ it can be enlarged by 10 elements with::
 Let's check how fast appending can be::
 
   >>> a = np.arange(1e7)
-  >>> b = ca.arange(1e7)
+  >>> b = bcolz.arange(1e7)
   >>> %time b.append(a)
   CPU times: user 0.06 s, sys: 0.00 s, total: 0.06 s
   Wall time: 0.06 s
@@ -125,7 +125,7 @@ Let's check how fast appending can be::
 
 This is specially true when appending small bits to large arrays::
 
-  >>> b = ca.carray(a)
+  >>> b = bcolz.carray(a)
   >>> %timeit b.append(np.arange(1e1))
   100000 loops, best of 3: 3.17 µs per loop
   >>> %timeit np.concatenate((a, np.arange(1e1)))
@@ -133,7 +133,7 @@ This is specially true when appending small bits to large arrays::
 
 You can also enlarge your arrays by using the `resize()` method::
 
-  >>> b = ca.arange(10)
+  >>> b = bcolz.arange(10)
   >>> b.resize(20)
   >>> b
   carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
@@ -144,7 +144,7 @@ Note how the append values are filled with zeros.  This is because the
 default value for filling is 0.  But you can choose a different value
 too::
 
-  >>> b = ca.arange(10, dflt=1)
+  >>> b = bcolz.arange(10, dflt=1)
   >>> b.resize(20)
   >>> b
   carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
@@ -153,7 +153,7 @@ too::
 
 Also, you can trim carrays::
 
-  >>> b = ca.arange(10)
+  >>> b = bcolz.arange(10)
   >>> b.resize(5)
   >>> b
   carray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01
@@ -183,11 +183,11 @@ By default carrays are compressed using Blosc with compression level 5
 with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
-  >>> ca.carray(a, ca.cparams(clevel=1))
+  >>> bcolz.carray(a, bcolz.cparams(clevel=1))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
     cparams := cparams(clevel=1, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
-  >>> ca.carray(a, ca.cparams(clevel=9))
+  >>> bcolz.carray(a, bcolz.cparams(clevel=9))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60
     cparams := cparams(clevel=9, shuffle=True)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
@@ -195,7 +195,7 @@ compression levels too::
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
-  >>> ca.carray(a, ca.cparams(shuffle=False))
+  >>> bcolz.carray(a, bcolz.cparams(shuffle=False))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
     cparams := cparams(clevel=5, shuffle=False)
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
@@ -217,7 +217,7 @@ NumPy.
 Specifying an index or slice::
 
   >>> a = np.arange(10)
-  >>> b = ca.carray(a)
+  >>> b = bcolz.carray(a)
   >>> b[0]
   0
   >>> b[-1]
@@ -244,14 +244,14 @@ arrays gives::
   >>> barr = np.array([True]*5+[False]*5)
   >>> b[barr]
   array([0, 1, 2, 3, 4])
-  >>> b[ca.carray(barr)]
+  >>> b[bcolz.carray(barr)]
   array([0, 1, 2, 3, 4])
 
 Or, with a list of indices::
 
   >>> b[[2,3,0,2]]
   array([2, 3, 0, 2])
-  >>> b[ca.carray([2,3,0,2])]
+  >>> b[bcolz.carray([2,3,0,2])]
   array([2, 3, 0, 2])
 
 Querying carrays
@@ -261,7 +261,7 @@ carrays can be queried in different ways.  The most easy (yet
 powerful) way is by using its set of iterators::
 
   >>> a = np.arange(1e7)
-  >>> b = ca.carray(a)
+  >>> b = bcolz.carray(a)
   >>> %time sum(v for v in a if v < 10)
   CPU times: user 7.44 s, sys: 0.00 s, total: 7.45 s
   Wall time: 7.57 s
@@ -286,7 +286,7 @@ to do the lookup is much shorter too.
 Also, you can quickly retrieve the indices of a boolean carray that
 have a true value::
 
-  >>> barr = ca.eval("b<10")  # see 'Operating with carrays' section below
+  >>> barr = bcolz.eval("b<10")  # see 'Operating with carrays' section below
   >>> [i for i in barr.wheretrue()]
   [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
   >>> %timeit [i for i in barr.wheretrue()]
@@ -326,7 +326,7 @@ Although it is a somewhat slow operation, carrays can be modified too.
 You can do it by specifying scalar or slice indices::
 
   >>> a = np.arange(10)
-  >>> b = ca.arange(10)
+  >>> b = bcolz.arange(10)
   >>> b[1] = 10
   >>> print b
   [ 0 10  2  3  4  5  6  7  8  9]
@@ -350,7 +350,7 @@ Modification by using fancy indexing is supported too::
 However, you must be aware that modifying a carray is expensive::
 
   >>> a = np.arange(1e7)
-  >>> b = ca.carray(a)
+  >>> b = bcolz.carray(a)
   >>> %timeit a[2] = 3
   10000000 loops, best of 3: 101 ns per loop
   >>> %timeit b[2] = 3
@@ -371,7 +371,7 @@ Multidimensional carrays
 
 You can create multidimensional carrays too.  Look at this example::
 
-  >>> a = ca.zeros((2,3))
+  >>> a = bcolz.zeros((2,3))
   carray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True)
   [[ 0.  0.  0.]
@@ -392,7 +392,7 @@ indexes than its NumPy counterparts.
 Also, you can use the `reshape()` method to set your desired shape to
 an existing carray::
 
-  >>> b = ca.arange(12).reshape((3,4))
+  >>> b = bcolz.arange(12).reshape((3,4))
   >>> b
   carray((3,), ('int64',(4,)))  nbytes: 96; cbytes: 4.00 KB; ratio: 0.02
     cparams := cparams(clevel=5, shuffle=True)
@@ -424,14 +424,14 @@ Operating with carrays
 Right now, you cannot operate with carrays directly (although that
 might be implemented in the future)::
 
-  >>> x = ca.arange(1e7)
+  >>> x = bcolz.arange(1e7)
   >>> x + x
   TypeError: unsupported operand type(s) for +:
   'carray.carrayExtension.carray' and 'carray.carrayExtension.carray'
 
 Rather, you should use the `eval` function::
 
-  >>> y = ca.eval("x + x")
+  >>> y = bcolz.eval("x + x")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.64 MB; ratio: 28.88
     cparams := cparams(clevel=5, shuffle=True)
@@ -439,7 +439,7 @@ Rather, you should use the `eval` function::
 
 You can also compute arbitrarily complex expressions in one shot::
 
-  >>> y = ca.eval(".5*x**3 + 2.1*x**2")
+  >>> y = bcolz.eval(".5*x**3 + 2.1*x**2")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01
     cparams := cparams(clevel=5, shuffle=True)
@@ -449,7 +449,7 @@ Note how the output of `eval()` is also a carray object.  You can pass
 other parameters of the carray constructor too.  Let's force maximum
 compression for the output::
 
-  >>> y = ca.eval(".5*x**3 + 2.1*x**2", cparams=ca.cparams(9))
+  >>> y = bcolz.eval(".5*x**3 + 2.1*x**2", cparams=bcolz.cparams(9))
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14
     cparams := cparams(clevel=9, shuffle=True)
@@ -460,18 +460,18 @@ and if not, it will default to use the Python one (via NumPy).  You
 can use the `vm` parameter to select the desired virtual machine
 ("numexpr" or "python")::
 
-  >>> %timeit ca.eval(".5*x**3 + 2.1*x**2", vm="numexpr")
+  >>> %timeit bcolz.eval(".5*x**3 + 2.1*x**2", vm="numexpr")
   10 loops, best of 3: 303 ms per loop
-  >>> %timeit ca.eval(".5*x**3 + 2.1*x**2", vm="python")
+  >>> %timeit bcolz.eval(".5*x**3 + 2.1*x**2", vm="python")
   10 loops, best of 3: 1.9 s per loop
 
 As can be seen, using the "numexpr" virtual machine is generally
 (much) faster, but there are situations that the "python" one is
 desirable because it offers much more functionality::
 
-  >>> ca.eval("diff(x)", vm="numexpr")
+  >>> bcolz.eval("diff(x)", vm="numexpr")
   NameError: variable name ``diff`` not found
-  >>> ca.eval("np.diff(x)", vm="python")
+  >>> bcolz.eval("np.diff(x)", vm="python")
   carray((9999389,), float64)  nbytes: 76.29 MB; cbytes: 814.25 KB; ratio: 95.94
     cparams := cparams(clevel=5, shuffle=True)
   [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]
@@ -479,7 +479,7 @@ desirable because it offers much more functionality::
 Finally, `eval` lets you select the type of the outcome to be a NumPy
 array by using the `out_flavor` argument::
 
-  >>> ca.eval("x**3", out_flavor="numpy")
+  >>> bcolz.eval("x**3", out_flavor="numpy")
   array([  0.00000000e+00,   1.00000000e+00,   8.00000000e+00, ...,
            9.99999100e+20,   9.99999400e+20,   9.99999700e+20])
 
@@ -493,7 +493,7 @@ carray implements several attributes, like `dtype`, `shape` and `ndim`
 that makes it to 'quack' like a NumPy array::
 
   >>> a = np.arange(1e7)
-  >>> b = ca.carray(a)
+  >>> b = bcolz.carray(a)
   >>> b.dtype
   dtype('float64')
   >>> b.shape
@@ -547,7 +547,7 @@ there is another set of attributes that can be added (and removed) by
 the user in another name space.  This space is accessible via the
 special `attrs` attribute::
 
-  >>> a = ca.carray([1,2], rootdir='mydata')
+  >>> a = bcolz.carray([1,2], rootdir='mydata')
   >>> a.attrs
   *no attrs*
 
@@ -582,7 +582,7 @@ As the 'a' carray is persistent, it can re-opened in other Python session::
   [GCC 4.6.3] on linux2
   Type "help", "copyright", "credits" or "license" for more information.
   >>> import carray as ca
-  >>> a = ca.open(rootdir="mydata")
+  >>> a = bcolz.open(rootdir="mydata")
   >>> a                            # yeah, our data is back
   carray((2,), int64)
     nbytes: 16; cbytes: 4.00 KB; ratio: 0.00
@@ -621,7 +621,7 @@ You can build ctable objects in many different ways, but perhaps the
 easiest one is using the `fromiter` constructor::
 
   >>> N = 100*1000
-  >>> ct = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
+  >>> ct = bcolz.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14
     cparams := cparams(clevel=5, shuffle=True)
@@ -630,7 +630,7 @@ easiest one is using the `fromiter` constructor::
 
 You can also build an empty ctable first and the append data::
 
-  >>> ct = ca.ctable(np.empty(0, dtype="i4,f8"))
+  >>> ct = bcolz.ctable(np.empty(0, dtype="i4,f8"))
   >>> for i in xrange(N):
   ...:    ct.append((i, i**2))
   ...:
@@ -647,7 +647,7 @@ figure out the number of entries in final array, but not for the loop
 case.  You can solve this by passing the final length with the
 `expectedlen` argument to the ctable constructor::
 
-  >>> ct = ca.ctable(np.empty(0, dtype="i4,f8"), expectedlen=N)
+  >>> ct = bcolz.ctable(np.empty(0, dtype="i4,f8"), expectedlen=N)
   >>> for i in xrange(N):
   ...:    ct.append((i, i**2))
   ...:
@@ -725,7 +725,7 @@ arrangement, very efficient.  Let's add a new column on an existing
 ctable::
 
   >>> N = 100*1000
-  >>> ct = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
+  >>> ct = bcolz.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> new_col = np.linspace(0, 1, 100*1000)
   >>> ct.addcol(new_col)
   >>> ct
@@ -756,7 +756,7 @@ over the values of a ctable.  `iter()` has support for start, stop and
 step parameters::
 
   >>> N = 100*1000
-  >>> t = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
+  >>> t = bcolz.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> [row for row in ct.iter(1,10,3)]
   [row(f0=1, f1=1.0), row(f0=4, f1=16.0), row(f0=7, f1=49.0)]
 
@@ -797,7 +797,7 @@ of storage space.
 Here it is an example of use::
 
   >>> N = 100*1000
-  >>> t = ca.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
+  >>> t = bcolz.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> [row for row in ct.where("(f0>0) & (f1<10)")]
   [row(f0=1, f1=1.0), row(f0=2, f1=4.0), row(f0=3, f1=9.0)]
   >>> sum([row.f1 for row in ct.where("(f1>10)")])

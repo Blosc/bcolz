@@ -8,10 +8,9 @@
 
 import sys, os, glob
 import textwrap
-import subprocess
 
 from paver.easy import *
-from paver.setuputils import setup, install_distutils_tasks
+from paver.setuputils import setup
 from distutils.core import Extension
 from distutils.dep_util import newer
 
@@ -56,7 +55,7 @@ if not (sys.version_info[0] >= 2 and sys.version_info[1] >= 6):
     exit_with_error("You need Python 2.6 or greater to install bcolz!")
 
 # The minimum version of Cython required for generating extensions
-min_cython_version = '0.16'
+min_cython_version = '0.20'
 # The minimum version of NumPy required
 min_numpy_version = '1.5'
 # The minimum version of Numexpr (optional)
@@ -66,34 +65,17 @@ min_numexpr_version = '1.4.1'
 cython = False
 try:
     from Cython.Compiler.Main import Version
-    if Version.version < min_cython_version:
-        cython = False
-    else:
+    if Version.version >= min_cython_version:
         cython = True
 except:
     pass
 
+
 # Check for NumPy
 check_import('numpy', min_numpy_version)
-
 # Check for Numexpr
-numexpr_here = False
-try:
-    import numexpr
-except ImportError:
-    print_warning(
-        "Numexpr is not installed.  For faster bcolz operation, "
-        "please consider installing it.")
-else:
-    if numexpr.__version__ >= min_numexpr_version:
-        numexpr_here = True
-        print ( "* Found %(pkgname)s %(pkgver)s package installed."
-                % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__} )
-    else:
-        print_warning(
-            "Numexpr %s installed, but version is not >= %s.  "
-            "Disabling support for it." % (
-            numexpr.__version__, min_numexpr_version))
+check_import('numexpr', min_numexpr_version)
+
 
 ########### End of version checks ##########
 
