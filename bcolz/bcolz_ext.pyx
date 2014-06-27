@@ -42,7 +42,7 @@ STORAGE_FILE = 'storage'
 
 # For the persistence layer
 EXTENSION = '.blp'
-MAGIC = 'blpk'
+MAGIC = b'blpk'
 BLOSCPACK_HEADER_LENGTH = 16
 BLOSC_HEADER_LENGTH = 16
 FORMAT_VERSION = 1
@@ -481,11 +481,16 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
         raise ValueError(
             "'nchunks' must be in the range 0 <= n <= %d, not '%s'" %
             (MAX_CHUNKS, str(nchunks)))
-    return (MAGIC + struct.pack('<B', format_version) + '\x00\x00\x00' +
+    return (MAGIC + struct.pack('<B', format_version) + b'\x00\x00\x00' +
             struct.pack('<q', nchunks if nchunks is not None else -1))
 
-def decode_byte(byte):
-    return int(byte.encode('hex'), 16)
+if sys.version_info >= (3, 0):
+    def decode_byte(byte):
+      return byte
+else:
+    def decode_byte(byte):
+      return int(byte.encode('hex'), 16)
+
 def decode_uint32(fourbyte):
     return struct.unpack('<I', fourbyte)[0]
 
