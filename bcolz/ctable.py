@@ -11,12 +11,15 @@ import sys, math
 import numpy as np
 import bcolz
 from bcolz import utils, attrs, array2string
-import itertools as it
+import itertools
 from collections import namedtuple
 import json
 import os, os.path
 import shutil
+from .py2help import _inttypes, _strtypes, imap, xrange
 
+_inttypes += (np.integer,)
+islice = itertools.islice
 
 ROOTDIRS = '__rootdirs__'
 
@@ -34,7 +37,7 @@ class cols(object):
         # Get the directories of the columns
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
         with open(rootsfile, 'rb') as rfile:
-            data = json.loads(rfile.read())
+            data = json.loads(rfile.read().decode('ascii'))
         # JSON returns unicode (?)
         self.names = [str(name) for name in data['names']]
         # Initialize the cols by instantiating the carrays
@@ -49,8 +52,8 @@ class cols(object):
         data = {'names': self.names, 'dirs': dirs}
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
         with open(rootsfile, 'wb') as rfile:
-            rfile.write(json.dumps(data))
-            rfile.write("\n")
+            rfile.write(json.dumps(data).encode('ascii'))
+            rfile.write(b"\n")
 
     def __getitem__(self, name):
         return self._cols[name]
@@ -694,7 +697,7 @@ class ctable(object):
                 istop = None
                 if limit is not None:
                     istop = limit + skip
-                icols.append(it.islice(xrange(start, stop, step), skip, istop))
+                icols.append(islice(xrange(start, stop, step), skip, istop))
                 dtypes.append((name, np.int_))
             else:
                 col = self.cols[name]
@@ -709,7 +712,7 @@ class ctable(object):
 
         icols = tuple(icols)
         namedt = namedtuple('row', dtype.names)
-        iterable = it.imap(namedt, *icols)
+        iterable = imap(namedt, *icols)
         return iterable
 
     def _where(self, boolarr, colnames=None):
@@ -751,7 +754,7 @@ class ctable(object):
         """
 
         # First, check for integer
-        if isinstance(key, (int, long)):
+        if isinstance(key, _inttypes):
             # Get a copy of the len-1 array
             ra = self._arr1.copy()
             # Fill it

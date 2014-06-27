@@ -11,9 +11,19 @@ import sys
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
-import unittest
+if sys.version < "2.7":
+    import unittest2 as unittest
+    from unittest2 import TestCase, skipUnless
+else:
+    import unittest
+    from unittest import TestCase, skipUnless
+
+
 from bcolz.tests import common
 from common import MayBeDiskTest
+
+if sys.version_info >= (3, 0):
+    xrange = range
 
 
 class createTest(MayBeDiskTest):
@@ -938,6 +948,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    @skipUnless(sys.version < "3", "not working in Python 3")
     def test04a(self):
         """Testing fancy indexing (setitem) with a condition (all false)"""
         N = 1000
@@ -951,6 +962,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    @skipUnless(sys.version < "3", "not working in Python 3")
     def test04b(self):
         """Testing fancy indexing (setitem) with a condition (all true)"""
         N = 1000
@@ -964,6 +976,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    @skipUnless(sys.version < "3", "not working in Python 3")
     def test04c(self):
         """Testing fancy indexing (setitem) with a condition (mixed values)"""
         N = 1000
@@ -977,6 +990,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         #print "ra[%s] -> %r" % (sl2, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    @skipUnless(sys.version < "3", "not working in Python 3")
     def test04d(self):
         """Testing fancy indexing (setitem) with a condition (diff values)"""
         N = 100
