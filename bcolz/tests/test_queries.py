@@ -13,15 +13,14 @@ import sys
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
-from bcolz.tests import common
-import unittest
-from unittest import TestCase
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 
 if sys.version_info >= (3, 0):
     xrange = range
 
 
-class with_listTest:
+class with_listTest():
 
     def test00a(self):
         """Testing wheretrue() in combination with a list constructor"""

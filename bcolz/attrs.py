@@ -9,6 +9,7 @@
 
 import os, os.path
 import json
+from .py2help import xrange, dict_iteritems
 
 
 ATTRSDIR = "__attrs__"
@@ -79,8 +80,9 @@ class attrs(object):
         if not self.rootdir:
             return
         with open(self.attrsfile, 'wb') as rfile:
-            rfile.write(json.dumps(self.attrs))
-            rfile.write("\n")
+            rfile.write(json.dumps(
+                self.attrs, ensure_ascii=True).encode('ascii'))
+            rfile.write(b"\n")
 
     def getall(self):
         return self.attrs.copy()
@@ -104,7 +106,7 @@ class attrs(object):
         self._update_meta()
     
     def __iter__(self):
-        return self.attrs.iteritems()
+        return dict_iteritems(self.attrs)
 
     def __len__(self):
         return len(self.attrs)

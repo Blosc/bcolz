@@ -12,11 +12,9 @@ import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 import bcolz
-from bcolz.bcolz_ext import chunk
-from bcolz.tests import common
-from common import MayBeDiskTest
-import unittest
 
 
 class constructorTest(MayBeDiskTest):
@@ -119,11 +117,19 @@ class constructorTest(MayBeDiskTest):
         # assert_array_equal() function
         assert_array_equal(a, b[:], "Arrays are not equal")
 
-class constructorDiskTest(constructorTest):
+class constructorMemoryTest(constructorTest, TestCase):
+    disk = False
+    open = False
+
+class constructorDiskTest(constructorTest, TestCase):
     disk = True
     open = False
 
-class constructorOpenTest(constructorTest):
+class constructorDiskTest(constructorTest, TestCase):
+    disk = True
+    open = False
+
+class constructorOpenTest(constructorTest, TestCase):
     disk = True
     open = True
 
@@ -240,11 +246,15 @@ class getitemTest(MayBeDiskTest):
         self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
-class getitemDiskTest(getitemTest):
+class getitemMemoryTest(getitemTest, TestCase):
+    disk = False
+    open = False
+
+class getitemDiskTest(getitemTest, TestCase):
     disk = True
     open = False
 
-class getitemOpenTest(getitemTest):
+class getitemOpenTest(getitemTest, TestCase):
     disk = True
     open = True
 
@@ -431,10 +441,13 @@ class setitemTest(MayBeDiskTest):
         #print "after->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
-class setitemDiskTest(setitemTest):
+class setitemMemoryTest(setitemTest, TestCase):
+    disk = False
+
+class setitemDiskTest(setitemTest, TestCase):
     disk = True
 
-class setitemOpenTest(setitemTest):
+class setitemOpenTest(setitemTest, TestCase):
     disk = True
     open = True
 
@@ -471,7 +484,10 @@ class appendTest(MayBeDiskTest):
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
-class appendDiskTest(appendTest):
+class appendMemoryTest(appendTest, TestCase):
+    disk = False
+
+class appendDiskTest(appendTest, TestCase):
     disk = True
 
 
@@ -504,11 +520,14 @@ class resizeTest(MayBeDiskTest):
         #print "b->", `b`
         assert_array_equal(a, b, "Arrays are not equal")
 
-class resizeDiskTest(resizeTest):
+class resizeMemoryTest(resizeTest, TestCase):
+    disk = False
+
+class resizeDiskTest(resizeTest, TestCase):
     disk = True
 
 
-class iterTest(unittest.TestCase):
+class iterTest(TestCase):
 
     def test00(self):
         """Testing `iter()` (no start, stop, step)"""
@@ -535,7 +554,7 @@ class iterTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
-class reshapeTest(unittest.TestCase):
+class reshapeTest(TestCase):
 
     def test00a(self):
         """Testing `reshape()` (unidim -> ndim)"""
@@ -593,7 +612,7 @@ class reshapeTest(unittest.TestCase):
         self.assertTrue(a.shape == b.shape+b.dtype.shape)
 
 
-class compoundTest(unittest.TestCase):
+class compoundTest():
 
     def test00(self):
         """Testing compound types (creation)"""
@@ -624,14 +643,14 @@ class compoundTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
-class plainCompoundTest(compoundTest):
+class plainCompoundTest(compoundTest, TestCase):
     dtype = np.dtype("i4,i8")
 
-class nestedCompoundTest(compoundTest):
+class nestedCompoundTest(compoundTest, TestCase):
     dtype = np.dtype([('f1', [('f1', 'i2'), ('f2', 'i4')])])
 
 
-class stringTest(unittest.TestCase):
+class stringTest(TestCase):
 
     def test00(self):
         """Testing string types (creation)"""
@@ -662,7 +681,7 @@ class stringTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
-class unicodeTest(unittest.TestCase):
+class unicodeTest(TestCase):
 
     def test00(self):
         """Testing unicode types (creation)"""
@@ -693,7 +712,7 @@ class unicodeTest(unittest.TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
-class evalTest(unittest.TestCase):
+class evalTest():
 
     vm = "python"
 
@@ -750,33 +769,33 @@ class evalTest(unittest.TestCase):
             assert_array_equal(a.sum(axis=1), bcolz.eval("sum(b, axis=1)"),
                                "Arrays are not equal")
 
-class d2eval_python(evalTest):
+class d2eval_python(evalTest, TestCase):
     shape = (3,4)
 
-class d2eval_ne(evalTest):
+class d2eval_ne(evalTest, TestCase):
     shape = (3,4)
     vm = "numexpr"
 
-class d3eval_python(evalTest):
+class d3eval_python(evalTest, TestCase):
     shape = (3,4,5)
 
-class d3eval_ne(evalTest):
+class d3eval_ne(evalTest, TestCase):
     shape = (3,4,5)
     vm = "numexpr"
 
-class d4eval_python(evalTest):
+class d4eval_python(evalTest, TestCase):
     shape = (3,40,50,2)
 
-class d4eval_ne(evalTest):
+class d4eval_ne(evalTest, TestCase):
     shape = (3,40,50,2)
     vm = "numexpr"
 
 
-class computeMethodsTest(unittest.TestCase):
+class computeMethodsTest(TestCase):
 
     def test00(self):
         """Testing sum()."""
-        a = np.arange(1e5).reshape(10, 1e4)
+        a = np.arange(int(1e5)).reshape(10, int(1e4))
         sa = a.sum()
         ac = bcolz.carray(a)
         sac = ac.sum()
@@ -787,43 +806,8 @@ class computeMethodsTest(unittest.TestCase):
 
 
 
-def suite():
-    theSuite = unittest.TestSuite()
-
-    theSuite.addTest(unittest.makeSuite(constructorTest))
-    theSuite.addTest(unittest.makeSuite(constructorDiskTest))
-    theSuite.addTest(unittest.makeSuite(constructorOpenTest))
-    theSuite.addTest(unittest.makeSuite(getitemTest))
-    theSuite.addTest(unittest.makeSuite(getitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(getitemOpenTest))
-    theSuite.addTest(unittest.makeSuite(setitemTest))
-    theSuite.addTest(unittest.makeSuite(setitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(setitemOpenTest))
-    theSuite.addTest(unittest.makeSuite(appendTest))
-    theSuite.addTest(unittest.makeSuite(appendDiskTest))
-    theSuite.addTest(unittest.makeSuite(resizeTest))
-    theSuite.addTest(unittest.makeSuite(resizeDiskTest))
-    theSuite.addTest(unittest.makeSuite(iterTest))
-    theSuite.addTest(unittest.makeSuite(reshapeTest))
-    theSuite.addTest(unittest.makeSuite(plainCompoundTest))
-    theSuite.addTest(unittest.makeSuite(nestedCompoundTest))
-    theSuite.addTest(unittest.makeSuite(stringTest))
-    theSuite.addTest(unittest.makeSuite(unicodeTest))
-    theSuite.addTest(unittest.makeSuite(d2eval_python))
-    theSuite.addTest(unittest.makeSuite(d3eval_python))
-    theSuite.addTest(unittest.makeSuite(d4eval_python))
-    theSuite.addTest(unittest.makeSuite(computeMethodsTest))
-    if bcolz.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(d2eval_ne))
-        theSuite.addTest(unittest.makeSuite(d3eval_ne))
-        theSuite.addTest(unittest.makeSuite(d4eval_ne))
-
-
-    return theSuite
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
 
 ## Local Variables:

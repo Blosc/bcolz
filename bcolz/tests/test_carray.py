@@ -8,16 +8,14 @@
 ########################################################################
 
 import sys
-import os, os.path
 import struct
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 import bcolz
-from bcolz.tests import common
-from common import MayBeDiskTest
 from bcolz.bcolz_ext import chunk
-import unittest
 
 
 is_64bit = (struct.calcsize("P") == 8)
@@ -27,7 +25,7 @@ if sys.version > '3':
     long = int
 
 
-class chunkTest(unittest.TestCase):
+class chunkTest(TestCase):
 
     def test01(self):
         """Testing `__getitem()__` method with scalars"""
@@ -203,7 +201,10 @@ class getitemTest(MayBeDiskTest):
         #print "b[sl]->", `b[sl]`
         self.assertRaises(NotImplementedError, b.__getitem__, sl)
 
-class getitemDiskTest(getitemTest):
+class getitemMemoryTest(getitemTest, TestCase):
+    disk = False
+
+class getitemDiskTest(getitemTest, TestCase):
     disk = True
 
 
@@ -362,7 +363,10 @@ class appendTest(MayBeDiskTest):
         d = np.concatenate((a, c))
         assert_array_equal(d, b[:], "Arrays are not equal")
 
-class appendDiskTest(appendTest):
+class appendMemoryTest(appendTest, TestCase):
+    disk = False
+
+class appendDiskTest(appendTest, TestCase):
     disk = True
 
 
@@ -424,7 +428,10 @@ class trimTest(MayBeDiskTest):
         #print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
-class trimDiskTest(trimTest):
+class trimMemoryTest(trimTest, TestCase):
+    disk = False
+
+class trimDiskTest(trimTest, TestCase):
     disk = True
 
 
@@ -473,17 +480,17 @@ class resizeTest(MayBeDiskTest):
         assert_array_equal(a, b[:], "Arrays are not equal")
 
 
-class resize_smallTest(resizeTest):
+class resize_smallTest(resizeTest, TestCase):
     N = 10
 
-class resize_smallDiskTest(resizeTest):
+class resize_smallDiskTest(resizeTest, TestCase):
     N = 10
     disk = True
 
-class resize_largeTest(resizeTest):
+class resize_largeTest(resizeTest, TestCase):
     N = 10000
 
-class resize_largeDiskTest(resizeTest):
+class resize_largeDiskTest(resizeTest, TestCase):
     N = 10000
     disk = True
 
@@ -513,7 +520,10 @@ class miscTest(MayBeDiskTest):
         self.assertTrue(sys.getsizeof(b) > b.nbytes,
                      "carray compress too much??")
 
-class miscDiskTest(miscTest):
+class miscMemoryTest(miscTest, TestCase):
+    disk = False
+
+class miscDiskTest(miscTest, TestCase):
     disk = True
 
 
@@ -554,7 +564,10 @@ class copyTest(MayBeDiskTest):
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
 
-class copyDiskTest(copyTest):
+class copyMemoryTest(copyTest, TestCase):
+    disk = False
+
+class copyDiskTest(copyTest, TestCase):
     disk = True
 
 
@@ -664,11 +677,14 @@ class iterTest(MayBeDiskTest):
         #print "c ->", repr(c)
         assert_array_equal(a[1010:2020], c, "iterator fails on zeros")
 
-class iterDiskTest(iterTest):
+class iterMemoryTest(iterTest, TestCase):
+    disk = False
+
+class iterDiskTest(iterTest, TestCase):
     disk = True
 
 
-class wheretrueTest(unittest.TestCase):
+class wheretrueTest(TestCase):
 
     def test00(self):
         """Testing `wheretrue()` iterator (all true values)"""
@@ -751,7 +767,7 @@ class wheretrueTest(unittest.TestCase):
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
 
-class whereTest(unittest.TestCase):
+class whereTest(TestCase):
 
     def test00(self):
         """Testing `where()` iterator (all true values)"""
@@ -857,7 +873,7 @@ class whereTest(unittest.TestCase):
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
 
-class fancy_indexing_getitemTest(unittest.TestCase):
+class fancy_indexing_getitemTest(TestCase):
 
     def test00(self):
         """Testing fancy indexing (short list)"""
@@ -920,7 +936,7 @@ class fancy_indexing_getitemTest(unittest.TestCase):
         assert_array_equal(wt, cwt, "where() does not work correctly")
 
 
-class fancy_indexing_setitemTest(unittest.TestCase):
+class fancy_indexing_setitemTest(TestCase):
 
     def test00(self):
         """Testing fancy indexing with __setitem__ (small values)"""
@@ -985,7 +1001,7 @@ class fancy_indexing_setitemTest(unittest.TestCase):
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
 
-class fromiterTest(unittest.TestCase):
+class fromiterTest(TestCase):
 
     def test00(self):
         """Testing fromiter (short iter)"""
@@ -1228,7 +1244,7 @@ class evalDiskBigNE(evalTest):
     disk = True
 
 
-class computeMethodsTest(unittest.TestCase):
+class computeMethodsTest(TestCase):
 
     def test00(self):
         """Testing sum()."""
@@ -1258,7 +1274,7 @@ class computeMethodsTest(unittest.TestCase):
         self.assertRaises(TypeError, ac.sum)
 
 
-class arangeTest(unittest.TestCase):
+class arangeTest():
 
     def test00(self):
         """Testing arange() with only a `stop`."""
@@ -1284,10 +1300,10 @@ class arangeTest(unittest.TestCase):
         ac = bcolz.arange(self.N, dtype="i1")
         self.assertTrue(np.all(a == ac))
 
-class arange_smallTest(arangeTest):
+class arange_smallTest(arangeTest, TestCase):
     N = 10
 
-class arange_bigTest(arangeTest):
+class arange_bigTest(arangeTest, TestCase):
     N = 1e4
 
 
@@ -1385,7 +1401,7 @@ class constructorBigDiskTest(constructorTest):
     disk = True
 
 
-class dtypesTest(unittest.TestCase):
+class dtypesTest(TestCase):
 
     def test00(self):
         """Testing carray constructor with a float32 `dtype`."""
@@ -1450,6 +1466,7 @@ class dtypesTest(unittest.TestCase):
         self.assertRaises(TypeError, bcolz.carray, a)
 
 
+@skipUnless(is_64bit and heavy, "not 64bit or not --heavy")
 class largeCarrayTest(MayBeDiskTest):
 
     disk = True
@@ -1513,7 +1530,7 @@ class largeCarrayTest(MayBeDiskTest):
         self.assertTrue(cn.sum() == 10)
 
 
-class persistenceTest(MayBeDiskTest):
+class persistenceTest(MayBeDiskTest, TestCase):
 
     disk = True
 
@@ -1599,61 +1616,9 @@ class persistenceTest(MayBeDiskTest):
         self.assertTrue(cn[N+1] == 3)
 
 
-def suite():
-    theSuite = unittest.TestSuite()
 
-    theSuite.addTest(unittest.makeSuite(chunkTest))
-    theSuite.addTest(unittest.makeSuite(getitemTest))
-    theSuite.addTest(unittest.makeSuite(getitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(setitemTest))
-    theSuite.addTest(unittest.makeSuite(setitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(appendTest))
-    theSuite.addTest(unittest.makeSuite(appendDiskTest))
-    theSuite.addTest(unittest.makeSuite(trimTest))
-    theSuite.addTest(unittest.makeSuite(trimDiskTest))
-    theSuite.addTest(unittest.makeSuite(resize_smallTest))
-    theSuite.addTest(unittest.makeSuite(resize_smallDiskTest))
-    theSuite.addTest(unittest.makeSuite(resize_largeTest))
-    theSuite.addTest(unittest.makeSuite(resize_largeDiskTest))
-    theSuite.addTest(unittest.makeSuite(miscTest))
-    theSuite.addTest(unittest.makeSuite(miscDiskTest))
-    theSuite.addTest(unittest.makeSuite(copyTest))
-    theSuite.addTest(unittest.makeSuite(copyDiskTest))
-    theSuite.addTest(unittest.makeSuite(iterTest))
-    theSuite.addTest(unittest.makeSuite(iterDiskTest))
-    theSuite.addTest(unittest.makeSuite(wheretrueTest))
-    theSuite.addTest(unittest.makeSuite(whereTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
-    theSuite.addTest(unittest.makeSuite(fromiterTest))
-    theSuite.addTest(unittest.makeSuite(arange_smallTest))
-    theSuite.addTest(unittest.makeSuite(arange_bigTest))
-    theSuite.addTest(unittest.makeSuite(constructorSmallTest))
-    theSuite.addTest(unittest.makeSuite(constructorSmallDiskTest))
-    theSuite.addTest(unittest.makeSuite(constructorBigTest))
-    theSuite.addTest(unittest.makeSuite(constructorBigDiskTest))
-    theSuite.addTest(unittest.makeSuite(dtypesTest))
-    theSuite.addTest(unittest.makeSuite(computeMethodsTest))
-    theSuite.addTest(unittest.makeSuite(evalSmall))
-    theSuite.addTest(unittest.makeSuite(evalDiskSmall))
-    theSuite.addTest(unittest.makeSuite(evalBig))
-    theSuite.addTest(unittest.makeSuite(evalDiskBig))
-    theSuite.addTest(unittest.makeSuite(persistenceTest))
-    if bcolz.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(evalSmallNE))
-        theSuite.addTest(unittest.makeSuite(evalDiskSmallNE))
-        theSuite.addTest(unittest.makeSuite(evalBigNE))
-        theSuite.addTest(unittest.makeSuite(evalBigNE))
-
-    # Only for 64-bit systems
-    if is_64bit and common.heavy:
-        theSuite.addTest(unittest.makeSuite(largeCarrayTest))
-
-    return theSuite
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
 
 ## Local Variables:

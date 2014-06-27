@@ -7,11 +7,18 @@
 ########################################################################
 
 
-import unittest
 import tempfile
-import os, os.path
+import os
+import os.path
+import sys
 import glob
 import shutil
+if sys.version < "2.7":
+    import unittest2 as unittest
+    from unittest2 import TestCase, skipUnless
+else:
+    import unittest
+    from unittest import TestCase, skipUnless
 
 
 # Global variables for the tests
@@ -20,7 +27,7 @@ heavy = False
 
 
 # Useful superclass for disk-based tests
-class MayBeDiskTest(unittest.TestCase):
+class MayBeDiskTest():
 
     disk = False
 

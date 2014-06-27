@@ -14,9 +14,8 @@ import struct
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
-from bcolz.tests import common
-from common import MayBeDiskTest
-import unittest
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 
 
 class basicTest(MayBeDiskTest):
@@ -129,37 +128,26 @@ class basicTest(MayBeDiskTest):
             count += 1
         self.assertTrue(count, 3)
 
-class carrayTest(basicTest):
+class carrayTest(basicTest, TestCase):
     flavor = "carray"
     disk = False
 
-class carrayDiskTest(basicTest):
+class carrayDiskTest(basicTest, TestCase):
     flavor = "carray"
     disk = True
 
-class ctableTest(basicTest):
+class ctableTest(basicTest, TestCase):
     flavor = "ctable"
     disk = False
 
-class ctableDiskTest(basicTest):
+class ctableDiskTest(basicTest, TestCase):
     flavor = "ctable"
     disk = True
 
 
 
-def suite():
-    theSuite = unittest.TestSuite()
-
-    theSuite.addTest(unittest.makeSuite(carrayTest))
-    theSuite.addTest(unittest.makeSuite(carrayDiskTest))
-    theSuite.addTest(unittest.makeSuite(ctableTest))
-    theSuite.addTest(unittest.makeSuite(ctableDiskTest))
-
-    return theSuite
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
 
 ## Local Variables:

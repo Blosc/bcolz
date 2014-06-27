@@ -34,7 +34,7 @@ def suite():
 def print_versions():
     """Print all the versions of software that bcolz relies on."""
     print("-=" * 38)
-    print("bcolz version:       %s" % bcolz.__version__)
+    print("bcolz version:     %s" % bcolz.__version__)
     print("NumPy version:     %s" % numpy.__version__)
     tinfo = bcolz.blosc_version()
     #blosc_cnames = bcolz.blosc_compressor_list()

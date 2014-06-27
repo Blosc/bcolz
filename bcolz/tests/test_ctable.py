@@ -10,17 +10,11 @@ import sys
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 import bcolz
-if sys.version < "2.7":
-    import unittest2 as unittest
-    from unittest2 import TestCase, skipUnless
-else:
-    import unittest
-    from unittest import TestCase, skipUnless
 
 
-from bcolz.tests import common
-from common import MayBeDiskTest
 
 if sys.version_info >= (3, 0):
     xrange = range
@@ -95,11 +89,14 @@ class createTest(MayBeDiskTest):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-class createDiskTest(createTest):
+class createMemoryTest(createTest, TestCase):
+    disk = False
+
+class createDiskTest(createTest, TestCase):
     disk = True
 
 
-class persistentTest(MayBeDiskTest):
+class persistentTest(MayBeDiskTest, TestCase):
 
     disk = True
 
@@ -341,7 +338,10 @@ class add_del_colTest(MayBeDiskTest):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-class add_del_colDiskTest(add_del_colTest):
+class add_del_colMemoryTest(add_del_colTest, TestCase):
+    disk = False
+
+class add_del_colDiskTest(add_del_colTest, TestCase):
     disk = True
 
 
@@ -405,7 +405,10 @@ class getitemTest(MayBeDiskTest):
         assert_array_equal(t[colnames][:], ra2,
                            "ctable values are not correct")
 
-class getitemDiskTest(getitemTest):
+class getitemMemoryTest(getitemTest, TestCase):
+    disk = False
+
+class getitemDiskTest(getitemTest, TestCase):
     disk = True
 
 
@@ -471,7 +474,10 @@ class setitemTest(MayBeDiskTest):
         #print "ra[%s] -> %r" % (sl, ra)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-class setitemDiskTest(setitemTest):
+class setitemMemoryTest(setitemTest, TestCase):
+    disk = False
+
+class setitemDiskTest(setitemTest, TestCase):
     disk = True
 
 
@@ -529,7 +535,10 @@ class appendTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-class appendDiskTest(appendTest):
+class appendMemoryTest(appendTest, TestCase):
+    disk = False
+
+class appendDiskTest(appendTest, TestCase):
     disk = True
 
 
@@ -588,9 +597,11 @@ class resizeTest(MayBeDiskTest):
         ra['f1'][N:] = np.zeros(4)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-class resizeDiskTest(resizeTest):
-    disk=True
+class resizeMemoryTest(resizeTest, TestCase):
+    disk=False
 
+class resizeDiskTest(resizeTest, TestCase):
+    disk=True
 
 class copyTest(MayBeDiskTest):
 
@@ -652,7 +663,10 @@ class copyTest(MayBeDiskTest):
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assertTrue(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 
-class copyDiskTest(copyTest):
+class copyMemoryTest(copyTest, TestCase):
+    disk = False
+
+class copyDiskTest(copyTest, TestCase):
     disk = True
 
 
@@ -796,13 +810,16 @@ class evalTest(MayBeDiskTest):
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
-class evalDiskTest(evalTest):
+class evalMemoryTest(evalTest, TestCase):
+    disk = False
+
+class evalDiskTest(evalTest, TestCase):
     disk = True
 
-class eval_ne(evalTest):
+class eval_ne(evalTest, TestCase):
     vm = "numexpr"
 
-class eval_neDisk(evalTest):
+class eval_neDisk(evalTest, TestCase):
     vm = "numexpr"
     disk = True
 
@@ -862,7 +879,7 @@ class fancy_indexing_getitemTest(unittest.TestCase):
         self.assertRaises(IndexError, b.__getitem__, idx)
 
 
-class fancy_indexing_setitemTest(unittest.TestCase):
+class fancy_indexing_setitemTest(TestCase):
 
     def test00a(self):
         """Testing fancy indexing (setitem) with a small list"""
@@ -1096,7 +1113,10 @@ class iterTest(MayBeDiskTest):
         #print "nl ->", nl
         self.assertTrue(cl == nl, "iter not working correctily")
 
-class iterDiskTest(iterTest):
+class iterMemoryTest(iterTest, TestCase):
+    disk = False
+
+class iterDiskTest(iterTest, TestCase):
     disk = True
 
 
@@ -1186,7 +1206,10 @@ class eval_getitemTest(MayBeDiskTest):
         #print "rar->", rar
         assert_array_equal(rt, rar, "ctable values are not correct")
 
-class eval_getitemDiskTest(eval_getitemTest):
+class eval_getitemMemoryTest(eval_getitemTest, TestCase):
+    disk = False
+
+class eval_getitemDiskTest(eval_getitemTest, TestCase):
     disk = True
 
 
@@ -1226,7 +1249,10 @@ class bool_getitemTest(MayBeDiskTest):
         barr = np.zeros(len(t)-1, dtype=np.bool_)
         self.assertRaises(IndexError, t.__getitem__, barr)
 
-class bool_getitemDiskTest(bool_getitemTest):
+class bool_getitemMemoryTest(bool_getitemTest, TestCase):
+    disk = False
+
+class bool_getitemDiskTest(bool_getitemTest, TestCase):
     disk = True
 
 
@@ -1403,23 +1429,23 @@ class whereTest(MayBeDiskTest):
         #print "rl->", rl
         self.assertTrue(rt == rl, "where not working correctly")
 
-class where_smallTest(whereTest):
+class where_smallTest(whereTest, TestCase):
     N = 10
 
-class where_largeTest(whereTest):
+class where_largeTest(whereTest, TestCase):
     N = 10*1000
 
-class where_smallDiskTest(whereTest):
+class where_smallDiskTest(whereTest, TestCase):
     N = 10
     disk = True
 
-class where_largeDiskTest(whereTest):
+class where_largeDiskTest(whereTest, TestCase):
     N = 10*1000
     disk = True
 
 
 # This test goes here until a new test_toplevel.py would be created
-class walkTest(MayBeDiskTest):
+class walkTest(MayBeDiskTest, TestCase):
     disk = True
     ncas = 3  # the number of carrays per level
     ncts = 4  # the number of ctables per level
@@ -1497,51 +1523,8 @@ class walkTest(MayBeDiskTest):
 
 
 
-def suite():
-    theSuite = unittest.TestSuite()
-
-    theSuite.addTest(unittest.makeSuite(createTest))
-    theSuite.addTest(unittest.makeSuite(createDiskTest))
-    theSuite.addTest(unittest.makeSuite(persistentTest))
-    theSuite.addTest(unittest.makeSuite(add_del_colTest))
-    theSuite.addTest(unittest.makeSuite(add_del_colDiskTest))
-    theSuite.addTest(unittest.makeSuite(getitemTest))
-    theSuite.addTest(unittest.makeSuite(getitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(setitemTest))
-    theSuite.addTest(unittest.makeSuite(setitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(appendTest))
-    theSuite.addTest(unittest.makeSuite(appendDiskTest))
-    theSuite.addTest(unittest.makeSuite(trimTest))
-    theSuite.addTest(unittest.makeSuite(trimDiskTest))
-    theSuite.addTest(unittest.makeSuite(resizeTest))
-    theSuite.addTest(unittest.makeSuite(resizeDiskTest))
-    theSuite.addTest(unittest.makeSuite(copyTest))
-    theSuite.addTest(unittest.makeSuite(copyDiskTest))
-    theSuite.addTest(unittest.makeSuite(specialTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexing_getitemTest))
-    theSuite.addTest(unittest.makeSuite(fancy_indexing_setitemTest))
-    theSuite.addTest(unittest.makeSuite(iterTest))
-    theSuite.addTest(unittest.makeSuite(iterDiskTest))
-    theSuite.addTest(unittest.makeSuite(evalTest))
-    theSuite.addTest(unittest.makeSuite(evalDiskTest))
-    if bcolz.numexpr_here:
-        theSuite.addTest(unittest.makeSuite(eval_ne))
-        theSuite.addTest(unittest.makeSuite(eval_neDisk))
-    theSuite.addTest(unittest.makeSuite(eval_getitemTest))
-    theSuite.addTest(unittest.makeSuite(eval_getitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(bool_getitemTest))
-    theSuite.addTest(unittest.makeSuite(bool_getitemDiskTest))
-    theSuite.addTest(unittest.makeSuite(where_smallTest))
-    theSuite.addTest(unittest.makeSuite(where_smallDiskTest))
-    theSuite.addTest(unittest.makeSuite(where_largeTest))
-    theSuite.addTest(unittest.makeSuite(where_largeDiskTest))
-    theSuite.addTest(unittest.makeSuite(walkTest))
-
-    return theSuite
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
 
 ## Local Variables:
