@@ -12,8 +12,9 @@ import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal
+import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
+    MayBeDiskTest, TestCase, unittest, skipUnless)
 import bcolz
 from bcolz.bcolz_ext import chunk
 
@@ -302,7 +303,10 @@ class setitemTest(MayBeDiskTest):
         sl = slice(2, 99, -30)
         self.assertRaises(NotImplementedError, b.__setitem__, sl, 3.)
 
-class setitemDiskTest(setitemTest):
+class setitemMemoryTest(setitemTest, TestCase):
+    disk = False
+
+class setitemDiskTest(setitemTest, TestCase):
     disk = True
 
 
@@ -1466,10 +1470,7 @@ class dtypesTest(TestCase):
         self.assertRaises(TypeError, bcolz.carray, a)
 
 
-@skipUnless(is_64bit and heavy, "not 64bit or not --heavy")
 class largeCarrayTest(MayBeDiskTest):
-
-    disk = True
 
     def test00(self):
         """Creating an extremely large carray (> 2**32) in memory."""
@@ -1529,6 +1530,13 @@ class largeCarrayTest(MayBeDiskTest):
 
         self.assertTrue(cn.sum() == 10)
 
+@skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
+class largeCarrayMemoryTest(MayBeDiskTest, TestCase):
+    disk = False
+
+@skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
+class largeCarrayDiskTest(MayBeDiskTest, TestCase):
+    disk = True
 
 class persistenceTest(MayBeDiskTest, TestCase):
 

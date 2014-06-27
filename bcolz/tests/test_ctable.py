@@ -14,8 +14,6 @@ from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
 import bcolz
 
-
-
 if sys.version_info >= (3, 0):
     xrange = range
 
@@ -571,7 +569,10 @@ class trimTest(MayBeDiskTest):
         t.trim(N)
         self.assertTrue(len(ra) == len(t), "Lengths are not equal")
 
-class trimDiskTest(trimTest):
+class trimMemoryTest(trimTest, TestCase):
+    disk = False
+
+class trimDiskTest(trimTest, TestCase):
     disk = True
 
 
@@ -670,7 +671,7 @@ class copyDiskTest(copyTest, TestCase):
     disk = True
 
 
-class specialTest(unittest.TestCase):
+class specialTest(TestCase):
 
     def test00(self):
         """Testing __len__()"""
@@ -824,7 +825,7 @@ class eval_neDisk(evalTest, TestCase):
     disk = True
 
 
-class fancy_indexing_getitemTest(unittest.TestCase):
+class fancy_indexing_getitemTest(TestCase):
 
     def test00(self):
         """Testing fancy indexing with a small list"""
