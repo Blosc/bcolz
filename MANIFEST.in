@@ -5,7 +5,7 @@ include VERSION
 include pavement.py
 include setup.py
 
-recursive-include bcolz *.py *.pyx *.pxd *.c
+recursive-include bcolz *.py *.pyx *.pxd *.c *.h
 recursive-include bcolz/tests *.py
 recursive-include blosc *.c *.h
 recursive-include blosc/win32 *.c *.h

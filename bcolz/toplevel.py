@@ -16,8 +16,72 @@ import itertools as it
 import numpy as np
 import bcolz
 import math
+from .py2help import xrange, _inttypes
 
+class Defaults(object):
+    """Class to taylor the setters and getters of default values."""
+
+    def __init__(self):
+        self.choices = {}
+
+        # Choices setup
+        self.choices['eval_out_flavor'] = ("carray", "numpy")
+        self.choices['eval_vm'] = ("numexpr", "python")
+
+    def check_choices(self, name, value):
+        if value not in self.choices[name]:
+            raiseValue, "value must be either 'numexpr' or 'python'"
+
+    #
+    # Properties start here...
+    #
+
+    @property
+    def eval_vm(self):
+        return self.__eval_vm
+
+    @eval_vm.setter
+    def eval_vm(self, value):
+        self.check_choices('eval_vm', value)
+        if value == "numexpr" and not bcolz.numexpr_here:
+            raise (ValueError,
+                   "cannot use `numexpr` virtual machine "
+                   "(minimum required version is probably not installed)")
+        self.__eval_vm = value
+
+    @property
+    def eval_out_flavor(self):
+        return self.__eval_out_flavor
+
+    @eval_out_flavor.setter
+    def eval_out_flavor(self, value):
+        self.check_choices('eval_out_flavor', value)
+        self.__eval_out_flavor = value
+
+
+defaults = Defaults()
+
+
+# Default values start here...
+
+defaults.eval_out_flavor = "carray"
+"""
+The flavor for the output object in `eval()`.  It can be 'carray' or
+'numpy'.  Default is 'carray'.
+
+"""
+
+defaults.eval_vm = "python"
+"""
+The virtual machine to be used in computations (via `eval`).  It can
+be 'numexpr' or 'python'.  Default is 'numexpr', if installed.  If
+not, then the default is 'python'.
+
+"""
+
+# If numexpr is available, use it as default
 if bcolz.numexpr_here:
+    defaults.eval_vm = "numexpr"
     from numexpr.expressions import functions as numexpr_functions
 
 
@@ -30,7 +94,7 @@ def detect_number_of_cores():
     """
     # Linux, Unix and MacOS:
     if hasattr(os, "sysconf"):
-        if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+        if "SC_NPROCESSORS_ONLN" in os.sysconf_names:
             # Linux & Unix:
             ncpus = os.sysconf("SC_NPROCESSORS_ONLN")
             if isinstance(ncpus, int) and ncpus > 0:
@@ -38,7 +102,7 @@ def detect_number_of_cores():
         else: # OSX:
             return int(os.popen2("sysctl -n hw.ncpu")[1].read())
     # Windows:
-    if os.environ.has_key("NUMBER_OF_PROCESSORS"):
+    if "NUMBER_OF_PROCESSORS" in os.environ:
         ncpus = int(os.environ["NUMBER_OF_PROCESSORS"]);
         if ncpus > 0:
             return ncpus
@@ -235,7 +299,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     """
 
     dtype = np.dtype(dtype)
-    if type(shape) in (int, long, float):
+    if type(shape) in _inttypes + (float,):
         shape = (int(shape),)
     else:
         shape = tuple(shape)
@@ -248,13 +312,13 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     # Create the container
     expectedlen = kwargs.pop("expectedlen", length)
     if dtype.kind == "V" and dtype.shape == ():
-        raise ValueError, "fill does not support ctables objects"
+        raise ValueError("fill does not support ctables objects")
     obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                        **kwargs)
     chunklen = obj.chunklen
 
     # Then fill it
-    # We need an array for the defaults so as to keep the atom info
+    # We need an array for the default so as to keep the atom info
     dflt = np.array(obj.dflt, dtype=dtype)
     # Making strides=(0,) below is a trick to create the array fast and
     # without memory consumption
@@ -364,7 +428,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
 
     # Check start, stop, step values
     if (start, stop) == (None, None):
-        raise ValueError, "You must pass a `stop` value at least."
+        raise ValueError("You must pass a `stop` value at least.")
     elif stop is None:
         start, stop = 0, start
     elif start is None:
@@ -374,7 +438,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
 
     # Guess the dtype
     if dtype is None:
-        if type(stop) in (int, long):
+        if type(stop) in _inttypes:
             dtype = np.dtype(np.int_)
     dtype = np.dtype(dtype)
     stop = int(stop)
@@ -382,7 +446,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     # Create the container
     expectedlen = kwargs.pop("expectedlen", stop)
     if dtype.kind == "V":
-        raise ValueError, "arange does not support ctables yet."
+        raise ValueError("arange does not support ctables yet.")
     else:
         obj = bcolz.carray(np.array([], dtype=dtype),
                            expectedlen=expectedlen,
@@ -493,14 +557,14 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
 
     if vm is None:
-        vm = bcolz.defaults.eval_vm
+        vm = defaults.eval_vm
     if vm not in ("numexpr", "python"):
-        raiseValue, "`vm` must be either 'numexpr' or 'python'"
+        raise ValueError("`vm` must be either 'numexpr' or 'python'")
 
     if out_flavor is None:
-        out_flavor = bcolz.defaults.eval_out_flavor
+        out_flavor = defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
-        raiseValue, "`out_flavor` must be either 'carray' or 'numpy'"
+        raise ValueError("`out_flavor` must be either 'carray' or 'numpy'")
 
     # Get variables and column names participating in expression
     depth = kwargs.pop('depth', 2)
@@ -511,7 +575,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     for name in vars.iterkeys():
         var = vars[name]
         if hasattr(var, "__len__") and not hasattr(var, "dtype"):
-            raise ValueError, "only numpy/carray sequences supported"
+            raise ValueError("only numpy/carray sequences supported")
         if hasattr(var, "dtype") and not hasattr(var, "__len__"):
             continue
         if hasattr(var, "dtype"):  # numpy/carray arrays
@@ -520,10 +584,10 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
             elif isinstance(var, bcolz.carray):  # carray array
                 typesize += var.dtype.itemsize
             else:
-                raise ValueError, "only numpy/carray objects supported"
+                raise ValueError("only numpy/carray objects supported")
         if hasattr(var, "__len__"):
             if vlen > 1 and vlen != len(var):
-                raise ValueError, "arrays must have the same length"
+                raise ValueError("arrays must have the same length")
             vlen = len(var)
 
     if typesize == 0:
@@ -713,12 +777,12 @@ class cparams(object):
 
     def __init__(self, clevel=5, shuffle=True):
         if not isinstance(clevel, int):
-            raise ValueError, "`clevel` must an int."
+            raise ValueError("`clevel` must be an int.")
         if not isinstance(shuffle, (bool, int)):
-            raise ValueError, "`shuffle` must a boolean."
+            raise ValueError("`shuffle` must be a boolean.")
         shuffle = bool(shuffle)
         if clevel < 0:
-            raiseValueError, "clevel must be a positive integer"
+            raise ValueError("clevel must be a positive integer")
         self._clevel = clevel
         self._shuffle = shuffle
 

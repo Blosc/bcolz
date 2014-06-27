@@ -252,16 +252,16 @@ class ctable(object):
             ratype = hasattr(columns.dtype, "names")
             if ratype:
                 if len(columns.shape) != 1:
-                    raise ValueError, "only unidimensional shapes supported"
+                    raise ValueError("only unidimensional shapes supported")
         else:
-            raise ValueError, "`columns` input is not supported"
+            raise ValueError("`columns` input is not supported")
         if not (calist or nalist or ratype):
             # Try to convert the elements to carrays
             try:
                 columns = [bcolz.carray(col) for col in columns]
                 calist = True
             except:
-                raise ValueError, "`columns` input is not supported"
+                raise ValueError("`columns` input is not supported")
 
         # Populate the columns
         clen = -1
@@ -277,14 +277,14 @@ class ctable(object):
             elif nalist:
                 column = columns[i]
                 if column.dtype == np.void:
-                    raise ValueError,(
+                    raise ValueError(
                         "`columns` elements cannot be of type void")
                 column = bcolz.carray(column, **kwargs)
             elif ratype:
                 column = bcolz.carray(columns[name], **kwargs)
             self.cols[name] = column
             if clen >= 0 and clen != len(column):
-                raise ValueError, "all `columns` must have the same length"
+                raise ValueError("all `columns` must have the same length")
             clen = len(column)
  
         self.len = clen
@@ -340,9 +340,9 @@ class ctable(object):
             rows = [rows[name] for name in self.names]
             calist = True
         else:
-            raise ValueError, "`rows` input is not supported"
+            raise ValueError("`rows` input is not supported")
         if not (calist or nalist or sclist or ratype):
-            raise ValueError, "`rows` input is not supported"
+            raise ValueError("`rows` input is not supported")
 
         # Populate the columns
         clen = -1
@@ -352,7 +352,7 @@ class ctable(object):
             elif nalist:
                 column = rows[i]
                 if column.dtype == np.void:
-                    raise ValueError, "`rows` elements cannot be of type void"
+                    raise ValueError("`rows` elements cannot be of type void")
                 column = column
             elif ratype:
                 column = rows[name]
@@ -363,7 +363,8 @@ class ctable(object):
             else:
                 clen2 = len(column)
             if clen >= 0 and clen != clen2:
-                raise ValueError, "all cols in `rows` must have the same length"
+                raise ValueError(
+                    "all cols in `rows` must have the same length")
             clen = clen2
         self.len += clen
 
@@ -440,18 +441,18 @@ class ctable(object):
             pos = len(self.names)
         else:
             if pos and type(pos) != int:
-                raise ValueError, "`pos` must be an int"
+                raise ValueError("`pos` must be an int")
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
+                raise ValueError("`pos` must be >= 0 and <= len(self.cols)")
         if name is None:
             name = "f%d" % pos
         else:
             if type(name) != str:
-                raise ValueError, "`name` must be a string"
+                raise ValueError("`name` must be a string")
         if name in self.names:
-            raise ValueError, "'%s' column already exists" % name
+            raise ValueError("'%s' column already exists" % name)
         if len(newcol) != self.len:
-            raise ValueError, "`newcol` must have the same length than ctable"
+            raise ValueError("`newcol` must have the same length than ctable")
 
         if isinstance(newcol, np.ndarray):
             if 'cparams' not in kwargs:
@@ -496,20 +497,20 @@ class ctable(object):
         """
 
         if name is None and pos is None:
-            raise ValueError, "specify either a `name` or a `pos`"
+            raise ValueError("specify either a `name` or a `pos`")
         if name is not None and pos is not None:
-            raise ValueError, "you cannot specify both a `name` and a `pos`"
+            raise ValueError("you cannot specify both a `name` and a `pos`")
         if name:
             if type(name) != str:
-                raise ValueError, "`name` must be a string"
+                raise ValueError("`name` must be a string")
             if name not in self.names:
-                raise ValueError, "`name` not found in columns"
+                raise ValueError("`name` not found in columns")
             pos = self.names.index(name)
         elif pos is not None:
             if type(pos) != int:
-                raise ValueError, "`pos` must be an int"
+                raise ValueError("`pos` must be an int")
             if pos < 0 or pos > len(self.names):
-                raise ValueError, "`pos` must be >= 0 and <= len(self.cols)"
+                raise ValueError("`pos` must be >= 0 and <= len(self.cols)")
             name = self.names[pos]
 
         # Remove the column
@@ -600,19 +601,20 @@ class ctable(object):
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
             boolarr = expression
         else:
-            raise ValueError, "only boolean expressions or arrays are supported"
+            raise ValueError(
+                "only boolean expressions or arrays are supported")
 
         # Check outcols
         if outcols is None:
             outcols = self.names
         else:
             if type(outcols) not in (list, tuple, str):
-                raise ValueError, "only list/str is supported for outcols"
+                raise ValueError("only list/str is supported for outcols")
             # Check name validity
             nt = namedtuple('_nt', outcols, verbose=False)
             outcols = list(nt._fields)
             if set(outcols) - set(self.names+['nrow__']) != set():
-                raise ValueError, "not all outcols are real column names"
+                raise ValueError("not all outcols are real column names")
 
         # Get iterators for selected columns
         icols, dtypes = [], []
@@ -673,16 +675,16 @@ class ctable(object):
             outcols = self.names
         else:
             if type(outcols) not in (list, tuple, str):
-                raise ValueError, "only list/str is supported for outcols"
+                raise ValueError("only list/str is supported for outcols")
             # Check name validity
             nt = namedtuple('_nt', outcols, verbose=False)
             outcols = list(nt._fields)
             if set(outcols) - set(self.names+['nrow__']) != set():
-                raise ValueError, "not all outcols are real column names"
+                raise ValueError("not all outcols are real column names")
 
         # Check limits
         if step <= 0:
-            raise NotImplementedError, "step param can only be positive"
+            raise NotImplementedError("step param can only be positive")
         start, stop, step = slice(start, stop, step).indices(self.len)
 
         # Get iterators for selected columns
@@ -763,7 +765,7 @@ class ctable(object):
         # Multidimensional keys
         elif isinstance(key, tuple):
             if len(key) != 1:
-                raise IndexError, "multidimensional keys are not supported"
+                raise IndexError("multidimensional keys are not supported")
             return self[key[0]]
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
@@ -778,8 +780,8 @@ class ctable(object):
             try:
                 key = np.array(key, dtype=np.int_)
             except:
-                raise IndexError, \
-                      "key cannot be converted to an array of indices"
+                raise IndexError(
+                    "key cannot be converted to an array of indices")
             return np.fromiter((self[i] for i in key),
                                dtype=self.dtype, count=len(key))
         # A boolean array (case of fancy indexing)
@@ -790,22 +792,22 @@ class ctable(object):
                 # An integer array
                 return np.array([self[i] for i in key], dtype=self.dtype)
             else:
-                raise IndexError, \
-                      "arrays used as indices must be integer (or boolean)"
+                raise IndexError(
+                      "arrays used as indices must be integer (or boolean)")
         # Column name or expression
         elif type(key) is str:
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key, depth=4)
                 if arr.dtype.type != np.bool_:
-                    raise IndexError, \
-                          "`key` %s does not represent a boolean expression" %\
-                          key
+                    raise IndexError(
+                        "`key` %s does not represent a boolean "
+                        "expression" % key)
                 return self._where(arr)
             return self.cols[key]
         # All the rest not implemented
         else:
-            raise NotImplementedError, "key not supported: %s" % repr(key)
+            raise NotImplementedError("key not supported: %s" % repr(key))
 
         # From now on, will only deal with [start:stop:step] slices
 

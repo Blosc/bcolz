@@ -21,6 +21,14 @@ import cython
 import bcolz
 from bcolz import utils, attrs, array2string
 
+if sys.version_info >= (3, 0):
+    _MAXINT = 2**31 - 1
+    _inttypes = (int, np.integer)
+else:
+    _MAXINT = sys.maxint
+    _inttypes = (int, long, np.integer)
+
+
 
 _KB = 1024
 _MB = 1024 * _KB
@@ -1967,7 +1975,7 @@ cdef class carray:
             self.step = 1
         if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
             self.nhits = 0
-            self.limit = sys.maxint
+            self.limit = _MAXINT
             self.skip = 0
         # Initialize some internal values
         self.startb = 0
@@ -2197,7 +2205,7 @@ cdef class carray:
         self.where_mode = False
         self.where_arr = None
         self.nhits = 0
-        self.limit = sys.maxint
+        self.limit = _MAXINT
         self.skip = 0
 
     cdef int check_zeros(self, object barr):
@@ -2290,7 +2298,7 @@ cdef class carray:
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 2
-## tab-width: 2
+## py-indent-offset: 4
+## tab-width: 4
 ## fill-column: 78
 ## End:

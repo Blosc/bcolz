@@ -10,8 +10,12 @@
 Run all test cases.
 """
 
-import sys, os
-import unittest
+import sys
+import os
+if sys.version < "2.7":
+    import unittest2 as unittest
+else:
+    import unittest
 
 import numpy
 import bcolz
@@ -19,38 +23,28 @@ from bcolz.tests import common
 
 
 # Recommended minimum versions
-min_numpy_version = "1.5"
-
+min_numpy_version = "1.7"
 
 def suite():
-    test_modules = [
-        'bcolz.tests.test_carray',
-        'bcolz.tests.test_ctable',
-        'bcolz.tests.test_ndcarray',
-        'bcolz.tests.test_queries',
-        'bcolz.tests.test_attrs',
-        ]
-    alltests = unittest.TestSuite()
-    for name in test_modules:
-        exec('from %s import suite as test_suite' % name)
-        alltests.addTest(test_suite())
-    return alltests
+    this_dir = os.path.dirname(__file__)
+    return unittest.TestLoader().discover(
+        start_dir=this_dir, pattern = "test_*.py")
 
 
 def print_versions():
-    """Print all the versions of software that carray relies on."""
+    """Print all the versions of software that bcolz relies on."""
     print("-=" * 38)
-    print("carray version:    %s" % bcolz.__version__)
+    print("bcolz version:       %s" % bcolz.__version__)
     print("NumPy version:     %s" % numpy.__version__)
     tinfo = bcolz.blosc_version()
+    #blosc_cnames = bcolz.blosc_compressor_list()
     print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
+    #print("Blosc compressors: %s" % (blosc_cnames,))
     if bcolz.numexpr_here:
         print("Numexpr version:   %s" % bcolz.numexpr.__version__)
     else:
         print("Numexpr version:   not available "
               "(version >= %s not detected)" %  bcolz.min_numexpr_version)
-    from Cython.Compiler.Main import Version as Cython_Version
-    print("Cython version:    %s" % Cython_Version.version)
     print("Python version:    %s" % sys.version)
     if os.name == "posix":
         (sysname, nodename, release, version, machine) = os.uname()
@@ -62,18 +56,19 @@ def print_versions():
 
 def print_heavy(heavy):
     if heavy:
-        print """\
-Performing the complete test suite!"""
+        print("""\
+Performing the complete test suite!""")
     else:
-        print """\
+        print("""\
 Performing only a light (yet comprehensive) subset of the test suite.
 If you want a more complete test, try passing the --heavy flag to this
 script (or set the 'heavy' parameter in case you are using bcolz.test()
 call).  The whole suite will take more than 30 seconds to complete on a
 relatively modern CPU and around 300 MB of RAM and 500 MB of disk
 [32-bit platforms will always run significantly more lightly].
-"""
-    print '-=' * 38
+""")
+    print('-=' * 38)
+
 
 def test(verbose=False, heavy=False):
     """
@@ -104,8 +99,8 @@ def test(verbose=False, heavy=False):
 if __name__ == '__main__':
 
     if numpy.__version__ < min_numpy_version:
-        print("*Warning*: NumPy version is lower than recommended: %s < %s" % \
-              (numpy.__version__, min_numpy_version))
+        print("*Warning*: NumPy version is lower than recommended:"
+              "%s < %s" % (numpy.__version__, min_numpy_version))
 
     # Handle some global flags (i.e. only useful for test_all.py)
     only_versions = 0
@@ -129,7 +124,5 @@ if __name__ == '__main__':
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
-## tab-width: 4
 ## fill-column: 72
 ## End:

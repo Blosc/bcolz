@@ -67,7 +67,6 @@ from bcolz.toplevel import (
     cparams, eval, walk )
 from bcolz.version import __version__
 from bcolz.tests import test
-from defaults import defaults
 
 # Initialize Blosc
 ncores = detect_number_of_cores()

@@ -6,6 +6,8 @@
 #
 ########################################################################
 
+from __future__ import absolute_import
+
 import sys
 
 import numpy as np
@@ -13,9 +15,13 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
 from bcolz.tests import common
 import unittest
+from unittest import TestCase
+
+if sys.version_info >= (3, 0):
+    xrange = range
 
 
-class with_listTest(unittest.TestCase):
+class with_listTest:
 
     def test00a(self):
         """Testing wheretrue() in combination with a list constructor"""
@@ -23,9 +29,9 @@ class with_listTest(unittest.TestCase):
         a[30:40] = bcolz.ones(10, dtype="bool")
         alist = list(a)
         blist1 = [r for r in a.wheretrue()]
-        self.assert_(blist1 == range(30,40))
+        self.assertTrue(blist1 == list(range(30,40)))
         alist2 = list(a)
-        self.assert_(alist == alist2, "wheretrue() not working correctly")
+        self.assertTrue(alist == alist2, "wheretrue() not working correctly")
 
     def test00b(self):
         """Testing wheretrue() with a multidimensional array"""
@@ -40,9 +46,9 @@ class with_listTest(unittest.TestCase):
         b = bcolz.arange(self.N, dtype="f4")
         blist = list(b)
         blist1 = [r for r in b.where(a)]
-        self.assert_(blist1 == range(30,40))
+        self.assertTrue(blist1 == list(range(30,40)))
         blist2 = list(b)
-        self.assert_(blist == blist2, "where() not working correctly")
+        self.assertTrue(blist == blist2, "where() not working correctly")
 
     def test01b(self):
         """Testing where() with a multidimensional array"""
@@ -56,29 +62,20 @@ class with_listTest(unittest.TestCase):
         b = bcolz.arange(self.N, dtype="f4")
         blist = list(b)
         blist1 = [r for r in b.iter(3,10)]
-        self.assert_(blist1 == range(3,10))
+        self.assertTrue(blist1 == list(range(3,10)))
         blist2 = list(b)
-        self.assert_(blist == blist2, "iter() not working correctly")
+        self.assertTrue(blist == blist2, "iter() not working correctly")
 
 
-class small_with_listTest(with_listTest):
+class small_with_listTest(with_listTest, TestCase):
     N = 100
 
-class big_with_listTest(with_listTest):
+class big_with_listTest(with_listTest, TestCase):
     N = 10000
 
 
-def suite():
-    theSuite = unittest.TestSuite()
-
-    theSuite.addTest(unittest.makeSuite(small_with_listTest))
-    theSuite.addTest(unittest.makeSuite(big_with_listTest))
-
-    return theSuite
-
-
-if __name__ == "__main__":
-    unittest.main(defaultTest="suite")
+if __name__ == '__main__':
+    unittest.main(verbosity=2)
 
 
 ## Local Variables:
