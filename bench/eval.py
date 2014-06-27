@@ -3,33 +3,38 @@
 # execute this.
 
 import math
-import numpy as np
-import numexpr as ne
-import bcolz
 from time import time
 
-N = 1e7       # the number of elements in x
-clevel = 9    # the compression level
-sexprs = [ "(x+1)<0",
-           "(2*x**2+.3*y**2+z+1)<0",
-           "((.25*x + .75)*x - 1.5)*x - 2",
-           "(((.25*x + .75)*x - 1.5)*x - 2)<0",
-           ]
+import numpy as np
+import numexpr as ne
+
+import bcolz
+
+
+N = 1e7  # the number of elements in x
+clevel = 9  # the compression level
+sexprs = ["(x+1)<0",
+          "(2*x**2+.3*y**2+z+1)<0",
+          "((.25*x + .75)*x - 1.5)*x - 2",
+          "(((.25*x + .75)*x - 1.5)*x - 2)<0",
+]
 
 # Initial dataset
-#x = np.arange(N)
-x = np.linspace(0,100,N)
+# x = np.arange(N)
+x = np.linspace(0, 100, N)
 
 doprofile = False
+
 
 def compute_ref(sexpr):
     t0 = time()
     out = eval(sexpr)
-    print "Time for plain numpy --> %.3f" % (time()-t0,)
+    print "Time for plain numpy --> %.3f" % (time() - t0,)
 
     t0 = time()
     out = ne.evaluate(sexpr)
-    print "Time for numexpr (numpy) --> %.3f" % (time()-t0,)
+    print "Time for numexpr (numpy) --> %.3f" % (time() - t0,)
+
 
 def compute_carray(sexpr, clevel, vm):
     # Uncomment the next for disabling threading
@@ -40,12 +45,12 @@ def compute_carray(sexpr, clevel, vm):
         x, y, z = cx, cy, cz
     t0 = time()
     cout = bcolz.eval(sexpr, vm=vm, cparams=bcolz.cparams(clevel))
-    print "Time for bcolz.eval (%s) --> %.3f" % (vm, time()-t0,),
+    print "Time for bcolz.eval (%s) --> %.3f" % (vm, time() - t0,),
     print ", cratio (out): %.1f" % (cout.nbytes / float(cout.cbytes))
     #print "cout-->", repr(cout)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     print "Creating inputs..."
 
@@ -67,8 +72,9 @@ if __name__=="__main__":
             import cProfile as prof
             #prof.run('compute_carray(sexpr, clevel=clevel, vm="numexpr")',
             prof.run('compute_carray(sexpr, clevel=0, vm="numexpr")',
-            #prof.run('compute_carray(sexpr, clevel=clevel, vm="python")',
-            #prof.run('compute_carray(sexpr, clevel=0, vm="python")',
+                     #prof.run('compute_carray(sexpr, clevel=clevel,
+                     # vm="python")',
+                     #prof.run('compute_carray(sexpr, clevel=0, vm="python")',
                      'eval.prof')
             stats = pstats.Stats('eval.prof')
             stats.strip_dirs()

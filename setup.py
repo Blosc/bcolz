@@ -1,13 +1,15 @@
-########################################################################
+# #######################################################################
 #
-#       License: BSD
+# License: BSD
 #       Created: August 16, 2012
 #       Author:  Francesc Alted - francesc@blosc.io
 #
 ########################################################################
 
-import sys, os
+from __future__ import absolute_import
 
+import sys
+import os
 from distutils.core import Extension
 from distutils.core import setup
 import textwrap
@@ -24,25 +26,28 @@ def _print_admonition(kind, head, body):
     for line in tw.wrap(body):
         print line
 
+
 def exit_with_error(head, body=''):
     _print_admonition('error', head, body)
     sys.exit(1)
 
+
 def print_warning(head, body=''):
     _print_admonition('warning', head, body)
+
 
 def check_import(pkgname, pkgver):
     try:
         mod = __import__(pkgname)
     except ImportError:
-            exit_with_error(
-                "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
-                % {'pkgname': pkgname, 'pkgver': pkgver} )
+        exit_with_error(
+            "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
+            % {'pkgname': pkgname, 'pkgver': pkgver})
     else:
         if mod.__version__ < pkgver:
             exit_with_error(
                 "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
-                % {'pkgname': pkgname, 'pkgver': pkgver} )
+                % {'pkgname': pkgname, 'pkgver': pkgver})
 
     print ( "* Found %(pkgname)s %(pkgver)s package installed."
             % {'pkgname': pkgname, 'pkgver': mod.__version__} )
@@ -75,12 +80,12 @@ try:
 except:
     exit_with_error(
         "You need %(pkgname)s %(pkgver)s or greater to compile bcolz!"
-        % {'pkgname': 'Cython', 'pkgver': min_cython_version} )
+        % {'pkgname': 'Cython', 'pkgver': min_cython_version})
 
 if Version.version < min_cython_version:
     exit_with_error(
         "At least Cython %s is needed so as to generate extensions!"
-        % (min_cython_version) )
+        % (min_cython_version))
 else:
     print ( "* Found %(pkgname)s %(pkgver)s package installed."
             % {'pkgname': 'Cython', 'pkgver': Version.version} )
@@ -105,7 +110,7 @@ else:
         print_warning(
             "Numexpr %s installed, but version is not >= %s.  "
             "Disabling support for it." % (
-            numexpr.__version__, min_numexpr_version))
+                numexpr.__version__, min_numexpr_version))
 
 ########### End of checks ##########
 
@@ -124,6 +129,7 @@ libs = []
 inc_dirs = ['blosc']
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
+
 inc_dirs.extend(get_numpy_include_dirs())
 optional_libs = []
 
@@ -144,7 +150,6 @@ if os.name == 'posix':
 # Add some macros here for debugging purposes, if needed
 def_macros = []
 
-
 classifiers = """\
 Development Status :: 4 - Beta
 Intended Audience :: Developers
@@ -156,10 +161,10 @@ Topic :: Software Development :: Libraries :: Python Modules
 Operating System :: Microsoft :: Windows
 Operating System :: Unix
 """
-setup(name = "bcolz",
-      version = VERSION,
-      description = 'columnar and compressed data containers.',
-      long_description = """\
+setup(name="bcolz",
+      version=VERSION,
+      description='columnar and compressed data containers.',
+      long_description="""\
 
 bcolz provides columnar and compressed data containers.  Column storage
 allows for efficiently querying tables with a large number of columns.  It
@@ -169,32 +174,33 @@ The compression process is carried out internally by Blosc,
 a high-performance compressor that is optimized for binary data.
 
 """,
-      classifiers = filter(None, classifiers.split("\n")),
-      author = 'Francesc Alted',
-      author_email = 'francesc@blosc.io',
-      maintainer = 'Francesc Alted',
-      maintainer_email = 'francesc@blosc.io',
-      url = 'https://github.com/Blosc/bcolz',
-      license = 'http://www.opensource.org/licenses/bsd-license.php',
+      classifiers=filter(None, classifiers.split("\n")),
+      author='Francesc Alted',
+      author_email='francesc@blosc.io',
+      maintainer='Francesc Alted',
+      maintainer_email='francesc@blosc.io',
+      url='https://github.com/Blosc/bcolz',
+      license='http://www.opensource.org/licenses/bsd-license.php',
       # It is better to upload manually to PyPI
-      #download_url = 'http://github.com/downloads/Blosc/bcolz/python-bcolz-%s.tar.gz' % (VERSION,),
-      platforms = ['any'],
-      cmdclass = {'build_ext': build_ext},
-      ext_modules = [
-        Extension( "bcolz.bcolz_ext",
-                   include_dirs=inc_dirs,
-                   define_macros=def_macros,
-                   sources = [ "bcolz/bcolz_ext.pyx",
-                               "blosc/blosc.c", "blosc/blosclz.c",
-                               "blosc/shuffle.c" ],
-                   depends = [ "blosc/blosc.h", "blosc/blosclz.h",
-                               "blosc/shuffle.h" ],
-                   library_dirs=lib_dirs,
-                   libraries=libs,
-                   extra_link_args=LFLAGS,
-                   extra_compile_args=CFLAGS ),
-        ],
-      packages = ['bcolz', 'bcolz.tests'],
+      #download_url = 'http://github.com/downloads/Blosc/bcolz/python-bcolz
+      # -%s.tar.gz' % (VERSION,),
+      platforms=['any'],
+      cmdclass={'build_ext': build_ext},
+      ext_modules=[
+          Extension("bcolz.bcolz_ext",
+                    include_dirs=inc_dirs,
+                    define_macros=def_macros,
+                    sources=["bcolz/bcolz_ext.pyx",
+                             "blosc/blosc.c", "blosc/blosclz.c",
+                             "blosc/shuffle.c"],
+                    depends=["blosc/blosc.h", "blosc/blosclz.h",
+                             "blosc/shuffle.h"],
+                    library_dirs=lib_dirs,
+                    libraries=libs,
+                    extra_link_args=LFLAGS,
+                    extra_compile_args=CFLAGS),
+      ],
+      packages=['bcolz', 'bcolz.tests'],
 
 )
 

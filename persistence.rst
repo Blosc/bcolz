@@ -7,30 +7,30 @@ RFC for a persistence layer for bcolz
 :Version: 0.1 (August 19, 2012)
 
 
-The original bcolz container (up to version 0.4) consisted on
-basically a list of compressed in-memory blocks.  This document
-explains how to extend it to allow to store the data blocks on disk
-too.
+    The original bcolz container (up to version 0.4) consisted on
+    basically a list of compressed in-memory blocks.  This document
+    explains how to extend it to allow to store the data blocks on disk
+    too.
 
-The goals of this proposal are:
+    The goals of this proposal are:
 
-1. Allow to work with data directly on disk, exactly on the same way
-  than data in memory.
+    1. Allow to work with data directly on disk, exactly on the same way
+      than data in memory.
 
-2. Must support the same access capabilities than bcolz objects
-   including: append data, modifying data and direct access to data.
+    2. Must support the same access capabilities than bcolz objects
+       including: append data, modifying data and direct access to data.
 
-3. Transparent data compression must be possible.
+    3. Transparent data compression must be possible.
 
-4. User metadata addition must be possible too.
+    4. User metadata addition must be possible too.
 
-5. The data should be easily 'shardeable' for optimal behaviour in a
-   distributed storage environment.
+    5. The data should be easily 'shardeable' for optimal behaviour in a
+       distributed storage environment.
 
-This, in combination with a distributed filesystem, and combined with
-a system that is aware of the physical topology of the
-underlying storage media would allow to almost replace the need for
-a distributed infrastructure for data (e.g. Disco/Hadoop).
+    This, in combination with a distributed filesystem, and combined with
+    a system that is aware of the physical topology of the
+    underlying storage media would allow to almost replace the need for
+    a distributed infrastructure for data (e.g. Disco/Hadoop).
 
 The layout
 ==========

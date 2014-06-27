@@ -1,7 +1,9 @@
-## Benchmark to check the creation of an array of length > 2**32 (5e9)
+# # Benchmark to check the creation of an array of length > 2**32 (5e9)
+
+from time import time
 
 import bcolz
-from time import time
+
 
 t0 = time()
 #cn = bcolz.zeros(5e9, dtype="i1")

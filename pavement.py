@@ -1,4 +1,4 @@
-########################################################################
+# #######################################################################
 #
 #       License: BSD
 #       Created: December 14, 2010
@@ -6,13 +6,16 @@
 #
 ########################################################################
 
-import sys, os, glob
+import sys
+import os
+import glob
 import textwrap
+from distutils.core import Extension
+from distutils.dep_util import newer
 
 from paver.easy import *
 from paver.setuputils import setup
-from distutils.core import Extension
-from distutils.dep_util import newer
+
 
 # Some functions for showing errors and warnings.
 def _print_admonition(kind, head, body):
@@ -23,25 +26,28 @@ def _print_admonition(kind, head, body):
     for line in tw.wrap(body):
         print line
 
+
 def exit_with_error(head, body=''):
     _print_admonition('error', head, body)
     sys.exit(1)
 
+
 def print_warning(head, body=''):
     _print_admonition('warning', head, body)
+
 
 def check_import(pkgname, pkgver):
     try:
         mod = __import__(pkgname)
     except ImportError:
-            exit_with_error(
-                "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
-                % {'pkgname': pkgname, 'pkgver': pkgver} )
+        exit_with_error(
+            "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
+            % {'pkgname': pkgname, 'pkgver': pkgver})
     else:
         if mod.__version__ < pkgver:
             exit_with_error(
                 "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
-                % {'pkgname': pkgname, 'pkgver': pkgver} )
+                % {'pkgname': pkgname, 'pkgver': pkgver})
 
     print ( "* Found %(pkgname)s %(pkgver)s package installed."
             % {'pkgname': pkgname, 'pkgver': mod.__version__} )
@@ -65,6 +71,7 @@ min_numexpr_version = '1.4.1'
 cython = False
 try:
     from Cython.Compiler.Main import Version
+
     if Version.version >= min_cython_version:
         cython = True
 except:
@@ -93,6 +100,7 @@ libs = []
 inc_dirs = ['bcolz', 'blosc']
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
+
 inc_dirs.extend(get_numpy_include_dirs())
 cython_pyxfiles = glob.glob('bcolz/*.pyx')
 cython_cfiles = [fn.split('.')[0] + '.c' for fn in cython_pyxfiles]
@@ -117,13 +125,14 @@ if os.name == 'posix':
 @task
 def cythonize():
     for fn in glob.glob('bcolz/*.pyx'):
-         dest = fn.split('.')[0] + '.c'
-         if newer(fn, dest):
-             if not cython:
-                 exit_with_error(
-                     "Need Cython >= %s to generate extensions."
-                     % min_cython_version)
-             sh("cython " + fn)
+        dest = fn.split('.')[0] + '.c'
+        if newer(fn, dest):
+            if not cython:
+                exit_with_error(
+                    "Need Cython >= %s to generate extensions."
+                    % min_cython_version)
+            sh("cython " + fn)
+
 
 @task
 @needs('html', 'setuptools.command.sdist')
@@ -131,15 +140,18 @@ def sdist():
     """Generate a source distribution for the package."""
     pass
 
+
 @task
 @needs(['cythonize', 'setuptools.command.build'])
 def build():
-     pass
+    pass
+
 
 @task
 @needs(['cythonize', 'setuptools.command.build_ext'])
 def build_ext():
-     pass
+    pass
+
 
 @task
 @needs('paver.doctools.html')
@@ -149,6 +161,7 @@ def html(options):
     destdir.rmtree()
     builtdocs = path("doc") / options.builddir / "html"
     builtdocs.move(destdir)
+
 
 @task
 def pdf(options):
@@ -162,13 +175,12 @@ def pdf(options):
 # Options for Paver tasks
 options(
 
-    sphinx = Bunch(
-        docroot = "doc",
-        builddir = "_build"
+    sphinx=Bunch(
+        docroot="doc",
+        builddir="_build"
     ),
 
 )
-
 
 classifiers = """\
 Development Status :: 4 - Beta
@@ -184,10 +196,10 @@ Operating System :: Unix
 
 # Package options
 setup(
-    name = 'bcolz',
-    version = VERSION,
-    description = 'A columnar and compressed data container.',
-    long_description = """\
+    name='bcolz',
+    version=VERSION,
+    description='A columnar and compressed data container.',
+    long_description="""\
 
 bcolz is a columnar and compressed data container.  Column storage allows
 for efficiently querying tables with a large number of columns.  It also
@@ -197,26 +209,27 @@ compression process is carried out internally by Blosc, a high-performance
 compressor that is optimized for binary data.
 
 """,
-    classifiers = filter(None, classifiers.split("\n")),
-    author = 'Francesc Alted',
-    author_email = 'francesc@blosc.io',
-    url = "https://github.com/Blosc/bcolz",
-    license = 'http://www.opensource.org/licenses/bsd-license.php',
+    classifiers=filter(None, classifiers.split("\n")),
+    author='Francesc Alted',
+    author_email='francesc@blosc.io',
+    url="https://github.com/Blosc/bcolz",
+    license='http://www.opensource.org/licenses/bsd-license.php',
     # It is better to upload manually to PyPI
-    #download_url = "http://bcolz.blosc.org/download/bcolz-%s/bcolz-%s.tar.gz" % (VERSION, VERSION),
-    platforms = ['any'],
-    ext_modules = [
-    Extension( "bcolz.bcolz_ext",
-               include_dirs=inc_dirs,
-               sources = cython_cfiles + blosc_files,
-               depends = ["bcolz/definitions.pxd"] + blosc_files,
-               library_dirs=lib_dirs,
-               libraries=libs,
-               extra_link_args=LFLAGS,
-               extra_compile_args=CFLAGS ),
+    #download_url = "http://bcolz.blosc.org/download/bcolz-%s/bcolz-%s.tar
+    # .gz" % (VERSION, VERSION),
+    platforms=['any'],
+    ext_modules=[
+        Extension("bcolz.bcolz_ext",
+                  include_dirs=inc_dirs,
+                  sources=cython_cfiles + blosc_files,
+                  depends=["bcolz/definitions.pxd"] + blosc_files,
+                  library_dirs=lib_dirs,
+                  libraries=libs,
+                  extra_link_args=LFLAGS,
+                  extra_compile_args=CFLAGS),
     ],
-    packages = ['bcolz', 'bcolz.tests'],
-    include_package_data = True,
+    packages=['bcolz', 'bcolz.tests'],
+    include_package_data=True,
 
 )
 

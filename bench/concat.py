@@ -13,11 +13,14 @@
 # python bench/concat.py style arraysize nchunks nrepeats clevel
 #
 
-import sys, math
-import numpy
-from numpy.testing import assert_array_equal, assert_array_almost_equal
-import bcolz
+import sys
+import math
 import time
+
+import numpy
+
+import bcolz
+
 
 def concat(data):
     tlen = sum(x.shape[0] for x in data)
@@ -25,10 +28,11 @@ def concat(data):
     pos = 0
     for x in data:
         step = x.shape[0]
-        alldata[pos:pos+step] = x
+        alldata[pos:pos + step] = x
         pos += step
 
     return alldata
+
 
 def append(data, clevel):
     alldata = bcolz.carray(data[0], cparams=bcolz.cparams(clevel))
@@ -36,6 +40,7 @@ def append(data, clevel):
         alldata.append(carr)
 
     return alldata
+
 
 if len(sys.argv) < 2:
     print "Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' "
@@ -45,7 +50,7 @@ style = sys.argv[1]
 if len(sys.argv) == 2:
     N, K, T, clevel = (1000000, 10, 3, 1)
 else:
-    N,K,T = [int(arg) for arg in sys.argv[2:5]]
+    N, K, T = [int(arg) for arg in sys.argv[2:5]]
     if len(sys.argv) > 5:
         clevel = int(sys.argv[5])
     else:
@@ -53,7 +58,7 @@ else:
 
 # The next datasets allow for very high compression ratios
 a = [numpy.arange(N, dtype='f8') for _ in range(K)]
-print("problem size: (%d) x %d = 10^%g" % (N, K, math.log10(N*K)))
+print("problem size: (%d) x %d = 10^%g" % (N, K, math.log10(N * K)))
 
 t = time.time()
 if style == 'numpy':
@@ -72,5 +77,5 @@ print('time for concat: %.3fs' % (t / T))
 if style == 'bcolz':
     size = r.cbytes
 else:
-    size = r.size*r.dtype.itemsize
-print("size of the final container: %.3f MB" % (size / float(1024*1024)) )
+    size = r.size * r.dtype.itemsize
+print("size of the final container: %.3f MB" % (size / float(1024 * 1024)) )
