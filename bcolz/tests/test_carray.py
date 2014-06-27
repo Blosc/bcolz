@@ -631,7 +631,7 @@ class iterTest(MayBeDiskTest):
 
     def test04(self):
         """Testing `iter()` method with large zero arrays"""
-        a = np.zeros(1e4, dtype='f8')
+        a = np.zeros(int(1e4), dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b), dtype='f8', count=len(a))
         #print "c ->", repr(c)

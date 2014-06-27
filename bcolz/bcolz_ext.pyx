@@ -1108,7 +1108,7 @@ cdef class carray:
         metadir = os.path.join(self._rootdir, META_DIR)
         shapef = os.path.join(metadir, SIZES_FILE)
         with open(shapef, 'rb') as shapefh:
-            sizes = json.loads(shapefh.read())
+            sizes = json.loads(shapefh.read().decode('ascii'))
         shape = sizes['shape']
         if type(shape) == list:
             shape = tuple(shape)
@@ -1118,7 +1118,7 @@ cdef class carray:
         # Then the rest of metadata
         storagef = os.path.join(metadir, STORAGE_FILE)
         with open(storagef, 'rb') as storagefh:
-            data = json.loads(storagefh.read())
+            data = json.loads(storagefh.read().decode('ascii'))
         dtype_ = np.dtype(data["dtype"])
         chunklen = data["chunklen"]
         cparams = bcolz.cparams(
@@ -2270,15 +2270,17 @@ cdef class carray:
             sizes['cbytes'] = self.cbytes
             rowsf = os.path.join(self.metadir, SIZES_FILE)
             with open(rowsf, 'wb') as rowsfh:
-                rowsfh.write(json.dumps(sizes))
-                rowsfh.write('\n')
+                rowsfh.write(json.dumps(
+                    sizes, ensure_ascii=True).encode('ascii'))
+                rowsfh.write(b'\n')
+
 
     def flush(self):
         """Flush data in internal buffers to disk.
 
-        This call should typically be done after performing modifications
-        (__settitem__(), append()) in persistence mode.  If you don't do this, you
-        risk loosing part of your modifications.
+        This call should typically be done after performing modifications (
+        __settitem__(), append()) in persistence mode.  If you don't do
+        this, you risk loosing part of your modifications.
 
         """
         cdef chunk chunk_

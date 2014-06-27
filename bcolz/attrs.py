@@ -56,8 +56,8 @@ class attrs(object):
         if self.mode != 'r':
             # Empty the underlying file
             with open(self.attrsfile, 'wb') as rfile:
-                rfile.write(json.dumps({}))
-                rfile.write("\n")
+                rfile.write(json.dumps({}, ensure_ascii=True).encode('ascii'))
+                rfile.write(b"\n")
 
     def _open(self):
         if not os.path.isfile(self.attrsfile):
@@ -68,7 +68,7 @@ class attrs(object):
         # Get the serialized attributes
         with open(self.attrsfile, 'rb') as rfile:
             try:
-                data = json.loads(rfile.read())
+                data = json.loads(rfile.read().decode('ascii'))
             except:
                 raise IOError(
                     "Attribute file is not readable")

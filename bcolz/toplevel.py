@@ -205,6 +205,7 @@ def fromiter(iterable, dtype, count, **kwargs):
     iterables).
 
     """
+    _MAXINT_SIGNAL = 2**64
 
     # Check for a true iterable
     if not hasattr(iterable, "next"):
@@ -219,7 +220,7 @@ def fromiter(iterable, dtype, count, **kwargs):
             expected = count
         else:
             # No guess
-            count = sys.maxint
+            count = _MAXINT_SIGNAL
             # If we do not have a hint on the iterable length then
             # create a couple of iterables and use the second when the
             # first one is exhausted (ValueError will be raised).
@@ -250,7 +251,7 @@ def fromiter(iterable, dtype, count, **kwargs):
             blen = count - nread
         else:
             blen = chunklen
-        if count != sys.maxint:
+        if count != _MAXINT_SIGNAL:
             chunk = np.fromiter(iterable, dtype=dtype, count=blen)
         else:
             try:
