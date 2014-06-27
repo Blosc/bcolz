@@ -14,6 +14,7 @@ import struct
 import shutil
 import tempfile
 import json
+import datetime
 
 import numpy as np
 import cython
@@ -129,6 +130,17 @@ def blosc_version():
 
     """
     return (<char *> BLOSC_VERSION_STRING, <char *> BLOSC_VERSION_DATE)
+
+def list_bytes_to_str(lst):
+    """The Python 3 JSON encoder doesn't accept 'bytes' objects,
+    this utility function converts all bytes to strings.
+    """
+    if isinstance(lst, bytes):
+        return lst.decode('ascii')
+    elif isinstance(lst, list):
+        return [list_bytes_to_str(x) for x in lst]
+    else:
+        return lst
 
 # This is the same than in utils.py, but works faster in extensions
 cdef get_len_of_range(npy_intp start, npy_intp stop, npy_intp step):
@@ -1062,17 +1074,27 @@ cdef class carray:
         """Write metadata persistently."""
         storagef = os.path.join(self.metadir, STORAGE_FILE)
         with open(storagef, 'wb') as storagefh:
+            dflt_list = self.dflt.tolist()
+            if type(dflt_list) in (datetime.datetime,
+                                   datetime.date, datetime.time):
+                # The datetime cannot be serialized with JSON.  Use a 0 int.
+                dflt_list = 0
+            # In Python 3, the json encoder doesn't accept bytes objects
+            if sys.version_info >= (3, 0):
+                dflt_list = list_bytes_to_str(dflt_list)
             storagefh.write(json.dumps({
-                "dtype": str(self.dtype),
+                # str(self.dtype) produces bytes by default in cython.py3
+                # Calling .__str__() is a workaround.
+                "dtype": self.dtype.__str__(),
                 "cparams": {
                     "clevel": self.cparams.clevel,
                     "shuffle": self.cparams.shuffle,
                 },
                 "chunklen": self._chunklen,
                 "expectedlen": self.expectedlen,
-                "dflt": self.dflt.tolist(),
-            }))
-            storagefh.write("\n")
+                "dflt": dflt_list,
+            }, ensure_ascii=True).encode('ascii'))
+            storagefh.write(b"\n")
 
     def read_meta(self):
         """Read persistent metadata."""
