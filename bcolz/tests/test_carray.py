@@ -22,6 +22,10 @@ import unittest
 
 is_64bit = (struct.calcsize("P") == 8)
 
+if sys.version > '3':
+    xrange = range
+    long = int
+
 
 class chunkTest(unittest.TestCase):
 
@@ -30,7 +34,7 @@ class chunkTest(unittest.TestCase):
         a = np.arange(1e3)
         b = chunk(a, atom=a.dtype, cparams=bcolz.cparams())
         #print "b[1]->", `b[1]`
-        self.assert_(a[1] == b[1], "Values in key 1 are not equal")
+        self.assertTrue(a[1] == b[1], "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
@@ -77,7 +81,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         #print "b[(1,)]->", `b[(1,)]`
-        self.assert_(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
+        self.assertTrue(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
 
     def test01d(self):
         """Testing `__getitem()__` method with only a (large) start"""
@@ -394,7 +398,7 @@ class trimTest(MayBeDiskTest):
         b = bcolz.arange(1e4, rootdir=self.rootdir)
         b.trim(1e4)
         #print "b->", `b`
-        self.assert_(len(a) == len(b), "Lengths are not equal")
+        self.assertTrue(len(a) == len(b), "Lengths are not equal")
 
     def test04(self):
         """Testing `trim()` method (trimming more than available items)"""
@@ -489,7 +493,7 @@ class miscTest(MayBeDiskTest):
         """Testing __len__()"""
         a = np.arange(111)
         b = bcolz.carray(a, rootdir=self.rootdir)
-        self.assert_(len(a) == len(b), "Arrays do not have the same length")
+        self.assertTrue(len(a) == len(b), "Arrays do not have the same length")
 
     def test01(self):
         """Testing __sizeof__() (big carrays)"""
@@ -497,7 +501,7 @@ class miscTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         #print "size b uncompressed-->", b.nbytes
         #print "size b compressed  -->", b.cbytes
-        self.assert_(sys.getsizeof(b) < b.nbytes,
+        self.assertTrue(sys.getsizeof(b) < b.nbytes,
                      "carray does not seem to compress at all")
 
     def test02(self):
@@ -506,7 +510,7 @@ class miscTest(MayBeDiskTest):
         b = bcolz.carray(a)
         #print "size b uncompressed-->", b.nbytes
         #print "size b compressed  -->", b.cbytes
-        self.assert_(sys.getsizeof(b) > b.nbytes,
+        self.assertTrue(sys.getsizeof(b) > b.nbytes,
                      "carray compress too much??")
 
 class miscDiskTest(miscTest):
@@ -521,8 +525,8 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy()
         c.append(np.arange(111, 122))
-        self.assert_(len(b) == 111, "copy() does not work well")
-        self.assert_(len(c) == 122, "copy() does not work well")
+        self.assertTrue(len(b) == 111, "copy() does not work well")
+        self.assertTrue(len(c) == 122, "copy() does not work well")
         r = np.arange(122)
         assert_array_equal(c[:], r, "incorrect correct values after copy()")
 
@@ -532,7 +536,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=bcolz.cparams(clevel=9))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
-        self.assert_(b.cbytes > c.cbytes, "clevel not changed")
+        self.assertTrue(b.cbytes > c.cbytes, "clevel not changed")
 
     def test02(self):
         """Testing copy() with lesser compression"""
@@ -540,7 +544,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=bcolz.cparams(clevel=1))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
-        self.assert_(b.cbytes < c.cbytes, "clevel not changed")
+        self.assertTrue(b.cbytes < c.cbytes, "clevel not changed")
 
     def test03(self):
         """Testing copy() with no shuffle"""
@@ -548,7 +552,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=bcolz.cparams(shuffle=False))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
-        self.assert_(b.cbytes < c.cbytes, "shuffle not changed")
+        self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
 
 class copyDiskTest(copyTest):
     disk = True
@@ -562,8 +566,8 @@ class iterTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter1->", sum(b)
         #print "sum iter2->", sum((v for v in b))
-        self.assert_(sum(a) == sum(b), "Sums are not equal")
-        self.assert_(sum((v for v in a)) == sum((v for v in b)),
+        self.assertTrue(sum(a) == sum(b), "Sums are not equal")
+        self.assertTrue(sum((v for v in a)) == sum((v for v in b)),
                      "Sums are not equal")
 
     def test01a(self):
@@ -571,28 +575,28 @@ class iterTest(MayBeDiskTest):
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3))
-        self.assert_(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
+        self.assertTrue(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
 
     def test01b(self):
         """Testing `iter()` method with a negative start"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(-3))
-        self.assert_(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
+        self.assertTrue(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
 
     def test02a(self):
         """Testing `iter()` method with positive start, stop"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3, 24))
-        self.assert_(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
+        self.assertTrue(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
 
     def test02b(self):
         """Testing `iter()` method with negative start, stop"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(-24, -3))
-        self.assert_(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
+        self.assertTrue(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
                      "Sums are not equal")
 
     def test02c(self):
@@ -600,7 +604,7 @@ class iterTest(MayBeDiskTest):
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(24, -3))
-        self.assert_(sum(a[24:-3]) == sum(b.iter(24, -3)),
+        self.assertTrue(sum(a[24:-3]) == sum(b.iter(24, -3)),
                      "Sums are not equal")
 
     def test03a(self):
@@ -608,7 +612,7 @@ class iterTest(MayBeDiskTest):
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(step=4))
-        self.assert_(sum(a[::4]) == sum(b.iter(step=4)),
+        self.assertTrue(sum(a[::4]) == sum(b.iter(step=4)),
                      "Sums are not equal")
 
     def test03b(self):
@@ -616,7 +620,7 @@ class iterTest(MayBeDiskTest):
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter->", sum(b.iter(3, 24, 4))
-        self.assert_(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
+        self.assertTrue(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
                      "Sums are not equal")
 
     def test03c(self):
@@ -674,7 +678,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
         #print "where ->", [i for i in b.wheretrue()]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test01(self):
         """Testing `wheretrue()` iterator (all false values)"""
@@ -684,7 +688,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
         #print "where ->", [i for i in b.wheretrue()]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test02(self):
         """Testing `wheretrue()` iterator (all false values, large array)"""
@@ -694,7 +698,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
         #print "where ->", [i for i in b.wheretrue()]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test03(self):
         """Testing `wheretrue()` iterator (mix of true/false values)"""
@@ -704,7 +708,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue()]
         #print "numpy ->", a.nonzero()[0].tolist()
         #print "where ->", [i for i in b.wheretrue()]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test04(self):
         """Testing `wheretrue()` iterator with `limit`"""
@@ -714,7 +718,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue(limit=3)]
         #print "numpy ->", a.nonzero()[0].tolist()[:3]
         #print "where ->", [i for i in b.wheretrue(limit=3)]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test05(self):
         """Testing `wheretrue()` iterator with `skip`"""
@@ -724,7 +728,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue(skip=2)]
         #print "numpy ->", a.nonzero()[0].tolist()[2:]
         #print "where ->", [i for i in b.wheretrue(skip=2)]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test06(self):
         """Testing `wheretrue()` iterator with `limit` and `skip`"""
@@ -734,7 +738,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue(skip=2, limit=2)]
         #print "numpy ->", a.nonzero()[0].tolist()[2:4]
         #print "where ->", [i for i in b.wheretrue(limit=2,skip=2)]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test07(self):
         """Testing `wheretrue()` iterator with `limit` and `skip` (zeros)"""
@@ -744,7 +748,7 @@ class wheretrueTest(unittest.TestCase):
         cwt = [i for i in b.wheretrue(skip=1020, limit=1020)]
         # print "numpy ->", a.nonzero()[0].tolist()[1020:2040]
         # print "where ->", [i for i in b.wheretrue(limit=1020,skip=1020)]
-        self.assert_(wt == cwt, "wheretrue() does not work correctly")
+        self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
 
 class whereTest(unittest.TestCase):
@@ -757,7 +761,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(a>0)]
         #print "numpy ->", [v for v in a if v>0]
         #print "where ->", [v for v in b.where(a>0)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test01(self):
         """Testing `where()` iterator (all false values)"""
@@ -767,7 +771,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(a<0)]
         #print "numpy ->", [v for v in a if v<0]
         #print "where ->", [v for v in b.where(a<0)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02a(self):
         """Testing `where()` iterator (mix of true/false values, I)"""
@@ -777,7 +781,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(a<=5)]
         #print "numpy ->", [v for v in a if v<=5]
         #print "where ->", [v for v in b.where(a<=5)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02b(self):
         """Testing `where()` iterator (mix of true/false values, II)"""
@@ -787,7 +791,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where((a<=5) & (a>2))]
         #print "numpy ->", [v for v in a if v<=5 and v>2]
         #print "where ->", [v for v in b.where((a<=5) & (a>2))]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02c(self):
         """Testing `where()` iterator (mix of true/false values, III)"""
@@ -797,7 +801,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where((a<=5) | (a>8))]
         #print "numpy ->", [v for v in a if v<=5 or v>8]
         #print "where ->", [v for v in b.where((a<=5) | (a>8))]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test03(self):
         """Testing `where()` iterator (using a boolean carray)"""
@@ -807,7 +811,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(bcolz.carray(a<=5))]
         #print "numpy ->", [v for v in a if v<=5]
         #print "where ->", [v for v in b.where(bcolz.carray(a<=5))]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test04(self):
         """Testing `where()` iterator using `limit`"""
@@ -817,7 +821,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(bcolz.carray(a<=5), limit=3)]
         #print "numpy ->", [v for v in a if v<=5][:3]
         #print "where ->", [v for v in b.where(bcolz.carray(a<=5), limit=3)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test05(self):
         """Testing `where()` iterator using `skip`"""
@@ -827,7 +831,7 @@ class whereTest(unittest.TestCase):
         cwt = [v for v in b.where(bcolz.carray(a<=5), skip=2)]
         #print "numpy ->", [v for v in a if v<=5][2:]
         #print "where ->", [v for v in b.where(bcolz.carray(a<=5), skip=2)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test06(self):
         """Testing `where()` iterator using `limit` and `skip`"""
@@ -838,7 +842,7 @@ class whereTest(unittest.TestCase):
         #print "numpy ->", [v for v in a if v<=5][1:4]
         #print "where ->", [v for v in b.where(bcolz.carray(a<=5),
         #                                      limit=3, skip=1)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test07(self):
         """Testing `where()` iterator using `limit` and `skip` (zeros)"""
@@ -850,7 +854,7 @@ class whereTest(unittest.TestCase):
         # print "numpy ->", [v for v in a if v>=5000][1010:2020]
         # print "where ->", [v for v in b.where(bcolz.carray(a>=5000,chunklen=100),
         #                                       limit=1010, skip=1010)]
-        self.assert_(wt == cwt, "where() does not work correctly")
+        self.assertTrue(wt == cwt, "where() does not work correctly")
 
 
 class fancy_indexing_getitemTest(unittest.TestCase):
@@ -1050,7 +1054,7 @@ class evalTest(MayBeDiskTest):
         a = 3
         cr = bcolz.eval("2 * a", rootdir=self.rootdir)
         #print "bcolz.eval ->", cr
-        self.assert_(cr == 6, "eval does not work correctly")
+        self.assertTrue(cr == 6, "eval does not work correctly")
 
     def test01(self):
         """Testing eval() with only carrays"""
@@ -1139,9 +1143,12 @@ class evalTest(MayBeDiskTest):
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
-        self.assertRaises(ValueError, bcolz.eval, "a*3", depth=3,
+        depth = 3
+        if sys.version_info >= (3, 0):
+            depth += 1  # curiously enough, Python 3 needs one level more
+        self.assertRaises(ValueError, bcolz.eval, "a*3", depth=depth,
                           rootdir=self.rootdir)
-        self.assertRaises(ValueError, bcolz.eval, "b*3", depth=3,
+        self.assertRaises(ValueError, bcolz.eval, "b*3", depth=depth,
                           rootdir=self.rootdir)
 
     def test09(self):
@@ -1185,7 +1192,7 @@ class evalTest(MayBeDiskTest):
         nr = a + 2 * b - 3
         #print "bcolz.eval ->", cr, type(cr)
         #print "numpy   ->", nr
-        self.assert_(type(cr) == np.ndarray)
+        self.assertTrue(type(cr) == np.ndarray)
         assert_array_equal(cr, nr, "eval does not work correctly")
 
 class evalSmall(evalTest):
@@ -1231,8 +1238,8 @@ class computeMethodsTest(unittest.TestCase):
         sac = ac.sum()
         #print "numpy sum-->", sa
         #print "carray sum-->", sac
-        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
-        self.assert_(sa == sac, "sum() is not working correctly.")
+        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assertTrue(sa == sac, "sum() is not working correctly.")
 
     def test01(self):
         """Testing sum() with dtype."""
@@ -1242,8 +1249,8 @@ class computeMethodsTest(unittest.TestCase):
         sac = ac.sum(dtype='i8')
         #print "numpy sum-->", sa
         #print "carray sum-->", sac
-        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
-        self.assert_(sa == sac, "sum() is not working correctly.")
+        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assertTrue(sa == sac, "sum() is not working correctly.")
 
     def test02(self):
         """Testing sum() with strings (TypeError)."""
@@ -1257,25 +1264,25 @@ class arangeTest(unittest.TestCase):
         """Testing arange() with only a `stop`."""
         a = np.arange(self.N)
         ac = bcolz.arange(self.N)
-        self.assert_(np.all(a == ac))
+        self.assertTrue(np.all(a == ac))
 
     def test01(self):
         """Testing arange() with a `start` and `stop`."""
         a = np.arange(3, self.N)
         ac = bcolz.arange(3, self.N)
-        self.assert_(np.all(a == ac))
+        self.assertTrue(np.all(a == ac))
 
     def test02(self):
         """Testing arange() with a `start`, `stop` and `step`."""
         a = np.arange(3, self.N, 4)
         ac = bcolz.arange(3, self.N, 4)
-        self.assert_(np.all(a == ac))
+        self.assertTrue(np.all(a == ac))
 
     def test03(self):
         """Testing arange() with a `dtype`."""
         a = np.arange(self.N, dtype="i1")
         ac = bcolz.arange(self.N, dtype="i1")
-        self.assert_(np.all(a == ac))
+        self.assertTrue(np.all(a == ac))
 
 class arange_smallTest(arangeTest):
     N = 10
@@ -1290,77 +1297,77 @@ class constructorTest(MayBeDiskTest):
         """Testing carray constructor with an int32 `dtype`."""
         a = np.arange(self.N)
         ac = bcolz.carray(a, dtype='i4', rootdir=self.rootdir)
-        self.assert_(ac.dtype == np.dtype('i4'))
+        self.assertTrue(ac.dtype == np.dtype('i4'))
         a = a.astype('i4')
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test01a(self):
         """Testing zeros() constructor."""
         a = np.zeros(self.N)
         ac = bcolz.zeros(self.N, rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test01b(self):
         """Testing zeros() constructor, with a `dtype`."""
         a = np.zeros(self.N, dtype='i4')
         ac = bcolz.zeros(self.N, dtype='i4', rootdir=self.rootdir)
         #print "dtypes-->", a.dtype, ac.dtype
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test01c(self):
         """Testing zeros() constructor, with a string type."""
         a = np.zeros(self.N, dtype='S5')
         ac = bcolz.zeros(self.N, dtype='S5', rootdir=self.rootdir)
         #print "ac-->", `ac`
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test02a(self):
         """Testing ones() constructor."""
         a = np.ones(self.N)
         ac = bcolz.ones(self.N, rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test02b(self):
         """Testing ones() constructor, with a `dtype`."""
         a = np.ones(self.N, dtype='i4')
         ac = bcolz.ones(self.N, dtype='i4', rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test02c(self):
         """Testing ones() constructor, with a string type"""
         a = np.ones(self.N, dtype='S3')
         ac = bcolz.ones(self.N, dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test03a(self):
         """Testing fill() constructor."""
         a = np.ones(self.N)
         ac = bcolz.fill(self.N, 1, rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test03b(self):
         """Testing fill() constructor, with a `dtype`."""
         a = np.ones(self.N, dtype='i4')*3
         ac = bcolz.fill(self.N, 3, dtype='i4', rootdir=self.rootdir)
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
     def test03c(self):
         """Testing fill() constructor, with a string type"""
         a = np.ones(self.N, dtype='S3')
         ac = bcolz.fill(self.N, "1", dtype='S3', rootdir=self.rootdir)
         #print "a-->", a, ac
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac[:]))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac[:]))
 
 
 class constructorSmallTest(constructorTest):
@@ -1384,27 +1391,27 @@ class dtypesTest(unittest.TestCase):
         """Testing carray constructor with a float32 `dtype`."""
         a = np.arange(10)
         ac = bcolz.carray(a, dtype='f4')
-        self.assert_(ac.dtype == np.dtype('f4'))
+        self.assertTrue(ac.dtype == np.dtype('f4'))
         a = a.astype('f4')
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac))
 
     def test01(self):
         """Testing carray constructor with a `dtype` with an empty input."""
         a = np.array([], dtype='i4')
         ac = bcolz.carray([], dtype='f4')
-        self.assert_(ac.dtype == np.dtype('f4'))
+        self.assertTrue(ac.dtype == np.dtype('f4'))
         a = a.astype('f4')
-        self.assert_(a.dtype == ac.dtype)
-        self.assert_(np.all(a == ac))
+        self.assertTrue(a.dtype == ac.dtype)
+        self.assertTrue(np.all(a == ac))
 
     def test02(self):
         """Testing carray constructor with a plain compound `dtype`."""
         dtype = np.dtype("f4,f8")
         a = np.ones(30000, dtype=dtype)
         ac = bcolz.carray(a, dtype=dtype)
-        self.assert_(ac.dtype == dtype)
-        self.assert_(a.dtype == ac.dtype)
+        self.assertTrue(ac.dtype == dtype)
+        self.assertTrue(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
 
@@ -1413,8 +1420,8 @@ class dtypesTest(unittest.TestCase):
         dtype = np.dtype([('f1', [('f1', 'i2'), ('f2', 'i4')])])
         a = np.ones(3000, dtype=dtype)
         ac = bcolz.carray(a, dtype=dtype)
-        self.assert_(ac.dtype == dtype)
-        self.assert_(a.dtype == ac.dtype)
+        self.assertTrue(ac.dtype == dtype)
+        self.assertTrue(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
 
@@ -1422,8 +1429,8 @@ class dtypesTest(unittest.TestCase):
         """Testing carray constructor with a string `dtype`."""
         a = np.array(["ale", "e", "aco"], dtype="S4")
         ac = bcolz.carray(a, dtype='S4')
-        self.assert_(ac.dtype == np.dtype('S4'))
-        self.assert_(a.dtype == ac.dtype)
+        self.assertTrue(ac.dtype == np.dtype('S4'))
+        self.assertTrue(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
@@ -1431,8 +1438,8 @@ class dtypesTest(unittest.TestCase):
         """Testing carray constructor with a unicode `dtype`."""
         a = np.array([u"aŀle", u"eñe", u"açò"], dtype="U4")
         ac = bcolz.carray(a, dtype='U4')
-        self.assert_(ac.dtype == np.dtype('U4'))
-        self.assert_(a.dtype == ac.dtype)
+        self.assertTrue(ac.dtype == np.dtype('U4'))
+        self.assertTrue(a.dtype == ac.dtype)
         #print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
@@ -1451,59 +1458,59 @@ class largeCarrayTest(MayBeDiskTest):
         """Creating an extremely large carray (> 2**32) in memory."""
 
         cn = bcolz.zeros(5e9, dtype="i1")
-        self.assert_(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == int(5e9))
 
         # Now check some accesses
         cn[1] = 1
-        self.assert_(cn[1] == 1)
+        self.assertTrue(cn[1] == 1)
         cn[int(2e9)] = 2
-        self.assert_(cn[int(2e9)] == 2)
+        self.assertTrue(cn[int(2e9)] == 2)
         cn[long(3e9)] = 3
-        self.assert_(cn[long(3e9)] == 3)
+        self.assertTrue(cn[long(3e9)] == 3)
         cn[-1] = 4
-        self.assert_(cn[-1] == 4)
+        self.assertTrue(cn[-1] == 4)
 
-        self.assert_(cn.sum() == 10)
+        self.assertTrue(cn.sum() == 10)
 
     def test01(self):
         """Creating an extremely large carray (> 2**32) on disk."""
 
         cn = bcolz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == int(5e9))
 
         # Now check some accesses
         cn[1] = 1
-        self.assert_(cn[1] == 1)
+        self.assertTrue(cn[1] == 1)
         cn[int(2e9)] = 2
-        self.assert_(cn[int(2e9)] == 2)
+        self.assertTrue(cn[int(2e9)] == 2)
         cn[long(3e9)] = 3
-        self.assert_(cn[long(3e9)] == 3)
+        self.assertTrue(cn[long(3e9)] == 3)
         cn[-1] = 4
-        self.assert_(cn[-1] == 4)
+        self.assertTrue(cn[-1] == 4)
 
-        self.assert_(cn.sum() == 10)
+        self.assertTrue(cn.sum() == 10)
 
     def test02(self):
         """Opening an extremely large carray (> 2**32) on disk."""
 
         # Create the array on-disk
         cn = bcolz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == int(5e9))
         # Reopen it from disk
         cn = bcolz.carray(rootdir=self.rootdir)
-        self.assert_(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == int(5e9))
 
         # Now check some accesses
         cn[1] = 1
-        self.assert_(cn[1] == 1)
+        self.assertTrue(cn[1] == 1)
         cn[int(2e9)] = 2
-        self.assert_(cn[int(2e9)] == 2)
+        self.assertTrue(cn[int(2e9)] == 2)
         cn[long(3e9)] = 3
-        self.assert_(cn[long(3e9)] == 3)
+        self.assertTrue(cn[long(3e9)] == 3)
         cn[-1] = 4
-        self.assert_(cn[-1] == 4)
+        self.assertTrue(cn[-1] == 4)
 
-        self.assert_(cn.sum() == 10)
+        self.assertTrue(cn.sum() == 10)
 
 
 class persistenceTest(MayBeDiskTest):
@@ -1522,23 +1529,23 @@ class persistenceTest(MayBeDiskTest):
 
         N = 50000
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         cn = bcolz.zeros(N-2, dtype="i1", rootdir=self.rootdir, mode='w')
-        self.assert_(len(cn) == N-2)
+        self.assertTrue(len(cn) == N-2)
 
         # Now check some accesses (no errors should be raised)
         cn.append([1,1])
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
         cn[1] = 2
-        self.assert_(cn[1] == 2)
+        self.assertTrue(cn[1] == 2)
 
     def test01c(self):
         """Creating a carray in "a" mode."""
 
         N = 30003
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         self.assertRaises(IOError, bcolz.zeros,
                           N-2, dtype="i1", rootdir=self.rootdir, mode='a')
@@ -1548,10 +1555,10 @@ class persistenceTest(MayBeDiskTest):
 
         N = 10001
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         cn = bcolz.carray(rootdir=self.rootdir, mode='r')
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         # Now check some accesses
         self.assertRaises(IOError, cn.__setitem__, 1, 1)
@@ -1562,34 +1569,34 @@ class persistenceTest(MayBeDiskTest):
 
         N = 100001
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         cn = bcolz.carray(rootdir=self.rootdir, mode='w')
-        self.assert_(len(cn) == 0)
+        self.assertTrue(len(cn) == 0)
 
         # Now check some accesses (no errors should be raised)
         cn.append([1,1])
-        self.assert_(len(cn) == 2)
+        self.assertTrue(len(cn) == 2)
         cn[1] = 2
-        self.assert_(cn[1] == 2)
+        self.assertTrue(cn[1] == 2)
 
     def test02c(self):
         """Opening a carray in "a" mode."""
 
         N = 1000-1
         cn = bcolz.zeros(N, dtype="i1", rootdir=self.rootdir)
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         cn = bcolz.carray(rootdir=self.rootdir, mode='a')
-        self.assert_(len(cn) == N)
+        self.assertTrue(len(cn) == N)
 
         # Now check some accesses (no errors should be raised)
         cn.append([1,1])
-        self.assert_(len(cn) == N+2)
+        self.assertTrue(len(cn) == N+2)
         cn[1] = 2
-        self.assert_(cn[1] == 2)
+        self.assertTrue(cn[1] == 2)
         cn[N+1] = 3
-        self.assert_(cn[N+1] == 3)
+        self.assertTrue(cn[N+1] == 3)
 
 
 def suite():

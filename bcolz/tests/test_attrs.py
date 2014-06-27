@@ -39,10 +39,10 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr1'] = 'val1'
         cn.attrs['attr2'] = 'val2'
         cn.attrs['attr3'] = 'val3'
-        self.assert_(cn.attrs['attr1'] == 'val1')
-        self.assert_(cn.attrs['attr2'] == 'val2')
-        self.assert_(cn.attrs['attr3'] == 'val3')
-        self.assert_(len(cn.attrs) == 3)
+        self.assertTrue(cn.attrs['attr1'] == 'val1')
+        self.assertTrue(cn.attrs['attr2'] == 'val2')
+        self.assertTrue(cn.attrs['attr3'] == 'val3')
+        self.assertTrue(len(cn.attrs) == 3)
 
     def test00b(self):
         """Accessing attributes in a opened carray."""
@@ -55,10 +55,10 @@ class basicTest(MayBeDiskTest):
         # Re-open the carray
         if self.rootdir:
             cn = bcolz.open(rootdir=self.rootdir)
-        self.assert_(cn.attrs['attr1'] == 'val1')
-        self.assert_(cn.attrs['attr2'] == 'val2')
-        self.assert_(cn.attrs['attr3'] == 'val3')
-        self.assert_(len(cn.attrs) == 3)
+        self.assertTrue(cn.attrs['attr1'] == 'val1')
+        self.assertTrue(cn.attrs['attr2'] == 'val2')
+        self.assertTrue(cn.attrs['attr3'] == 'val3')
+        self.assertTrue(len(cn.attrs) == 3)
 
     def test01a(self):
         """Removing attributes in a new carray."""
@@ -70,10 +70,10 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr3'] = 'val3'
         # Remove one of them
         del cn.attrs['attr2']
-        self.assert_(cn.attrs['attr1'] == 'val1')
-        self.assert_(cn.attrs['attr3'] == 'val3')
+        self.assertTrue(cn.attrs['attr1'] == 'val1')
+        self.assertTrue(cn.attrs['attr3'] == 'val3')
         self.assertRaises(KeyError, cn.attrs.__getitem__, 'attr2')
-        self.assert_(len(cn.attrs) == 2)
+        self.assertTrue(len(cn.attrs) == 2)
 
     def test01b(self):
         """Removing attributes in a opened carray."""
@@ -88,10 +88,10 @@ class basicTest(MayBeDiskTest):
             cn = bcolz.open(rootdir=self.rootdir)
         # Remove one of them
         del cn.attrs['attr2']
-        self.assert_(cn.attrs['attr1'] == 'val1')
-        self.assert_(cn.attrs['attr3'] == 'val3')
+        self.assertTrue(cn.attrs['attr1'] == 'val1')
+        self.assertTrue(cn.attrs['attr3'] == 'val3')
         self.assertRaises(KeyError, cn.attrs.__getitem__, 'attr2')
-        self.assert_(len(cn.attrs) == 2)
+        self.assertTrue(len(cn.attrs) == 2)
 
     def test01c(self):
         """Appending attributes in a opened carray."""
@@ -105,10 +105,10 @@ class basicTest(MayBeDiskTest):
         # Append attrs
         cn.attrs['attr2'] = 'val2'
         cn.attrs['attr3'] = 'val3'
-        self.assert_(cn.attrs['attr1'] == 'val1')
-        self.assert_(cn.attrs['attr2'] == 'val2')
-        self.assert_(cn.attrs['attr3'] == 'val3')
-        self.assert_(len(cn.attrs) == 3)
+        self.assertTrue(cn.attrs['attr1'] == 'val1')
+        self.assertTrue(cn.attrs['attr2'] == 'val2')
+        self.assertTrue(cn.attrs['attr3'] == 'val3')
+        self.assertTrue(len(cn.attrs) == 3)
 
     def test02(self):
         """Checking iterator in attrs accessor."""
@@ -121,13 +121,13 @@ class basicTest(MayBeDiskTest):
         count = 0
         for key, val in cn.attrs:
             if key == 'attr1':
-                self.assert_(val, 'val1')
+                self.assertTrue(val, 'val1')
             if key == 'attr2':
-                self.assert_(val, 'val2')
+                self.assertTrue(val, 'val2')
             if key == 'attr3':
-                self.assert_(val, 'val3')
+                self.assertTrue(val, 'val3')
             count += 1
-        self.assert_(count, 3)
+        self.assertTrue(count, 3)
 
 class carrayTest(basicTest):
     flavor = "carray"

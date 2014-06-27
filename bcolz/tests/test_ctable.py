@@ -239,7 +239,7 @@ class add_del_colTest(MayBeDiskTest):
         t = bcolz.ctable(ra, cparams=bcolz.cparams(1), rootdir=self.rootdir)
         c = np.arange(N, dtype='i8')*3
         t.addcol(c, 'f2')
-        self.assert_(t['f2'].cparams.clevel == 1, "Incorrect clevel")
+        self.assertTrue(t['f2'].cparams.clevel == 1, "Incorrect clevel")
 
     def test02(self):
         """Testing adding a new column (default naming)"""
@@ -550,7 +550,7 @@ class trimTest(MayBeDiskTest):
         t = bcolz.fromiter(((i, i*2.) for i in xrange(N)), 'i4,f8', N,
                         rootdir=self.rootdir)
         t.trim(N)
-        self.assert_(len(ra) == len(t), "Lengths are not equal")
+        self.assertTrue(len(ra) == len(t), "Lengths are not equal")
 
 class trimDiskTest(trimTest):
     disk = True
@@ -598,8 +598,8 @@ class copyTest(MayBeDiskTest):
         b = np.arange(N, N+10, dtype='f8')*2.
         t2.append((a, b))
         ra = np.fromiter(((i, i*2.) for i in xrange(N+10)), dtype='i4,f8')
-        self.assert_(len(t) == N, "copy() does not work correctly")
-        self.assert_(len(t2) == N+10, "copy() does not work correctly")
+        self.assertTrue(len(t) == N, "copy() does not work correctly")
+        self.assertTrue(len(t2) == N+10, "copy() does not work correctly")
         assert_array_equal(t2[:], ra, "ctable values are not correct")
 
     def test01(self):
@@ -617,9 +617,9 @@ class copyTest(MayBeDiskTest):
             t2 = t.copy(cparams=bcolz.cparams(clevel=9),
                         rootdir=self.rootdir, mode='w')
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
-        self.assert_(t.cparams.clevel == bcolz.cparams().clevel)
-        self.assert_(t2.cparams.clevel == 9)
-        self.assert_(t['f1'].cbytes > t2['f1'].cbytes, "clevel not changed")
+        self.assertTrue(t.cparams.clevel == bcolz.cparams().clevel)
+        self.assertTrue(t2.cparams.clevel == 9)
+        self.assertTrue(t['f1'].cbytes > t2['f1'].cbytes, "clevel not changed")
 
     def test02(self):
         """Testing copy() with lower clevel"""
@@ -627,10 +627,10 @@ class copyTest(MayBeDiskTest):
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         t2 = t.copy(cparams=bcolz.cparams(clevel=1))
-        self.assert_(t.cparams.clevel == bcolz.cparams().clevel)
-        self.assert_(t2.cparams.clevel == 1)
+        self.assertTrue(t.cparams.clevel == bcolz.cparams().clevel)
+        self.assertTrue(t2.cparams.clevel == 1)
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
-        self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
+        self.assertTrue(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 
     def test03(self):
         """Testing copy() with no shuffle"""
@@ -640,7 +640,7 @@ class copyTest(MayBeDiskTest):
         # print "t:", t, t.rootdir
         t2 = t.copy(cparams=bcolz.cparams(shuffle=False), rootdir=self.rootdir)
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
-        self.assert_(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
+        self.assertTrue(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 
 class copyDiskTest(copyTest):
     disk = True
@@ -653,7 +653,7 @@ class specialTest(unittest.TestCase):
         N = 10
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
-        self.assert_(len(t) == len(ra), "Objects do not have the same length")
+        self.assertTrue(len(t) == len(ra), "Objects do not have the same length")
 
     def test01(self):
         """Testing __sizeof__() (big ctables)"""
@@ -662,7 +662,7 @@ class specialTest(unittest.TestCase):
         t = bcolz.ctable(ra)
         #print "size t uncompressed ->", t.nbytes
         #print "size t compressed   ->", t.cbytes
-        self.assert_(sys.getsizeof(t) < t.nbytes,
+        self.assertTrue(sys.getsizeof(t) < t.nbytes,
                      "ctable does not seem to compress at all")
 
     def test02(self):
@@ -672,7 +672,7 @@ class specialTest(unittest.TestCase):
         t = bcolz.ctable(ra)
         #print "size t uncompressed ->", t.nbytes
         #print "size t compressed   ->", t.cbytes
-        self.assert_(sys.getsizeof(t) > t.nbytes,
+        self.assertTrue(sys.getsizeof(t) > t.nbytes,
                      "ctable compress too much??")
 
 
@@ -709,7 +709,7 @@ class evalTest(MayBeDiskTest):
         rar = f0 * f1 * sin(f2)
         #print "ctable ->", ctr
         #print "python ->", rar
-        self.assert_(ctr == rar, "values are not correct")
+        self.assertTrue(ctr == rar, "values are not correct")
 
     def test01(self):
         """Testing eval() with columns and constants"""
@@ -1003,7 +1003,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test01(self):
         """Testing ctable.iter() without params"""
@@ -1014,7 +1014,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test02(self):
         """Testing ctable.iter() with start,stop,step"""
@@ -1025,7 +1025,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test03(self):
         """Testing ctable.iter() with outcols"""
@@ -1036,7 +1036,7 @@ class iterTest(MayBeDiskTest):
         nl = [(r['f2'], i, r['f0']) for i, r in enumerate(ra)]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test04(self):
         """Testing ctable.iter() with start,stop,step and outcols"""
@@ -1047,7 +1047,7 @@ class iterTest(MayBeDiskTest):
         nl = [(r['f2'], r['f0'], r['f0']) for r in ra[1:9:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test05(self):
         """Testing ctable.iter() with start, stop, step and limit"""
@@ -1058,7 +1058,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:2][:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test06(self):
         """Testing ctable.iter() with start, stop, step and skip"""
@@ -1069,7 +1069,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:2][3:]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
     def test07(self):
         """Testing ctable.iter() with start, stop, step and limit, skip"""
@@ -1080,7 +1080,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:2][1:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assert_(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctily")
 
 class iterDiskTest(iterTest):
     disk = True
@@ -1228,7 +1228,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test00b(self):
         """Testing where() with a boolean array (all true values)"""
@@ -1240,7 +1240,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if i <= i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test00c(self):
         """Testing where() with a boolean array (mix values)"""
@@ -1252,7 +1252,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test01a(self):
         """Testing where() with an expression (all false values)"""
@@ -1263,7 +1263,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test01b(self):
         """Testing where() with an expression (all true values)"""
@@ -1274,7 +1274,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if i <= i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test01c(self):
         """Testing where() with an expression (mix values)"""
@@ -1285,7 +1285,7 @@ class whereTest(MayBeDiskTest):
         rl = [i for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test02a(self):
         """Testing where() with an expression (with outcols)"""
@@ -1296,7 +1296,7 @@ class whereTest(MayBeDiskTest):
         rl = [i*2. for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test02b(self):
         """Testing where() with an expression (with outcols II)"""
@@ -1307,7 +1307,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i*2., i*3) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test02c(self):
         """Testing where() with an expression (with outcols III)"""
@@ -1318,7 +1318,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     # This does not work anymore because of the nesting of ctable._iter
     def _test02d(self):
@@ -1338,7 +1338,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt, type(rt[0][0])
         #print "rl->", rl, type(rl[0][0])
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test04(self):
         """Testing where() after an iter()"""
@@ -1351,7 +1351,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2]
         #print "rt->", rt, type(rt[0][0])
         #print "rl->", rl, type(rl[0][0])
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test05(self):
         """Testing where() with limit"""
@@ -1363,7 +1363,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][:3]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test06(self):
         """Testing where() with skip"""
@@ -1375,7 +1375,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][3:]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
     def test07(self):
         """Testing where() with limit & skip"""
@@ -1387,7 +1387,7 @@ class whereTest(MayBeDiskTest):
         rl = [(i, i*3, i) for i in xrange(N) if 4+i > i*2][2:3]
         #print "rt->", rt
         #print "rl->", rl
-        self.assert_(rt == rl, "where not working correctly")
+        self.assertTrue(rt == rl, "where not working correctly")
 
 class where_smallTest(whereTest):
     N = 10
@@ -1445,9 +1445,9 @@ class walkTest(MayBeDiskTest):
             else:
                 others += 1
 
-        self.assert_(ncas_ == self.ncas * self.nlevels)
-        self.assert_(ncts_ == self.ncts * self.nlevels)
-        self.assert_(others == 0)
+        self.assertTrue(ncas_ == self.ncas * self.nlevels)
+        self.assertTrue(ncts_ == self.ncts * self.nlevels)
+        self.assertTrue(others == 0)
 
     def test01(self):
         """Checking the walk toplevel function (classname='carray')"""
@@ -1461,9 +1461,9 @@ class walkTest(MayBeDiskTest):
             else:
                 others += 1
 
-        self.assert_(ncas_ == self.ncas * self.nlevels)
-        self.assert_(ncts_ == 0)
-        self.assert_(others == 0)
+        self.assertTrue(ncas_ == self.ncas * self.nlevels)
+        self.assertTrue(ncts_ == 0)
+        self.assertTrue(others == 0)
 
     def test02(self):
         """Checking the walk toplevel function (classname='ctable')"""
@@ -1477,9 +1477,9 @@ class walkTest(MayBeDiskTest):
             else:
                 others += 1
 
-        self.assert_(ncas_ == 0)
-        self.assert_(ncts_ == self.ncts * self.nlevels)
-        self.assert_(others == 0)
+        self.assertTrue(ncas_ == 0)
+        self.assertTrue(ncts_ == self.ncts * self.nlevels)
+        self.assertTrue(others == 0)
 
 
 

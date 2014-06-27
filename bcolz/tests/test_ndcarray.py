@@ -139,7 +139,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = 1
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test00b(self):
@@ -149,7 +149,7 @@ class getitemTest(MayBeDiskTest):
         if self.open:
             b = bcolz.open(rootdir=self.rootdir)
         sl = slice(1)
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01(self):
@@ -160,7 +160,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = slice(1,4)
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02(self):
@@ -171,7 +171,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = slice(1,9,2)
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03a(self):
@@ -182,7 +182,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (slice(1,3,1), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03b(self):
@@ -193,7 +193,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (slice(1,3,2), slice(1,4,2), slice(None))
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03c(self):
@@ -204,7 +204,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (slice(None,None,3), slice(1,3,2), slice(1,4,2))
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04a(self):
@@ -215,7 +215,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (1,1)
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04b(self):
@@ -226,7 +226,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2))
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04c(self):
@@ -237,7 +237,7 @@ class getitemTest(MayBeDiskTest):
             b = bcolz.open(rootdir=self.rootdir)
         sl = (1,slice(1,4,2),2)
         #print "b[sl]->", `b[sl]`
-        self.assert_(a[sl].shape == b[sl].shape, "Shape is not equal")
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 class getitemDiskTest(getitemTest):
@@ -493,8 +493,8 @@ class resizeTest(MayBeDiskTest):
         #print "b->", `b`
         # The next does not work well for carrays with shape (0,)
         #assert_array_equal(a, b, "Arrays are not equal")
-        self.assert_("a.dtype.base == b.dtype.base")
-        self.assert_("a.shape == b.shape+b.dtype.shape")
+        self.assertTrue("a.dtype.base == b.dtype.base")
+        self.assertTrue("a.shape == b.shape+b.dtype.shape")
 
     def test01(self):
         """Testing `resize()` (enlarge)"""
@@ -589,8 +589,8 @@ class reshapeTest(unittest.TestCase):
         #print "b->", `b`
         # The next does not work well for carrays with shape (0,)
         #assert_array_equal(a, b, "Arrays are not equal")
-        self.assert_(a.dtype.base == b.dtype.base)
-        self.assert_(a.shape == b.shape+b.dtype.shape)
+        self.assertTrue(a.dtype.base == b.dtype.base)
+        self.assertTrue(a.shape == b.shape+b.dtype.shape)
 
 
 class compoundTest(unittest.TestCase):
@@ -601,7 +601,7 @@ class compoundTest(unittest.TestCase):
         b = bcolz.ones((300,4), dtype=self.dtype)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01(self):
@@ -611,7 +611,7 @@ class compoundTest(unittest.TestCase):
         b.append(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test02(self):
@@ -639,7 +639,7 @@ class stringTest(unittest.TestCase):
         b = bcolz.carray(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01(self):
@@ -649,7 +649,7 @@ class stringTest(unittest.TestCase):
         b.append(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test02(self):
@@ -670,7 +670,7 @@ class unicodeTest(unittest.TestCase):
         b = bcolz.carray(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01(self):
@@ -680,7 +680,7 @@ class unicodeTest(unittest.TestCase):
         b.append(a)
         #print "b.dtype-->", b.dtype
         #print "b->", `b`
-        self.assert_(a.dtype == b.dtype.base)
+        self.assertTrue(a.dtype == b.dtype.base)
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test02(self):
@@ -782,8 +782,8 @@ class computeMethodsTest(unittest.TestCase):
         sac = ac.sum()
         #print "numpy sum-->", sa
         #print "carray sum-->", sac
-        self.assert_(sa.dtype == sac.dtype, "sum() is not working correctly.")
-        self.assert_(sa == sac, "sum() is not working correctly.")
+        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        self.assertTrue(sa == sac, "sum() is not working correctly.")
 
 
 

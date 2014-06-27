@@ -18,6 +18,7 @@ import bcolz
 import math
 from .py2help import xrange, _inttypes
 
+
 class Defaults(object):
     """Class to taylor the setters and getters of default values."""
 
@@ -543,7 +544,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         The flavor for the `out` object.  It can be 'carray' or 'numpy'.
     user_dict : dict
         An user-provided dictionary where the variables in expression
-        can be found by name.    
+        can be found by name.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -572,7 +573,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
 
     # Gather info about sizes and lengths
     typesize, vlen = 0, 1
-    for name in vars.iterkeys():
+    for name in vars:
         var = vars[name]
         if hasattr(var, "__len__") and not hasattr(var, "dtype"):
             raise ValueError("only numpy/carray sequences supported")
@@ -628,7 +629,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
     vars_ = {}
     # Get temporaries for vars
     maxndims = 0
-    for name in vars.iterkeys():
+    for name in vars:
         var = vars[name]
         if hasattr(var, "__len__"):
             ndims = len(var.shape) + len(var.dtype.shape)
@@ -639,7 +640,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
 
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
-        for name in vars.iterkeys():
+        for name in vars:
             var = vars[name]
             if hasattr(var, "__len__") and len(var) > bsize:
                 if hasattr(var, "_getrange"):
