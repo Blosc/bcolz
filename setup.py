@@ -68,10 +68,10 @@ if sys.version_info[0] == 2:
     if sys.version_info[1] < 6:
         exit_with_error("You need Python 2.6 or greater to run bcolz!")
 elif sys.version_info[0] == 3:
-    if sys.version_info[1] < 1:
-        exit_with_error("You need Python 3.1 or greater to run bcolz!")
+    if sys.version_info[1] < 2:
+        exit_with_error("You need Python 3.2 or greater to run bcolz!")
 else:
-    exit_with_error("You need Python 2.6/3.1 or greater to run bcolz!")
+    exit_with_error("You need Python 2.6/3.2 or greater to run bcolz!")
 
 # Check if Cython is installed or not (requisite)
 try:
