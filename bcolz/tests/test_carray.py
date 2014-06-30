@@ -1277,37 +1277,47 @@ class computeMethodsTest(TestCase):
         self.assertRaises(TypeError, ac.sum)
 
 
-class arangeTest():
+class arangeTest(MayBeDiskTest):
 
     def test00(self):
         """Testing arange() with only a `stop`."""
         a = np.arange(self.N)
-        ac = bcolz.arange(self.N)
+        ac = bcolz.arange(self.N, rootdir=self.rootdir)
         self.assertTrue(np.all(a == ac))
 
     def test01(self):
         """Testing arange() with a `start` and `stop`."""
         a = np.arange(3, self.N)
-        ac = bcolz.arange(3, self.N)
+        ac = bcolz.arange(3, self.N, rootdir=self.rootdir)
         self.assertTrue(np.all(a == ac))
 
     def test02(self):
         """Testing arange() with a `start`, `stop` and `step`."""
         a = np.arange(3, self.N, 4)
-        ac = bcolz.arange(3, self.N, 4)
+        ac = bcolz.arange(3, self.N, 4, rootdir=self.rootdir)
         self.assertTrue(np.all(a == ac))
 
     def test03(self):
         """Testing arange() with a `dtype`."""
         a = np.arange(self.N, dtype="i1")
-        ac = bcolz.arange(self.N, dtype="i1")
+        ac = bcolz.arange(self.N, dtype="i1", rootdir=self.rootdir)
         self.assertTrue(np.all(a == ac))
 
 class arange_smallTest(arangeTest, TestCase):
     N = 10
+    disk = False
 
 class arange_bigTest(arangeTest, TestCase):
     N = 1e4
+    disk = False
+
+class arange_smallDiskTest(arangeTest, TestCase):
+    N = 10
+    disk = True
+
+class arange_bigDiskTest(arangeTest, TestCase):
+    N = 1e4
+    disk = True
 
 
 class constructorTest(MayBeDiskTest):
@@ -1389,17 +1399,17 @@ class constructorTest(MayBeDiskTest):
         self.assertTrue(np.all(a == ac[:]))
 
 
-class constructorSmallTest(constructorTest):
+class constructorSmallTest(constructorTest, TestCase):
     N = 10
 
-class constructorSmallDiskTest(constructorTest):
+class constructorSmallDiskTest(constructorTest, TestCase):
     N = 10
     disk = True
 
-class constructorBigTest(constructorTest):
+class constructorBigTest(constructorTest, TestCase):
     N = 50000
 
-class constructorBigDiskTest(constructorTest):
+class constructorBigDiskTest(constructorTest, TestCase):
     N = 50000
     disk = True
 
