@@ -4,7 +4,7 @@ Announcing bcolz 0.7
 What's new
 ----------
 
-#XXX version-specific blurb XXX#
+* Support for Python 3 added.
 
 For more detailed info, see the release notes in:
 https://github.com/Blosc/bcolz/wiki/Release-Notes

@@ -6,16 +6,17 @@ Release notes for bcolz
 :Contact: francesc@blosc.io
 
 
-Changes from 0.5.1 to 0.6
+Changes from 0.5.1 to 0.7
 =========================
 
 - Renamed the package to `bcolz`.
+- Added support for Python 3.
 
 
 Changes from 0.5 to 0.5.1
 =========================
 
-- Added the missing bcolz.tests module in setup.py
+- Added the missing bcolz.tests module in setup.py.
 
 
 Changes from 0.4 to 0.5
