@@ -21,7 +21,7 @@ def compute_bcolz(sexpr, clevel, vm):
     cout = bcolz.eval(sexpr, vm=vm, cparams=bcolz.cparams(clevel))
     print("Time for bcolz.eval (%s) --> %.3f" % (vm, time() - t0,))
     #print(", cratio (out): %.1f" % (cout.nbytes / float(cout.cbytes)))
-    #print "cout-->", repr(cout)
+    #print("cout-->", repr(cout))
 
 
 if __name__ == "__main__":
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     t0 = time()
     cout = ne.evaluate(sexpr)
-    print "Time for numexpr --> %.3f" % (time() - t0,)
+    print("Time for numexpr --> %.3f" % (time() - t0,))
 
     if doprofile:
         import pstats

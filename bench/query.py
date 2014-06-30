@@ -17,7 +17,7 @@ sexpr = "(2*x*x*x+.3*y**2+z+1)<10"  # small number
 #sexpr = "(2*x*x*x+.3*y**2+z+1)<1e15"  # medium number
 #sexpr = "(2*x*x*x+.3*y**2+z+1)<1e20"  # large number
 
-print "Creating inputs..."
+print("Creating inputs...")
 
 cparams = bcolz.cparams(clevel)
 
@@ -33,19 +33,19 @@ else:
     t = bcolz.ctable((cx, cy, cz), names=['x', 'y', 'z'])
 nt = t[:]
 
-print "Querying '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
+print("Querying '%s' with 10^%d points" % (sexpr, int(math.log10(N))))
 
 t0 = time()
 out = [r for r in x[eval(sexpr)]]
-print "Time for numpy--> %.3f" % (time() - t0,)
+print("Time for numpy--> %.3f" % (time() - t0,))
 
 t0 = time()
 out = [r for r in t[eval(sexpr)]]
-print "Time for structured array--> %.3f" % (time() - t0,)
+print("Time for structured array--> %.3f" % (time() - t0,))
 
 t0 = time()
 out = [r for r in cx[sexpr]]
-print "Time for carray --> %.3f" % (time() - t0,)
+print("Time for carray --> %.3f" % (time() - t0,))
 
 # Uncomment the next for disabling threading
 #ne.set_num_threads(1)
@@ -59,7 +59,7 @@ t0 = time()
 cout = [r for r in t.where(sexpr)]
 #cout = [r['x'] for r in t.where(sexpr)]
 #cout = [r['y'] for r in t.where(sexpr, colnames=['x', 'y'])]
-print "Time for ctable--> %.3f" % (time() - t0,)
-print "cout-->", len(cout), cout[:10]
+print("Time for ctable--> %.3f" % (time() - t0,))
+print("cout-->", len(cout), cout[:10])
 
 #assert_array_equal(out, cout, "Arrays are not equal")

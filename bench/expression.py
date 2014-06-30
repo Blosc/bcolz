@@ -17,7 +17,7 @@ clevel = 3  # the compression level
 sexpr = "((.25*x + .75)*x - 1.5)*x - 2"  # a computer-friendly polynomial
 #sexpr = "(((.25*x + .75)*x - 1.5)*x - 2)<0"  # a computer-friendly polynomial
 
-print "Creating inputs..."
+print("Creating inputs...")
 
 cparams = bcolz.cparams(clevel)
 
@@ -33,15 +33,15 @@ else:
     cz = bcolz.carray(z, cparams=cparams)
     t = bcolz.ctable((cx, cy, cz), names=['x', 'y', 'z'])
 
-print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
+print("Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N))))
 
 t0 = time()
 out = eval(sexpr)
-print "Time for plain numpy--> %.3f" % (time() - t0,)
+print("Time for plain numpy--> %.3f" % (time() - t0,))
 
 t0 = time()
 out = ne.evaluate(sexpr)
-print "Time for numexpr (numpy)--> %.3f" % (time() - t0,)
+print("Time for numexpr (numpy)--> %.3f" % (time() - t0,))
 
 # Uncomment the next for disabling threading
 #ne.set_num_threads(1)
@@ -54,7 +54,7 @@ for kernel in "python", "numexpr":
     t0 = time()
     #cout = t.eval(sexpr, kernel=kernel, cparams=cparams)
     cout = t.eval(sexpr, cparams=cparams)
-    print "Time for ctable (%s) --> %.3f" % (kernel, time() - t0,)
+    print("Time for ctable (%s) --> %.3f" % (kernel, time() - t0,))
     #print "cout-->", repr(cout)
 
 #assert_array_equal(out, cout, "Arrays are not equal")

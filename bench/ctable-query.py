@@ -2,8 +2,9 @@
 # is needed in order to execute this.  A comparison with SQLite3 and
 # PyTables (if installed) is also done.
 
+from __future__ import print_function
+
 import sys
-import math
 import os
 import os.path
 import subprocess
@@ -14,10 +15,17 @@ from time import time
 import numpy as np
 
 import bcolz
+from bcolz.py2help import xrange
 
 
 NR = 1e5  # the number of rows
-NC = 500  # the number of columns
+if sys.version_info >= (3,0):
+    # There is a silly limitation on the number of fields for namedtuples
+    # for Python 3:
+    # https://groups.google.com/forum/#!msg/python-ideas/96AwHqs59GM/8bxJsiWLN6UJ
+    NC = 253  # the number of columns
+else:
+    NC = 500  # the number of columns
 mv = 1e10  # the mean value for entries (sig digits = 17 - log10(mv))
 clevel = 3  # the compression level
 show = False  # show statistics
@@ -34,7 +42,7 @@ def show_rss(explain):
     global tref
     # Build the command to obtain memory info
     newtref = time()
-    print "Time (%20s) --> %.3f" % (explain, newtref - tref),
+    print("Time (%20s) --> %.3f" % (explain, newtref - tref), end="")
     tref = newtref
     if show:
         cmd = "cat /proc/%s/status" % os.getpid()
@@ -42,9 +50,9 @@ def show_rss(explain):
         for line in sout:
             if line.startswith("VmRSS:"):
                 vmrss = int(line.split()[1]) // 1024
-        print "\t(Resident memory: %d MB)" % vmrss
+        print("\t(Resident memory: %d MB)" % vmrss)
     else:
-        print
+        print()
 
 
 def enter():
@@ -189,10 +197,10 @@ if __name__ == "__main__":
         mess = "sqlite (in-memory)"
     else:
         mess = method
-    print "########## Checking method: %s ############" % mess
+    print("########## Checking method: %s ############" % mess)
 
-    print "Querying with %g rows and %d cols" % (NR, NC)
-    print "Building database.  Wait please..."
+    print("Querying with %g rows and %d cols" % (NR, NC))
+    print("Building database.  Wait please...")
 
     if method == "ctable":
         out = test_ctable(clevel)
@@ -202,4 +210,4 @@ if __name__ == "__main__":
         out = test_numexpr()
     elif method == "sqlite":
         out = test_sqlite()
-    print "Number of selected elements in query:", len(out)
+    print("Number of selected elements in query:", len(out))

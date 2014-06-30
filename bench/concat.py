@@ -13,6 +13,8 @@
 # python bench/concat.py style arraysize nchunks nrepeats clevel
 #
 
+from __future__ import absolute_import
+
 import sys
 import math
 import time
@@ -20,6 +22,7 @@ import time
 import numpy
 
 import bcolz
+from bcolz.py2help import xrange
 
 
 def concat(data):
@@ -43,7 +46,7 @@ def append(data, clevel):
 
 
 if len(sys.argv) < 2:
-    print "Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' "
+    print("Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' ")
     sys.exit(1)
 
 style = sys.argv[1]

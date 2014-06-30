@@ -2,6 +2,8 @@
 # eval() on carray/numpy arrays.  Numexpr is needed in order to
 # execute this.
 
+from __future__ import print_function
+
 import math
 from time import time
 
@@ -29,30 +31,30 @@ doprofile = False
 def compute_ref(sexpr):
     t0 = time()
     out = eval(sexpr)
-    print "Time for plain numpy --> %.3f" % (time() - t0,)
+    print("Time for plain numpy --> %.3f" % (time() - t0,))
 
     t0 = time()
     out = ne.evaluate(sexpr)
-    print "Time for numexpr (numpy) --> %.3f" % (time() - t0,)
+    print("Time for numexpr (numpy) --> %.3f" % (time() - t0,))
 
 
 def compute_carray(sexpr, clevel, vm):
     # Uncomment the next for disabling threading
     # Maybe due to some contention between Numexpr and Blosc?
     # bcolz.set_nthreads(bcolz.ncores//2)
-    print "*** carray (using compression clevel = %d):" % clevel
+    print("*** carray (using compression clevel = %d):" % clevel)
     if clevel > 0:
         x, y, z = cx, cy, cz
     t0 = time()
     cout = bcolz.eval(sexpr, vm=vm, cparams=bcolz.cparams(clevel))
-    print "Time for bcolz.eval (%s) --> %.3f" % (vm, time() - t0,),
-    print ", cratio (out): %.1f" % (cout.nbytes / float(cout.cbytes))
+    print("Time for bcolz.eval (%s) --> %.3f" % (vm, time() - t0,), end="")
+    print(", cratio (out): %.1f" % (cout.nbytes / float(cout.cbytes)))
     #print "cout-->", repr(cout)
 
 
 if __name__ == "__main__":
 
-    print "Creating inputs..."
+    print("Creating inputs...")
 
     cparams = bcolz.cparams(clevel)
 
@@ -63,7 +65,8 @@ if __name__ == "__main__":
     cz = bcolz.carray(z, cparams=cparams)
 
     for sexpr in sexprs:
-        print "Evaluating '%s' with 10^%d points" % (sexpr, int(math.log10(N)))
+        print("Evaluating '%s' with 10^%d points" % (
+            sexpr, int(math.log10(N))))
         compute_ref(sexpr)
         for vm in "python", "numexpr":
             compute_carray(sexpr, clevel=0, vm=vm)

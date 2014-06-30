@@ -15,7 +15,7 @@ sexpr = "(x-1) < 10."  # the expression to compute
 
 cparams = bcolz.cparams(clevel)
 
-print "Creating inputs..."
+print("Creating inputs...")
 
 x = np.arange(N)
 cx = bcolz.carray(x, cparams=cparams)
@@ -28,30 +28,30 @@ else:
     cz = bcolz.carray(z, cparams=cparams)
     ct = bcolz.ctable((cx, cy, cz), names=['x', 'y', 'z'])
 
-print "Evaluating...", sexpr
+print("Evaluating...", sexpr)
 t0 = time()
 cbout = ct.eval(sexpr)
-print "Time for evaluation--> %.3f" % (time() - t0,)
-print "Converting to numy arrays"
+print("Time for evaluation--> %.3f" % (time() - t0,))
+print("Converting to numy arrays")
 bout = cbout[:]
 t = ct[:]
 
 t0 = time()
 cbool = bcolz.carray(bout, cparams=cparams)
-print "Time for converting boolean--> %.3f" % (time() - t0,)
-print "cbool-->", repr(cbool)
+print("Time for converting boolean--> %.3f" % (time() - t0,))
+print("cbool-->", repr(cbool))
 
 t0 = time()
 vals = [v for v in cbool.wheretrue()]
-print "Time for wheretrue()--> %.3f" % (time() - t0,)
-print "vals-->", len(vals)
+print("Time for wheretrue()--> %.3f" % (time() - t0,))
+print("vals-->", len(vals))
 
-print "Starting benchmark now..."
+print("Starting benchmark now...")
 # Retrieve from a ndarray
 t0 = time()
 vals = [v for v in x[bout]]
-print "Time for array--> %.3f" % (time() - t0,)
-#print "vals-->", len(vals)
+print("Time for array--> %.3f" % (time() - t0,))
+#print("vals-->", len(vals))
 
 #bcolz.set_num_threads(bcolz.ncores//2)
 
@@ -59,20 +59,20 @@ print "Time for array--> %.3f" % (time() - t0,)
 t0 = time()
 #cvals = [v for v in cx[cbout]]
 cvals = [v for v in cx.where(cbout)]
-print "Time for carray--> %.3f" % (time() - t0,)
-#print "vals-->", len(cvals)
+print("Time for carray--> %.3f" % (time() - t0,))
+#print("vals-->", len(cvals))
 assert vals == cvals
 
 # Retrieve from a structured ndarray
 t0 = time()
 vals = [tuple(v) for v in t[bout]]
-print "Time for structured array--> %.3f" % (time() - t0,)
-#print "vals-->", len(vals)
+print("Time for structured array--> %.3f" % (time() - t0,))
+#print("vals-->", len(vals))
 
 # Retrieve from a ctable
 t0 = time()
 #cvals = [tuple(v) for v in ct[cbout]]
 cvals = [v for v in ct.where(cbout)]
-print "Time for ctable--> %.3f" % (time() - t0,)
-#print "vals-->", len(cvals)
+print("Time for ctable--> %.3f" % (time() - t0,))
+#print("vals-->", len(cvals))
 assert vals == cvals

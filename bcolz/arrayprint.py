@@ -22,7 +22,7 @@ from numpy.core import numerictypes as _nt
 from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
 from numpy.core.multiarray import format_longfloat
 from numpy.core.fromnumeric import ravel
-
+from .py2help import xrange
 
 try:
     from numpy.core.multiarray import datetime_as_string, datetime_data
