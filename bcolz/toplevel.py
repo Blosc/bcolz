@@ -9,6 +9,8 @@
 """Top level functions and classes.
 """
 
+from __future__ import absolute_import
+
 import sys
 import os, os.path
 import glob

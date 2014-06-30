@@ -9,8 +9,10 @@
 """Utility functions (mostly private).
 """
 
-import sys, os, os.path, subprocess, math
-from time import time, clock
+from __future__ import absolute_import
+
+import os, os.path, subprocess, math
+from time import time
 import numpy as np
 
 

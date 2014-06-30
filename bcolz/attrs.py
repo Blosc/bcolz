@@ -7,6 +7,8 @@
 #
 ########################################################################
 
+from __future__ import absolute_import
+
 import os, os.path
 import json
 from .py2help import xrange, dict_iteritems
