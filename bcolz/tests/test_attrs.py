@@ -7,15 +7,14 @@
 #
 ########################################################################
 
-import sys
-import os, os.path
-import struct
+from __future__ import absolute_import
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
+from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
+    MayBeDiskTest, TestCase, unittest, skipUnless)
 
 
 class basicTest(MayBeDiskTest):

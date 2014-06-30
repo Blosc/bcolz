@@ -13,11 +13,9 @@ import sys
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
+from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless, heavy)
-
-if sys.version_info >= (3, 0):
-    xrange = range
+    MayBeDiskTest, TestCase, unittest, skipUnless)
 
 
 class with_listTest():

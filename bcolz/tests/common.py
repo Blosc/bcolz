@@ -6,6 +6,8 @@
 #
 ########################################################################
 
+from __future__ import absolute_import
+
 
 import tempfile
 import os
@@ -13,12 +15,13 @@ import os.path
 import sys
 import glob
 import shutil
+
 if sys.version < "2.7":
     import unittest2 as unittest
-    from unittest2 import TestCase, skipUnless
+    from unittest2 import TestCase, skipUnless, SkipTest
 else:
     import unittest
-    from unittest import TestCase, skipUnless
+    from unittest import TestCase, skipUnless, SkipTest
 
 
 # Global variables for the tests

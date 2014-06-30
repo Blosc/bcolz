@@ -7,14 +7,16 @@
 #
 ########################################################################
 
+from __future__ import absolute_import
+
 import sys
 import struct
 
 import numpy as np
 from numpy.testing import assert_array_equal
-import common
+from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless)
+    MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
 from bcolz.bcolz_ext import chunk
 
@@ -1511,6 +1513,8 @@ class largeCarrayTest(MayBeDiskTest):
     def test02(self):
         """Opening an extremely large carray (> 2**32) on disk."""
 
+        if not self.disk:
+            raise SkipTest
         # Create the array on-disk
         cn = bcolz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
         self.assertTrue(len(cn) == int(5e9))
@@ -1531,15 +1535,14 @@ class largeCarrayTest(MayBeDiskTest):
         self.assertTrue(cn.sum() == 10)
 
 @skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
-class largeCarrayMemoryTest(MayBeDiskTest, TestCase):
+class largeCarrayMemoryTest(largeCarrayTest, TestCase):
     disk = False
 
 @skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
-class largeCarrayDiskTest(MayBeDiskTest, TestCase):
+class largeCarrayDiskTest(largeCarrayTest, TestCase):
     disk = True
 
 class persistenceTest(MayBeDiskTest, TestCase):
-
     disk = True
 
     def test01a(self):
