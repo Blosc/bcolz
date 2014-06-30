@@ -214,39 +214,7 @@ Top level functions
         ctable object.
 
     See Also:
-      :py:func:`whereblocks`
-
-
-.. py:function:: whereblocks(table, expression, blen=None, outfields=None, limit=None, skip=0)
-
-    Iterate over the rows that fullfill the `expression` condition on
-    `table` in blocks of size `blen`.
-
-    Parameters:
-      expression : string or carray
-        A boolean Numexpr expression or a boolean carray.
-      blen : int
-        The length of the block that is returned.  The default is the
-        chunklen, or for a ctable, the minimum of the different column
-        chunklens.
-      outfields : list of strings or string
-        The list of column names that you want to get back in results.
-        Alternatively, it can be specified as a string such as 'f0 f1' or
-        'f0, f1'.
-      limit : int
-        A maximum number of elements to return.  The default is return
-        everything.
-      skip : int
-        An initial number of elements to skip.  The default is 0.
-
-    Returns:
-      out : iterable
-        This iterable returns buffers as NumPy arrays made of
-        structured types (or homogeneous ones in case `outfields` is a
-        single field.
-
-    See Also:
-      :py:func:`iterblocks`
+      :py:func:`ctable.whereblocks`
 
 
 .. py:function:: get_printoptions()
@@ -634,6 +602,7 @@ carray methods
     See Also:
       :py:meth:`iter`, :py:meth:`wheretrue`
 
+
   .. py:method:: wheretrue(limit=None, skip=0)
 
     Iterator that returns indices where this object is true.
@@ -953,6 +922,39 @@ ctable methods
 
     See Also:
       :py:meth:`ctable.iter`
+
+
+  .. py:method:: whereblocks(expression, blen=None, outfields=None, limit=None, skip=0)
+
+    Iterate over the rows that fullfill the `expression` condition on
+    this ctable, in blocks of size `blen`.
+
+    Parameters:
+      expression : string or carray
+        A boolean Numexpr expression or a boolean carray.
+      blen : int
+        The length of the block that is returned.  The default is the
+        chunklen, or for a ctable, the minimum of the different column
+        chunklens.
+      outfields : list of strings or string
+        The list of column names that you want to get back in results.
+        Alternatively, it can be specified as a string such as 'f0 f1' or
+        'f0, f1'.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
+
+    Returns:
+      out : iterable
+        This iterable returns buffers as NumPy arrays made of
+        structured types (or homogeneous ones in case `outfields` is a
+        single field.
+
+    See Also:
+      :py:func:`iterblocks`
+
 
 
 ctable special methods

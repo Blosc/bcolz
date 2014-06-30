@@ -87,11 +87,11 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2'):
+        for block in t.whereblocks('f1 < f2'):
             l += len(block)
             s += block['f0'].sum()
-        self.assertTrue(l == N - 1)
-        self.assertTrue(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test01(self):
         """Testing `whereblocks` method with a `blen`"""
@@ -99,14 +99,14 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f0 <= f1', blen=100):
+        for block in t.whereblocks('f0 <= f1', blen=100):
             l += len(block)
             # All blocks should be of length 100, except the last one,
             # which should be 0 or 20
             self.assertTrue(len(block) in (0, 20, 100))
             s += block['f0'].sum()
-        self.assertTrue(l == N)
-        self.assertTrue(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test02(self):
         """Testing `whereblocks` method with a `outfields` with 2 fields"""
@@ -114,12 +114,12 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i, i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', outfields=('f1','f2')):
-            self.assertTrue(block.dtype.names == ('f1','f2'))
+        for block in t.whereblocks('f1 < f2', outfields=('f1','f2')):
+            self.assertEqual(block.dtype.names, ('f1','f2'))
             l += len(block)
             s += block['f1'].sum()
-        self.assertTrue(l == N - 1)
-        self.assertTrue(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test03(self):
         """Testing `whereblocks` method with a `outfields` with 1 field"""
@@ -127,12 +127,12 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i, i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', outfields=('f1',)):
-            self.assertTrue(block.dtype.names == ('f1',))
+        for block in t.whereblocks('f1 < f2', outfields=('f1',)):
+            self.assertEqual(block.dtype.names, ('f1',))
             l += len(block)
             s += block['f1'].sum()
-        self.assertTrue(l == N - 1)
-        self.assertTrue(s == (N - 1) * (N / 2))  # Gauss summation formula
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test04(self):
         """Testing `whereblocks` method with a `limit` parameter"""
@@ -140,11 +140,11 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', limit=M):
+        for block in t.whereblocks('f1 < f2', limit=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assertTrue(l == M)
-        self.assertTrue(s == M * ((M + 1) / 2))  # Gauss summation formula
+        self.assertEqual(l, M)
+        self.assertEqual(s, M * ((M + 1) / 2))  # Gauss summation formula
 
     def test05(self):
         """Testing `whereblocks` method with a `limit` parameter"""
@@ -152,11 +152,11 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', limit=M):
+        for block in t.whereblocks('f1 < f2', limit=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assertTrue(l == M)
-        self.assertTrue(s == M * ((M + 1) / 2))  # Gauss summation formula
+        self.assertEqual(l, M)
+        self.assertEqual(s, M * ((M + 1) / 2))  # Gauss summation formula
 
     def test06(self):
         """Testing `whereblocks` method with a `skip` parameter"""
@@ -164,11 +164,11 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', skip=N-M):
+        for block in t.whereblocks('f1 < f2', skip=N-M):
             l += len(block)
             s += block['f0'].sum()
-        self.assertTrue(l == M - 1)
-        self.assertTrue(s == np.arange(N-M+1, N).sum())
+        self.assertEqual(l, M - 1)
+        self.assertEqual(s, np.arange(N-M+1, N).sum())
 
     def test07(self):
         """Testing `whereblocks` method with a `limit`, `skip` parameter"""
@@ -176,11 +176,11 @@ class whereblocksTest(MayBeDiskTest):
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in bcolz.whereblocks(t, 'f1 < f2', limit=N-M-2, skip=M):
+        for block in t.whereblocks('f1 < f2', limit=N-M-2, skip=M):
             l += len(block)
             s += block['f0'].sum()
-        self.assertTrue(l == N - M - 2)
-        self.assertTrue(s == np.arange(M+1, N-1).sum())
+        self.assertEqual(l, N - M - 2)
+        self.assertEqual(s, np.arange(M+1, N-1).sum())
 
 
 class small_whereblocksTest(whereblocksTest, TestCase):
