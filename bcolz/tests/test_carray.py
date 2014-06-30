@@ -16,13 +16,15 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless)
+    MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
 from bcolz.py2help import xrange
 from bcolz.bcolz_ext import chunk
 
 is_64bit = (struct.calcsize("P") == 8)
 
+if sys.version_info >= (3,0):
+    long = int
 
 
 class chunkTest(TestCase):
@@ -1485,7 +1487,7 @@ class largeCarrayTest(MayBeDiskTest):
         """Creating an extremely large carray (> 2**32) in memory."""
 
         cn = bcolz.zeros(5e9, dtype="i1")
-        self.assertTrue(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == long(5e9))
 
         # Now check some accesses
         cn[1] = 1
@@ -1503,7 +1505,7 @@ class largeCarrayTest(MayBeDiskTest):
         """Creating an extremely large carray (> 2**32) on disk."""
 
         cn = bcolz.zeros(5e9, dtype="i1", rootdir=self.rootdir)
-        self.assertTrue(len(cn) == int(5e9))
+        self.assertTrue(len(cn) == long(5e9))
 
         # Now check some accesses
         cn[1] = 1
