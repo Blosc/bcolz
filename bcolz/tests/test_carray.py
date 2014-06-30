@@ -16,16 +16,13 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
+    MayBeDiskTest, TestCase, unittest, skipUnless)
 import bcolz
+from bcolz.py2help import xrange
 from bcolz.bcolz_ext import chunk
-
 
 is_64bit = (struct.calcsize("P") == 8)
 
-if sys.version > '3':
-    xrange = range
-    long = int
 
 
 class chunkTest(TestCase):

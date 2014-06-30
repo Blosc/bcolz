@@ -16,9 +16,7 @@ from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless)
 import bcolz
-
-if sys.version_info >= (3, 0):
-    xrange = range
+from bcolz.py2help import xrange
 
 
 class createTest(MayBeDiskTest):

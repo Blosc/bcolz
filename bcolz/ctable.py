@@ -241,7 +241,6 @@ class ctable(object):
                 raise ValueError(
                     "`columns` and `names` must have the same length")
         # Check names validity
-        print("names:", names, type(names))
         nt = namedtuple('_nt', list(names), verbose=False)
         names = list(nt._fields)
 
