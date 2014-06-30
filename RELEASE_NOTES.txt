@@ -10,7 +10,12 @@ Changes from 0.5.1 to 0.7
 =========================
 
 - Renamed the package to `bcolz`.
+
 - Added support for Python 3.
+
+- Added a new function `iterblocks` for quickly returning blocks of
+  data, not just single elements. ctable receives a new `whereblocks`
+  method, which is the equivalent of `where` but returning data blocks.
 
 
 Changes from 0.5 to 0.5.1
