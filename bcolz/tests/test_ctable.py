@@ -1122,6 +1122,78 @@ class iterDiskTest(iterTest, TestCase):
     disk = True
 
 
+class iterblocksTest(MayBeDiskTest):
+
+    def test00(self):
+        """Testing `iterblocks` method with no blen, no start, no stop"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in bcolz.iterblocks(t):
+            l += len(block)
+            s += block['f0'].sum()
+        self.assertEqual(l, N)
+        self.assertEqual(s, (N - 1) * (N / 2))  # as per Gauss summation formula
+
+    def test01(self):
+        """Testing `iterblocks` method with no start, no stop"""
+        N, blen = self.N, 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in bcolz.iterblocks(t, blen):
+            if l == 0:
+                self.assertEqual(len(block), blen)
+            l += len(block)
+            s += block['f0'].sum()
+        self.assertEqual(l, N)
+        self.assertEqual(s, (N - 1) * (N / 2))  # as per Gauss summation formula
+
+    def test02(self):
+        """Testing `iterblocks` method with no stop"""
+        N, blen = self.N, 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0.
+        for block in bcolz.iterblocks(t, blen, blen-1):
+            l += len(block)
+            s += block['f1'].sum()
+        self.assertEqual(l, (N - (blen - 1)))
+        self.assertEqual(s, (np.arange(blen-1, N, dtype='f8')*2).sum())
+
+    def test03(self):
+        """Testing `iterblocks` method with all parameters set"""
+        N, blen = self.N, 100
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in bcolz.iterblocks(t, blen, blen-1, 3*blen+2):
+            l += len(block)
+            s += block['f2'].sum()
+        mlen = min(N - (blen - 1), 2*blen + 3)
+        self.assertEqual(l, mlen)
+        slen = min(N, 3*blen + 2)
+        self.assertEqual(s, (np.arange(blen-1, slen)*3).sum())
+
+
+class small_iterblocksMemoryTest(iterblocksTest, TestCase):
+    N = 100
+    disk = False
+
+class small_iterblocksDiskTest(iterblocksTest, TestCase):
+    N = 120
+    disk = True
+
+class large_iterblocksMemoryTest(iterblocksTest, TestCase):
+    N = 10000
+    disk = False
+
+class large_iterblocksDiskTest(iterblocksTest, TestCase):
+    N = 10030
+    disk = True
+
+
 class eval_getitemTest(MayBeDiskTest):
 
     def test00(self):

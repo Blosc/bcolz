@@ -191,6 +191,64 @@ Top level functions
       :py:func:`fill`, :py:func:`ones`
 
 
+.. py:function:: iterblocks(blen=None, start=0, stop=None)
+
+    Iterate over a `cobj` (carray/ctable) in blocks of size `blen`.
+
+    Parameters:
+      cobj : carray/ctable object
+        The bcolz object to be iterated over.
+      blen : int
+        The length of the block that is returned.  The default is the
+        chunklen, or for a ctable, the minimum of the different column
+        chunklens.
+      start : int
+        Where the iterator starts.  The default is to start at the beginning.
+      stop : int
+        Where the iterator stops. The default is to stop at the end.
+
+    Returns:
+      out : iterable
+        This iterable returns buffers as NumPy arays of homogeneous or
+        structured types, depending on whether `cobj` is a carray or a
+        ctable object.
+
+    See Also:
+      :py:func:`whereblocks`
+
+
+.. py:function:: whereblocks(table, expression, blen=None, outfields=None, limit=None, skip=0)
+
+    Iterate over the rows that fullfill the `expression` condition on
+    `table` in blocks of size `blen`.
+
+    Parameters:
+      expression : string or carray
+        A boolean Numexpr expression or a boolean carray.
+      blen : int
+        The length of the block that is returned.  The default is the
+        chunklen, or for a ctable, the minimum of the different column
+        chunklens.
+      outfields : list of strings or string
+        The list of column names that you want to get back in results.
+        Alternatively, it can be specified as a string such as 'f0 f1' or
+        'f0, f1'.
+      limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
+      skip : int
+        An initial number of elements to skip.  The default is 0.
+
+    Returns:
+      out : iterable
+        This iterable returns buffers as NumPy arrays made of
+        structured types (or homogeneous ones in case `outfields` is a
+        single field.
+
+    See Also:
+      :py:func:`iterblocks`
+
+
 .. py:function:: get_printoptions()
 
     Return the current print options.
@@ -845,7 +903,6 @@ ctable methods
 
     See Also:
       :py:meth:`ctable.where`
-
 
   .. py:method:: resize(nitems)
 

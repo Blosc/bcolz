@@ -471,6 +471,133 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     obj.flush()
     return obj
 
+def iterblocks(cobj, blen=None, start=0, stop=None):
+    """iterblocks(blen=None, start=0, stop=None)
+
+    Iterate over a `cobj` (carray/ctable) in blocks of size `blen`.
+
+    Parameters
+    ----------
+    cobj : carray/ctable object
+        The bcolz object to be iterated over.
+    blen : int
+        The length of the block that is returned.  The default is the
+        chunklen, or for a ctable, the minimum of the different column
+        chunklens.
+    start : int
+        Where the iterator starts.  The default is to start at the beginning.
+    stop : int
+        Where the iterator stops. The default is to stop at the end.
+
+    Returns
+    -------
+    out : iterable
+        This iterable returns buffers as NumPy arays of homogeneous or
+        structured types, depending on whether `cobj` is a carray or a
+        ctable object.
+
+    See Also
+    --------
+    whereblocks
+
+    """
+
+    if stop is None or stop > len(cobj):
+        stop = len(cobj)
+    if isinstance(cobj, bcolz.ctable):
+        # A ctable object
+        if blen is None:
+            # Get the minimum chunklen for every column
+            blen = min(cobj[col].chunklen for col in cobj.cols)
+        # Create intermediate buffers for columns in a dictarray
+        # (it is important that columns are contiguous)
+        cbufs = {}
+        for name in cobj.names:
+            cbufs[name] = np.empty(blen, dtype=cobj[name].dtype)
+        for i in xrange(start, stop, blen):
+            buf = np.empty(blen, dtype=cobj.dtype)
+            # Populate the column buffers and assign to the final buffer
+            for name in cobj.names:
+                cobj[name]._getrange(i, blen, cbufs[name])
+                buf[name][:] = cbufs[name]
+            if i + blen > stop:
+                buf = buf[:stop - i]
+            yield buf
+    else:
+        # A carray object
+        if blen is None:
+            blen = cobj.chunklen
+        for i in xrange(start, stop, blen):
+            buf = np.empty(blen, dtype=cobj.dtype)
+            cobj._getrange(i, blen, buf)
+            if i + blen > stop:
+                buf = buf[:stop - i]
+            yield buf
+
+def whereblocks(table, expression, blen=None, outfields=None, limit=None,
+                skip=0):
+    """
+    whereblocks(table, expression, blen=None, outfields=None, limit=None, skip=0)
+
+    Iterate over the rows that fullfill the `expression` condition on
+    `table` in blocks of size `blen`.
+
+    Parameters
+    ----------
+    expression : string or carray
+        A boolean Numexpr expression or a boolean carray.
+    blen : int
+        The length of the block that is returned.  The default is the
+        chunklen, or for a ctable, the minimum of the different column
+        chunklens.
+    outfields : list of strings or string
+        The list of column names that you want to get back in results.
+        Alternatively, it can be specified as a string such as 'f0 f1' or
+        'f0, f1'.
+    limit : int
+        A maximum number of elements to return.  The default is return
+        everything.
+    skip : int
+        An initial number of elements to skip.  The default is 0.
+
+    Returns
+    -------
+    out : iterable
+        This iterable returns buffers as NumPy arrays made of
+        structured types (or homogeneous ones in case `outfields` is a
+        single field.
+
+    See Also
+    --------
+    iterblocks
+
+    """
+
+    if blen is None:
+        # Get the minimum chunklen for every field
+        blen = min(table[col].chunklen for col in table.cols)
+    if outfields is None:
+        dtype = table.dtype
+    else:
+        if not isinstance(outfields, (list, tuple)):
+            raise ValueError("only a sequence is supported for outfields")
+        # Get the dtype for the outfields set
+        try:
+            dtype = [(name, table[name].dtype) for name in outfields]
+        except IndexError:
+            raise ValueError("Some names in `outfields` are not real fields")
+
+    buf = np.empty(blen, dtype=dtype)
+    nrow = 0
+    for row in table.where(expression, outfields, limit, skip):
+        buf[nrow] = row
+        nrow += 1
+        if nrow == blen:
+            yield buf
+            buf = np.empty(blen, dtype=dtype)
+            nrow = 0
+    yield buf[:nrow]
+
 def _getvars(expression, user_dict, depth, vm):
     """Get the variables in `expression`.
 
