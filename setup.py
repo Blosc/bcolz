@@ -1,4 +1,4 @@
-# #######################################################################
+########################################################################
 #
 # License: BSD
 #       Created: August 16, 2012
@@ -124,18 +124,27 @@ open('bcolz/version.py', 'w').write('__version__ = "%s"\n' % VERSION)
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
+# Allow setting the Blosc dir if installed in the system
+BLOSC_DIR = os.environ.get('BLOSC_DIR', '')
+
+# Sources & libraries
+inc_dirs = []
 lib_dirs = []
 libs = []
-inc_dirs = ['blosc']
+def_macros = []
+sources = ["bcolz/bcolz_ext.pyx"]
+
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
-
 inc_dirs.extend(get_numpy_include_dirs())
 optional_libs = []
 
-# Handle --lflags=[FLAGS] --cflags=[FLAGS]
+# Handle --blosc=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
 for arg in args:
+    if arg.find('--blosc=') == 0:
+        BLOSC_DIR = os.path.expanduser(arg.split('=')[1])
+        sys.argv.remove(arg)
     if arg.find('--lflags=') == 0:
         LFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
@@ -143,9 +152,28 @@ for arg in args:
         CFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
 
-# Add -msse2 flag for optimizing shuffle in include Blosc
-if os.name == 'posix':
-    CFLAGS.append("-msse2")
+if not BLOSC_DIR:
+    # Compiling everything from sources
+    # Blosc + BloscLZ sources
+    sources += glob.glob('c-blosc/blosc/*.c')
+    # LZ4 sources
+    sources += glob.glob('c-blosc/internal-complibs/lz4*/*.c')
+    # Snappy sources
+    sources += glob.glob('c-blosc/internal-complibs/snappy*/*.cc')
+    # Zlib sources
+    sources += glob.glob('c-blosc/internal-complibs/zlib*/*.c')
+    # Finally, add all the include dirs...
+    inc_dirs += [os.path.join('c-blosc', 'blosc')]
+    inc_dirs += glob.glob('c-blosc/internal-complibs/*')
+    # ...and the macros for all the compressors supported
+    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
+    # Add -msse2 flag for optimizing shuffle in included c-blosc
+    if os.name == 'posix':
+        CFLAGS.append("-msse2")
+else:
+    inc_dirs += [os.path.join(BLOSC_DIR, 'include')]
+    lib_dirs += [os.path.join(BLOSC_DIR, 'lib')]
+    libs += ['blosc']
 
 # Add some macros here for debugging purposes, if needed
 def_macros = []
@@ -190,11 +218,7 @@ a high-performance compressor that is optimized for binary data.
           Extension("bcolz.bcolz_ext",
                     include_dirs=inc_dirs,
                     define_macros=def_macros,
-                    sources=["bcolz/bcolz_ext.pyx",
-                             "blosc/blosc.c", "blosc/blosclz.c",
-                             "blosc/shuffle.c"],
-                    depends=["blosc/blosc.h", "blosc/blosclz.h",
-                             "blosc/shuffle.h"],
+                    sources=sources,
                     library_dirs=lib_dirs,
                     libraries=libs,
                     extra_link_args=LFLAGS,
@@ -203,4 +227,3 @@ a high-performance compressor that is optimized for binary data.
       packages=['bcolz', 'bcolz.tests'],
 
 )
-

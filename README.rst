@@ -41,13 +41,32 @@ Requisites
 - Python >= 2.6
 - NumPy >= 1.7
 - Cython >= 0.20
+- Blosc >= 1.3.0 (optional, the internal Blosc will be used by default)
+- unittest2 (only in the case you are running Python 2.6)
 
 Building
 --------
 
 Assuming that you have the requisites and a C compiler installed, do::
 
-    $ python setup.py build_ext --inplace
+  $ pip install -U bcolz
+
+or, if you have unpacked the tarball locally::
+
+  $ python setup.py build_ext --inplace
+
+In case you have Blosc installed as an external library you can link
+with it (disregarding the included Blosc sources) in a couple of ways:
+
+Using an environment variable::
+
+  $ BLOSC_DIR=/usr/local     (or "set BLOSC_DIR=\blosc" on Win)
+  $ export BLOSC_DIR         (not needed on Win)
+  $ python setup.py build_ext --inplace
+
+Using a flag::
+
+  $ python setup.py build_ext --inplace --blosc=/usr/local
 
 Testing
 -------
@@ -55,21 +74,24 @@ Testing
 After compiling, you can quickly check that the package is sane by
 running::
 
-    $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
-    $ export PYTHONPATH    (not needed on Windows)
-    $ python bcolz/tests/test_all.py
+  $ PYTHONPATH=.   (or "set PYTHONPATH=." on Windows)
+  $ export PYTHONPATH    (not needed on Windows)
+  $ python -c"import bcolz; bcolz.test()"  # add `heavy=True` if desired
 
 Installing
 ----------
 
 Install it as a typical Python package::
 
-    $ python setup.py install
+  $ python setup.py install
 
 Documentation
 -------------
 
-Please refer to the doc/ directory.  The HTML manual is in doc/html,
+You can find the online manual at:
+
+http://bcolz.blosc.org
+
 but of course, you can always access docstrings from the console
 (i.e. help(bcolz.ctable)).
 
@@ -81,9 +103,6 @@ Resources
 
 Visit the main bcolz site repository at:
 http://github.com/Blosc/bcolz
-
-Manual:
-http://bcolz.blosc.org
 
 Home of Blosc compressor:
 http://blosc.org
