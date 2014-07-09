@@ -34,7 +34,9 @@ from bcolz.arrayprint import (
     array2string, set_printoptions, get_printoptions )
 
 from bcolz.bcolz_ext import (
-    carray, blosc_version, _blosc_set_nthreads as blosc_set_nthreads )
+    carray, blosc_version, blosc_compressor_list,
+    _blosc_set_nthreads as blosc_set_nthreads,
+    _blosc_init, _blosc_destroy)
 from bcolz.ctable import ctable
 from bcolz.toplevel import (
     detect_number_of_cores, set_nthreads,
@@ -43,6 +45,9 @@ from bcolz.toplevel import (
 from bcolz.version import __version__
 from bcolz.tests import test
 
-# Initialize Blosc
+# Initialization code for the Blosc library
+_blosc_init()
 ncores = detect_number_of_cores()
 blosc_set_nthreads(ncores)
+import atexit
+atexit.register(_blosc_destroy)

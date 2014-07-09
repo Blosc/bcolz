@@ -37,9 +37,9 @@ def print_versions():
     print("bcolz version:     %s" % bcolz.__version__)
     print("NumPy version:     %s" % numpy.__version__)
     tinfo = bcolz.blosc_version()
-    #blosc_cnames = bcolz.blosc_compressor_list()
+    blosc_cnames = bcolz.blosc_compressor_list()
     print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
-    #print("Blosc compressors: %s" % (blosc_cnames,))
+    print("Blosc compressors: %s" % (blosc_cnames,))
     if bcolz.numexpr_here:
         print("Numexpr version:   %s" % bcolz.numexpr.__version__)
     else:

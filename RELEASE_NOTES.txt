@@ -17,6 +17,10 @@ Changes from 0.5.1 to 0.7
   data, not just single elements. ctable receives a new `whereblocks`
   method, which is the equivalent of `where` but returning data blocks.
 
+- Support for c-blosc 1.4.1.  This allows the use of different
+  compressors via the new `cname` parameter in the `cparams` class, and
+  also to be used in platforms not supporting unaligned access.
+
 
 Changes from 0.5 to 0.5.1
 =========================

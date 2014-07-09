@@ -23,19 +23,18 @@ import cython
 import bcolz
 from bcolz import utils, attrs, array2string
 
+
 if sys.version_info >= (3, 0):
-    _MAXINT = 2**31 - 1
+    _MAXINT = 2 ** 31 - 1
     _inttypes = (int, np.integer)
 else:
     _MAXINT = sys.maxint
     _inttypes = (int, long, np.integer)
 
-
-
 _KB = 1024
 _MB = 1024 * _KB
 
-# Directories for saving the data and metadata for carray persistency
+# Directories for saving the data and metadata for bcolz persistency
 DATA_DIR = 'data'
 META_DIR = 'meta'
 SIZES_FILE = 'sizes'
@@ -62,24 +61,32 @@ IntType = np.dtype(np.int_)
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
-    PyString_AsString, PyString_FromString, \
+    PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
     PyArray_GETITEM, PyArray_SETITEM, \
-    npy_intp
+    npy_intp, PyBuffer_FromMemory, Py_uintptr_t
 
 #-----------------------------------------------------------------
 
+
+# Check blosc version
+cdef extern from "check_blosc_version.h":
+    pass
 
 # Blosc routines
 cdef extern from "blosc.h":
     cdef enum:
         BLOSC_MAX_OVERHEAD,
         BLOSC_VERSION_STRING,
-        BLOSC_VERSION_DATE
+        BLOSC_VERSION_DATE,
+        BLOSC_MAX_TYPESIZE
 
+    void blosc_init()
+    void blosc_destroy()
     void blosc_get_versions(char *version_str, char *version_date)
     int blosc_set_nthreads(int nthreads)
+    int blosc_set_compressor(const char*compname)
     int blosc_compress(int clevel, int doshuffle, size_t typesize,
                        size_t nbytes, void *src, void *dest,
                        size_t destsize) nogil
@@ -91,6 +98,7 @@ cdef extern from "blosc.h":
     void blosc_cbuffer_metainfo(void *cbuffer, size_t *typesize, int *flags)
     void blosc_cbuffer_versions(void *cbuffer, int *version, int *versionlz)
     void blosc_set_blocksize(size_t blocksize)
+    char*blosc_list_compressors()
 
 
 #----------------------------------------------------------------------------
@@ -104,9 +112,28 @@ import_array()
 #-------------------------------------------------------------
 
 # Some utilities
+def blosc_compressor_list():
+    """
+    blosc_compressor_list()
+
+    Returns a list of compressors available in the Blosc build.
+
+    Parameters
+    ----------
+    None
+
+    Returns
+    -------
+    out : list
+        The list of names.
+    """
+    list_compr = blosc_list_compressors().decode()
+    clist = [s.encode() for s in list_compr.split(',')]
+    return clist
+
 def _blosc_set_nthreads(nthreads):
     """
-    blosc_set_nthreads(nthreads)
+    _blosc_set_nthreads(nthreads)
 
     Sets the number of threads that Blosc can use.
 
@@ -119,9 +146,26 @@ def _blosc_set_nthreads(nthreads):
     -------
     out : int
         The previous setting for the number of threads.
-
     """
     return blosc_set_nthreads(nthreads)
+
+def _blosc_init():
+    """
+    _blosc_init()
+
+    Initialize the Blosc library.
+
+    """
+    blosc_init()
+
+def _blosc_destroy():
+    """
+    _blosc_destroy()
+
+    Finalize the Blosc library.
+
+    """
+    blosc_destroy()
 
 def blosc_version():
     """
@@ -130,7 +174,14 @@ def blosc_version():
     Return the version of the Blosc library.
 
     """
-    return (<char *> BLOSC_VERSION_STRING, <char *> BLOSC_VERSION_DATE)
+    # All the 'decode' contorsions are for Python 3 returning actual strings
+    ver_str = <char *> BLOSC_VERSION_STRING
+    if hasattr(ver_str, "decode"):
+        ver_str = ver_str.decode()
+    ver_date = <char *> BLOSC_VERSION_DATE
+    if hasattr(ver_date, "decode"):
+        ver_date = ver_date.decode()
+    return (ver_str, ver_date)
 
 def list_bytes_to_str(lst):
     """The Python 3 JSON encoder doesn't accept 'bytes' objects,
@@ -218,6 +269,7 @@ cdef int true_count(char *data, int nbytes):
 
 #-------------------------------------------------------------
 
+
 cdef class chunk:
     """
     chunk(array, atom, cparams)
@@ -227,14 +279,18 @@ cdef class chunk:
     This class is meant to be used only by the `carray` class.
 
     """
-
-    # To save space, keep these variables under a minimum
     cdef char typekind, isconstant
-    cdef int atomsize, itemsize, blocksize
-    cdef int nbytes, cbytes, cdbytes
+    cdef public int atomsize, itemsize, blocksize
+    cdef public int nbytes, cbytes, cdbytes
     cdef int true_count
     cdef char *data
     cdef object atom, constant, dobject
+
+    cdef void _getitem(self, int start, int stop, char *dest)
+    cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
+                       object cparams)
+    cdef compress_arrdata(self, ndarray array, int itemsize,
+                          object cparams, object _memory)
 
     property dtype:
         "The NumPy dtype for this chunk."
@@ -246,26 +302,45 @@ cdef class chunk:
         cdef int itemsize, footprint
         cdef size_t nbytes, cbytes, blocksize
         cdef dtype dtype_
+        cdef char *data
 
         self.atom = atom
         self.atomsize = atom.itemsize
         dtype_ = atom.base
-        self.itemsize = itemsize = dtype_.elsize
         self.typekind = dtype_.kind
+        # Hack for allowing strings with len > BLOSC_MAX_TYPESIZE
+        if self.typekind == 'S':
+            itemsize = 1
+        elif self.typekind == 'U':
+            itemsize = 4
+        elif self.typekind == 'V' and dtype_.elsize > BLOSC_MAX_TYPESIZE:
+            itemsize = 1
+        else:
+            itemsize = dtype_.elsize
+        if itemsize > BLOSC_MAX_TYPESIZE:
+            raise TypeError(
+                "typesize is %d and bcolz does not currently support data "
+                "types larger than %d bytes" % (itemsize, BLOSC_MAX_TYPESIZE))
+        self.itemsize = itemsize
         self.dobject = None
         footprint = 0
 
         if _compr:
             # Data comes in an already compressed state inside a Python String
             self.data = PyString_AsString(dobject)
-            self.dobject = dobject  # Increment the reference so that data
-            # don't go
+            # Increment the reference so that data don't go away
+            self.dobject = dobject
             # Set size info for the instance
             blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+        elif dtype_ == 'O':
+            # The objects should arrive here already pickled
+            data = PyString_AsString(dobject)
+            nbytes = PyString_GET_SIZE(dobject)
+            cbytes, blocksize = self.compress_data(data, 1, nbytes, cparams)
         else:
             # Compress the data object (a NumPy object)
-            nbytes, cbytes, blocksize, footprint = self.compress_data(
-                dobject, cparams, _memory)
+            nbytes, cbytes, blocksize, footprint = self.compress_arrdata(
+                dobject, itemsize, cparams, _memory)
         footprint += 128  # add the (aprox) footprint of this instance in bytes
 
         # Fill instance data
@@ -274,15 +349,13 @@ cdef class chunk:
         self.cdbytes = cbytes
         self.blocksize = blocksize
 
-    cdef compress_data(self, ndarray array, object cparams, object _memory):
+    cdef compress_arrdata(self, ndarray array, int itemsize,
+                          object cparams, object _memory):
         """Compress data in `array` and put it in ``self.data``"""
-        cdef size_t nbytes, cbytes, blocksize, itemsize, footprint
-        cdef int clevel, shuffle
-        cdef char *dest
+        cdef size_t nbytes, cbytes, blocksize, footprint
 
         # Compute the total number of bytes in this array
-        itemsize = array.itemsize
-        nbytes = itemsize * array.size
+        nbytes = array.itemsize * array.size
         cbytes = 0
         footprint = 0
 
@@ -320,32 +393,63 @@ cdef class chunk:
                 array = array.copy()
 
             # Compress data
-            dest = <char *> malloc(nbytes + BLOSC_MAX_OVERHEAD)
-            clevel = cparams.clevel
-            shuffle = cparams.shuffle
-            with nogil:
-                cbytes = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                                        array.data, dest,
-                                        nbytes + BLOSC_MAX_OVERHEAD)
-            if cbytes <= 0:
-                raise RuntimeError, "fatal error during Blosc compression: " \
-                                    "%d" % cbytes
-            # Free the unused data
-            self.data = <char *> realloc(dest, cbytes)
-            # Set size info for the instance
-            blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+            cbytes, blocksize = self.compress_data(
+                array.data, itemsize, nbytes, cparams)
 
         return (nbytes, cbytes, blocksize, footprint)
 
+    cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
+                       object cparams):
+        """Compress data with `cparams` and return metadata."""
+        cdef size_t nbytes_, cbytes, blocksize
+        cdef int clevel, shuffle, ret
+        cdef char *dest
+
+        clevel = cparams.clevel
+        shuffle = cparams.shuffle
+        cname = cparams.cname
+        if blosc_set_compressor(cname) < 0:
+            raise ValueError(
+                "Compressor '%s' is not available in this build" % cname)
+        dest = <char *> malloc(nbytes + BLOSC_MAX_OVERHEAD)
+        with nogil:
+            ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                                 data, dest, nbytes + BLOSC_MAX_OVERHEAD)
+        if ret <= 0:
+            raise RuntimeError(
+                "fatal error during Blosc compression: %d" % ret)
+        # Free the unused data
+        cbytes = ret;
+        self.data = <char *> realloc(dest, cbytes)
+        # Set size info for the instance
+        blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
+        assert nbytes_ == nbytes
+
+        return (cbytes, blocksize)
+
     def getdata(self):
-        """Get a compressed String object out of this chunk (for
-        persistence)."""
+        """Get a compressed string object out of this chunk (for persistence)."""
         cdef object string
 
         assert (not self.isconstant,
                 "This function can only be used for persistency")
         string = PyString_FromStringAndSize(self.data,
                                             <Py_ssize_t> self.cdbytes)
+        return string
+
+    def getudata(self):
+        """Get an uncompressed string out of this chunk (for 'O'bject types)."""
+        cdef int ret
+        cdef char *dest
+
+        dest = <char *> malloc(self.nbytes)
+        # Fill dest with uncompressed data
+        with nogil:
+            ret = blosc_decompress(self.data, dest, self.nbytes)
+        if ret < 0:
+            raise RuntimeError(
+                "fatal error during Blosc decompression: %d" % ret)
+        string = PyString_FromStringAndSize(dest, <Py_ssize_t> self.nbytes)
         return string
 
     cdef void _getitem(self, int start, int stop, char *dest):
@@ -372,15 +476,15 @@ cdef class chunk:
             else:
                 ret = blosc_getitem(self.data, nstart, nitems, dest)
         if ret < 0:
-            raise RuntimeError, "fatal error during Blosc decompression: %d" \
-                                % ret
+            raise RuntimeError(
+                "fatal error during Blosc decompression: %d" % ret)
 
     def __getitem__(self, object key):
         """__getitem__(self, key) -> values."""
         cdef ndarray array
         cdef object start, stop, step, clen, idx
 
-        if isinstance(key, (int, long)):
+        if isinstance(key, _inttypes):
             # Quickly return a single element
             array = np.empty(shape=(1,), dtype=self.dtype)
             self._getitem(key, key + 1, array.data)
@@ -399,7 +503,7 @@ cdef class chunk:
             else:
                 (start, stop, step) = key[0].start, key[0].stop, key[0].step
         else:
-            raise IndexError, "key not suitable:", key
+            raise IndexError("key not suitable:", key)
 
         # Get the corrected values for start, stop, step
         clen = cython.cdiv(self.nbytes, self.atomsize)
@@ -415,9 +519,17 @@ cdef class chunk:
             return array[::step]
         return array
 
+    @property
+    def pointer(self):
+        return <Py_uintptr_t> self.data + BLOSCPACK_HEADER_LENGTH
+
+    @property
+    def viewof(self):
+        return PyBuffer_FromMemory(<void*>self.data, <Py_ssize_t>self.cdbytes)
+
     def __setitem__(self, object key, object value):
         """__setitem__(self, key, value) -> None."""
-        raise NotImplementedError
+        raise NotImplementedError()
 
     def __str__(self):
         """Represent the chunk as an string."""
@@ -487,11 +599,10 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
 
 if sys.version_info >= (3, 0):
     def decode_byte(byte):
-      return byte
+        return byte
 else:
     def decode_byte(byte):
-      return int(byte.encode('hex'), 16)
-
+        return int(byte.encode('hex'), 16)
 def decode_uint32(fourbyte):
     return struct.unpack('<I', fourbyte)[0]
 
@@ -563,7 +674,8 @@ cdef class chunks(object):
 
     def __cinit__(self, rootdir, metainfo=None, _new=False):
         cdef ndarray lastchunkarr
-        cdef void *decompressed, *compressed
+        cdef void *decompressed
+        cdef void *compressed
         cdef int leftover
         cdef char *lastchunk
         cdef size_t chunksize
@@ -578,7 +690,13 @@ cdef class chunks(object):
         atomsize = self.dtype.itemsize
         itemsize = self.dtype.base.itemsize
 
-        if not _new:
+        # For 'O'bject types, the number of chunks is equal to the number of
+        # elements
+        if self.dtype.char == 'O':
+            self.nchunks = self.len
+
+        # Initialize last chunk (not valid for 'O'bject dtypes)
+        if not _new and self.dtype.char != 'O':
             self.nchunks = cython.cdiv(self.len, len(lastchunkarr))
             chunksize = len(lastchunkarr) * atomsize
             lastchunk = lastchunkarr.data
@@ -613,7 +731,8 @@ cdef class chunks(object):
         return scomp
 
     def __getitem__(self, nchunk):
-        cdef void *decompressed, *compressed
+        cdef void *decompressed
+        cdef void *compressed
 
         if nchunk == self.nchunk_cached:
             # Hit!
@@ -633,6 +752,10 @@ cdef class chunks(object):
 
     def __len__(self):
         return self.nchunks
+
+    def free_cachemem(self):
+        self.nchunk_cached = -1
+        self.chunk_cached = None
 
     def append(self, chunk_):
         """Append an new chunk to the carray."""
@@ -731,7 +854,8 @@ cdef class carray:
 
     """
 
-    cdef int itemsize, atomsize, _chunksize, _chunklen, leftover
+    cdef public int itemsize, atomsize
+    cdef int _chunksize, _chunklen, leftover
     cdef int nrowsinbuf, _row
     cdef int sss_mode, wheretrue_mode, where_mode
     cdef npy_intp startb, stopb
@@ -743,7 +867,8 @@ cdef class carray:
     cdef char *lastchunk
     cdef object lastchunkarr, where_arr, arr1
     cdef object _cparams, _dflt
-    cdef object _dtype, chunks
+    cdef object _dtype
+    cdef public object chunks
     cdef object _rootdir, datadir, metadir, _mode
     cdef object _attrs
     cdef ndarray iobuf, where_buf
@@ -751,6 +876,29 @@ cdef class carray:
     cdef int idxcache
     cdef ndarray blockcache
     cdef char *datacache
+
+    property leftovers:
+        def __get__(self):
+            # Pointer to the leftovers chunk
+            return self.lastchunkarr.ctypes.data
+
+    property nchunks:
+        def __get__(self):
+            # TODO: do we need to handle the last chunk specially?
+            return <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
+
+    property partitions:
+        def __get__(self):
+            # Return a sequence of tuples indicating the bounds
+            # of each of the chunks.
+            nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
+            chunklen = cython.cdiv(self._chunksize, self.atomsize)
+            return [(i * chunklen, (i + 1) * chunklen) for i in
+                    xrange(nchunks)]
+
+    property leftover_array:
+        def __get__(self):
+            return self.lastchunkarr
 
     property attrs:
         "The attribute accessor."
@@ -785,8 +933,11 @@ cdef class carray:
     property len:
         "The length (leading dimension) of this object."
         def __get__(self):
-            # Important to do the cast in order to get a npy_intp result
-            return <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+            if self._dtype.char == 'O':
+                return len(self.chunks)
+            else:
+                # Important to do the cast in order to get a npy_intp result
+                return <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
 
     property mode:
         "The mode used to create/open the `mode`."
@@ -794,7 +945,8 @@ cdef class carray:
             return self._mode
         def __set__(self, value):
             self._mode = value
-            self.chunks.mode = value
+            if hasattr(self.chunks, 'mode'):
+                self.chunks.mode = value
 
     property nbytes:
         "The original (uncompressed) size of this object (in bytes)."
@@ -861,9 +1013,28 @@ cdef class carray:
         self.where_mode = False
         self.idxcache = -1  # cache not initialized
 
+    cdef _adapt_dtype(self, dtype, shape):
+        """adapt the dtype to one supported in carray.
+        returns the adapted type with the shape modified accordingly.
+        """
+        if dtype.hasobject:
+            if dtype != np.object_:
+                raise TypeError(repr(dtype) + " is not a supported dtype")
+        else:
+            dtype = np.dtype((dtype, shape[1:]))
+
+        return dtype
+
     def create_carray(self, array, cparams, dtype, dflt,
                       expectedlen, chunklen, rootdir, mode):
-        """Create a new array."""
+        """Create a new array.
+
+        There are restrictions creating carray objects with dtypes that have
+        objects (dtype.hasobject is True). The only case where this dtype is
+        supported is on unidimensionl arrays whose dtype is object (objects in
+        composite dtypes are not supported).
+
+        """
         cdef int itemsize, atomsize, chunksize
         cdef ndarray lastchunkarr
         cdef object array_, _dflt
@@ -873,36 +1044,40 @@ cdef class carray:
             cparams = bcolz.cparams()
 
         if not isinstance(cparams, bcolz.cparams):
-            raise ValueError, "`cparams` param must be an instance of " \
-                              "`cparams` class"
+            raise ValueError(
+                "`cparams` param must be an instance of `cparams` class")
 
         # Convert input to an appropriate type
         if type(dtype) is str:
             dtype = np.dtype(dtype)
+
+        # avoid bad performance with another carray, as in utils it would
+        # construct the temp ndarray using a slow iterator.
+        #
+        # TODO: There should be a fast path creating carrays from other carrays
+        # (especially when dtypes and compression params match)
+        if isinstance(array, carray):
+            array = array[:]
+
         array_ = utils.to_ndarray(array, dtype)
+
+        # if no base dtype is provided, use the dtype from the array.
         if dtype is None:
-            if len(array_.shape) == 1:
-                self._dtype = dtype = array_.dtype
-            else:
-                # Multidimensional array.  The atom will have array_.shape[
-                # 1:] dims.
-                # atom dimensions will be stored in `self._dtype`, which is
-                # different
-                # than `self.dtype` in that `self._dtype` dimensions are
-                # borrowed
-                # from `self.shape`.  `self.dtype` will always be scalar (NumPy
-                # convention).
-                self._dtype = dtype = np.dtype(
-                    (array_.dtype.base, array_.shape[1:]))
-        else:
-            self._dtype = dtype
-        # Checks for the dtype
-        if self._dtype.kind == 'O':
-            raise TypeError, "object dtypes are not supported in carray " \
-                             "objects"
+            dtype = array_.dtype.base
+
+        # Multidimensional array.  The atom will have array_.shape[1:] dims.
+        # atom dimensions will be stored in `self._dtype`, which is different
+        # than `self.dtype` in that `self._dtype` dimensions are borrowed
+        # from `self.shape`.  `self.dtype` will always be scalar (NumPy
+        # convention).
+        #
+        # Note that objects are a special case. Carray does not support object
+        # arrays of more than one dimensions.
+        self._dtype = dtype = self._adapt_dtype(dtype, array_.shape)
+
         # Check that atom size is less than 2 GB
         if dtype.itemsize >= 2 ** 31:
-            raise ValueError, "atomic size is too large (>= 2 GB)"
+            raise ValueError("atomic size is too large (>= 2 GB)")
 
         self.atomsize = atomsize = dtype.itemsize
         self.itemsize = itemsize = dtype.base.itemsize
@@ -923,7 +1098,7 @@ cdef class carray:
                 expectedlen = len(array_)
             except TypeError:
                 raise NotImplementedError(
-                    "creating carrays from scalar objects not supported")
+                    "creating carrays from scalar objects is not supported")
         try:
             self.expectedlen = expectedlen
         except OverflowError:
@@ -940,7 +1115,7 @@ cdef class carray:
                 chunksize = atomsize
         else:
             if not isinstance(chunklen, int) or chunklen < 1:
-                raise ValueError, "chunklen must be a positive integer"
+                raise ValueError("chunklen must be a positive integer")
             chunksize = chunklen * atomsize
         chunklen = cython.cdiv(chunksize, atomsize)
         self._chunksize = chunksize
@@ -954,9 +1129,8 @@ cdef class carray:
 
         # Create layout for data and metadata
         self._cparams = cparams
-        if rootdir is None:
-            self.chunks = []
-        else:
+        self.chunks = []
+        if rootdir is not None:
             self.mkdirs(rootdir, mode)
             metainfo = (
             dtype, cparams, self.shape[0], lastchunkarr, self._mode)
@@ -965,7 +1139,12 @@ cdef class carray:
             self.write_meta()
 
         # Finally, fill the chunks
-        self.fill_chunks(array_)
+        # Object dtype requires special storage
+        if array_.dtype.char == 'O':
+            for obj in array_:
+                self.store_obj(obj)
+        else:
+            self.fill_chunks(array_)
 
         # and flush the data pending...
         self.flush()
@@ -1042,7 +1221,7 @@ cdef class carray:
         # Compress data in chunks
         cbytes = 0
         chunklen = self._chunklen
-        nchunks = <npy_intp>cython.cdiv(nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(nbytes, self._chunksize)
         for i from 0 <= i < nchunks:
             assert i * chunklen < array_.size, "i, nchunks: %d, %d" % (
             i, nchunks)
@@ -1088,7 +1267,7 @@ cdef class carray:
             if sys.version_info >= (3, 0):
                 dflt_list = list_bytes_to_str(dflt_list)
             storagefh.write(json.dumps({
-                # str(self.dtype) produces bytes by default in cython.py3
+                # str(self.dtype) produces bytes by default in cython.py3.
                 # Calling .__str__() is a workaround.
                 "dtype": self.dtype.__str__(),
                 "cparams": {
@@ -1128,6 +1307,20 @@ cdef class carray:
         dflt = data["dflt"]
         return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
+    def store_obj(self, object arrobj):
+        cdef chunk chunk_
+        import pickle
+
+        pick_obj = pickle.dumps(arrobj, pickle.HIGHEST_PROTOCOL)
+        chunk_ = chunk(pick_obj, np.dtype('O'), self._cparams,
+                       _memory=self._rootdir is None)
+
+        self.chunks.append(chunk_)
+        # Update some counters
+        nbytes, cbytes = chunk_.nbytes, chunk_.cbytes
+        self._cbytes += cbytes
+        self._nbytes += nbytes
+
     def append(self, object array):
         """
         append(array)
@@ -1154,13 +1347,19 @@ cdef class carray:
 
         arrcpy = utils.to_ndarray(array, self._dtype)
         if arrcpy.dtype != self._dtype.base:
-            raise TypeError, "array dtype does not match with self"
+            raise TypeError("array dtype does not match with self")
+
+        # Object dtype requires special storage
+        if arrcpy.dtype.char == 'O':
+            self.store_obj(array)
+            return
+
         # Appending a single row should be supported
         if arrcpy.shape == self._dtype.shape:
             arrcpy = arrcpy.reshape((1,) + arrcpy.shape)
         if arrcpy.shape[1:] != self._dtype.shape:
-            raise ValueError, "array trailing dimensions does not match with " \
-                              "self"
+            raise ValueError(
+                "array trailing dimensions do not match with self")
 
         atomsize = self.atomsize
         itemsize = self.itemsize
@@ -1202,7 +1401,7 @@ cdef class carray:
 
             # Then fill other possible chunks
             nbytes = bsize - nbytesfirst
-            nchunks = <npy_intp>cython.cdiv(nbytes, chunksize)
+            nchunks = <npy_intp> cython.cdiv(nbytes, chunksize)
             chunklen = self._chunklen
             # Get a new view skipping the elements that have been already
             # copied
@@ -1228,6 +1427,7 @@ cdef class carray:
         self.leftover = leftover
         self._cbytes += cbytes
         self._nbytes += bsize
+        return
 
     def trim(self, object nitems):
         """
@@ -1247,12 +1447,12 @@ cdef class carray:
         cdef npy_intp cbytes, bsize, nchunk2
         cdef chunk chunk_
 
-        if not isinstance(nitems, (int, long, float)):
-            raise TypeError, "`nitems` must be an integer"
+        if not isinstance(nitems, _inttypes + (float,)):
+            raise TypeError("`nitems` must be an integer")
 
         # Check that we don't run out of space
         if nitems > self.len:
-            raise ValueError, "`nitems` must be less than total length"
+            raise ValueError("`nitems` must be less than total length")
         # A negative number of items means that we want to grow the object
         if nitems <= 0:
             self.resize(self.len - nitems)
@@ -1275,7 +1475,7 @@ cdef class carray:
             leftover = leftover2 * atomsize
 
             # Remove complete chunks
-            nchunk2 = lnchunk = <npy_intp>cython.cdiv(
+            nchunk2 = lnchunk = <npy_intp> cython.cdiv(
                 self._nbytes, self._chunksize)
             while nchunk2 > nchunk:
                 chunk_ = chunks.pop()
@@ -1317,13 +1517,13 @@ cdef class carray:
         """
         cdef object chunk
 
-        if not isinstance(nitems, (int, long, float)):
-            raise TypeError, "`nitems` must be an integer"
+        if not isinstance(nitems, _inttypes + (float,)):
+            raise TypeError("`nitems` must be an integer")
 
         if nitems == self.len:
             return
         elif nitems < 0:
-            raise ValueError, "`nitems` cannot be negative"
+            raise ValueError("`nitems` cannot be negative")
 
         if nitems > self.len:
             # Create a 0-strided array and append it to self
@@ -1359,7 +1559,7 @@ cdef class carray:
         cdef object ishape, oshape, pos, newdtype, out
 
         # Enforce newshape as tuple
-        if isinstance(newshape, (int, long)):
+        if isinstance(newshape, _inttypes):
             newshape = (newshape,)
         newsize = np.prod(newshape)
 
@@ -1370,7 +1570,7 @@ cdef class carray:
         # Check for -1 in newshape
         if -1 in newshape:
             if newshape.count(-1) > 1:
-                raise ValueError, "only one shape dimension can be -1"
+                raise ValueError("only one shape dimension can be -1")
             pos = newshape.index(-1)
             osize = np.prod(newshape[:pos] + newshape[pos + 1:])
             if isize == 0:
@@ -1382,8 +1582,8 @@ cdef class carray:
 
         # Check shape compatibility
         if isize != newsize:
-            raise ValueError, "`newshape` is not compatible with the current " \
-                              "one"
+            raise ValueError(
+                "`newshape` is not compatible with the current one")
         # Create the output container
         newdtype = np.dtype((self._dtype.base, newshape[1:]))
         newlen = newshape[0]
@@ -1496,12 +1696,12 @@ cdef class carray:
         else:
             dtype = np.dtype(dtype)
         if dtype.kind == 'S':
-            raise TypeError, "cannot perform reduce with flexible type"
+            raise TypeError("cannot perform reduce with flexible type")
 
         # Get a container for the result
         result = np.zeros(1, dtype=dtype)[0]
 
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         for nchunk from 0 <= nchunk < nchunks:
             chunk_ = self.chunks[nchunk]
             if chunk_.isconstant:
@@ -1543,9 +1743,9 @@ cdef class carray:
         cdef chunk chunk_
 
         atomsize = self.atomsize
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         chunklen = self._chunklen
-        nchunk = <npy_intp>cython.cdiv(pos, chunklen)
+        nchunk = <npy_intp> cython.cdiv(pos, chunklen)
 
         # Check whether pos is in the last chunk
         if nchunk == nchunks and self.leftover:
@@ -1556,9 +1756,9 @@ cdef class carray:
         # Locate the *block* inside the chunk
         chunk_ = self.chunks[nchunk]
         blocksize = chunk_.blocksize
-        blocklen = cython.cdiv(blocksize, atomsize)
+        blocklen = <npy_intp> cython.cdiv(blocksize, atomsize)
 
-        if atomsize > blocksize:
+        if ((atomsize > blocksize) or ((pos + blocklen) > chunklen)):
             # This request cannot be resolved here
             return 0
 
@@ -1572,7 +1772,7 @@ cdef class carray:
             #   self._cbytes += chunksize
 
         # Check if block is cached
-        idxcache = <npy_intp>cython.cdiv(pos, blocklen) * blocklen
+        idxcache = <npy_intp> cython.cdiv(pos, blocklen) * blocklen
         if idxcache == self.idxcache:
             # Hit!
             posinbytes = (pos % blocklen) * atomsize
@@ -1588,6 +1788,26 @@ cdef class carray:
         # Update the cache index
         self.idxcache = idxcache
         return 1
+
+    def free_cachemem(self):
+        if type(self.chunks) is not list:
+            self.chunks.free_cachemem()
+        self.idxcache = -1
+        self.blockcache = None
+
+    def getitem_object(self, start, stop=None, step=None):
+        """Retrieve elements of type object."""
+        import pickle
+
+        if stop is None and step is None:
+            # Integer
+            cchunk = self.chunks[start]
+            chunk = cchunk.getudata()
+            return pickle.loads(chunk)
+
+        # Range
+        objs = [self.getitem_object(i) for i in xrange(start, stop, step)]
+        return np.array(objs, dtype=self._dtype)
 
     def __getitem__(self, object key):
         """
@@ -1624,21 +1844,22 @@ cdef class carray:
         chunklen = self._chunklen
 
         # Check for integer
-        # isinstance(key, int) is not enough in Cython (?)
-        if isinstance(key, (int, long)) or isinstance(key, np.int_):
+        if isinstance(key, _inttypes):
             if key < 0:
                 # To support negative values
                 key += self.len
             if key >= self.len:
-                raise IndexError, "index out of range"
+                raise IndexError("index out of range")
             arr1 = self.arr1
+            if self.dtype.char == 'O':
+                return self.getitem_object(key)
             if self.getitem_cache(key, arr1.data):
                 if self.itemsize == self.atomsize:
                     return PyArray_GETITEM(arr1, arr1.data)
                 else:
                     return arr1[0]
             # Fallback action: use the slice code
-            return np.squeeze(self[slice(key, None, 1)])
+            return np.squeeze(self[slice(key, key + 1, 1)])
         # Slices
         elif isinstance(key, slice):
             (start, stop, step) = key.start, key.stop, key.step
@@ -1668,16 +1889,16 @@ cdef class carray:
             try:
                 key = np.array(key, dtype=np.int_)
             except:
-                raise IndexError, "key cannot be converted to an array of " \
-                                  "indices"
+                raise IndexError(
+                    "key cannot be converted to an array of indices")
             return self[key]
         # A boolean or integer array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
                 # A boolean array
                 if len(key) != self.len:
-                    raise IndexError, "boolean array length must match len(" \
-                                      "self)"
+                    raise IndexError(
+                        "boolean array length must match len(self)")
                 if isinstance(key, carray):
                     count = key.sum()
                 else:
@@ -1688,23 +1909,22 @@ cdef class carray:
                 # An integer array
                 return np.array([self[i] for i in key], dtype=self._dtype)
             else:
-                raise IndexError, \
-                    "arrays used as indices must be of integer (or boolean) " \
-                    "type"
-        # An boolean expression (case of fancy indexing)
+                raise IndexError(
+                    "arrays used as indices must be integer (or boolean)")
+        # A boolean expression (case of fancy indexing)
         elif type(key) is str:
             # Evaluate
             result = bcolz.eval(key)
             if result.dtype.type != np.bool_:
-                raise IndexError, "only boolean expressions supported"
+                raise IndexError("only boolean expressions supported")
             if len(result) != self.len:
-                raise IndexError, "boolean expression outcome must match " \
-                                  "len(self)"
+                raise IndexError(
+                    "boolean expression outcome must match len(self)")
             # Call __getitem__ again
             return self[result]
         # All the rest not implemented
         else:
-            raise NotImplementedError, "key not supported: %s" % repr(key)
+            raise NotImplementedError("key not supported: %s" % repr(key))
 
         # From now on, will only deal with [start:stop:step] slices
 
@@ -1718,9 +1938,12 @@ cdef class carray:
             # If empty, return immediately
             return arr
 
+        if self.dtype.char == 'O':
+            return self.getitem_object(start, stop, step)
+
         # Fill it from data in chunks
         nwrow = 0
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         if self.leftover > 0:
             nchunks += 1
         for nchunk from 0 <= nchunk < nchunks:
@@ -1778,13 +2001,12 @@ cdef class carray:
             self.idxcache = -2
 
         # Check for integer
-        # isinstance(key, int) is not enough in Cython (?)
-        if isinstance(key, (int, long)) or isinstance(key, np.int_):
+        if isinstance(key, _inttypes):
             if key < 0:
                 # To support negative values
                 key += self.len
             if key >= self.len:
-                raise IndexError, "index out of range"
+                raise IndexError("index out of range")
             (start, stop, step) = key, key + 1, 1
         # Slices
         elif isinstance(key, slice):
@@ -1817,8 +2039,8 @@ cdef class carray:
             try:
                 key = np.array(key, dtype=np.int_)
             except:
-                raise IndexError, "key cannot be converted to an array of " \
-                                  "indices"
+                raise IndexError(
+                    "key cannot be converted to an array of indices")
             self[key] = value
             return
         # A boolean or integer array (case of fancy indexing)
@@ -1826,8 +2048,8 @@ cdef class carray:
             if key.dtype.type == np.bool_:
                 # A boolean array
                 if len(key) != self.len:
-                    raise ValueError, "boolean array length must match len(" \
-                                      "self)"
+                    raise ValueError(
+                        "boolean array length must match len(self)")
                 self.bool_update(key, value)
                 return
             elif np.issubsctype(key, np.int_):
@@ -1838,24 +2060,24 @@ cdef class carray:
                     self[item] = value[i]
                 return
             else:
-                raise IndexError, \
-                    "arrays used as indices must be of integer (or boolean) " \
-                    "type"
+                raise IndexError(
+                    "arrays used as indices must be of integer (or boolean) "
+                    "type")
         # An boolean expression (case of fancy indexing)
         elif type(key) is str:
             # Evaluate
             result = bcolz.eval(key)
             if result.dtype.type != np.bool_:
-                raise IndexError, "only boolean expressions supported"
+                raise IndexError("only boolean expressions supported")
             if len(result) != self.len:
-                raise IndexError, "boolean expression outcome must match " \
-                                  "len(self)"
+                raise IndexError(
+                    "boolean expression outcome must match len(self)")
             # Call __setitem__ again
             self[result] = value
             return
         # All the rest not implemented
         else:
-            raise NotImplementedError, "key not supported: %s" % repr(key)
+            raise NotImplementedError("key not supported: %s" % repr(key))
 
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.len)
@@ -1870,7 +2092,7 @@ cdef class carray:
         # Fill it from data in chunks
         nwrow = 0
         chunklen = self._chunklen
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         if self.leftover > 0:
             nchunks += 1
         for nchunk from 0 <= nchunk < nchunks:
@@ -1911,17 +2133,17 @@ cdef class carray:
         cdef chunk chunk_
 
         # Check that we are inside limits
-        nrows = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+        nrows = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
         if (start + blen) > nrows:
             blen = nrows - start
 
         # Fill `out` from data in chunks
         nwrow = 0
         stop = start + blen
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         chunklen = cython.cdiv(self._chunksize, self.atomsize)
-        schunk = <npy_intp>cython.cdiv(start, chunklen)
-        echunk = <npy_intp>cython.cdiv((start + blen), chunklen)
+        schunk = <npy_intp> cython.cdiv(start, chunklen)
+        echunk = <npy_intp> cython.cdiv((start + blen), chunklen)
         for nchunk from schunk <= nchunk <= echunk:
             # Compute start & stop for each block
             startb = start % chunklen
@@ -1962,10 +2184,10 @@ cdef class carray:
         # Fill it from data in chunks
         nwrow = 0
         chunklen = self._chunklen
-        nchunks = <npy_intp>cython.cdiv(self._nbytes, self._chunksize)
+        nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         if self.leftover > 0:
             nchunks += 1
-        nrows = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+        nrows = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
         for nchunk from 0 <= nchunk < nchunks:
             # Compute start & stop for each block
             startb, stopb, _ = clip_chunk(nchunk, chunklen, 0, nrows, 1)
@@ -2001,7 +2223,7 @@ cdef class carray:
 
         if not self.sss_mode:
             self.start = 0
-            self.stop = <npy_intp>cython.cdiv(self._nbytes, self.atomsize)
+            self.stop = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
             self.step = 1
         if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
             self.nhits = 0
@@ -2051,7 +2273,7 @@ cdef class carray:
         """
         # Check limits
         if step <= 0:
-            raise NotImplementedError, "step param can only be positive"
+            raise NotImplementedError("step param can only be positive")
         self.start, self.stop, self.step = \
             slice(start, stop, step).indices(self.len)
         self.reset_sentinels()
@@ -2088,9 +2310,9 @@ cdef class carray:
         """
         # Check self
         if self._dtype.base.type != np.bool_:
-            raise ValueError, "`self` is not an array of booleans"
+            raise ValueError("`self` is not an array of booleans")
         if self.ndim > 1:
-            raise NotImplementedError, "`self` is not unidimensional"
+            raise NotImplementedError("`self` is not unidimensional")
         self.reset_sentinels()
         self.wheretrue_mode = True
         if limit is not None:
@@ -2127,13 +2349,14 @@ cdef class carray:
         """
         # Check input
         if self.ndim > 1:
-            raise NotImplementedError, "`self` is not unidimensional"
+            raise NotImplementedError("`self` is not unidimensional")
         if not hasattr(boolarr, "dtype"):
-            raise ValueError, "`boolarr` is not an array"
+            raise ValueError("`boolarr` is not an array")
         if boolarr.dtype.type != np.bool_:
-            raise ValueError, "`boolarr` is not an array of booleans"
+            raise ValueError("`boolarr` is not an array of booleans")
         if len(boolarr) != self.len:
-            raise ValueError, "`boolarr` must be of the same length than ``self``"
+            raise ValueError(
+                "`boolarr` must be of the same length than ``self``")
         self.reset_sentinels()
         self.where_mode = True
         self.where_arr = boolarr
@@ -2249,7 +2472,7 @@ cdef class carray:
         if isinstance(barr, carray):
             # Check for zero'ed chunks in carrays
             carr = barr
-            nchunk = <npy_intp>cython.cdiv(self.nrowsread, self.nrowsinbuf)
+            nchunk = <npy_intp> cython.cdiv(self.nrowsread, self.nrowsinbuf)
             if nchunk < len(carr.chunks):
                 chunk_ = carr.chunks[nchunk]
                 if chunk_.isconstant and chunk_.constant in (0, ''):
@@ -2273,17 +2496,16 @@ cdef class carray:
             sizes['cbytes'] = self.cbytes
             rowsf = os.path.join(self.metadir, SIZES_FILE)
             with open(rowsf, 'wb') as rowsfh:
-                rowsfh.write(json.dumps(
-                    sizes, ensure_ascii=True).encode('ascii'))
+                rowsfh.write(
+                    json.dumps(sizes, ensure_ascii=True).encode('ascii'))
                 rowsfh.write(b'\n')
-
 
     def flush(self):
         """Flush data in internal buffers to disk.
 
-        This call should typically be done after performing modifications (
-        __settitem__(), append()) in persistence mode.  If you don't do
-        this, you risk loosing part of your modifications.
+        This call should typically be done after performing modifications
+        (__settitem__(), append()) in persistence mode.  If you don't do this,
+        you risk loosing part of your modifications.
 
         """
         cdef chunk chunk_
@@ -2330,7 +2552,6 @@ cdef class carray:
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 78
 ## End:

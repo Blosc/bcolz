@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 import sys
 import os
+import glob
 from distutils.core import Extension
 from distutils.core import setup
 import textwrap
@@ -148,7 +149,7 @@ for arg in args:
     if arg.find('--lflags=') == 0:
         LFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
-    elif arg.find('--cflags=') == 0:
+    if arg.find('--cflags=') == 0:
         CFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
 
@@ -167,13 +168,14 @@ if not BLOSC_DIR:
     inc_dirs += glob.glob('c-blosc/internal-complibs/*')
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
-    # Add -msse2 flag for optimizing shuffle in included c-blosc
-    if os.name == 'posix':
-        CFLAGS.append("-msse2")
 else:
     inc_dirs += [os.path.join(BLOSC_DIR, 'include')]
     lib_dirs += [os.path.join(BLOSC_DIR, 'lib')]
     libs += ['blosc']
+
+# Add -msse2 flag for optimizing shuffle in included c-blosc
+if os.name == 'posix':
+    CFLAGS.append("-msse2")
 
 # Add some macros here for debugging purposes, if needed
 def_macros = []

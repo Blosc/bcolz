@@ -42,7 +42,7 @@ its representation form::
 
   >>> b   # <==> print repr(b)
   carray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9]
 
 As you can see, the compressed size is much larger than the
@@ -58,7 +58,7 @@ comparison::
   >>> b = bcolz.arange(1e8)
   >>> b
   carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
 The carray consumes less than 24 MB, while the original data would have
@@ -78,14 +78,14 @@ Finally, you can get a copy of your created carrays by using the
   >>> c = b.copy()
   >>> c
   carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
 and you can control parameters for the newly created copy::
 
   >>> b.copy(cparams=bcolz.cparams(clevel=9))
   carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78
-    cparams := cparams(clevel=9, shuffle=True)
+    cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
 
 Enlarging your carray
@@ -99,7 +99,7 @@ For example, if `b` is a carray with 10 million elements::
 
   >>> b
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 it can be enlarged by 10 elements with::
@@ -107,7 +107,7 @@ it can be enlarged by 10 elements with::
   >>> b.append(np.arange(10.))
   >>> b
   carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
 
 Let's check how fast appending can be::
@@ -137,7 +137,7 @@ You can also enlarge your arrays by using the `resize()` method::
   >>> b.resize(20)
   >>> b
   carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]
 
 Note how the append values are filled with zeros.  This is because the
@@ -148,7 +148,7 @@ too::
   >>> b.resize(20)
   >>> b
   carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]
 
 Also, you can trim carrays::
@@ -157,7 +157,7 @@ Also, you can trim carrays::
   >>> b.resize(5)
   >>> b
   carray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4]
 
 You can even set the size to 0:
@@ -185,11 +185,11 @@ compression levels too::
 
   >>> bcolz.carray(a, bcolz.cparams(clevel=1))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
-    cparams := cparams(clevel=1, shuffle=True)
+    cparams := cparams(clevel=1, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> bcolz.carray(a, bcolz.cparams(clevel=9))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60
-    cparams := cparams(clevel=9, shuffle=True)
+    cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 Also, you can decide if you want to disable the shuffle filter that
@@ -197,7 +197,7 @@ comes with Blosc::
 
   >>> bcolz.carray(a, bcolz.cparams(shuffle=False))
   carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
-    cparams := cparams(clevel=5, shuffle=False)
+    cparams := cparams(clevel=5, shuffle=False, cname='blosclz')
   [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
 
 but, as can be seen, the compression ratio is much worse in this case.
@@ -373,7 +373,7 @@ You can create multidimensional carrays too.  Look at this example::
 
   >>> a = bcolz.zeros((2,3))
   carray((2, 3), float64)  nbytes: 48; cbytes: 3.98 KB; ratio: 0.01
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [[ 0.  0.  0.]
    [ 0.  0.  0.]]
 
@@ -395,7 +395,7 @@ an existing carray::
   >>> b = bcolz.arange(12).reshape((3,4))
   >>> b
   carray((3,), ('int64',(4,)))  nbytes: 96; cbytes: 4.00 KB; ratio: 0.02
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [[ 0  1  2  3]
    [ 4  5  6  7]
    [ 8  9 10 11]]
@@ -434,7 +434,7 @@ Rather, you should use the `eval` function::
   >>> y = bcolz.eval("x + x")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.64 MB; ratio: 28.88
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 2.0, 4.0, ..., 19999994.0, 19999996.0, 19999998.0]
 
 You can also compute arbitrarily complex expressions in one shot::
@@ -442,7 +442,7 @@ You can also compute arbitrarily complex expressions in one shot::
   >>> y = bcolz.eval(".5*x**3 + 2.1*x**2")
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 38.00 MB; ratio: 2.01
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
 
 Note how the output of `eval()` is also a carray object.  You can pass
@@ -452,7 +452,7 @@ compression for the output::
   >>> y = bcolz.eval(".5*x**3 + 2.1*x**2", cparams=bcolz.cparams(9))
   >>> y
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 35.66 MB; ratio: 2.14
-    cparams := cparams(clevel=9, shuffle=True)
+    cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
   [0.0, 2.6, 12.4, ..., 4.9999976e+20, 4.9999991e+20, 5.0000006e+20]
 
 By default, `eval` will use Numexpr virtual machine if it is installed
@@ -473,7 +473,7 @@ desirable because it offers much more functionality::
   NameError: variable name ``diff`` not found
   >>> bcolz.eval("np.diff(x)", vm="python")
   carray((9999389,), float64)  nbytes: 76.29 MB; cbytes: 814.25 KB; ratio: 95.94
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [1.0, 1.0, 1.0, ..., 1.0, 1.0, 1.0]
 
 Finally, `eval` lets you select the type of the outcome to be a NumPy
@@ -520,7 +520,7 @@ For knowing the compression level used and other optional filters, use
 the `cparams` read-only attribute::
 
   >>> b.cparams
-  cparams(clevel=5, shuffle=True)
+  cparams(clevel=5, shuffle=True, cname='blosclz')
 
 Also, you can check which the default value is (remember, used when
 `resize` -ing the carray)::
@@ -586,7 +586,7 @@ As the 'a' carray is persistent, it can re-opened in other Python session::
   >>> a                            # yeah, our data is back
   carray((2,), int64)
     nbytes: 16; cbytes: 4.00 KB; ratio: 0.00
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
     rootdir := 'mydata'
   [1 2]
   >>> a.attrs                      # and so is user attrs!
@@ -624,7 +624,7 @@ easiest one is using the `fromiter` constructor::
   >>> ct = bcolz.fromiter(((i,i*i) for i in xrange(N)), dtype="i4,f8", count=N)
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
@@ -636,7 +636,7 @@ You can also build an empty ctable first and the append data::
   ...:
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 355.48 KB; ratio: 3.30
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
@@ -653,7 +653,7 @@ case.  You can solve this by passing the final length with the
   ...:
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 283.27 KB; ratio: 4.14
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
@@ -695,7 +695,7 @@ Setting rows is also supported::
   >>> ct[1] = (0,0)
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 279.89 KB; ratio: 4.19
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0), (0, 0.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
   >>> ct[1:6]
@@ -730,7 +730,7 @@ ctable::
   >>> ct.addcol(new_col)
   >>> ct
   ctable((100000,), |V20) nbytes: 1.91 MB; cbytes: 528.83 KB; ratio: 3.69
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0, 0.0), (1, 1.0, 1.000010000100001e-05),
    (2, 4.0, 2.000020000200002e-05), ...,
    (99997, 9999400009.0, 0.99997999979999797),
@@ -741,7 +741,7 @@ Now, remove the already existing 'f1' column::
   >>> ct.delcol('f1')
   >>> ct
   ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 318.68 KB; ratio: 3.68
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [(0, 0.0), (1, 1.000010000100001e-05), (2, 2.000020000200002e-05), ...,
    (99997, 0.99997999979999797), (99998, 0.99998999989999904), (99999, 1.0)]
 
@@ -823,7 +823,7 @@ carrying out operations among columns::
 
   >>> ct.eval("cos((3+f0)/sqrt(2*f1))")
   carray((1000000,), float64)  nbytes: 7.63 MB; cbytes: 2.23 MB; ratio: 3.42
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [nan, -0.951363128126, -0.195699435691, ...,
    0.760243218982, 0.760243218983, 0.760243218984]
 

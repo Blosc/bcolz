@@ -815,7 +815,7 @@ def walk(dir, classname=None, mode='a'):
 
 class cparams(object):
     """
-    cparams(clevel=5, shuffle=True)
+    cparams(clevel=5, shuffle=True, cname="blosclz")
 
     Class to host parameters for compression and other filters.
 
@@ -825,6 +825,8 @@ class cparams(object):
         The compression level.
     shuffle : bool
         Whether the shuffle filter is active or not.
+    cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', others?)
+        Select the compressor to use inside Blosc.
 
     Notes
     -----
@@ -843,7 +845,12 @@ class cparams(object):
         """Shuffle filter is active?"""
         return self._shuffle
 
-    def __init__(self, clevel=5, shuffle=True):
+    @property
+    def cname(self):
+        """The compressor name."""
+        return self._cname
+
+    def __init__(self, clevel=5, shuffle=True, cname="blosclz"):
         if not isinstance(clevel, int):
             raise ValueError("`clevel` must be an int.")
         if not isinstance(shuffle, (bool, int)):
@@ -853,9 +860,20 @@ class cparams(object):
             raise ValueError("clevel must be a positive integer")
         self._clevel = clevel
         self._shuffle = shuffle
+        list_cnames = bcolz.blosc_compressor_list()
+        # Store the cname as bytes object internally
+        if hasattr(cname, 'encode'):
+            cname = cname.encode()
+        if cname not in list_cnames:
+            raise ValueError(
+                "Compressor '%s' is not available in this build" % cname)
+        self._cname = cname
 
     def __repr__(self):
-        args = ["clevel=%d"%self._clevel, "shuffle=%s"%self._shuffle]
+        args = ["clevel=%d" % self._clevel,
+                "shuffle=%s" % self._shuffle,
+                "cname='%s'" % self._cname,
+                ]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
@@ -863,7 +881,6 @@ class cparams(object):
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 78
 ## End:

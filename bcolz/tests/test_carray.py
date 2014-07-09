@@ -164,6 +164,14 @@ class getitemTest(MayBeDiskTest):
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04a(self):
+        """Testing `__getitem()__` method with lsmall ranges"""
+        a = np.arange(1e3)
+        b = bcolz.carray(a, chunklen=16, rootdir=self.rootdir)
+        sl = slice(1, 2)
+        #print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test04ab(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
@@ -1545,10 +1553,30 @@ class dtypesTest(TestCase):
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test06(self):
-        """Testing carray constructor with an object `dtype`."""
+        """Testing barray constructor with an object `dtype`."""
         dtype = np.dtype("object")
         a = np.array(["ale", "e", "aco"], dtype=dtype)
-        self.assertRaises(TypeError, bcolz.carray, a)
+        ac = bcolz.carray(a, dtype=dtype)
+        self.assert_(ac.dtype == dtype)
+        self.assert_(a.dtype == ac.dtype)
+        assert_array_equal(a, ac, "Arrays are not equal")
+
+    def test07(self):
+        """Checking barray constructor from another barray."""
+        types = [np.int8, np.int16, np.int32, np.int64,
+                 np.uint8, np.uint16, np.uint32, np.uint64,
+                 np.float16, np.float32, np.float64,
+                 np.complex64, np.complex128]
+        if hasattr(np, 'float128'):
+            types.extend([np.float128, np.complex256])
+        shapes = [(10,), (10,10), (10,10,10)]
+        for shape in shapes:
+            for t in types:
+                a = bcolz.zeros(shape, t)
+                b = bcolz.carray(a)
+                self.assertEqual(a.dtype, b.dtype)
+                self.assertEqual(a.shape, b.shape)
+                self.assertEqual(a.shape, shape)
 
 
 class largeCarrayTest(MayBeDiskTest):
@@ -1713,7 +1741,6 @@ if __name__ == '__main__':
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 72
 ## End:

@@ -25,7 +25,7 @@ First level variables
 Top level classes
 ===================
 
-.. py:class:: cparams(clevel=5, shuffle=True)
+.. py:class:: cparams(clevel=5, shuffle=True, cname='blosclz')
 
     Class to host parameters for compression and other filters.
 
@@ -34,6 +34,8 @@ Top level classes
         The compression level.
       shuffle : bool
         Whether the shuffle filter is active or not.
+      cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', others?)
+        Select the compressor to use inside Blosc.
 
     Notes:
       The shuffle filter may be automatically disable in case it is
