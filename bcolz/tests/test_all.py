@@ -12,14 +12,12 @@ Run all test cases.
 
 import sys
 import os
-if sys.version < "2.7":
-    import unittest2 as unittest
-else:
-    import unittest
 
 import numpy
 import bcolz
 from bcolz.tests import common
+from bcolz.tests.common import (
+    MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 
 
 # Recommended minimum versions
