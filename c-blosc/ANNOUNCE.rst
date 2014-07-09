@@ -1,20 +1,14 @@
 ===============================================================
- Announcing c-blosc 1.4.0
+ Announcing c-blosc 1.4.1
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-Support for non-Intel and non-SSE2 architectures has been added.  In
-particular, c-blosc has been tested in a Raspberry Pi (ARM) and
-everything seems to go smoothly, even when the kernel was configured
-to crash with a SIGBUS (echo 4 > /proc/cpu/alignment) in case of an
-unaligned access.
-
-Architectures requiring strict access alignment are supported as well.
-Due to this, arquitectures with a high penalty in accessing unaligned
-data (e.g. Raspberry Pi, ARMv6) can compress up to 2.5x faster.
+This is a maintenance release, where a bug in blosc_getitem() introduced
+in 1.4.0 has been tracked down and squashed.  If you use this function,
+please update your c-blosc copy.
 
 For more info, please see the release notes in:
 
