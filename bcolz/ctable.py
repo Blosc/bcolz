@@ -980,6 +980,17 @@ class ctable(object):
         for name in self.names:
             self.cols[name].flush()
 
+    def free_cachemem(self):
+        """Get rid of internal caches to free memory.
+
+        This call can typically be made after reading from a
+        carray/ctable so as to free the memory used internally to
+        cache data blocks/chunks.
+
+        """
+        for name in self.names:
+            self.cols[name].free_cachemem()
+
     def _get_stats(self):
         """
         _get_stats()
@@ -1023,7 +1034,6 @@ class ctable(object):
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 78
 ## End:

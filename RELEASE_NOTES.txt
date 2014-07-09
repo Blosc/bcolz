@@ -21,6 +21,9 @@ Changes from 0.5.1 to 0.7
   compressors via the new `cname` parameter in the `cparams` class, and
   also to be used in platforms not supporting unaligned access.
 
+- Added a new `free_cachemem()` method for freeing internal caches after
+  reading carray/ctable objects.
+
 
 Changes from 0.5 to 0.5.1
 =========================

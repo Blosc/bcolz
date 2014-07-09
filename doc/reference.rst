@@ -505,6 +505,15 @@ carray methods
     risk loosing part of your modifications.
 
 
+  .. py:method:: free_cachemem()
+
+    Get rid of internal caches to free memory.
+
+    This call can typically be made after reading from a
+    carray/ctable so as to free the memory used internally to
+    cache data blocks/chunks.
+
+
   .. py:method:: iter(start=0, stop=None, step=1, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
@@ -843,6 +852,15 @@ ctable methods
     This call should typically be done after performing modifications
     (__settitem__(), append()) in persistence mode.  If you don't do this, you
     risk loosing part of your modifications.
+
+
+  .. py:method:: free_cachemem()
+
+    Get rid of internal caches to free memory.
+
+    This call can typically be made after reading from a
+    carray/ctable so as to free the memory used internally to
+    cache data blocks/chunks.
 
 
   .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)

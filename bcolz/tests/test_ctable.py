@@ -88,6 +88,17 @@ class createTest(MayBeDiskTest):
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test04(self):
+        """Testing freeing memory after reading (just check the API)"""
+        N = 10*1000
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)),
+                         dtype='i4,f8', count=N)
+        t = bcolz.fromiter(((i, i*2.) for i in xrange(N)),
+                        dtype='i4,f8', count=N, rootdir=self.rootdir)
+        mt = t[:]
+        t.free_cachemem()
+
+
 class createMemoryTest(createTest, TestCase):
     disk = False
 
@@ -1603,7 +1614,6 @@ if __name__ == '__main__':
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 72
 ## End:
