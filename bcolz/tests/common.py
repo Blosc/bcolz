@@ -28,6 +28,11 @@ verbose = False
 heavy = False
 
 
+def remove_tree(rootdir):
+    # Remove every directory starting with rootdir
+    for dir_ in glob.glob(rootdir+'*'):
+        shutil.rmtree(dir_)
+
 # Useful superclass for disk-based tests
 class MayBeDiskTest():
 

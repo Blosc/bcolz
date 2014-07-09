@@ -23,7 +23,7 @@ def _print_admonition(kind, head, body):
     tw = textwrap.TextWrapper(
         initial_indent='   ', subsequent_indent='   ')
 
-    print ( ".. %s:: %s" % (kind.upper(), head) )
+    print( ".. %s:: %s" % (kind.upper(), head))
     for line in tw.wrap(body):
         print(line)
 
@@ -50,8 +50,8 @@ def check_import(pkgname, pkgver):
                 "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver})
 
-    print ( "* Found %(pkgname)s %(pkgver)s package installed."
-            % {'pkgname': pkgname, 'pkgver': mod.__version__} )
+    print("* Found %(pkgname)s %(pkgver)s package installed."
+          % {'pkgname': pkgname, 'pkgver': mod.__version__})
     globals()[pkgname] = mod
 
 
@@ -88,8 +88,8 @@ if Version.version < min_cython_version:
         "At least Cython %s is needed so as to generate extensions!"
         % (min_cython_version))
 else:
-    print ( "* Found %(pkgname)s %(pkgver)s package installed."
-            % {'pkgname': 'Cython', 'pkgver': Version.version} )
+    print("* Found %(pkgname)s %(pkgver)s package installed."
+          % {'pkgname': 'Cython', 'pkgver': Version.version})
 
 # Check for NumPy
 check_import('numpy', min_numpy_version)
@@ -105,8 +105,8 @@ except ImportError:
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
-        print ( "* Found %(pkgname)s %(pkgver)s package installed."
-                % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__} )
+        print("* Found %(pkgname)s %(pkgver)s package installed."
+              % {'pkgname': 'numexpr', 'pkgver': numexpr.__version__})
     else:
         print_warning(
             "Numexpr %s installed, but version is not >= %s.  "
@@ -177,8 +177,6 @@ else:
 if os.name == 'posix':
     CFLAGS.append("-msse2")
 
-# Add some macros here for debugging purposes, if needed
-def_macros = []
 
 classifiers = """\
 Development Status :: 4 - Beta

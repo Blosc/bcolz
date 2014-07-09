@@ -11,6 +11,7 @@ import bcolz
 
 N = 1e7  # the number of elements in x
 clevel = 5  # the compression level
+cname = "blosclz"  # the compressor name
 sexpr = "(x+1)<10"  # small number of items
 # sexpr = "(x+1)<1000000"              # large number
 sexpr = "(2*x*x*x+.3*y**2+z+1)<10"  # small number
@@ -19,7 +20,7 @@ sexpr = "(2*x*x*x+.3*y**2+z+1)<10"  # small number
 
 print("Creating inputs...")
 
-cparams = bcolz.cparams(clevel)
+cparams = bcolz.cparams(clevel=clevel, cname=cname)
 
 x = np.arange(N)
 cx = bcolz.carray(x, cparams=cparams)

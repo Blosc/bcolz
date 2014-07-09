@@ -28,6 +28,7 @@ else:
     NC = 500  # the number of columns
 mv = 1e10  # the mean value for entries (sig digits = 17 - log10(mv))
 clevel = 3  # the compression level
+cname = 'blosclz'  # the compressor to be used
 show = False  # show statistics
 # The query for a ctable
 squery = "(f2>.9) & ((f8>.3) & (f8<.4))"  # the ctable query
@@ -104,7 +105,7 @@ def test_ctable(clevel):
     tc = bcolz.fromiter(
         (mv + np.random.rand(NC) - mv for i in xrange(int(NR))),
         dtype=dt,
-        cparams=bcolz.cparams(clevel),
+        cparams=bcolz.cparams(clevel, cname=cname),
         count=int(NR))
     after_create()
 
@@ -155,16 +156,19 @@ def test_sqlite():
 if __name__ == "__main__":
     global dt
 
-    usage = """usage: %s [-s] [-m method] [-c ncols] [-r nrows] [-z clevel]
-            -s show memory statistics (only for Linux)
-            -m select the method: "ctable" (def.), "numpy", "numexpr", "sqlite"
-            -c the number of columns in table (def. 100)
-            -r the number of rows in table (def. 1e6)
-            -z the compression level (def. 3)
-            \n""" % sys.argv[0]
+    usage = """\
+usage: %s [-s] [-m method] [-c ncols] [-r nrows] [-n cname] [-z clevel]
+    -s show memory statistics (only for Linux)
+    -m select the method: "ctable" (def.), "numpy", "numexpr", "sqlite"
+    -c the number of columns in table (def. %d)
+    -r the number of rows in table (def. %d)
+    -n the compressor name (def. '%s')
+    -z the compression level (def. %d)
+
+""" % (sys.argv[0], NC, NR, cname, clevel)
 
     try:
-        opts, pargs = getopt.getopt(sys.argv[1:], 'sc:r:m:z:')
+        opts, pargs = getopt.getopt(sys.argv[1:], 'sc:r:m:n:z:')
     except:
         sys.stderr.write(usage)
         sys.exit(1)
@@ -181,6 +185,8 @@ if __name__ == "__main__":
             NC = int(option[1])
         elif option[0] == '-r':
             NR = float(option[1])
+        elif option[0] == '-n':
+            cname = option[1]
         elif option[0] == '-z':
             clevel = int(option[1])
 
@@ -192,7 +198,7 @@ if __name__ == "__main__":
     if method == "numexpr":
         mess = "numexpr (+numpy)"
     elif method == "ctable":
-        mess = "ctable (clevel=%d)" % clevel
+        mess = "ctable (clevel=%d, cname='%s')" % (clevel, cname)
     elif method == "sqlite":
         mess = "sqlite (in-memory)"
     else:

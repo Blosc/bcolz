@@ -1553,7 +1553,7 @@ class dtypesTest(TestCase):
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test06(self):
-        """Testing barray constructor with an object `dtype`."""
+        """Testing carray constructor with an object `dtype`."""
         dtype = np.dtype("object")
         a = np.array(["ale", "e", "aco"], dtype=dtype)
         ac = bcolz.carray(a, dtype=dtype)
@@ -1562,7 +1562,7 @@ class dtypesTest(TestCase):
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test07(self):
-        """Checking barray constructor from another barray."""
+        """Checking carray constructor from another carray."""
         types = [np.int8, np.int16, np.int32, np.int64,
                  np.uint8, np.uint16, np.uint32, np.uint64,
                  np.float16, np.float32, np.float64,
@@ -1649,6 +1649,7 @@ class largeCarrayMemoryTest(largeCarrayTest, TestCase):
 class largeCarrayDiskTest(largeCarrayTest, TestCase):
     disk = True
 
+
 class persistenceTest(MayBeDiskTest, TestCase):
     disk = True
 
@@ -1733,6 +1734,50 @@ class persistenceTest(MayBeDiskTest, TestCase):
         cn[N+1] = 3
         self.assertTrue(cn[N+1] == 3)
 
+
+class bloscCompressorsTest(MayBeDiskTest, TestCase):
+
+    def test00(self):
+        """Testing all available compressors in small arrays"""
+        a = np.arange(20)
+        cnames = bcolz.blosc_compressor_list()
+        if common.verbose:
+            print("Checking compressors:", cnames)
+        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            b = bcolz.carray(a, rootdir=self.rootdir,
+                             cparams=bcolz.cparams(clevel=9, cname=cname))
+            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assert_(sys.getsizeof(b) > b.nbytes,
+                         "compression does not seem to have any overhead")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            if self.disk:
+                common.remove_tree(self.rootdir)
+
+    def test01(self):
+        """Testing all available compressors in big arrays"""
+        a = np.arange(2e5)
+        cnames = bcolz.blosc_compressor_list()
+        if common.verbose:
+            print("Checking compressors:", cnames)
+        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            b = bcolz.carray(a, rootdir=self.rootdir,
+                             cparams=bcolz.cparams(clevel=9, cname=cname))
+            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assert_(sys.getsizeof(b) < b.nbytes,
+                         "carray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            if self.disk:
+                common.remove_tree(self.rootdir)
+
+class compressorsMemoryTest(bloscCompressorsTest, TestCase):
+    disk = False
+
+class compressorsDiskTest(bloscCompressorsTest, TestCase):
+    disk = True
 
 
 if __name__ == '__main__':
