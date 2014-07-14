@@ -26,6 +26,9 @@ Changes from 0.5.1 to 0.7
 - Added a new `free_cachemem()` method for freeing internal caches after
   reading carray/ctable objects.
 
+- New `cparams.setdefaults()` method for globally setting defaults in
+  compression parameters during carray/ctable creation.
+
 
 Changes from 0.5 to 0.5.1
 =========================

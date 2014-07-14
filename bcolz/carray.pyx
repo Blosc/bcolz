@@ -1031,7 +1031,7 @@ cdef class carray:
 
         There are restrictions creating carray objects with dtypes that have
         objects (dtype.hasobject is True). The only case where this dtype is
-        supported is on unidimensionl arrays whose dtype is object (objects in
+        supported is on unidimensional arrays whose dtype is object (objects in
         composite dtypes are not supported).
 
         """
@@ -1645,12 +1645,10 @@ cdef class carray:
         cdef object chunklen
 
         # Get defaults for some parameters
-        cparams = kwargs.pop('cparams', self._cparams)
         expectedlen = kwargs.pop('expectedlen', self.len)
 
         # Create a new, empty carray
         ccopy = carray(np.empty(0, dtype=self._dtype),
-                       cparams=cparams,
                        expectedlen=expectedlen,
                        **kwargs)
 

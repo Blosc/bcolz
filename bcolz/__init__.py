@@ -33,7 +33,7 @@ else:
 from bcolz.arrayprint import (
     array2string, set_printoptions, get_printoptions )
 
-from bcolz.bcolz_ext import (
+from bcolz.carray import (
     carray, blosc_version, blosc_compressor_list,
     _blosc_set_nthreads as blosc_set_nthreads,
     _blosc_init, _blosc_destroy)

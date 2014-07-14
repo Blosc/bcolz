@@ -13,13 +13,13 @@ import sys
 import struct
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_allclose
 from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
 from bcolz.py2help import xrange
-from bcolz.bcolz_ext import chunk
+from bcolz.carray import chunk
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -565,17 +565,34 @@ class copyTest(MayBeDiskTest):
         """Testing copy() with lesser compression"""
         a = np.linspace(-1., 1., 1e4)
         b = bcolz.carray(a, rootdir=self.rootdir)
-        c = b.copy(cparams=bcolz.cparams(clevel=1))
+        bcolz.cparams.setdefaults(clevel=1)
+        c = b.copy()
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "clevel not changed")
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
-    def test03(self):
+    def test03a(self):
         """Testing copy() with no shuffle"""
         a = np.linspace(-1., 1., 1e4)
         b = bcolz.carray(a, rootdir=self.rootdir)
+        bcolz.cparams.setdefaults(clevel=1)
         c = b.copy(cparams=bcolz.cparams(shuffle=False))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
+
+    def test03b(self):
+        """Testing copy() with no shuffle (setdefaults version)"""
+        a = np.linspace(-1., 1., 1e4)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        bcolz.cparams.setdefaults(shuffle=False)
+        c = b.copy()
+        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
 class copyMemoryTest(copyTest, TestCase):
     disk = False
@@ -661,7 +678,7 @@ class iterTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b), dtype='f8', count=len(a))
         #print "c ->", repr(c)
-        assert_array_equal(a, c[:], "iterator fails on zeros")
+        assert_allclose(a, c[:], err_msg="iterator fails on zeros")
 
     def test05(self):
         """Testing `iter()` method with `limit`"""
@@ -670,7 +687,7 @@ class iterTest(MayBeDiskTest):
         c = bcolz.fromiter((v for v in b.iter(limit=1010)), dtype='f8',
                         count=1010)
         #print "c ->", repr(c)
-        assert_array_equal(a[:1010], c, "iterator fails on zeros")
+        assert_allclose(a[:1010], c, err_msg="iterator fails on zeros")
 
     def test06(self):
         """Testing `iter()` method with `skip`"""
@@ -679,16 +696,17 @@ class iterTest(MayBeDiskTest):
         c = bcolz.fromiter((v for v in b.iter(skip=1010)), dtype='f8',
                         count=10000-1010)
         #print "c ->", repr(c)
-        assert_array_equal(a[1010:], c, "iterator fails on zeros")
+        assert_allclose(a[1010:], c, err_msg="iterator fails on zeros")
 
     def test07(self):
         """Testing `iter()` method with `limit` and `skip`"""
         a = np.arange(1e4, dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
-        c = bcolz.fromiter((v for v in b.iter(limit=1010, skip=1010)), dtype='f8',
-                        count=1010)
+        c = bcolz.fromiter((v for v in b.iter(limit=1010, skip=1010)),
+                            dtype='f8',
+                            count=1010)
         #print "c ->", repr(c)
-        assert_array_equal(a[1010:2020], c, "iterator fails on zeros")
+        assert_allclose(a[1010:2020], c, err_msg="iterator fails on zeros")
 
 class iterMemoryTest(iterTest, TestCase):
     disk = False
@@ -1763,8 +1781,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             print("Checking compressors:", cnames)
         #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
-            b = bcolz.carray(a, rootdir=self.rootdir,
-                             cparams=bcolz.cparams(clevel=9, cname=cname))
+            bcolz.cparams.setdefaults(clevel=9, cname=cname)
+            b = bcolz.carray(a, rootdir=self.rootdir)
             #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assert_(sys.getsizeof(b) < b.nbytes,
                          "carray does not seem to compress at all")
@@ -1772,6 +1790,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
 class compressorsMemoryTest(bloscCompressorsTest, TestCase):
     disk = False

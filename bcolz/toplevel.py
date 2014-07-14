@@ -815,7 +815,7 @@ def walk(dir, classname=None, mode='a'):
 
 class cparams(object):
     """
-    cparams(clevel=5, shuffle=True, cname="blosclz")
+    cparams(clevel=None, shuffle=None, cname=None)
 
     Class to host parameters for compression and other filters.
 
@@ -825,15 +825,20 @@ class cparams(object):
         The compression level.
     shuffle : bool
         Whether the shuffle filter is active or not.
-    cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', others?)
+    cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
         Select the compressor to use inside Blosc.
 
-    Notes
-    -----
-    The shuffle filter may be automatically disable in case it is
-    non-sense to use it (e.g. itemsize == 1).
+    In case some of the parameters are not passed, they will be
+    set to a default (see `setdefaults()` method).
+
+    See also
+    --------
+    cparams.setdefaults()
 
     """
+
+    # Parameter defaults
+    defaults = {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}
 
     @property
     def clevel(self):
@@ -850,24 +855,58 @@ class cparams(object):
         """The compressor name."""
         return self._cname
 
-    def __init__(self, clevel=5, shuffle=True, cname="blosclz"):
-        if not isinstance(clevel, int):
-            raise ValueError("`clevel` must be an int.")
-        if not isinstance(shuffle, (bool, int)):
-            raise ValueError("`shuffle` must be a boolean.")
-        shuffle = bool(shuffle)
-        if clevel < 0:
-            raise ValueError("clevel must be a positive integer")
-        self._clevel = clevel
-        self._shuffle = shuffle
-        list_cnames = bcolz.blosc_compressor_list()
+    @staticmethod
+    def _checkparams(clevel, shuffle, cname):
+        if clevel is not None:
+            if not isinstance(clevel, int):
+                raise ValueError("`clevel` must be an int.")
+            if clevel < 0:
+                raise ValueError("clevel must be a positive integer")
+        if shuffle is not None:
+            if not isinstance(shuffle, (bool, int)):
+                raise ValueError("`shuffle` must be a boolean.")
+            shuffle = bool(shuffle)
         # Store the cname as bytes object internally
-        if hasattr(cname, 'encode'):
-            cname = cname.encode()
-        if cname not in list_cnames:
-            raise ValueError(
-                "Compressor '%s' is not available in this build" % cname)
-        self._cname = cname
+        if cname is not None:
+            list_cnames = bcolz.blosc_compressor_list()
+            if hasattr(cname, 'encode'):
+                cname = cname.encode()
+            if cname not in list_cnames:
+                raise ValueError(
+                    "Compressor '%s' is not available in this build" % cname)
+        return clevel, shuffle, cname
+
+    @staticmethod
+    def setdefaults(clevel=None, shuffle=None, cname=None):
+        """
+        Change the defaults for `clevel`, `shuffle` and `cname` params.
+
+        Parameters
+        ----------
+        clevel : int (0 <= clevel < 10)
+            The compression level.
+        shuffle : bool
+            Whether the shuffle filter is active or not.
+        cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
+            Select the compressor to use inside Blosc.
+
+        If this method is not called, the defaults will be set as in
+        defaults.py, which initially is set as ``clevel=5``,
+        ``shuffle=True``, ``cname='blosclz'``.
+
+        """
+        clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
+        dflts = cparams.defaults
+        if clevel is not None: dflts['clevel'] = clevel
+        if shuffle is not None: dflts['shuffle'] = shuffle
+        if cname is not None: dflts['cname'] = cname
+
+    def __init__(self, clevel=None, shuffle=None, cname=None):
+        clevel, shuffle, cname = self._checkparams(clevel, shuffle, cname)
+        dflts = self.defaults
+        self._clevel = dflts['clevel'] if clevel is None else clevel
+        self._shuffle = dflts['shuffle'] if shuffle is None else shuffle
+        self._cname = dflts['cname'] if cname is None else cname
 
     def __repr__(self):
         args = ["clevel=%d" % self._clevel,
