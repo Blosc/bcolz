@@ -139,7 +139,7 @@ inc_dirs = []
 lib_dirs = []
 libs = []
 def_macros = []
-sources = ["bcolz/bcolz_ext.pyx"]
+sources = ["bcolz/carray.pyx"]
 
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
@@ -221,7 +221,7 @@ a high-performance compressor that is optimized for binary data.
       platforms=['any'],
       cmdclass={'build_ext': build_ext},
       ext_modules=[
-          Extension("bcolz.bcolz_ext",
+          Extension("bcolz.carray",
                     include_dirs=inc_dirs,
                     define_macros=def_macros,
                     sources=sources,

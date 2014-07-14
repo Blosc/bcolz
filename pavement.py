@@ -219,7 +219,7 @@ compressor that is optimized for binary data.
     # .gz" % (VERSION, VERSION),
     platforms=['any'],
     ext_modules=[
-        Extension("bcolz.bcolz_ext",
+        Extension("bcolz.carray",
                   include_dirs=inc_dirs,
                   sources=cython_cfiles + blosc_files,
                   depends=["bcolz/definitions.pxd"] + blosc_files,
