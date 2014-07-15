@@ -560,14 +560,13 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         supported by carray constructor in `kwargs`.
 
     """
-
     if vm is None:
-        vm = bcolz.defaults.defaults.eval_vm
+        vm = bcolz.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raise ValueError("`vm` must be either 'numexpr' or 'python'")
 
     if out_flavor is None:
-        out_flavor = bcolz.defaults.defaults.eval_out_flavor
+        out_flavor = bcolz.defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
         raise ValueError("`out_flavor` must be either 'carray' or 'numpy'")
 

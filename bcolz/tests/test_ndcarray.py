@@ -10,7 +10,7 @@
 from __future__ import absolute_import
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal
 from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless)
@@ -717,11 +717,11 @@ class evalTest():
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = bcolz.defaults.defaults.eval_vm
-        bcolz.defaults.defaults.eval_vm = self.vm
+        self.prev_vm = bcolz.defaults.eval_vm
+        bcolz.defaults.eval_vm = self.vm
 
     def tearDown(self):
-        bcolz.defaults.defaults.eval_vm = self.prev_vm
+        bcolz.defaults.eval_vm = self.prev_vm
 
     def test00a(self):
         """Testing evaluation of ndcarrays (bool out)"""
@@ -751,7 +751,7 @@ class evalTest():
         """Testing evaluation of ndcarrays (reduction, no axis)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = bcolz.arange(np.prod(self.shape)).reshape(self.shape)
-        if bcolz.defaults.defaults.eval_vm == "python":
+        if bcolz.defaults.eval_vm == "python":
             assert_array_equal(sum(a), bcolz.eval("sum(b)"),
                                "Arrays are not equal")
         else:
@@ -761,7 +761,7 @@ class evalTest():
         """Testing evaluation of ndcarrays (reduction, with axis)"""
         a = np.arange(np.prod(self.shape)).reshape(self.shape)
         b = bcolz.arange(np.prod(self.shape)).reshape(self.shape)
-        if bcolz.defaults.defaults.eval_vm == "python":
+        if bcolz.defaults.eval_vm == "python":
             # The Python VM does not have support for `axis` param
             assert_array_equal(sum(a), bcolz.eval("sum(b)"),
                                "Arrays are not equal")
