@@ -76,8 +76,7 @@ class Defaults(object):
 
     @cparams.setter
     def cparams(self, value):
-        newdflts = self.check_cparams(value)
-        self.__cparams = newdflts
+        self.__cparams = self.check_cparams(value)
 
 
 defaults = Defaults()
