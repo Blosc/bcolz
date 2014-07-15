@@ -19,7 +19,7 @@ from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
 from bcolz.py2help import xrange
-from bcolz.carray import chunk
+from bcolz.carray_ext import chunk
 
 is_64bit = (struct.calcsize("P") == 8)
 
