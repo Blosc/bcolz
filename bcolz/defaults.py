@@ -40,6 +40,9 @@ class Defaults(object):
             raise ValueError(
                 "The dictionary must have the next entries: "
                 "'clevel', 'shuffle' and 'cname'")
+        clevel, shuffle, cname = bcolz.cparams._checkparams(
+            value['clevel'], value['shuffle'], value['cname'])
+        return {'clevel': clevel, 'shuffle': shuffle, 'cname': cname}
 
     #
     # Properties start here...
@@ -73,8 +76,8 @@ class Defaults(object):
 
     @cparams.setter
     def cparams(self, value):
-        self.check_cparams(value)
-        self.__cparams = value
+        newdflts = self.check_cparams(value)
+        self.__cparams = newdflts
 
 
 defaults = Defaults()
