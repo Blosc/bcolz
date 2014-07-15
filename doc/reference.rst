@@ -57,8 +57,7 @@ Top level classes
         Select the compressor to use inside Blosc.
 
     If this method is not called, the defaults will be set as in
-    defaults.py, which initially is set as ``clevel=5``,
-    ``shuffle=True``, ``cname='blosclz'``.
+    defaults.py (``{clevel=5, shuffle=True, cname='blosclz'}``).
 
 
 Also, see the :py:class:`carray` and :py:class:`ctable` classes below.

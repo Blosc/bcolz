@@ -773,9 +773,6 @@ class cparams(object):
 
     """
 
-    # Parameter defaults
-    defaults = {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}
-
     @property
     def clevel(self):
         """The compression level."""
@@ -814,8 +811,7 @@ class cparams(object):
 
     @staticmethod
     def setdefaults(clevel=None, shuffle=None, cname=None):
-        """
-        Change the defaults for `clevel`, `shuffle` and `cname` params.
+        """Change the defaults for `clevel`, `shuffle` and `cname` params.
 
         Parameters
         ----------
@@ -827,19 +823,18 @@ class cparams(object):
             Select the compressor to use inside Blosc.
 
         If this method is not called, the defaults will be set as in
-        defaults.py, which initially is set as ``clevel=5``,
-        ``shuffle=True``, ``cname='blosclz'``.
+        defaults.py (``{clevel=5, shuffle=True, cname='blosclz'}``).
 
         """
         clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
-        dflts = cparams.defaults
+        dflts = bcolz.defaults.cparams
         if clevel is not None: dflts['clevel'] = clevel
         if shuffle is not None: dflts['shuffle'] = shuffle
         if cname is not None: dflts['cname'] = cname
 
     def __init__(self, clevel=None, shuffle=None, cname=None):
-        clevel, shuffle, cname = self._checkparams(clevel, shuffle, cname)
-        dflts = self.defaults
+        clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
+        dflts = bcolz.defaults.cparams
         self._clevel = dflts['clevel'] if clevel is None else clevel
         self._shuffle = dflts['shuffle'] if shuffle is None else shuffle
         self._cname = dflts['cname'] if cname is None else cname

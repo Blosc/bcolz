@@ -8,10 +8,18 @@ You can tailor the behaviour of bcolz by changing the values of
 certain some special top level variables whose defaults are listed
 here.  You can change these values in two ways:
 
-* In your program: the changes will be temporary.
+* In your program: the changes will be temporary.  For example::
 
-* In the ``defaults.py`` module of the bcolz package: the changes
-  will be persistent.
+    bcolz.defaults.eval_out_flavor = "numpy"
+
+* Manually modify the ``defaults.py`` module of the bcolz package: the
+  changes will be persistent.  For example, replace::
+
+    defaults.eval_out_flavor = "carray"
+
+  by::
+
+    defaults.eval_out_flavor = "numpy"
 
 
 List of default values
@@ -29,3 +37,10 @@ List of default values
     if installed.  If not, then the default is 'python'.
 
 
+.. py:attribute:: cparams
+
+    The defaults for parameters used in compression (dict).  The
+    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}.
+
+    See Also:
+        :py:func:`cparams.setdefaults`

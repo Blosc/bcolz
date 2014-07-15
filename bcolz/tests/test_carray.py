@@ -1773,9 +1773,9 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             if self.disk:
                 common.remove_tree(self.rootdir)
 
-    def test01(self):
-        """Testing all available compressors in big arrays"""
-        a = np.arange(2e5)
+    def test01a(self):
+        """Testing all available compressors in big arrays (setdefaults)"""
+        a = np.arange(1e5)
         cnames = bcolz.blosc_compressor_list()
         if common.verbose:
             print("Checking compressors:", cnames)
@@ -1792,6 +1792,28 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
                 common.remove_tree(self.rootdir)
         # Restore defaults
         bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
+
+    def test01b(self):
+        """Testing all available compressors in big arrays (bcolz.defaults)"""
+        a = np.arange(1e5)
+        cnames = bcolz.blosc_compressor_list()
+        if common.verbose:
+            print("Checking compressors:", cnames)
+        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            bcolz.defaults.cparams = {
+                'clevel': 9, 'shuffle': True, 'cname': cname}
+            b = bcolz.carray(a, rootdir=self.rootdir)
+            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assert_(sys.getsizeof(b) < b.nbytes,
+                         "carray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            if self.disk:
+                common.remove_tree(self.rootdir)
+        # Restore defaults
+        bcolz.defaults.cparams = {
+            'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}
 
 class compressorsMemoryTest(bloscCompressorsTest, TestCase):
     disk = False
