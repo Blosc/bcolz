@@ -41,7 +41,8 @@ from bcolz.ctable import ctable
 from bcolz.toplevel import (
     detect_number_of_cores, set_nthreads,
     open, fromiter, arange, zeros, ones, fill,
-    iterblocks, cparams, eval, walk, defaults )
+    iterblocks, cparams, eval, walk)
+from bcolz import defaults
 from bcolz.version import __version__
 from bcolz.tests import test
 

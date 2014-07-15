@@ -20,72 +20,9 @@ import bcolz
 import math
 from .py2help import xrange, _inttypes
 
-
-class Defaults(object):
-    """Class to taylor the setters and getters of default values."""
-
-    def __init__(self):
-        self.choices = {}
-
-        # Choices setup
-        self.choices['eval_out_flavor'] = ("carray", "numpy")
-        self.choices['eval_vm'] = ("numexpr", "python")
-
-    def check_choices(self, name, value):
-        if value not in self.choices[name]:
-            raiseValue, "value must be either 'numexpr' or 'python'"
-
-    #
-    # Properties start here...
-    #
-
-    @property
-    def eval_vm(self):
-        return self.__eval_vm
-
-    @eval_vm.setter
-    def eval_vm(self, value):
-        self.check_choices('eval_vm', value)
-        if value == "numexpr" and not bcolz.numexpr_here:
-            raise (ValueError,
-                   "cannot use `numexpr` virtual machine "
-                   "(minimum required version is probably not installed)")
-        self.__eval_vm = value
-
-    @property
-    def eval_out_flavor(self):
-        return self.__eval_out_flavor
-
-    @eval_out_flavor.setter
-    def eval_out_flavor(self, value):
-        self.check_choices('eval_out_flavor', value)
-        self.__eval_out_flavor = value
-
-
-defaults = Defaults()
-
-
-# Default values start here...
-
-defaults.eval_out_flavor = "carray"
-"""
-The flavor for the output object in `eval()`.  It can be 'carray' or
-'numpy'.  Default is 'carray'.
-
-"""
-
-defaults.eval_vm = "python"
-"""
-The virtual machine to be used in computations (via `eval`).  It can
-be 'numexpr' or 'python'.  Default is 'numexpr', if installed.  If
-not, then the default is 'python'.
-
-"""
-
-# If numexpr is available, use it as default
 if bcolz.numexpr_here:
-    defaults.eval_vm = "numexpr"
     from numexpr.expressions import functions as numexpr_functions
+
 
 
 def detect_number_of_cores():
@@ -625,12 +562,12 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
 
     if vm is None:
-        vm = defaults.eval_vm
+        vm = bcolz.defaults.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raise ValueError("`vm` must be either 'numexpr' or 'python'")
 
     if out_flavor is None:
-        out_flavor = defaults.eval_out_flavor
+        out_flavor = bcolz.defaults.defaults.eval_out_flavor
     if out_flavor not in ("carray", "numpy"):
         raise ValueError("`out_flavor` must be either 'carray' or 'numpy'")
 
