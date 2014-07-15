@@ -718,7 +718,10 @@ class evalTest():
 
     def setUp(self):
         self.prev_vm = bcolz.defaults.eval_vm
-        bcolz.defaults.eval_vm = self.vm
+        if bcolz.numexpr_here:
+            bcolz.defaults.eval_vm = self.vm
+        else:
+            bcolz.defaults.eval_vm = "python"
 
     def tearDown(self):
         bcolz.defaults.eval_vm = self.prev_vm

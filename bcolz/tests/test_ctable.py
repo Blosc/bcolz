@@ -719,7 +719,10 @@ class evalTest(MayBeDiskTest):
 
     def setUp(self):
         self.prev_vm = bcolz.defaults.eval_vm
-        bcolz.defaults.eval_vm = self.vm
+        if bcolz.numexpr_here:
+            bcolz.defaults.eval_vm = self.vm
+        else:
+            bcolz.defaults.eval_vm = "python"
         MayBeDiskTest.setUp(self)
 
     def tearDown(self):
