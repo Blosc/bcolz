@@ -681,9 +681,10 @@ class ctable(object):
             columns=columns, orient=orient)
         return df
 
-    def tohdf5(self, filepath, nodepath='/ctable', cparams=None, cname=None):
+    def tohdf5(self, filepath, nodepath='/ctable', mode='w',
+               cparams=None, cname=None):
         """
-        tohdf5(filepath, nodepath='/ctable', cparams=None, cname=None)
+        tohdf5(filepath, nodepath='/ctable', mode='w', cparams=None, cname=None)
 
         Write this object into an HDF5 file.
 
@@ -693,6 +694,8 @@ class ctable(object):
             The path of the HDF5 file.
         nodepath : string
             The path of the node inside the HDF5 file.
+        mode : string
+            The mode to open the PyTables file.  Default is 'w'rite mode.
         cparams : cparams object
             The compression parameters.  The defaults are the same than for
             the current bcolz environment.
@@ -714,7 +717,7 @@ class ctable(object):
         if os.path.exists(filepath):
             raise IOError("path '%s' already exists" % filepath)
 
-        f = tb.open_file(filepath, 'w')
+        f = tb.open_file(filepath, mode=mode)
         cparams = cparams if cparams is not None else bcolz.defaults.cparams
         cname = cname if cname is not None else "blosc:"+cparams['cname']
         filters = tb.Filters(complevel=cparams['clevel'],
