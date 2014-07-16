@@ -38,6 +38,15 @@ except ImportError:
 else:
     pandas_here = True
 
+# Check for PyTables (for data container conversion purposes)
+pytables_here = False
+try:
+    import tables
+except ImportError:
+    pass
+else:
+    tables_here = True
+
 
 # Print array functions (imported from NumPy)
 from bcolz.arrayprint import (

@@ -567,7 +567,7 @@ class ctable(object):
         Parameters
         ----------
         df : DataFrame
-            A pandas dataframe
+            A pandas dataframe.
         kwargs : list of parameters or dictionary
             Any parameter supported by the ctable constructor.
 
@@ -575,6 +575,10 @@ class ctable(object):
         -------
         out : ctable object
             A ctable filled with values from `df`.
+
+        See Also
+        --------
+        ctable.todataframe
 
         """
         # Use the names in kwargs, or if not there, the names in dataframe
@@ -585,6 +589,57 @@ class ctable(object):
 
         # Create the ctable
         ct = bcolz.ctable([df[key] for key in names], names)
+        return ct
+
+    @staticmethod
+    def fromhdf5(filepath, nodepath='/ctable', **kwargs):
+        """
+        fromhdf5(filepath, nodepath='/ctable', **kwargs)
+
+        Return a ctable object out of a compound HDF5 dataset (PyTables Table).
+
+        Parameters
+        ----------
+        filepath : string
+            The path of the HDF5 file.
+        nodepath : string
+            The path of the node inside the HDF5 file.
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the ctable constructor.
+
+        Returns
+        -------
+        out : ctable object
+            A ctable filled with values from the HDF5 node.
+
+        See Also
+        --------
+        ctable.tohdf5
+
+        """
+        if bcolz.tables_here:
+            import tables as tb
+        else:
+            raise ValueError("you need PyTables to use this functionality")
+
+        # Read the Table on file
+        f = tb.open_file(filepath)
+        t = f.get_node(nodepath)
+        # Use the names in kwargs, or if not there, the names in Table
+        if 'names' in kwargs:
+            names = kwargs.pop('names')
+        else:
+            names = t.colnames
+        # Collect metadata
+        dtypes = [dt[0] for dt in t.dtype.fields.values()]
+        cols = [np.zeros(0, dtype=dt) for dt in dtypes]
+        # Create an empty ctable
+        ct = bcolz.ctable(cols, names)
+        # Fill it chunk by chunk
+        bs = t._v_chunkshape[0]
+        for i in xrange(0, len(t), bs):
+            ct.append(t[i:i+bs])
+        f.close()
         return ct
 
     def todataframe(self, columns=None, orient='columns'):
@@ -606,13 +661,17 @@ class ctable(object):
         out : DataFrame
             A pandas DataFrame filled with values from this object.
 
+        See Also
+        --------
+        ctable.fromdataframe
+
         """
-        # Use a generator here to minimize the number of column copies
-        # existing simultaneously in-memory
         if bcolz.pandas_here:
             import pandas as pd
         else:
             raise ValueError("you need pandas to use this functionality")
+        # Use a generator here to minimize the number of column copies
+        # existing simultaneously in-memory
         df = pd.DataFrame.from_items(
             ((key, self[key][:]) for key in self.names),
             columns=columns, orient=orient)

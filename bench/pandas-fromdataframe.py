@@ -8,7 +8,8 @@ from time import time
 NR = int(1e6)
 NC = 100
 
-bcolz.cparams.setdefaults(clevel=0)
+#bcolz.cparams.setdefaults(clevel=0)
+
 a = bcolz.arange(NR, dtype='i4')
 df = pd.DataFrame.from_items((('f%d'%i, a[:]) for i in range(NC)))
 
@@ -36,7 +37,7 @@ print("time with constructor: %.2f (%.2f GB/s)" % (tt, dsize / tt))
 t0 = time()
 t = bcolz.ctable.fromdataframe(df)
 tt = time() - t0
-print("time with from_dataframe: %.2f (%.2f GB/s)" % (tt, dsize / tt))
+print("time with fromdataframe: %.2f (%.2f GB/s)" % (tt, dsize / tt))
 
 
 #print(t)

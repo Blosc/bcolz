@@ -900,6 +900,26 @@ ctable methods
       :py:meth:`todataframe`
 
 
+  .. py:staticmethod:: fromhdf5(filepath, nodepath='/ctable', **kwargs)
+
+    Return a ctable object out of a compound HDF5 dataset (PyTables Table).
+
+    Parameters:
+      filepath : string
+        The path of the HDF5 file.
+      nodepath : string
+        The path of the node inside the HDF5 file.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by the ctable constructor.
+
+    Returns:
+      out : ctable object
+        A ctable filled with values from the HDF5 node.
+
+    See Also:
+      :py:meth:`tohdf5`
+
+
   .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
