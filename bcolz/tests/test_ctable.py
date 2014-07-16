@@ -9,9 +9,11 @@
 from __future__ import absolute_import
 
 import sys
+import os
+import tempfile
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal, assert_allclose
 from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless)
@@ -786,8 +788,8 @@ class evalTest(MayBeDiskTest):
         rar = ra['f0'] * np.sin(ra['f1'])
         #print "ctable ->", ctr
         #print "numpy  ->", rar
-        assert_array_almost_equal(ctr[:], rar, decimal=15,
-                                  err_msg="ctable values are not correct")
+        assert_allclose(ctr[:], rar, rtol=1e-15,
+                        err_msg="ctable values are not correct")
 
     def test04(self):
         """Testing eval() with a boolean as output"""
@@ -1609,6 +1611,31 @@ class walkTest(MayBeDiskTest, TestCase):
         self.assertTrue(ncts_ == self.ncts * self.nlevels)
         self.assertTrue(others == 0)
 
+
+class conversionTest(TestCase):
+
+
+    def test00(self):
+        """Testing roundtrips to a pandas dataframe"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ct = bcolz.ctable(ra)
+        df = ct.todataframe()
+        ct2 = bcolz.ctable.fromdataframe(df)
+        for key in ct.names:
+            assert_allclose(ct2[key][:], ct[key][:])
+
+    def test01(self):
+        """Testing roundtrips to a HDF5 file"""
+        N = 1000
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ct = bcolz.ctable(ra)
+        tmpfile = tempfile.mktemp(".h5")
+        ct.tohdf5(tmpfile)
+        ct2 = bcolz.ctable.fromhdf5(tmpfile)
+        for key in ct.names:
+            assert_allclose(ct2[key][:], ct[key][:])
+        os.remove(tmpfile)
 
 
 if __name__ == '__main__':

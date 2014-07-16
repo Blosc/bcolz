@@ -10,6 +10,8 @@
 from __future__ import absolute_import
 
 import os
+import tempfile
+
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
@@ -140,9 +142,10 @@ class basicTest(MayBeDiskTest):
         cn.attrs['attr1'] = 'val1'
         cn.attrs['attr2'] = 'val2'
         cn.attrs['attr3'] = 'val3'
-        cn.tohdf5("myfile.h5")
-        cn = bcolz.ctable.fromhdf5("myfile.h5")
-        os.remove("myfile.h5")
+        tmpfile = tempfile.mktemp(".h5")
+        cn.tohdf5(tmpfile)
+        cn = bcolz.ctable.fromhdf5(tmpfile)
+        os.remove(tmpfile)
         self.assertEqual(cn.attrs['attr1'], 'val1')
         self.assertEqual(cn.attrs['attr2'], 'val2')
         self.assertEqual(cn.attrs['attr3'], 'val3')
