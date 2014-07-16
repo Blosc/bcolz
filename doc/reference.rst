@@ -981,6 +981,27 @@ ctable methods
       :py:meth:`fromdataframe`
 
 
+  .. py:method:: tohdf5(filepath, nodepath='/ctable', cparams=None, cname=None)
+
+    Write this object into an HDF5 file.
+
+    Parameters:
+      filepath : string
+        The path of the HDF5 file.
+      nodepath : string
+        The path of the node inside the HDF5 file.
+      cparams : cparams object
+        The compression parameters.  The defaults are the same than for
+        the current bcolz environment.
+      cname : string
+        Any of the compressors supported by PyTables (e.g. 'zlib').  The
+        default is to use 'blosc' as meta-compressor in combination with
+        one of its compressors (see `cparams` parameter above).
+
+    See Also:
+       :py:meth:`fromhdf5`
+
+
   .. py:method:: trim(nitems)
 
     Remove the trailing `nitems` from this instance.

@@ -20,6 +20,9 @@ Changes from 0.5.1 to 0.7
 - New pandas import/export functionality via `ctable.fromdataframe()`
   and `ctable.todataframe()`.
 
+- New HDF5/PyTables import/export functionality via `ctable.fromhdf5()`
+  and `ctable.tohdf5()`.
+
 - Support for c-blosc 1.4.1.  This allows the use of different
   compressors via the new `cname` parameter in the `cparams` class, and
   also to be used in platforms not supporting unaligned access.

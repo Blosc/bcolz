@@ -643,7 +643,8 @@ class ctable(object):
         return ct
 
     def todataframe(self, columns=None, orient='columns'):
-        """todataframe(columns=None, orient='columns')
+        """
+        todataframe(columns=None, orient='columns')
 
         Return a pandas dataframe out of this object.
 
@@ -676,6 +677,50 @@ class ctable(object):
             ((key, self[key][:]) for key in self.names),
             columns=columns, orient=orient)
         return df
+
+    def tohdf5(self, filepath, nodepath='/ctable', cparams=None, cname=None):
+        """
+        tohdf5(filepath, nodepath='/ctable', cparams=None, cname=None)
+
+        Write this object into an HDF5 file.
+
+        Parameters
+        ----------
+        filepath : string
+            The path of the HDF5 file.
+        nodepath : string
+            The path of the node inside the HDF5 file.
+        cparams : cparams object
+            The compression parameters.  The defaults are the same than for
+            the current bcolz environment.
+        cname : string
+            Any of the compressors supported by PyTables (e.g. 'zlib').  The
+            default is to use 'blosc' as meta-compressor in combination with
+            one of its compressors (see `cparams` parameter above).
+
+        See Also
+        --------
+        ctable.fromhdf5
+
+        """
+        if bcolz.tables_here:
+            import tables as tb
+        else:
+            raise ValueError("you need PyTables to use this functionality")
+
+        if os.path.exists(filepath):
+            raise IOError("path '%s' already exists" % filepath)
+
+        f = tb.open_file(filepath, 'w')
+        cparams = cparams if cparams is not None else bcolz.defaults.cparams
+        cname = cname if cname is not None else "blosc:"+cparams['cname']
+        filters = tb.Filters(complevel=cparams['clevel'],
+                             shuffle=cparams['clevel'],
+                             complib=cname)
+        t = f.create_table(f.root, nodepath[1:], self.dtype, filters=filters)
+        for block in bcolz.iterblocks(self):
+            t.append(block)
+        f.close()
 
     def __len__(self):
         return self.len
