@@ -639,6 +639,9 @@ class ctable(object):
         bs = t._v_chunkshape[0]
         for i in xrange(0, len(t), bs):
             ct.append(t[i:i+bs])
+        # Get the attributes
+        for key in t.attrs._f_list():
+            ct.attrs[key] = t.attrs[key]
         f.close()
         return ct
 
@@ -718,6 +721,10 @@ class ctable(object):
                              shuffle=cparams['clevel'],
                              complib=cname)
         t = f.create_table(f.root, nodepath[1:], self.dtype, filters=filters)
+        # Set the attributes
+        for key, val in self.attrs:
+            t.attrs[key] = val
+        # Copy the data
         for block in bcolz.iterblocks(self):
             t.append(block)
         f.close()

@@ -9,6 +9,7 @@
 
 from __future__ import absolute_import
 
+import os
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
@@ -30,7 +31,7 @@ class basicTest(MayBeDiskTest):
         return obj
 
     def test00a(self):
-        """Creating attributes in a new carray."""
+        """Creating attributes in a new object."""
 
         cn = self.getobject()
         # Some attrs
@@ -43,14 +44,14 @@ class basicTest(MayBeDiskTest):
         self.assertTrue(len(cn.attrs) == 3)
 
     def test00b(self):
-        """Accessing attributes in a opened carray."""
+        """Accessing attributes in a opened object."""
 
         cn = self.getobject()
         # Some attrs
         cn.attrs['attr1'] = 'val1'
         cn.attrs['attr2'] = 'val2'
         cn.attrs['attr3'] = 'val3'
-        # Re-open the carray
+        # Re-open the object
         if self.rootdir:
             cn = bcolz.open(rootdir=self.rootdir)
         self.assertTrue(cn.attrs['attr1'] == 'val1')
@@ -59,7 +60,7 @@ class basicTest(MayBeDiskTest):
         self.assertTrue(len(cn.attrs) == 3)
 
     def test01a(self):
-        """Removing attributes in a new carray."""
+        """Removing attributes in a new object."""
 
         cn = self.getobject()
         # Some attrs
@@ -74,7 +75,7 @@ class basicTest(MayBeDiskTest):
         self.assertTrue(len(cn.attrs) == 2)
 
     def test01b(self):
-        """Removing attributes in a opened carray."""
+        """Removing attributes in a opened object."""
 
         cn = self.getobject()
         # Some attrs
@@ -92,7 +93,7 @@ class basicTest(MayBeDiskTest):
         self.assertTrue(len(cn.attrs) == 2)
 
     def test01c(self):
-        """Appending attributes in a opened carray."""
+        """Appending attributes in a opened object."""
 
         cn = self.getobject()
         # Some attrs
@@ -114,18 +115,38 @@ class basicTest(MayBeDiskTest):
         cn = self.getobject()
         # Some attrs
         cn.attrs['attr1'] = 'val1'
-        cn.attrs['attr2'] = 'val2'
-        cn.attrs['attr3'] = 'val3'
+        cn.attrs['attr2'] = 2
+        cn.attrs['attr3'] = 3.
         count = 0
         for key, val in cn.attrs:
             if key == 'attr1':
-                self.assertTrue(val, 'val1')
+                self.assertEqual(val, 'val1')
             if key == 'attr2':
-                self.assertTrue(val, 'val2')
+                self.assertEqual(val, 2)
             if key == 'attr3':
-                self.assertTrue(val, 'val3')
+                self.assertEqual(val, 3.)
             count += 1
         self.assertTrue(count, 3)
+
+    @skipUnless(bcolz.tables_here , "PyTables not here")
+    def test03(self):
+        """Checking roundtrip of attrs in HDF5 files."""
+
+        if self.flavor != 'ctable':
+            # ATM HDF5 serialization only works for ctables object
+            return
+        cn = self.getobject()
+        # Some attrs
+        cn.attrs['attr1'] = 'val1'
+        cn.attrs['attr2'] = 'val2'
+        cn.attrs['attr3'] = 'val3'
+        cn.tohdf5("myfile.h5")
+        cn = bcolz.ctable.fromhdf5("myfile.h5")
+        os.remove("myfile.h5")
+        self.assertEqual(cn.attrs['attr1'], 'val1')
+        self.assertEqual(cn.attrs['attr2'], 'val2')
+        self.assertEqual(cn.attrs['attr3'], 'val3')
+        self.assertEqual(len(cn.attrs), 3)
 
 class carrayTest(basicTest, TestCase):
     flavor = "carray"
@@ -151,7 +172,6 @@ if __name__ == '__main__':
 
 ## Local Variables:
 ## mode: python
-## py-indent-offset: 4
 ## tab-width: 4
 ## fill-column: 72
 ## End:

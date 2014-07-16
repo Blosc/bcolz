@@ -17,7 +17,7 @@ from .py2help import xrange, dict_iteritems
 ATTRSDIR = "__attrs__"
 
 class attrs(object):
-    """Accessor for attributes in carray objects.
+    """Accessor for attributes in carray/ctable objects.
 
     This class behaves very similarly to a dictionary, and attributes
     can be appended in the typical way::
@@ -92,11 +92,11 @@ class attrs(object):
     def __getitem__(self, name):
         return self.attrs[name]
 
-    def __setitem__(self, name, carray):
+    def __setitem__(self, name, obj):
         if self.rootdir and self.mode == 'r':
             raise IOError(
                 "Cannot modify an attribute when in 'r'ead-only mode")
-        self.attrs[name] = carray
+        self.attrs[name] = obj
         self._update_meta()
 
     def __delitem__(self, name):

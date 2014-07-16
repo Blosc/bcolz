@@ -39,7 +39,7 @@ else:
     pandas_here = True
 
 # Check for PyTables (for data container conversion purposes)
-pytables_here = False
+tables_here = False
 try:
     import tables
 except ImportError:
