@@ -557,6 +557,37 @@ class ctable(object):
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
 
+    def todataframe(self, columns=None, orient='columns'):
+        """todataframe(columns=None, orient='columns')
+
+        Return a pandas dataframe out of this object.
+
+        Parameters
+        ----------
+        columns : sequence of column labels, optional
+            Must be passed if orient='index'.
+        orient : {'columns', 'index'}, default 'columns'
+            The "orientation" of the data. If the keys of the input correspond
+            to column labels, pass 'columns' (default). Otherwise if the keys
+            correspond to the index, pass 'index'.
+
+        Returns
+        -------
+        out : DataFrame
+            A pandas DataFrame filled with values from this object.
+
+        """
+        # Use a generator here to minimize the number of column copies
+        # existing simultaneously in-memory
+        if bcolz.pandas_here:
+            import pandas as pd
+        else:
+            raise ValueError("you need pandas to use this functionality")
+        df = pd.DataFrame.from_items(
+            ((key, self[key][:]) for key in self.names),
+            columns=columns, orient=orient)
+        return df
+
     def __len__(self):
         return self.len
 

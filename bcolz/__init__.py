@@ -29,6 +29,16 @@ else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
 
+# Check for pandas (for data container conversion purposes)
+pandas_here = False
+try:
+    import pandas
+except ImportError:
+    pass
+else:
+    pandas_here = True
+
+
 # Print array functions (imported from NumPy)
 from bcolz.arrayprint import (
     array2string, set_printoptions, get_printoptions )

@@ -923,6 +923,23 @@ ctable methods
         filling values.
 
 
+  .. py:method:: todataframe(columns=None, orient='columns')
+
+    Return a pandas dataframe out of this object.
+
+    Parameters:
+      columns : sequence of column labels, optional
+        Must be passed if orient='index'.
+      orient : {'columns', 'index'}, default 'columns'
+        The "orientation" of the data. If the keys of the input correspond
+        to column labels, pass 'columns' (default). Otherwise if the keys
+        correspond to the index, pass 'index'.
+
+    Returns:
+      out : DataFrame
+        A pandas DataFrame filled with values from this object.
+
+
   .. py:method:: trim(nitems)
 
     Remove the trailing `nitems` from this instance.
