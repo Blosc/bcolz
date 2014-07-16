@@ -557,6 +557,36 @@ class ctable(object):
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
 
+    @staticmethod
+    def fromdataframe(df, **kwargs):
+        """
+        fromdataframe(df, **kwargs)
+
+        Return a ctable object out of a pandas dataframe.
+
+        Parameters
+        ----------
+        df : DataFrame
+            A pandas dataframe
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the ctable constructor.
+
+        Returns
+        -------
+        out : ctable object
+            A ctable filled with values from `df`.
+
+        """
+        # Use the names in kwargs, or if not there, the names in dataframe
+        if 'names' in kwargs:
+            names = kwargs.pop('names')
+        else:
+            names = list(df.columns.values)
+
+        # Create the ctable
+        ct = bcolz.ctable([df[key] for key in names], names)
+        return ct
+
     def todataframe(self, columns=None, orient='columns'):
         """todataframe(columns=None, orient='columns')
 

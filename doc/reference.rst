@@ -235,7 +235,7 @@ Top level functions
         ctable object.
 
     See Also:
-      :py:func:`ctable.whereblocks`
+      :py:meth:`ctable.whereblocks`
 
 
 .. py:function:: get_printoptions()
@@ -882,6 +882,24 @@ ctable methods
     cache data blocks/chunks.
 
 
+  .. py:staticmethod:: fromdataframe(df, **kwargs)
+
+    Return a ctable object out of a pandas dataframe.
+
+    Parameters:
+      df : DataFrame
+        A pandas dataframe
+      kwargs : list of parameters or dictionary
+        Any parameter supported by the ctable constructor.
+
+    Returns:
+      out : ctable object
+        A ctable filled with values from `df`.
+
+    See Also:
+      :py:meth:`todataframe`
+
+
   .. py:method:: iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
 
     Iterator with `start`, `stop` and `step` bounds.
@@ -910,7 +928,7 @@ ctable methods
       out : iterable
 
     See Also:
-      :py:meth:`ctable.where`
+      :py:func:`ctable.where`
 
   .. py:method:: resize(nitems)
 
@@ -938,6 +956,9 @@ ctable methods
     Returns:
       out : DataFrame
         A pandas DataFrame filled with values from this object.
+
+    See Also:
+      :py:meth:`fromdataframe`
 
 
   .. py:method:: trim(nitems)

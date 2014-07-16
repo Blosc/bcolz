@@ -1,4 +1,4 @@
-.. _bcolz-defaults:
+.. _defaults:
 
 -----------------------------
 Defaults for bcolz operation

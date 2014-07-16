@@ -207,6 +207,10 @@ fine-tuning the performance for an specific carray).
 See :ref:`opt-tips` chapter for info on how you can change other
 internal parameters like the size of the chunk.
 
+Also, for setting globally or permanently your own defaults for the
+compression parameters, see :ref:`defaults` chapter.
+
+
 Accessing carray data
 ---------------------
 
@@ -483,8 +487,8 @@ array by using the `out_flavor` argument::
   array([  0.00000000e+00,   1.00000000e+00,   8.00000000e+00, ...,
            9.99999100e+20,   9.99999400e+20,   9.99999700e+20])
 
-For setting permanently your own defaults for the `vm` and
-`out_flavors`, see :ref:`carray-defaults` chapter.
+For setting globally or permanently your own defaults for the `vm` and
+`out_flavors`, see :ref:`defaults` chapter.
 
 carray metadata
 ---------------
