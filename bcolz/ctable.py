@@ -576,19 +576,45 @@ class ctable(object):
         out : ctable object
             A ctable filled with values from `df`.
 
+        Note
+        ----
+        The 'object' dtype will be converted into a 'S'tring type, if possible.
+        This allows for much better storage savings in bcolz.
+
         See Also
         --------
         ctable.todataframe
 
         """
+        if bcolz.pandas_here:
+            import pandas as pd
+        else:
+            raise ValueError("you need pandas to use this functionality")
+
         # Use the names in kwargs, or if not there, the names in dataframe
         if 'names' in kwargs:
             names = kwargs.pop('names')
         else:
             names = list(df.columns.values)
 
+        # Build the list of columns as in-memory numpy arrays and carrays
+        # (when doing the conversion object -> string)
+        cols = []
+        # Remove a possible rootdir argument to prevent copies going to disk
+        ckwargs = kwargs.copy()
+        if 'rootdir' in ckwargs: del ckwargs['rootdir']
+        for key in names:
+            vals = df[key].values  # just a view as a numpy array
+            if vals.dtype == np.object and pd.lib.infer_dtype(vals) == 'string':
+                maxitemsize = pd.lib.max_len_string_array(vals)
+                # Convert the view into a carray of strings
+                col = bcolz.carray(vals, dtype='S%d'%maxitemsize, **ckwargs)
+                cols.append(col)
+            else:
+                cols.append(vals)
+
         # Create the ctable
-        ct = ctable([df[key] for key in names], names, **kwargs)
+        ct = ctable(cols, names, **kwargs)
         return ct
 
     @staticmethod
@@ -674,6 +700,7 @@ class ctable(object):
             import pandas as pd
         else:
             raise ValueError("you need pandas to use this functionality")
+
         # Use a generator here to minimize the number of column copies
         # existing simultaneously in-memory
         df = pd.DataFrame.from_items(
