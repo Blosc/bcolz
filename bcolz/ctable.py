@@ -261,7 +261,7 @@ class ctable(object):
         if not (calist or nalist or ratype):
             # Try to convert the elements to carrays
             try:
-                columns = [bcolz.carray(col) for col in columns]
+                columns = [bcolz.carray(col, **kwargs) for col in columns]
                 calist = True
             except:
                 raise ValueError("`columns` input is not supported")
@@ -588,7 +588,7 @@ class ctable(object):
             names = list(df.columns.values)
 
         # Create the ctable
-        ct = bcolz.ctable([df[key] for key in names], names)
+        ct = ctable([df[key] for key in names], names, **kwargs)
         return ct
 
     @staticmethod
@@ -634,7 +634,7 @@ class ctable(object):
         dtypes = [dt[0] for dt in t.dtype.fields.values()]
         cols = [np.zeros(0, dtype=dt) for dt in dtypes]
         # Create an empty ctable
-        ct = bcolz.ctable(cols, names)
+        ct = ctable(cols, names, **kwargs)
         # Fill it chunk by chunk
         bs = t._v_chunkshape[0]
         for i in xrange(0, len(t), bs):
