@@ -35,6 +35,10 @@ Changes from 0.5.1 to 0.7
 - New `cparams.setdefaults()` method for globally setting defaults in
   compression parameters during carray/ctable creation.
 
+- Disabled the multi-threading because it is not delivering the promised
+  speedups.  This can always be re-activated by using
+  `blosc_set_nthreads(nthreads)` and `numexpr.set_num_threads(nthreads)`.
+
 
 Changes from 0.5 to 0.5.1
 =========================
