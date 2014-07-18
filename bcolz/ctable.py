@@ -605,10 +605,23 @@ class ctable(object):
         if 'rootdir' in ckwargs: del ckwargs['rootdir']
         for key in names:
             vals = df[key].values  # just a view as a numpy array
-            if vals.dtype == np.object and pd.lib.infer_dtype(vals) == 'string':
-                maxitemsize = pd.lib.max_len_string_array(vals)
-                # Convert the view into a carray of strings
-                col = bcolz.carray(vals, dtype='S%d'%maxitemsize, **ckwargs)
+            if vals.dtype == np.object:
+                inferred_type = pd.lib.infer_dtype(vals)
+                # Next code could be made to work if
+                # pd.lib.max_len_string_array(vals) below would work
+                # with unicode in Python 2
+                # if inferred_type == 'unicode':
+                #     maxitemsize = pd.lib.max_len_string_array(vals)
+                #     print "maxitemsize:", maxitesize
+                #     # Convert the view into a carray of Unicode strings
+                #     col = bcolz.carray(vals, dtype='U%d'%maxitemsize, **ckwargs)
+                # elif inferred_type == 'string':
+                if inferred_type == 'string':
+                    maxitemsize = pd.lib.max_len_string_array(vals)
+                    # Convert the view into a carray of regular strings
+                    col = bcolz.carray(vals, dtype='S%d'%maxitemsize, **ckwargs)
+                else:
+                    col = vals
                 cols.append(col)
             else:
                 cols.append(vals)
