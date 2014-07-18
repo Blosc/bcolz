@@ -64,11 +64,16 @@ from bcolz.toplevel import (
 from chunked_eval import eval
 from bcolz.defaults import defaults
 from bcolz.version import __version__
-from bcolz.tests import test
+from bcolz.tests import test, print_versions
 
 # Initialization code for the Blosc library
 _blosc_init()
 ncores = detect_number_of_cores()
 blosc_set_nthreads(ncores)
+# Benchmarks show that using several threads is rarely an advantage in bcolz.
+# Disabling multi-threading for the time being...
+blosc_set_nthreads(1)
+if numexpr_here:
+    numexpr.set_num_threads(1)
 import atexit
 atexit.register(_blosc_destroy)
