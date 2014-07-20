@@ -13,7 +13,7 @@ __docformat__ = 'restructuredtext'
 # modified by Jim Hugunin   1997-3-3 for repr's and str's (and other details)
 # and by Perry Greenfield   2000-4-1 for numarray
 # and by Travis Oliphant    2005-8-22 for numpy
-# adapted by Francesc Alted 20012-8-18 for bcolz
+# adapted by Francesc Alted 2012-8-18 for bcolz
 
 import sys
 

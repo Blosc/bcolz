@@ -1,15 +1,15 @@
-========================
-Release notes for bcolz
-========================
+=======================================
+Release notes for bcolz (former carray)
+=======================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
 
 
-Changes from 0.5.1 to 0.7
-=========================
+Changes from 0.5.1 to 0.7.0
+===========================
 
-- Renamed the package to `bcolz`.
+- Renamed the ``carray`` package to ``bcolz``.
 
 - Added support for Python 3.
 
@@ -30,14 +30,15 @@ Changes from 0.5.1 to 0.7
 - Objects are supported in carray containers (not yet for ctable).
 
 - Added a new `free_cachemem()` method for freeing internal caches after
-  reading carray/ctable objects.
+  reading/querying carray/ctable objects.
 
 - New `cparams.setdefaults()` method for globally setting defaults in
   compression parameters during carray/ctable creation.
 
-- Disabled the multi-threading because it is not delivering the promised
-  speedups.  This can always be re-activated by using
-  `blosc_set_nthreads(nthreads)` and `numexpr.set_num_threads(nthreads)`.
+- Disabled multi-threading in both Blosc and numexpr because it is not
+  delivering the promised speedups yet.  This can always be re-activated
+  by using `blosc_set_nthreads(nthreads)` and
+  `numexpr.set_num_threads(nthreads)`.
 
 
 Changes from 0.5 to 0.5.1
