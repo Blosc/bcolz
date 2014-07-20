@@ -568,8 +568,6 @@ class cparams(object):
         # Store the cname as bytes object internally
         if cname is not None:
             list_cnames = bcolz.blosc_compressor_list()
-            if hasattr(cname, 'encode'):
-                cname = cname.encode()
             if cname not in list_cnames:
                 raise ValueError(
                     "Compressor '%s' is not available in this build" % cname)

@@ -1578,8 +1578,8 @@ class dtypesTest(TestCase):
         dtype = np.dtype("object")
         a = np.array(["ale", "e", "aco"], dtype=dtype)
         ac = bcolz.carray(a, dtype=dtype)
-        self.assert_(ac.dtype == dtype)
-        self.assert_(a.dtype == ac.dtype)
+        self.assertEqual(ac.dtype, dtype)
+        self.assertEqual(a.dtype, ac.dtype)
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test07(self):
@@ -1769,7 +1769,7 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             b = bcolz.carray(a, rootdir=self.rootdir,
                              cparams=bcolz.cparams(clevel=9, cname=cname))
             #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
-            self.assert_(sys.getsizeof(b) > b.nbytes,
+            self.assertTrue(sys.getsizeof(b) > b.nbytes,
                          "compression does not seem to have any overhead")
             assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
@@ -1787,8 +1787,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             bcolz.cparams.setdefaults(clevel=9, cname=cname)
             b = bcolz.carray(a, rootdir=self.rootdir)
             #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
-            self.assert_(sys.getsizeof(b) < b.nbytes,
-                         "carray does not seem to compress at all")
+            self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                            "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:
@@ -1808,8 +1808,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
                 'clevel': 9, 'shuffle': True, 'cname': cname}
             b = bcolz.carray(a, rootdir=self.rootdir)
             #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
-            self.assert_(sys.getsizeof(b) < b.nbytes,
-                         "carray does not seem to compress at all")
+            self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                            "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:

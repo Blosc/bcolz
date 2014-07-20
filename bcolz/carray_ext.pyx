@@ -127,8 +127,11 @@ def blosc_compressor_list():
     out : list
         The list of names.
     """
-    list_compr = blosc_list_compressors().decode()
-    clist = [s.encode() for s in list_compr.split(',')]
+    list_compr = blosc_list_compressors()
+    if sys.version_info >= (3, 0):
+        # Convert compressor names into regular strings in Python 3 (unicode)
+        list_compr = list_compr.decode()
+    clist = list_compr.split(',')
     return clist
 
 def _blosc_set_nthreads(nthreads):
@@ -408,6 +411,8 @@ cdef class chunk:
         clevel = cparams.clevel
         shuffle = cparams.shuffle
         cname = cparams.cname
+        if type(cname) != bytes:
+            cname = cname.encode()
         if blosc_set_compressor(cname) < 0:
             raise ValueError(
                 "Compressor '%s' is not available in this build" % cname)
