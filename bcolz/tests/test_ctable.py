@@ -1615,6 +1615,7 @@ class walkTest(MayBeDiskTest, TestCase):
 class conversionTest(TestCase):
 
 
+    @skipUnless(bcolz.pandas_here, "pandas not here")
     def test00(self):
         """Testing roundtrips to a pandas dataframe"""
         N = 1000
@@ -1625,6 +1626,7 @@ class conversionTest(TestCase):
         for key in ct.names:
             assert_allclose(ct2[key][:], ct[key][:])
 
+    @skipUnless(bcolz.tables_here, "PyTables not here")
     def test01(self):
         """Testing roundtrips to a HDF5 file"""
         N = 1000
