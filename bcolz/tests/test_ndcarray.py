@@ -804,8 +804,8 @@ class computeMethodsTest(TestCase):
         sac = ac.sum()
         #print "numpy sum-->", sa
         #print "carray sum-->", sac
-        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
-        self.assertTrue(sa == sac, "sum() is not working correctly.")
+        self.assertEqual(sa.dtype, sac.dtype, "sum() is not working correctly.")
+        self.assertEqual(sa, sac, "sum() is not working correctly.")
 
 
 
