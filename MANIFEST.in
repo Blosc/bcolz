@@ -1,14 +1,13 @@
 include MANIFEST.in
 include *.txt *.rst
-exclude post-release.txt  releasing.txt
+exclude RELEASING.rst
 include VERSION
 include pavement.py
 include setup.py
 
 recursive-include bcolz *.py *.pyx *.pxd *.c *.h
 recursive-include bcolz/tests *.py
-recursive-include blosc *.c *.h
-recursive-include blosc/win32 *.c *.h
+recursive-include c-blosc *.c *.h
 recursive-include bench *.py *.txt
 recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
 recursive-exclude doc/_build *
