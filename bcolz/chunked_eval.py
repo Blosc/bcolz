@@ -15,6 +15,7 @@ import sys
 import math
 import numpy as np
 import bcolz
+from bcolz.py2help import xrange
 
 if bcolz.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
