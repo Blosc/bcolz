@@ -11,6 +11,7 @@
 
 from __future__ import absolute_import
 
+import sys
 import os, os.path
 import glob
 import itertools as it
@@ -18,6 +19,29 @@ import numpy as np
 import bcolz
 from .py2help import xrange, _inttypes
 
+
+
+def print_versions():
+    """Print all the versions of packages that bcolz relies on."""
+    print("-=" * 38)
+    print("bcolz version:     %s" % bcolz.__version__)
+    print("NumPy version:     %s" % np.__version__)
+    tinfo = bcolz.blosc_version()
+    blosc_cnames = bcolz.blosc_compressor_list()
+    print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
+    print("Blosc compressors: %s" % (blosc_cnames,))
+    if bcolz.numexpr_here:
+        print("Numexpr version:   %s" % bcolz.numexpr.__version__)
+    else:
+        print("Numexpr version:   not available "
+              "(version >= %s not detected)" %  bcolz.min_numexpr_version)
+    print("Python version:    %s" % sys.version)
+    if os.name == "posix":
+        (sysname, nodename, release, version, machine) = os.uname()
+        print("Platform:          %s-%s" % (sys.platform, machine))
+    print("Byte-ordering:     %s" % sys.byteorder)
+    print("Detected cores:    %s" % bcolz.detect_number_of_cores())
+    print("-=" * 38)
 
 
 def detect_number_of_cores():

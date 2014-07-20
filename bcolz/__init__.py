@@ -58,13 +58,13 @@ from bcolz.carray_ext import (
     _blosc_init, _blosc_destroy)
 from bcolz.ctable import ctable
 from bcolz.toplevel import (
-    detect_number_of_cores, set_nthreads,
+    print_versions, detect_number_of_cores, set_nthreads,
     open, fromiter, arange, zeros, ones, fill,
     iterblocks, cparams, walk)
 from bcolz.chunked_eval import eval
 from bcolz.defaults import defaults
 from bcolz.version import __version__
-from bcolz.tests import test, print_versions
+from bcolz.tests import test
 
 # Initialization code for the Blosc library
 _blosc_init()

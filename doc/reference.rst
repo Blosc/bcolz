@@ -191,25 +191,15 @@ Top level functions
       twice (which is slooow).  It avoids memory leaks to happen too
       (which can be important for large iterables).
 
-.. py:function:: ones(shape, dtype=float, **kwargs)
+.. py:function:: get_printoptions()
 
-    Return a new carray object of given shape and type, filled with ones.
+    Return the current print options.
 
-    Parameters:
-      shape : int
-        Shape of the new array, e.g., ``(2,3)``.
-      dtype : data-type, optional
-        The desired data-type for the array, e.g., `numpy.int8`.  Default is
-        `numpy.float64`.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray
-        Array of ones with the given shape and dtype.
+    This is the same function than in NumPy.  For more info, please
+    refer to the NumPy documentation.
 
     See Also:
-      :py:func:`fill`, :py:func:`ones`
+      :py:func:`array2string`, :py:func:`set_printoptions`
 
 
 .. py:function:: iterblocks(blen=None, start=0, stop=None)
@@ -238,15 +228,25 @@ Top level functions
       :py:meth:`ctable.whereblocks`
 
 
-.. py:function:: get_printoptions()
+.. py:function:: ones(shape, dtype=float, **kwargs)
 
-    Return the current print options.
+    Return a new carray object of given shape and type, filled with ones.
 
-    This is the same function than in NumPy.  For more info, please
-    refer to the NumPy documentation.
+    Parameters:
+      shape : int
+        Shape of the new array, e.g., ``(2,3)``.
+      dtype : data-type, optional
+        The desired data-type for the array, e.g., `numpy.int8`.  Default is
+        `numpy.float64`.
+      kwargs : list of parameters or dictionary
+        Any parameter supported by the carray constructor.
+
+    Returns:
+      out : carray
+        Array of ones with the given shape and dtype.
 
     See Also:
-      :py:func:`array2string`, :py:func:`set_printoptions`
+      :py:func:`fill`, :py:func:`ones`
 
 
 .. py:function:: open(rootdir, mode='a')
@@ -266,6 +266,11 @@ Top level functions
 
     Returns:
       out : a carray/ctable object or None (if not objects are found)
+
+
+.. py:function:: print_versions()
+
+    Print all the versions of packages that bcolz relies on.
 
 
 .. py:function:: set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None)

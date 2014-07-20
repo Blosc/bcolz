@@ -29,29 +29,6 @@ def suite():
         start_dir=this_dir, pattern = "test_*.py")
 
 
-def print_versions():
-    """Print all the versions of software that bcolz relies on."""
-    print("-=" * 38)
-    print("bcolz version:     %s" % bcolz.__version__)
-    print("NumPy version:     %s" % numpy.__version__)
-    tinfo = bcolz.blosc_version()
-    blosc_cnames = bcolz.blosc_compressor_list()
-    print("Blosc version:     %s (%s)" % (tinfo[0], tinfo[1]))
-    print("Blosc compressors: %s" % (blosc_cnames,))
-    if bcolz.numexpr_here:
-        print("Numexpr version:   %s" % bcolz.numexpr.__version__)
-    else:
-        print("Numexpr version:   not available "
-              "(version >= %s not detected)" %  bcolz.min_numexpr_version)
-    print("Python version:    %s" % sys.version)
-    if os.name == "posix":
-        (sysname, nodename, release, version, machine) = os.uname()
-        print("Platform:          %s-%s" % (sys.platform, machine))
-    print("Byte-ordering:     %s" % sys.byteorder)
-    print("Detected cores:    %s" % bcolz.detect_number_of_cores())
-    print("-=" * 38)
-
-
 def print_heavy(heavy):
     if heavy:
         print("""\
@@ -82,7 +59,7 @@ def test(verbose=False, heavy=False):
     should be careful with this because it can take a lot of time and
     resources from your computer).
     """
-    print_versions()
+    bcolz.print_versions()
     print_heavy(heavy)
 
     # What a context this is!
@@ -114,7 +91,7 @@ if __name__ == '__main__':
             common.heavy = True
             sys.argv.remove(arg)
 
-    print_versions()
+    bcolz.print_versions()
     if not only_versions:
         print_heavy(common.heavy)
         unittest.main(defaultTest='bcolz.tests.suite')
