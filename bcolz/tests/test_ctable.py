@@ -620,6 +620,8 @@ class resizeDiskTest(resizeTest, TestCase):
 
 class copyTest(MayBeDiskTest):
 
+    N = 100*1000
+
     def test00(self):
         """Testing copy() without params"""
         N = 10
@@ -640,7 +642,7 @@ class copyTest(MayBeDiskTest):
 
     def test01(self):
         """Testing copy() with higher clevel"""
-        N = 10*1000
+        N = self.N
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         if self.disk:
@@ -659,7 +661,7 @@ class copyTest(MayBeDiskTest):
 
     def test02(self):
         """Testing copy() with lower clevel"""
-        N = 10*1000
+        N = self.N
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         t2 = t.copy(cparams=bcolz.cparams(clevel=1))
@@ -670,10 +672,10 @@ class copyTest(MayBeDiskTest):
 
     def test03(self):
         """Testing copy() with no shuffle"""
-        N = 10*1000
+        N = self.N
         ra = np.fromiter(((i, i**2.2) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra)
-        # print "t:", t, t.rootdir
+        #print "t:", repr(t), t.rootdir
         t2 = t.copy(cparams=bcolz.cparams(shuffle=False), rootdir=self.rootdir)
         #print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assertTrue(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
@@ -696,13 +698,13 @@ class specialTest(TestCase):
 
     def test01(self):
         """Testing __sizeof__() (big ctables)"""
-        N = int(1e4)
+        N = int(1e5)
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         #print "size t uncompressed ->", t.nbytes
         #print "size t compressed   ->", t.cbytes
         self.assertTrue(sys.getsizeof(t) < t.nbytes,
-                     "ctable does not seem to compress at all")
+                        "ctable does not seem to compress at all")
 
     def test02(self):
         """Testing __sizeof__() (small ctables)"""

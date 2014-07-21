@@ -48,11 +48,12 @@ def show_stats(explain, tref):
 
 def csformula(expectedsizeinMB):
     """Return the fitted chunksize for expectedsizeinMB."""
-    # For a basesize of 1 KB, this will return:
-    # 4 KB for datasets <= .1 KB
-    # 64 KB for datasets == 1 MB
-    # 1 MB for datasets >= 10 GB
-    basesize = 1024
+    # For a basesize of 4 KB, this will return:
+    # 16 KB for datasets <= .1 KB
+    # 256 KB for datasets == 1 MB
+    # 4 MB for datasets >= 10 GB
+    # The next figure is based on experiments with 'movielens-bench' repo
+    basesize = 4 * 1024
     return basesize * int(2**(math.log10(expectedsizeinMB)+6))
 
 def limit_es(expectedsizeinMB):

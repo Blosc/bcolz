@@ -160,12 +160,11 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
 
     # Compute the optimal block size (in elements)
     # The next is based on experiments with bench/ctable-query.py
+    # and the 'movielens-bench' repository
     if vm == "numexpr":
-        # If numexpr, make sure that operands fits in L3 chache
-        bsize = 2**20  # 1 MB is common for L3
+        bsize = 2**24
     else:
-        # If python, make sure that operands fits in L2 chache
-        bsize = 2**17  # 256 KB is common for L2
+        bsize = 2**22
     bsize //= typesize
     # Evaluation seems more efficient if block size is a power of 2
     bsize = 2 ** (int(math.log(bsize, 2)))

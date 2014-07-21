@@ -542,6 +542,13 @@ class miscDiskTest(miscTest, TestCase):
 
 class copyTest(MayBeDiskTest):
 
+    N = int(1e5)
+
+    def tearDown(self):
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
+        MayBeDiskTest.tearDown(self)
+
     def test00(self):
         """Testing copy() without params"""
         a = np.arange(111)
@@ -555,7 +562,7 @@ class copyTest(MayBeDiskTest):
 
     def test01(self):
         """Testing copy() with higher compression"""
-        a = np.linspace(-1., 1., 1e4)
+        a = np.linspace(-1., 1., self.N)
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=bcolz.cparams(clevel=9))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
@@ -563,36 +570,30 @@ class copyTest(MayBeDiskTest):
 
     def test02(self):
         """Testing copy() with lesser compression"""
-        a = np.linspace(-1., 1., 1e4)
+        a = np.linspace(-1., 1., self.N)
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(clevel=1)
         c = b.copy()
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "clevel not changed")
-        # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
     def test03a(self):
         """Testing copy() with no shuffle"""
-        a = np.linspace(-1., 1., 1e4)
+        a = np.linspace(-1., 1., self.N)
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(clevel=1)
         c = b.copy(cparams=bcolz.cparams(shuffle=False))
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
-        # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
     def test03b(self):
         """Testing copy() with no shuffle (setdefaults version)"""
-        a = np.linspace(-1., 1., 1e4)
+        a = np.linspace(-1., 1., self.N)
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(shuffle=False)
         c = b.copy()
         #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
-        # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
 class copyMemoryTest(copyTest, TestCase):
     disk = False
@@ -1758,6 +1759,11 @@ class persistenceTest(MayBeDiskTest, TestCase):
 
 class bloscCompressorsTest(MayBeDiskTest, TestCase):
 
+    def tearDown(self):
+        # Restore defaults
+        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
+        MayBeDiskTest.tearDown(self)
+
     def test00(self):
         """Testing all available compressors in small arrays"""
         a = np.arange(20)
@@ -1793,8 +1799,6 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)
-        # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=True, cname='blosclz')
 
     def test01b(self):
         """Testing all available compressors in big arrays (bcolz.defaults)"""
