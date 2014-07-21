@@ -36,7 +36,7 @@ Performing the complete test suite!""")
     else:
         print("""\
 Performing only a light (yet comprehensive) subset of the test suite.
-If you want a more complete test, try passing the --heavy flag to this
+If you want a more complete test, try passing the '-heavy' flag to this
 script (or set the 'heavy' parameter in case you are using bcolz.test()
 call).  The whole suite will take more than 30 seconds to complete on a
 relatively modern CPU and around 300 MB of RAM and 500 MB of disk
@@ -80,21 +80,22 @@ if __name__ == '__main__':
     # Handle some global flags (i.e. only useful for test_all.py)
     only_versions = 0
     args = sys.argv[:]
+    print "args:", args
     for arg in args:
-        if arg in ['--print-versions']:
+        if arg in ['-print-versions']:
             only_versions = True
             sys.argv.remove(arg)
-        if arg in ['--verbose']:
+        if arg in ['-verbose']:
             common.verbose = True
             sys.argv.remove(arg)
-        if arg in ['--heavy']:
+        if arg in ['-heavy']:
             common.heavy = True
             sys.argv.remove(arg)
 
     bcolz.print_versions()
     if not only_versions:
         print_heavy(common.heavy)
-        unittest.main(defaultTest='bcolz.tests.suite')
+        unittest.TextTestRunner().run(suite())
 
 
 ## Local Variables:
