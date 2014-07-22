@@ -6,6 +6,12 @@ Release notes for bcolz (former carray)
 :Contact: francesc@blosc.io
 
 
+Changes from 0.7.0 to 0.7.1
+===========================
+
+#XXX version-specific blurb XXX#
+
+
 Changes from 0.5.1 to 0.7.0
 ===========================
 
