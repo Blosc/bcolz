@@ -66,14 +66,13 @@ from bcolz.defaults import defaults
 from bcolz.version import __version__
 from bcolz.tests import test
 
-# Initialization code for the Blosc library
+# Initialization code for the Blosc and numexpr libraries
 _blosc_init()
 ncores = detect_number_of_cores()
 blosc_set_nthreads(ncores)
-# Benchmarks show that using several threads is rarely an advantage in bcolz.
-# Disabling multi-threading for the time being...
-blosc_set_nthreads(1)
+# Benchmarks show that using several threads can be an advantage in bcolz
+blosc_set_nthreads(ncores)
 if numexpr_here:
-    numexpr.set_num_threads(1)
+    numexpr.set_num_threads(ncores)
 import atexit
 atexit.register(_blosc_destroy)
