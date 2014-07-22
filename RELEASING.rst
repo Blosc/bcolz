@@ -103,6 +103,8 @@ Announcing
   lists.  Use the ``ANNOUNCE.rst`` file as skeleton (or possibly as the
   definitive version).
 
+* Tweet about the new release and enjoy!
+
 
 Post-release actions
 --------------------
