@@ -80,7 +80,6 @@ if __name__ == '__main__':
     # Handle some global flags (i.e. only useful for test_all.py)
     only_versions = 0
     args = sys.argv[:]
-    print "args:", args
     for arg in args:
         if arg in ['-print-versions']:
             only_versions = True

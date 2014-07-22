@@ -18,6 +18,12 @@ doing the computations, so it is blazing fast.  Moreover, with the
 introduction of a carray/ctable disk-based container (in version 0.5),
 it can be used for doing out-of-core computations transparently.
 
+Together, bcolz and the Blosc compressor, are finally fullfilling the
+promise of accelerating memory I/O, at least for some real scenarios:
+
+http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb
+
+
 Rational
 --------
 

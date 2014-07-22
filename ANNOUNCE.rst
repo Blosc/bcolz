@@ -9,6 +9,14 @@ In this release, support for Python 3 has been added, new pandas and
 HDF5/PyTables conversion, support for different compressors via latest
 release of Blosc, and a new `iterblocks()` iterator.
 
+Also, intensive benchmarking has lead to an important tuning of buffer
+sizes parameters so that compression and evaluation goes faster than
+ever.  Together, bcolz and the Blosc compressor, are finally fullfilling
+the promise of accelerating memory I/O, at least for some real
+scenarios:
+
+http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
+
 ``bcolz`` is a renaming of the ``carray`` project.  The new goals for
 the project are to create a simple, yet flexible compressed containers,
 that can live either on-disk or in-memory, and with some
