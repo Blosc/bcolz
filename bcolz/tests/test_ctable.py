@@ -220,9 +220,10 @@ class add_del_colTest(MayBeDiskTest):
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
-        c = np.arange(N, dtype='i8')*3
+        c = np.fromiter(("s%d"%i for i in xrange(N)), dtype='S2')
         t.addcol(c.tolist(), 'f2')
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i*2., "s%d"%i) for i in xrange(N)),
+                         dtype='i4,f8,S2')
         #print "t->", `t`
         #print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
