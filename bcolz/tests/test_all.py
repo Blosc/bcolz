@@ -66,7 +66,7 @@ def test(verbose=False, heavy=False):
     oldverbose, common.verbose = common.verbose, verbose
     oldheavy, common.heavy = common.heavy, heavy
     try:
-        unittest.TextTestRunner().run(suite())
+        return unittest.TextTestRunner().run(suite())
     finally:
         common.verbose = oldverbose
         common.heavy = oldheavy  # there are pretty young heavies, too ;)
