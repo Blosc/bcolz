@@ -98,9 +98,9 @@ Announcing
 
   https://github.com/Blosc/bcolz/wiki/Release-Notes
 
-* Send an announcement to the blosc, numpy list and python-announce
-  lists.  Use the ``ANNOUNCE.rst`` file as skeleton (or possibly as the
-  definitive version).
+* Send an announcement to the bcolz, blosc, numpy list, pandas and
+  python-announce lists.  Use the ``ANNOUNCE.rst`` file as skeleton
+  (or possibly as the definitive version).
 
 * Tweet about the new release and enjoy!
 

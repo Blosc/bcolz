@@ -130,12 +130,12 @@ Home of Blosc compressor:
 http://blosc.org
 
 User's mail list:
-bcolz@googlegroups.com
-http://groups.google.com/group/bcolz
+http://groups.google.com/group/bcolz (bcolz@googlegroups.com)
 
-An introductory talk about bcolz at EuroPython 2014:
-https://www.youtube.com/watch?v=-lKV4zC1gss
-http://blosc.org/docs/bcolz-EuroPython-2014.pdf
+An `introductory talk (20 min)
+<https://www.youtube.com/watch?v=-lKV4zC1gss>`_ about bcolz at
+EuroPython 2014.  `Slides here
+<http://blosc.org/docs/bcolz-EuroPython-2014.pdf>`_.
 
 License
 -------
