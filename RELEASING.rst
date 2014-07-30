@@ -74,10 +74,9 @@ Packaging
 Uploading
 ---------
 
-* Register and upload it also in the PyPi repository::
+* Upload it also in the PyPi repository::
 
     $ python setup.py sdist upload
-    $ python setup.py register
 
 
 Tagging

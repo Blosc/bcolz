@@ -1,6 +1,6 @@
-=======================================
-Release notes for bcolz (former carray)
-=======================================
+=======================
+Release notes for bcolz
+=======================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
@@ -9,7 +9,14 @@ Release notes for bcolz (former carray)
 Changes from 0.7.0 to 0.7.1
 ===========================
 
-#XXX version-specific blurb XXX#
+- Return the outcome of the test for checking that in standalone
+  programs.  Thanks to Ilan Schnell for suggesting that.
+
+- Avoiding importing lists of ints as this has roundtrip problems in
+  32-bit platforms.
+
+- Got rid of the nose dependency for Python 2.6.  Thanks to Ilan Schnell
+  for the suggestion.
 
 
 Changes from 0.5.1 to 0.7.0

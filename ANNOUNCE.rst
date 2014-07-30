@@ -5,7 +5,10 @@ Announcing bcolz 0.7.1
 What's new
 ==========
 
-  #XXX version-specific blurb XXX#
+This is maintenance release, where bcolz got rid of the nose dependency
+for Python 2.6 (only unittest2 should be required).  Also, some small
+fixes for the test suite, specially in 32-bit has been done.  Thanks to
+Ilan Schnell for pointing out the problems and for suggesting fixes.
 
 ``bcolz`` is a renaming of the ``carray`` project.  The new goals for
 the project are to create simple, yet flexible compressed containers,
