@@ -200,12 +200,13 @@ setup(name="bcolz",
       description='columnar and compressed data containers.',
       long_description="""\
 
-bcolz provides columnar and compressed data containers.  Column storage
-allows for efficiently querying tables with a large number of columns.  It
-also allows for cheap addition and removal of column.  In addition,
-bcolz objects are compressed by default for reducing memory/disk I/O needs.
-The compression process is carried out internally by Blosc,
-a high-performance compressor that is optimized for binary data.
+bcolz provides columnar and compressed data containers.  Column
+storage allows for efficiently querying tables with a large number of
+columns.  It also allows for cheap addition and removal of column.  In
+addition, bcolz objects are compressed by default for reducing
+memory/disk I/O needs.  The compression process is carried out
+internally by Blosc, a high-performance compressor that is optimized
+for binary data.
 
 """,
       classifiers=filter(None, classifiers.split("\n")),

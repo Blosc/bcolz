@@ -5,10 +5,14 @@ Introduction
 bcolz at glance
 ===============
 
-bcolz is a Python package that provides containers (called `carray`
-and `ctable`) for numerical data that can be compressed either
-in-memory and on-disk.  It is based on NumPy, and uses it as the
-standard data container to communicate with bcolz objects.
+bcolz provides columnar, chunked data containers that can be
+compressed either in-memory and on-disk.  Column storage allows for
+efficiently querying tables, as well as for cheap column addition and
+removal.  It is based on `NumPy <http://www.numpy.org>`_, and uses it
+as the standard data container to communicate with bcolz objects, but
+it also comes with support for import/export facilities to/from
+`HDF5/PyTables tables <http://www.pytables.org>`_ and `pandas
+dataframes <http://pandas.pydata.org>`_.
 
 The building blocks of bcolz objects are the so-called ``chunks`` that
 are bits of data compressed as a whole, but that can be decompressed
@@ -24,15 +28,16 @@ data.  That ensures maximum performance for I/O operation.
 bcolz can use numexpr internally (it does that by default if it
 detects numexpr installed) so as to accelerate many vector and query
 operations (although it can use pure NumPy for doing so too).  numexpr
-can use optimize the memory usage and use several cores for doing the
-computations, so it is blazing fast.  Moreover, with the introduction
-of a carray/ctable disk-based container (in version 0.5), it can be
-used for seamlessly performing out-of-core computations.
+can optimize the memory usage and use multithreading for doing the
+computations, so it is blazing fast.  This, in combination with
+carray/ctable disk-based, compressed containers, can be used for
+performing out-of-core computations efficiently, but most importantly
+*transparently*.
 
 carray and ctable objects
 -------------------------
 
-The main objects in the bcolz package are:
+The main data container objects in the bcolz package are:
 
   * `carray`: container for homogeneous & heterogeneous (row-wise) data
   * `ctable`: container for heterogeneous (column-wise) data
@@ -53,11 +58,12 @@ is of paramount importance when you need to add and remove columns in
 wide (and possibly large) in-memory and on-disk tables --doing this
 with regular ``structured arrays`` in NumPy is exceedingly slow.
 
-Also, column-wise ordering turns out that this gives the `ctable` a
-huge opportunity to improve compression ratio.  This is because data
-tends to expose more similarity in elements that sit in the same
-column rather than those in the same row, so compressors generally do
-a much better job when data is aligned column-wise.
+Furthermore, columnar means that the tabular datasets are stored
+column-wise order, and this turns out to offer better opportunities to
+improve compression ratio.  This is because data tends to expose more
+similarity in elements that sit in the same column rather than those
+in the same row, so compressors generally do a much better job when
+data is aligned in such column-wise order.
 
 
 bcolz main features
