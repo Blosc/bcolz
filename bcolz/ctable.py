@@ -670,7 +670,7 @@ class ctable(object):
         else:
             names = t.colnames
         # Collect metadata
-        dtypes = [dt[0] for dt in t.dtype.fields.values()]
+        dtypes = [t.dtype.fields[name][0] for name in names]
         cols = [np.zeros(0, dtype=dt) for dt in dtypes]
         # Create an empty ctable
         ct = ctable(cols, names, **kwargs)

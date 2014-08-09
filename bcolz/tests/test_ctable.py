@@ -1638,6 +1638,7 @@ class conversionTest(TestCase):
         tmpfile = tempfile.mktemp(".h5")
         ct.tohdf5(tmpfile)
         ct2 = bcolz.ctable.fromhdf5(tmpfile)
+        self.assertEqual(ct.dtype, ct2.dtype)
         for key in ct.names:
             assert_allclose(ct2[key][:], ct[key][:])
         os.remove(tmpfile)
