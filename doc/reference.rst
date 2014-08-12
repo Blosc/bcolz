@@ -805,12 +805,12 @@ ctable methods
       :py:func:`delcol`
 
 
-  .. py:method:: append(rows)
+  .. py:method:: append(cols)
 
-    Append `rows` to this ctable.
+    Append `cols` to this ctable.
 
     Parameters:
-      rows : list/tuple of scalar values, NumPy arrays or carrays
+      cols : list/tuple of scalar values, NumPy arrays or carrays
         It also can be a NumPy record, a NumPy recarray, or
         another ctable.
 

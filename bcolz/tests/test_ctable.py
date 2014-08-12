@@ -496,13 +496,22 @@ class setitemDiskTest(setitemTest, TestCase):
 
 class appendTest(MayBeDiskTest):
 
-    def test00(self):
+    def test00a(self):
         """Testing append() with scalar values"""
         N = 10
         ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         t.append((N, N*2))
         ra = np.fromiter(((i, i*2.) for i in xrange(N+1)), dtype='i4,f8')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test00b(self):
+        """Testing append() with a list of scalar values"""
+        N = 10
+        ra = np.fromiter(((i, i*2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        t.append([[N, N + 1], [N * 2, (N + 1) * 2]])
+        ra = np.fromiter(((i, i*2.) for i in xrange(N+2)), dtype='i4,f8')
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test01(self):

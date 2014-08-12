@@ -314,60 +314,60 @@ class ctable(object):
                 os.remove(rootdir)
         os.mkdir(rootdir)
 
-    def append(self, rows):
+    def append(self, cols):
         """
-        append(rows)
+        append(cols)
 
-        Append `rows` to this ctable.
+        Append `cols` to this ctable.
 
         Parameters
         ----------
-        rows : list/tuple of scalar values, NumPy arrays or carrays
+        cols : list/tuple of scalar values, NumPy arrays or carrays
             It also can be a NumPy record, a NumPy recarray, or
             another ctable.
 
         """
 
-        # Guess the kind of rows input
+        # Guess the kind of cols input
         calist, nalist, sclist, ratype = False, False, False, False
-        if type(rows) in (tuple, list):
-            calist = [type(v) for v in rows] == [bcolz.carray for v in rows]
-            nalist = [type(v) for v in rows] == [np.ndarray for v in rows]
+        if type(cols) in (tuple, list):
+            calist = [type(v) for v in cols] == [bcolz.carray for v in cols]
+            nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
             if not (calist or nalist):
                 # Try with a scalar list
                 sclist = True
-        elif isinstance(rows, np.ndarray):
-            ratype = hasattr(rows.dtype, "names")
-        elif isinstance(rows, bcolz.ctable):
+        elif isinstance(cols, np.ndarray):
+            ratype = hasattr(cols.dtype, "names")
+        elif isinstance(cols, bcolz.ctable):
             # Convert int a list of carrays
-            rows = [rows[name] for name in self.names]
+            cols = [cols[name] for name in self.names]
             calist = True
         else:
-            raise ValueError("`rows` input is not supported")
+            raise ValueError("`cols` input is not supported")
         if not (calist or nalist or sclist or ratype):
-            raise ValueError("`rows` input is not supported")
+            raise ValueError("`cols` input is not supported")
 
         # Populate the columns
         clen = -1
         for i, name in enumerate(self.names):
             if calist or sclist:
-                column = rows[i]
+                column = cols[i]
             elif nalist:
-                column = rows[i]
+                column = cols[i]
                 if column.dtype == np.void:
-                    raise ValueError("`rows` elements cannot be of type void")
+                    raise ValueError("`cols` elements cannot be of type void")
                 column = column
             elif ratype:
-                column = rows[name]
+                column = cols[name]
             # Append the values to column
             self.cols[name].append(column)
-            if sclist:
+            if sclist and not hasattr(column, '__len__'):
                 clen2 = 1
             else:
                 clen2 = len(column)
             if clen >= 0 and clen != clen2:
                 raise ValueError(
-                    "all cols in `rows` must have the same length")
+                    "all cols in `cols` must have the same length")
             clen = clen2
         self.len += clen
 
