@@ -604,15 +604,21 @@ class copyDiskTest(copyTest, TestCase):
 
 class iterTest(MayBeDiskTest):
 
-    def test00(self):
+    def test00a(self):
+        """Testing `next()` method"""
+        a = np.arange(101)
+        b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
+        for i in range(101):
+            self.assertEqual(i, next(b))
+
+    def test00b(self):
         """Testing `iter()` method"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
         #print "sum iter1->", sum(b)
         #print "sum iter2->", sum((v for v in b))
-        self.assertTrue(sum(a) == sum(b), "Sums are not equal")
-        self.assertTrue(sum((v for v in a)) == sum((v for v in b)),
-                     "Sums are not equal")
+        self.assertEqual(sum(a), sum(b))
+        self.assertEqual(sum((v for v in a)), sum((v for v in b)))
 
     def test01a(self):
         """Testing `iter()` method with a positive start"""

@@ -2371,6 +2371,12 @@ cdef class carray:
         cdef char *vbool
         cdef int nhits_buf
 
+        if not (self.sss_mode or
+                self.wheretrue_mode or
+                self.where_mode):
+            # No mode.  Probably a direct call to next().  Use sss_mode here.
+            self.iter()
+
         self.nextelement = self._nrow + self.step
         while (self.nextelement < self.stop) and (self.nhits < self.limit):
             if self.nextelement >= self.nrowsread:
