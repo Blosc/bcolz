@@ -543,9 +543,8 @@ cdef class chunk:
     def __repr__(self):
         """Represent the chunk as an string, with additional info."""
         cratio = self.nbytes / float(self.cbytes)
-        fullrepr = "chunk(%s, %s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
-                   (self.shape, self.dtype, self.nbytes, self.cbytes, cratio,
-                    str(self))
+        fullrepr = "chunk(%s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
+                   (self.dtype, self.nbytes, self.cbytes, cratio, str(self))
         return fullrepr
 
     def __dealloc__(self):
