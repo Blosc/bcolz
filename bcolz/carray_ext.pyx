@@ -1860,7 +1860,7 @@ cdef class carray:
                 if self.itemsize == self.atomsize:
                     return PyArray_GETITEM(arr1, arr1.data)
                 else:
-                    return arr1[0]
+                    return arr1[0].copy()
             # Fallback action: use the slice code
             return np.squeeze(self[slice(key, key + 1, 1)])
         # Slices
@@ -1910,7 +1910,7 @@ cdef class carray:
                                    count=count)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self._dtype)
+                return np.array([self[i] for i in key], dtype=self._dtype.base)
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")

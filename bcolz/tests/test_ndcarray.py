@@ -246,6 +246,39 @@ class getitemTest(MayBeDiskTest):
         self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
+    def test05a(self):
+        """Testing `__getitem()__` method with fancy indexing (I)"""
+        a = np.arange(2000).reshape((50,40))
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = bcolz.open(rootdir=self.rootdir)
+        sl = [3,5,2]
+        #print "b[sl]->", `b[sl]`
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test05b(self):
+        """Testing `__getitem()__` method with fancy indexing (II)"""
+        a = np.arange(2000).reshape((50,40))
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = bcolz.open(rootdir=self.rootdir)
+        sl = ([0,2],slice(None))
+        #print "b[sl]->", `b[sl]`
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
+    def test05c(self):
+        """Testing `__getitem()__` method with fancy indexing (III)"""
+        a = np.arange(2000).reshape((50,40))
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        if self.open:
+            b = bcolz.open(rootdir=self.rootdir)
+        sl = (slice(None),[0,2])
+        #print "b[sl]->", `b[sl]`
+        self.assertTrue(a[sl].shape == b[sl].shape, "Shape is not equal")
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
 class getitemMemoryTest(getitemTest, TestCase):
     disk = False
     open = False
