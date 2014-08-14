@@ -38,18 +38,18 @@ class cols(object):
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
         with open(rootsfile, 'rb') as rfile:
             data = json.loads(rfile.read().decode('ascii'))
-        # JSON returns unicode (?)
+        # JSON returns unicode, but we want plain bytes for Python 2.x
         self.names = [str(name) for name in data['names']]
         # Initialize the cols by instantiating the carrays
-        for name, dir_ in data['dirs'].items():
-            self._cols[str(name)] = bcolz.carray(rootdir=dir_, mode=self.mode)
+        for name in self.names:
+            dir_ = os.path.join(self.rootdir, name)
+            self._cols[name] = bcolz.carray(rootdir=dir_, mode=self.mode)
 
     def update_meta(self):
         """Update metainfo about directories on-disk."""
         if not self.rootdir:
             return
-        dirs = dict((n, o.rootdir) for n,o in self._cols.items())
-        data = {'names': self.names, 'dirs': dirs}
+        data = {'names': self.names}
         rootsfile = os.path.join(self.rootdir, ROOTDIRS)
         with open(rootsfile, 'wb') as rfile:
             rfile.write(json.dumps(data).encode('ascii'))
@@ -258,13 +258,6 @@ class ctable(object):
                     raise ValueError("only unidimensional shapes supported")
         else:
             raise ValueError("`columns` input is not supported")
-        if not (calist or nalist or ratype):
-            # Try to convert the elements to carrays
-            try:
-                columns = [bcolz.carray(col, **kwargs) for col in columns]
-                calist = True
-            except:
-                raise ValueError("`columns` input is not supported")
 
         # Populate the columns
         clen = -1
@@ -285,8 +278,13 @@ class ctable(object):
                 column = bcolz.carray(column, **kwargs)
             elif ratype:
                 column = bcolz.carray(columns[name], **kwargs)
+            else:
+                # Try to convert from a sequence of columns
+                column = bcolz.carray(columns[i], **kwargs)
             self.cols[name] = column
             if clen >= 0 and clen != len(column):
+                if self.rootdir:
+                    shutil.rmtree(self.rootdir)
                 raise ValueError("all `columns` must have the same length")
             clen = len(column)
  

@@ -17,6 +17,7 @@ import glob
 import itertools as it
 import numpy as np
 import bcolz
+from bcolz.ctable import ROOTDIRS
 from .py2help import xrange, _inttypes
 
 
@@ -116,21 +117,15 @@ def open(rootdir, mode='a'):
 
     Returns
     -------
-    out : a carray/ctable object or None (if not objects are found)
+    out : a carray/ctable object or IOError (if not objects are found)
 
     """
     # First try with a carray
-    obj = None
-    try:
-        obj = bcolz.carray(rootdir=rootdir, mode=mode)
-    except IOError:
-        # Not a carray.  Now with a ctable
-        try:
-            obj = bcolz.ctable(rootdir=rootdir, mode=mode)
-        except IOError:
-            # Not a ctable
-            pass
-    return obj
+    rootsfile = os.path.join(rootdir, ROOTDIRS)
+    if os.path.exists(rootsfile):
+        return bcolz.ctable(rootdir=rootdir, mode=mode)
+    else:
+        return bcolz.carray(rootdir=rootdir, mode=mode)
 
 def fromiter(iterable, dtype, count, **kwargs):
     """
