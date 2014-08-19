@@ -1055,9 +1055,11 @@ class fancy_indexing_setitemTest(TestCase):
 
 class iterTest(MayBeDiskTest):
 
+    N = 10
+
     def test00(self):
         """Testing ctable.__iter__"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t]
@@ -1068,7 +1070,7 @@ class iterTest(MayBeDiskTest):
 
     def test01(self):
         """Testing ctable.iter() without params"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter()]
@@ -1079,7 +1081,7 @@ class iterTest(MayBeDiskTest):
 
     def test02(self):
         """Testing ctable.iter() with start,stop,step"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,3)]
@@ -1090,7 +1092,7 @@ class iterTest(MayBeDiskTest):
 
     def test03(self):
         """Testing ctable.iter() with outcols"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [tuple(r) for r in t.iter(outcols='f2, nrow__, f0')]
@@ -1101,7 +1103,7 @@ class iterTest(MayBeDiskTest):
 
     def test04(self):
         """Testing ctable.iter() with start,stop,step and outcols"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r for r in t.iter(1,9,3, 'f2, nrow__ f0')]
@@ -1112,7 +1114,7 @@ class iterTest(MayBeDiskTest):
 
     def test05(self):
         """Testing ctable.iter() with start, stop, step and limit"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, limit=3)]
@@ -1123,7 +1125,7 @@ class iterTest(MayBeDiskTest):
 
     def test06(self):
         """Testing ctable.iter() with start, stop, step and skip"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, skip=3)]
@@ -1134,14 +1136,28 @@ class iterTest(MayBeDiskTest):
 
     def test07(self):
         """Testing ctable.iter() with start, stop, step and limit, skip"""
-        N = 10
+        N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
         cl = [r.f1 for r in t.iter(1,9,2, limit=2, skip=1)]
         nl = [r['f1'] for r in ra[1:9:2][1:3]]
         #print "cl ->", cl
         #print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
+
+    def test08(self):
+        """Testing several iterators in parallel"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
+        u = t.iter(1,9,2, limit=2, skip=1)
+        w = t.iter(1,9,2)
+        wl = [r.f1 for r in w]
+        nl = [r['f1'] for r in ra[1:9:2]]
+        self.assertEqual(wl, nl, "iter not working correctly")
+        ul = [r.f1 for r in u]
+        nl2 = [r['f1'] for r in ra[1:9:2][1:3]]
+        self.assertEqual(ul, nl2, "iter not working correctly")
 
 class iterMemoryTest(iterTest, TestCase):
     disk = False
@@ -1530,6 +1546,12 @@ class whereTest(MayBeDiskTest):
         #print "rt->", rt
         #print "rl->", rl
         self.assertTrue(rt == rl, "where not working correctly")
+
+    def test08(self):
+        """Testing several iterators in parallel.  See #37."""
+        bc = bcolz.ctable([[1, 2, 3], [10, 20, 30]], names=['a', 'b'])
+        u = bc.where('a >= 2')  # call .where but don't do anything with it
+        self.assertEqual([10, 20, 30], list(bc['b']))
 
 class where_smallTest(whereTest, TestCase):
     N = 10
