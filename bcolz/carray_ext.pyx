@@ -2270,7 +2270,7 @@ cdef class carray:
 
         return self
 
-    def iter(self, start=0, stop=None, step=1, limit=None, skip=0):
+    def iter(self, start=0, stop=None, step=1, limit=None, skip=0, _next=False):
         """
         iter(start=0, stop=None, step=1, limit=None, skip=0)
 
@@ -2305,6 +2305,13 @@ cdef class carray:
             raise NotImplementedError("step param can only be positive")
         self.start, self.stop, self.step = \
             slice(start, stop, step).indices(self.len)
+        if _next:
+            cview = self
+        else:
+            cview = self.view()
+        return cview._init_iter(start, stop, step, limit, skip)
+
+    def _init_iter(self, start, stop, step, limit, skip):
         self.reset_sentinels()
         self.sss_mode = True
         if limit is not None:
@@ -2342,6 +2349,10 @@ cdef class carray:
             raise ValueError("`self` is not an array of booleans")
         if self.ndim > 1:
             raise NotImplementedError("`self` is not unidimensional")
+        cview = self.view()
+        return cview._init_wheretrue(limit, skip)
+
+    def _init_wheretrue(self, limit, skip):
         self.reset_sentinels()
         self.wheretrue_mode = True
         if limit is not None:
@@ -2386,6 +2397,10 @@ cdef class carray:
         if len(boolarr) != self.len:
             raise ValueError(
                 "`boolarr` must be of the same length than ``self``")
+        cview = self.view()
+        return cview._init_where(boolarr, limit, skip)
+
+    def _init_where(self, boolarr, limit, skip):
         self.reset_sentinels()
         self.where_mode = True
         self.where_arr = boolarr
@@ -2402,7 +2417,7 @@ cdef class carray:
                 self.wheretrue_mode or
                 self.where_mode):
             # No mode.  Probably a direct call to next().  Use sss_mode here.
-            self.iter()
+            self.iter(_next=True)
 
         self.nextelement = self._nrow + self.step
         while (self.nextelement < self.stop) and (self.nhits < self.limit):

@@ -767,6 +767,16 @@ class iterTest(MayBeDiskTest):
         #print "c ->", repr(c)
         assert_allclose(a[1010:2020], c, err_msg="iterator fails on zeros")
 
+    def test08(self):
+        """Testing several iterators in parallel"""
+        a = np.arange(1e3)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        u = b.iter(3, 30, 3)
+        w = b.iter(2, 20, 2)
+        self.assertEqual(a.tolist(), list(b))
+        self.assertEqual(sum(a[3:30:3]), sum(u))
+        self.assertEqual(sum(a[2:20:2]), sum(w))
+
 class iterMemoryTest(iterTest, TestCase):
     disk = False
 
@@ -926,6 +936,14 @@ class wheretrueTest(TestCase):
         # print "where ->", [i for i in b.wheretrue(limit=1020,skip=1020)]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
+    def test08(self):
+        """Testing several iterators in parallel"""
+        a = np.arange(10000) > 5000
+        b = bcolz.carray(a, chunklen=100)
+        u = b.wheretrue(skip=1020, limit=1020)
+        w = b.wheretrue(skip=1030, limit=1030)
+        self.assertEqual(a.nonzero()[0].tolist()[1020:2040], list(u))
+        self.assertEqual(a.nonzero()[0].tolist()[1030:2060], list(w))
 
 class whereTest(TestCase):
 
@@ -1031,6 +1049,17 @@ class whereTest(TestCase):
         # print "where ->", [v for v in b.where(bcolz.carray(a>=5000,chunklen=100),
         #                                       limit=1010, skip=1010)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
+
+    def test08(self):
+        """Testing several iterators in parallel"""
+        a = np.arange(1, 11)
+        b = bcolz.carray(a)
+        ul = [v for v in a if v<=5]
+        u = b.where(a<=5)
+        wl = [v for v in a if v<=6]
+        w = b.where(a<=6)
+        self.assertEqual(ul, list(u))
+        self.assertEqual(wl, list(w))
 
 
 class fancy_indexing_getitemTest(TestCase):
