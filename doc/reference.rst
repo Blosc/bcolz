@@ -519,6 +519,9 @@ carray methods
       out : carray object
         The copy of this object.
 
+    See Also:
+      :py:meth:`view`
+
 
   .. py:method:: flush()
 
@@ -615,6 +618,19 @@ carray methods
 
     See Also:
       :py:meth:`append`
+
+
+  .. py:method:: view()
+
+    Create a light weight view of the data in the original carray.
+
+    Returns:
+      out : carray object
+        The view of this object.
+
+    See Also:
+      :py:meth:`copy`
+
 
   .. py:method:: where(boolarr, limit=None, skip=0)
 

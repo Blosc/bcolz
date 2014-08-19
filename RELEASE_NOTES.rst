@@ -9,7 +9,13 @@ Release notes for bcolz
 Changes from 0.7.1 to 0.7.2
 ===========================
 
-- Each iterator now return a view of the original object, so things like::
+- Introduced a new `carray.view()` method returning a light-weight
+  carray object describing the same data than the original carray.  This
+  is mostly useful for iterators, but other uses could be devised as
+  well.
+
+- Each iterator now return a view (see above) of the original object, so
+  things like::
 
   >>> bc = bcolz.ctable([[1, 2, 3], [10, 20, 30]], names=['a', 'b'])
   >>> bc.where('a >= 2')  # call .where but don't do anything with it
@@ -17,8 +23,7 @@ Changes from 0.7.1 to 0.7.2
   >>> list(bc['b'])  # later iterate over table, get where result
   [10, 20, 30]
 
-works as expected now.
-
+  works as expected now.
 
 
 Changes from 0.7.0 to 0.7.1

@@ -1672,15 +1672,16 @@ cdef class carray:
         """
         view()
 
-        Create a light weight view of the data in carray.  Useful for iter().
-
-        Parameters
-        ----------
+        Create a light weight view of the data in the original carray.
 
         Returns
         -------
         out : carray object
             The view of this object.
+
+        See Also
+        --------
+        copy
 
         """
         # Create a light weight data container
