@@ -602,6 +602,58 @@ class copyDiskTest(copyTest, TestCase):
     disk = True
 
 
+class viewTest(MayBeDiskTest):
+
+    def tearDown(self):
+        MayBeDiskTest.tearDown(self)
+
+    def test00(self):
+        """Testing view()"""
+        a = np.arange(self.N)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        c = b.view()
+        self.assertEqual(len(c), self.N)
+        assert_array_equal(c[:], a)
+
+    def test01(self):
+        """Testing view() and appends"""
+        a = np.arange(self.N)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        c = b.view()
+        c.append(np.arange(self.N, self.N + 11))
+        self.assertEqual(len(b), self.N)
+        self.assertEqual(len(c), self.N + 11)
+        r = np.arange(self.N + 11)
+        assert_array_equal(b[:], a)
+        assert_array_equal(c[:], r)
+
+    def test02(self):
+        """Testing view() and iterators"""
+        a = np.arange(self.N)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        c = iter(b.view())
+        u = c.iter(3)
+        w = b.iter(2)
+        self.assertEqual(sum(a[3:]), sum(u))
+        self.assertEqual(sum(a[2:]), sum(w))
+
+class small_viewMemoryTest(viewTest, TestCase):
+    N = 111
+    disk = False
+
+class small_viewDiskTest(viewTest, TestCase):
+    N = 111
+    disk = True
+
+class large_viewMemoryTest(viewTest, TestCase):
+    N = int(1e5)
+    disk = False
+
+class large_viewDiskTest(viewTest, TestCase):
+    N = int(1e5)
+    disk = True
+
+
 class iterTest(MayBeDiskTest):
 
     def test00a(self):

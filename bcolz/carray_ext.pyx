@@ -1154,7 +1154,7 @@ cdef class carray:
         self.flush()
 
     def open_carray(self, shape, cparams, dtype, dflt,
-                    expectedlen, cbytes, chunklen):
+                    expectedlen, cbytes, chunklen, xchunks=None):
         """Open an existing array."""
         cdef ndarray lastchunkarr
         cdef object array_, _dflt
@@ -1186,22 +1186,26 @@ cdef class carray:
         self.lastchunk = lastchunkarr.data
         self.lastchunkarr = lastchunkarr
 
-        # Check rootdir hierarchy
-        if not os.path.isdir(self._rootdir):
-            raise IOError("root directory does not exist")
-        self.datadir = os.path.join(self._rootdir, DATA_DIR)
-        if not os.path.isdir(self.datadir):
-            raise IOError("data directory does not exist")
-        self.metadir = os.path.join(self._rootdir, META_DIR)
-        if not os.path.isdir(self.metadir):
-            raise IOError("meta directory does not exist")
+        if xchunks is None:
+            # No chunks container, so read meta info from disk
+            # Check rootdir hierarchy
+            if not os.path.isdir(self._rootdir):
+                raise IOError("root directory does not exist")
+            self.datadir = os.path.join(self._rootdir, DATA_DIR)
+            if not os.path.isdir(self.datadir):
+                raise IOError("data directory does not exist")
+            self.metadir = os.path.join(self._rootdir, META_DIR)
+            if not os.path.isdir(self.metadir):
+                raise IOError("meta directory does not exist")
 
-        calen = shape[0]  # the length ot the carray
-        # Finally, open data directory
-        metainfo = (dtype, cparams, calen, lastchunkarr, self._mode)
-        self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
+            # Finally, open data directory
+            metainfo = (dtype, cparams, shape[0], lastchunkarr, self._mode)
+            self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=False)
+        else:
+            self.chunks, lastchunkarr[:] = xchunks
 
         # Update some counters
+        calen = shape[0]  # the length ot the carray
         self.leftover = (calen % chunklen) * self.atomsize
         self._cbytes = cbytes
         self._nbytes = calen * self.atomsize
@@ -1663,6 +1667,29 @@ cdef class carray:
         ccopy.flush()
 
         return ccopy
+
+    def view(self):
+        """
+        view()
+
+        Create a light weight view of the data in carray.  Useful for iter().
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        out : carray object
+            The view of this object.
+
+        """
+        # Create a light weight data container
+        cview = carray(np.empty(0, dtype=self._dtype))
+        # And populate it with metainfo (including chunks)
+        meta_info = (self.shape, self.cparams, self.dtype, self.dflt,
+                     self.expectedlen, self.cbytes, self.chunklen)
+        cview.open_carray(*meta_info, xchunks=(self.chunks, self.lastchunkarr))
+        return cview
 
     def sum(self, dtype=None):
         """
