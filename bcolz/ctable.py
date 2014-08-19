@@ -908,7 +908,6 @@ class ctable(object):
                 nrow = 0
         yield buf[:nrow]
 
-
     def __iter__(self):
         return self.iter(0, self.len, 1)
 

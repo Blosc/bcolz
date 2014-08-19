@@ -9,7 +9,16 @@ Release notes for bcolz
 Changes from 0.7.1 to 0.7.2
 ===========================
 
-  #XXX version-specific blurb XXX#
+- Each iterator now return a view of the original object, so things like::
+
+  >>> bc = bcolz.ctable([[1, 2, 3], [10, 20, 30]], names=['a', 'b'])
+  >>> bc.where('a >= 2')  # call .where but don't do anything with it
+  <itertools.imap at 0x7fd7a84f5750>
+  >>> list(bc['b'])  # later iterate over table, get where result
+  [10, 20, 30]
+
+works as expected now.
+
 
 
 Changes from 0.7.0 to 0.7.1
