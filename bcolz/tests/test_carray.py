@@ -767,8 +767,18 @@ class iterTest(MayBeDiskTest):
         #print "c ->", repr(c)
         assert_allclose(a[1010:2020], c, err_msg="iterator fails on zeros")
 
-    def test08(self):
-        """Testing several iterators in parallel"""
+    def test08a(self):
+        """Testing several iterators in stage (I)"""
+        a = np.arange(1e3)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        u = iter(b)
+        w = b.iter(2, 20, 2)
+        self.assertEqual(a.tolist(), list(b))
+        self.assertEqual(sum(a), sum(u))
+        self.assertEqual(sum(a[2:20:2]), sum(w))
+
+    def test08b(self):
+        """Testing several iterators in stage (II)"""
         a = np.arange(1e3)
         b = bcolz.carray(a, rootdir=self.rootdir)
         u = b.iter(3, 30, 3)
@@ -776,6 +786,28 @@ class iterTest(MayBeDiskTest):
         self.assertEqual(a.tolist(), list(b))
         self.assertEqual(sum(a[3:30:3]), sum(u))
         self.assertEqual(sum(a[2:20:2]), sum(w))
+
+    def test09a(self):
+        """Testing several iterators in parallel (I)"""
+        a = np.arange(10)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        b1 = iter(b)
+        b2 = iter(b)
+        a1 = iter(a)
+        a2 = iter(a)
+        #print "result:",  [i for i in zip(b1, b2)]
+        self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
+
+    def test09b(self):
+        """Testing several iterators in parallel (II)"""
+        a = np.arange(10)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        b1 = b.iter(2,10,2)
+        b2 = b.iter(1,5,1)
+        a1 = iter(a[2:10:2])
+        a2 = iter(a[1:5:1])
+        #print "result:",  [i for i in zip(b1, b2)]
+        self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
 class iterMemoryTest(iterTest, TestCase):
     disk = False
@@ -937,13 +969,25 @@ class wheretrueTest(TestCase):
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test08(self):
-        """Testing several iterators in parallel"""
+        """Testing several iterators in stage"""
         a = np.arange(10000) > 5000
         b = bcolz.carray(a, chunklen=100)
         u = b.wheretrue(skip=1020, limit=1020)
         w = b.wheretrue(skip=1030, limit=1030)
         self.assertEqual(a.nonzero()[0].tolist()[1020:2040], list(u))
         self.assertEqual(a.nonzero()[0].tolist()[1030:2060], list(w))
+
+    def test09(self):
+        """Testing several iterators in parallel"""
+        a = np.arange(10000) > 5000
+        b = bcolz.carray(a, chunklen=100)
+        b1 = b.wheretrue(skip=1020, limit=1020)
+        b2 = b.wheretrue(skip=1030, limit=1020)
+        a1 = a.nonzero()[0].tolist()[1020:2040]
+        a2 = a.nonzero()[0].tolist()[1030:2050]
+        #print "result:",  [i for i in zip(b1, b2)]
+        self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
+
 
 class whereTest(TestCase):
 
@@ -1051,7 +1095,7 @@ class whereTest(TestCase):
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test08(self):
-        """Testing several iterators in parallel"""
+        """Testing several iterators in stage"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
         ul = [v for v in a if v<=5]
@@ -1061,6 +1105,16 @@ class whereTest(TestCase):
         self.assertEqual(ul, list(u))
         self.assertEqual(wl, list(w))
 
+    def test09(self):
+        """Testing several iterators in parallel"""
+        a = np.arange(1, 11)
+        b = bcolz.carray(a)
+        b1 = b.where(a<=5)
+        b2 = b.where(a<=6)
+        a1 = [v for v in a if v<=5]
+        a2 = [v for v in a if v<=6]
+        #print "result:",  [i for i in zip(b1, b2)]
+        self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
 class fancy_indexing_getitemTest(TestCase):
 

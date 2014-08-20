@@ -1146,7 +1146,7 @@ class iterTest(MayBeDiskTest):
         self.assertTrue(cl == nl, "iter not working correctly")
 
     def test08(self):
-        """Testing several iterators in parallel"""
+        """Testing several iterators in stage"""
         N = self.N
         ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
@@ -1158,6 +1158,17 @@ class iterTest(MayBeDiskTest):
         ul = [r.f1 for r in u]
         nl2 = [r['f1'] for r in ra[1:9:2][1:3]]
         self.assertEqual(ul, nl2, "iter not working correctly")
+
+    def test09(self):
+        """Testing several iterators in parallel"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
+        u = t.iter(1,10,2)
+        w = t.iter(1,5,1)
+        wl = [(r[0].f1, r[1].f1) for r in zip(u,w)]
+        nl = [(r[0]['f1'], r[1]['f1']) for r in zip(ra[1:10:2], ra[1:5:1])]
+        self.assertEqual(wl, nl, "iter not working correctly")
 
 class iterMemoryTest(iterTest, TestCase):
     disk = False
@@ -1548,10 +1559,21 @@ class whereTest(MayBeDiskTest):
         self.assertTrue(rt == rl, "where not working correctly")
 
     def test08(self):
-        """Testing several iterators in parallel.  See #37."""
+        """Testing several iterators in stage.  Ticket #37"""
         bc = bcolz.ctable([[1, 2, 3], [10, 20, 30]], names=['a', 'b'])
         u = bc.where('a >= 2')  # call .where but don't do anything with it
         self.assertEqual([10, 20, 30], list(bc['b']))
+
+    def test09(self):
+        """Testing several iterators in parallel. Ticket #37"""
+        a = np.array([10, 20, 30, 40])
+        bc = bcolz.ctable([[1, 2, 3, 4], [10, 20, 30, 40]], names=['a', 'b'])
+        b1 = bc.where('a >= 1')
+        b2 = bc.where('a >= 2')
+        a1 = iter(a[a>=10])
+        a2 = iter(a[a>=20])
+        self.assertEqual([i for i in zip(a1, a2)],
+                         [(i[0].b, i[1].b) for i in zip(b1, b2)])
 
 class where_smallTest(whereTest, TestCase):
     N = 10

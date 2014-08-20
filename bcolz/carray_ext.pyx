@@ -2251,6 +2251,12 @@ cdef class carray:
 
     def __iter__(self):
 
+        if not (self.sss_mode or
+                self.wheretrue_mode or
+                self.where_mode):
+            # No mode.  Probably a direct iter() call.  Use sss_mode here.
+            return self.iter()
+
         if not self.sss_mode:
             self.start = 0
             self.stop = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
