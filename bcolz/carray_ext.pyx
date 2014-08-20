@@ -2261,10 +2261,6 @@ cdef class carray:
             self.start = 0
             self.stop = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
             self.step = 1
-        if not (self.sss_mode or self.where_mode or self.wheretrue_mode):
-            self.nhits = 0
-            self.limit = _MAXINT
-            self.skip = 0
         # Initialize some internal values
         self.startb = 0
         self.nrowsread = self.start
