@@ -2304,8 +2304,6 @@ cdef class carray:
         # Check limits
         if step <= 0:
             raise NotImplementedError("step param can only be positive")
-        self.start, self.stop, self.step = \
-            slice(start, stop, step).indices(self.len)
         if _next:
             cview = self
         else:
@@ -2315,6 +2313,8 @@ cdef class carray:
     def _init_iter(self, start, stop, step, limit, skip):
         self.reset_sentinels()
         self.sss_mode = True
+        self.start, self.stop, self.step = \
+            slice(start, stop, step).indices(self.len)
         if limit is not None:
             self.limit = limit + skip
         self.skip = skip
