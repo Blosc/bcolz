@@ -840,6 +840,13 @@ class evalTest(MayBeDiskTest):
         #print "numpy  ->", rar
         assert_array_equal(ctr[:], rar, "ctable values are not correct")
 
+    def test07(self):
+        """Testing eval() with Unicode vars (via where).  Ticket #38."""
+        a = np.array(['a', 'b', 'c'], dtype='U4')
+        b = bcolz.ctable([a], names=['text'])
+        assert [i.text for i in b.where('text == "b"')] == [u"b"]
+
+
 class evalMemoryTest(evalTest, TestCase):
     disk = False
 

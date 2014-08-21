@@ -212,7 +212,14 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
         if vm == "python":
             res_block = _eval(expression, vars_)
         else:
-            res_block = bcolz.numexpr.evaluate(expression, local_dict=vars_)
+            try:
+                res_block = bcolz.numexpr.evaluate(expression, local_dict=vars_)
+            except ValueError:
+                # numexpr cannot handle this. Fall back to a pure "python" VM.
+                return _eval_blocks(
+                    expression, vars, vlen, typesize, "python",
+                    out_flavor, **kwargs)
+
 
         if i == 0:
             # Detection of reduction operations
