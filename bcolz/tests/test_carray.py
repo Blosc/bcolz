@@ -809,6 +809,25 @@ class iterTest(MayBeDiskTest):
         #print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
+    def test10a(self):
+        """Testing the reuse of exhausted iterators (I)"""
+        a = np.arange(10)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        bi = iter(b)
+        ai = iter(a)
+        self.assertEqual([i for i in ai], [i for i in bi])
+        self.assertEqual([i for i in ai], [i for i in bi])
+
+    def test10b(self):
+        """Testing the reuse of exhausted iterators (II)"""
+        a = np.arange(10)
+        b = bcolz.carray(a, rootdir=self.rootdir)
+        bi = b.iter(2,10,2)
+        ai = iter(a[2:10:2])
+        #print "result:", [i for i in bi]
+        self.assertEqual([i for i in ai], [i for i in bi])
+        self.assertEqual([i for i in ai], [i for i in bi])
+
 class iterMemoryTest(iterTest, TestCase):
     disk = False
 
@@ -988,6 +1007,15 @@ class wheretrueTest(TestCase):
         #print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
+    def test10(self):
+        """Testing the reuse of exhausted iterators"""
+        a = np.arange(10000) > 5000
+        b = bcolz.carray(a, chunklen=100)
+        bi = b.wheretrue(skip=1020, limit=1020)
+        ai = iter(np.array(a.nonzero()[0].tolist()[1020:2040]))
+        self.assertEqual([i for i in ai], [i for i in bi])
+        self.assertEqual([i for i in ai], [i for i in bi])
+
 
 class whereTest(TestCase):
 
@@ -1115,6 +1143,15 @@ class whereTest(TestCase):
         a2 = [v for v in a if v<=6]
         #print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
+
+    def test10(self):
+        """Testing the reuse of exhausted iterators"""
+        a = np.arange(1, 11)
+        b = bcolz.carray(a)
+        bi = b.where(a<=5)
+        ai = (v for v in a if v<=5)
+        self.assertEqual([i for i in ai], [i for i in bi])
+        self.assertEqual([i for i in ai], [i for i in bi])
 
 class fancy_indexing_getitemTest(TestCase):
 

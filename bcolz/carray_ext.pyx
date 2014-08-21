@@ -874,7 +874,7 @@ cdef class carray:
     cdef object _dtype
     cdef public object chunks
     cdef object _rootdir, datadir, metadir, _mode
-    cdef object _attrs
+    cdef object _attrs, iter_exhausted
     cdef ndarray iobuf, where_buf
     # For block cache
     cdef int idxcache
@@ -2249,7 +2249,25 @@ cdef class carray:
         # Safety check
         assert (nwrow == vlen)
 
+    cdef reset_iter_sentinels(self):
+        """Reset sentinels for iterator."""
+        self.sss_mode = False
+        self.wheretrue_mode = False
+        self.where_mode = False
+        self.where_arr = None
+        self.nhits = 0
+        self.limit = _MAXINT
+        self.skip = 0
+        self.start = 0
+        self.stop = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
+        self.step = 1
+        self.iter_exhausted = False
+
     def __iter__(self):
+
+        if self.iter_exhausted:
+            # Iterator is exhausted, so return immediately
+            return self
 
         if not (self.sss_mode or
                 self.wheretrue_mode or
@@ -2257,10 +2275,6 @@ cdef class carray:
             # No mode.  Probably a direct iter() call.  Use sss_mode here.
             return self.iter()
 
-        if not self.sss_mode:
-            self.start = 0
-            self.stop = <npy_intp> cython.cdiv(self._nbytes, self.atomsize)
-            self.step = 1
         # Initialize some internal values
         self.startb = 0
         self.nrowsread = self.start
@@ -2313,7 +2327,7 @@ cdef class carray:
         return cview._init_iter(start, stop, step, limit, skip)
 
     def _init_iter(self, start, stop, step, limit, skip):
-        self.reset_sentinels()
+        self.reset_iter_sentinels()
         self.sss_mode = True
         self.start, self.stop, self.step = \
             slice(start, stop, step).indices(self.len)
@@ -2356,7 +2370,7 @@ cdef class carray:
         return cview._init_wheretrue(limit, skip)
 
     def _init_wheretrue(self, limit, skip):
-        self.reset_sentinels()
+        self.reset_iter_sentinels()
         self.wheretrue_mode = True
         if limit is not None:
             self.limit = limit + skip
@@ -2404,7 +2418,7 @@ cdef class carray:
         return cview._init_where(boolarr, limit, skip)
 
     def _init_where(self, boolarr, limit, skip):
-        self.reset_sentinels()
+        self.reset_iter_sentinels()
         self.where_mode = True
         self.where_arr = boolarr
         if limit is not None:
@@ -2501,18 +2515,8 @@ cdef class carray:
             # Release buffers
             self.iobuf = np.empty(0, dtype=self._dtype)
             self.where_buf = np.empty(0, dtype=np.bool_)
-            self.reset_sentinels()
+            self.iter_exhausted = True
             raise StopIteration  # end of iteration
-
-    cdef reset_sentinels(self):
-        """Reset sentinels for iterator."""
-        self.sss_mode = False
-        self.wheretrue_mode = False
-        self.where_mode = False
-        self.where_arr = None
-        self.nhits = 0
-        self.limit = _MAXINT
-        self.skip = 0
 
     cdef int check_zeros(self, object barr):
         """Check for zeros.  Return 1 if all zeros, else return 0."""

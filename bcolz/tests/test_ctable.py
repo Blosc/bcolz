@@ -1170,6 +1170,28 @@ class iterTest(MayBeDiskTest):
         nl = [(r[0]['f1'], r[1]['f1']) for r in zip(ra[1:10:2], ra[1:5:1])]
         self.assertEqual(wl, nl, "iter not working correctly")
 
+    def test10a(self):
+        """Testing the reuse of exhausted iterators (I)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
+        u = iter(t)
+        wl = (r.f1 for r in u)
+        nl = (r['f1'] for r in iter(ra))
+        self.assertEqual(list(wl), list(nl), "iter not working correctly")
+        self.assertEqual(list(wl), list(nl), "iter not working correctly")
+
+    def test10b(self):
+        """Testing the reuse of exhausted iterators (II)"""
+        N = self.N
+        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
+        u = t.iter(1,10,2)
+        wl = (r.f1 for r in u)
+        nl = (r['f1'] for r in iter(ra[1:10:2]))
+        self.assertEqual(list(wl), list(nl), "iter not working correctly")
+        self.assertEqual(list(wl), list(nl), "iter not working correctly")
+
 class iterMemoryTest(iterTest, TestCase):
     disk = False
 
@@ -1574,6 +1596,15 @@ class whereTest(MayBeDiskTest):
         a2 = iter(a[a>=20])
         self.assertEqual([i for i in zip(a1, a2)],
                          [(i[0].b, i[1].b) for i in zip(b1, b2)])
+
+    def test10(self):
+        """Testing the reuse of exhausted iterators"""
+        a = np.array([10, 20, 30, 40])
+        bc = bcolz.ctable([[1, 2, 3, 4], [10, 20, 30, 40]], names=['a', 'b'])
+        bi = bc.where('a >= 1')
+        ai = iter(a[a>=10])
+        self.assertEqual([i for i in ai], [i.b for i in bi])
+        self.assertEqual([i for i in ai], [i.b for i in bi])
 
 class where_smallTest(whereTest, TestCase):
     N = 10
