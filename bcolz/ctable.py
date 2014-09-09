@@ -661,7 +661,12 @@ class ctable(object):
 
         # Read the Table on file
         f = tb.open_file(filepath)
-        t = f.get_node(nodepath)
+        try:
+            t = f.get_node(nodepath)
+        except:
+            f.close()
+            raise
+
         # Use the names in kwargs, or if not there, the names in Table
         if 'names' in kwargs:
             names = kwargs.pop('names')
