@@ -641,8 +641,8 @@ class cparams(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 78
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 78
+# End:

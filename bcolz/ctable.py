@@ -1255,8 +1255,8 @@ class ctable(object):
         return fullrepr
 
 
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 78
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 78
+# End:

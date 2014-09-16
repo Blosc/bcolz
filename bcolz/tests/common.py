@@ -19,8 +19,8 @@ if sys.version < "2.7":
     import unittest2 as unittest
     from unittest2 import TestCase, skipUnless, SkipTest
 else:
-    import unittest
-    from unittest import TestCase, skipUnless, SkipTest
+    import unittest  # noqa
+    from unittest import TestCase, skipUnless, SkipTest  # noqa
 
 
 # Global variables for the tests
@@ -32,6 +32,7 @@ def remove_tree(rootdir):
     # Remove every directory starting with rootdir
     for dir_ in glob.glob(rootdir+'*'):
         shutil.rmtree(dir_)
+
 
 # Useful superclass for disk-based tests
 class MayBeDiskTest():
@@ -51,5 +52,3 @@ class MayBeDiskTest():
             # Remove every directory starting with rootdir
             for dir_ in glob.glob(self.rootdir+'*'):
                 shutil.rmtree(dir_)
-
-

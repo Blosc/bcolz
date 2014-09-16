@@ -23,7 +23,7 @@ from bcolz.carray_ext import chunk
 
 is_64bit = (struct.calcsize("P") == 8)
 
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     long = int
 
 
@@ -33,28 +33,28 @@ class chunkTest(TestCase):
         """Testing `__getitem()__` method with scalars"""
         a = np.arange(1e3)
         b = chunk(a, atom=a.dtype, cparams=bcolz.cparams())
-        #print "b[1]->", `b[1]`
+        # print "b[1]->", `b[1]`
         self.assertTrue(a[1] == b[1], "Values in key 1 are not equal")
 
     def test02(self):
         """Testing `__getitem()__` method with ranges"""
         a = np.arange(1e3)
         b = chunk(a, atom=a.dtype, cparams=bcolz.cparams())
-        #print "b[1:3]->", `b[1:3]`
+        # print "b[1:3]->", `b[1:3]`
         assert_array_equal(a[1:3], b[1:3], "Arrays are not equal")
 
     def test03(self):
         """Testing `__getitem()__` method with ranges and steps"""
         a = np.arange(1e3)
         b = chunk(a, atom=a.dtype, cparams=bcolz.cparams())
-        #print "b[1:8:3]->", `b[1:8:3]`
+        # print "b[1:8:3]->", `b[1:8:3]`
         assert_array_equal(a[1:8:3], b[1:8:3], "Arrays are not equal")
 
     def test04(self):
         """Testing `__getitem()__` method with long ranges"""
         a = np.arange(1e4)
         b = chunk(a, atom=a.dtype, cparams=bcolz.cparams())
-        #print "b[1:8000]->", `b[1:8000]`
+        # print "b[1:8000]->", `b[1:8000]`
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
 
@@ -65,7 +65,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(1)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01b(self):
@@ -73,22 +73,23 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(-1)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test01c(self):
         """Testing `__getitem()__` method with only a (start,)"""
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
-        #print "b[(1,)]->", `b[(1,)]`
-        self.assertTrue(a[(1,)] == b[(1,)], "Values with key (1,) are not equal")
+        # print "b[(1,)]->", `b[(1,)]`
+        self.assertTrue(a[(1,)] == b[(1,)],
+                        "Values with key (1,) are not equal")
 
     def test01d(self):
         """Testing `__getitem()__` method with only a (large) start"""
         a = np.arange(1e4)
         b = bcolz.carray(a, rootdir=self.rootdir)
         sl = -2   # second last element
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02a(self):
@@ -96,7 +97,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(1, 3)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02b(self):
@@ -104,7 +105,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(-3)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02c(self):
@@ -112,7 +113,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(1, -3)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02d(self):
@@ -120,7 +121,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(-3, -1)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test02e(self):
@@ -128,7 +129,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(4, 3, 30)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03a(self):
@@ -136,7 +137,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(1, 80, 3)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03b(self):
@@ -144,7 +145,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(1, 80, 30)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03c(self):
@@ -152,7 +153,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(990, 998, 2)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test03d(self):
@@ -160,7 +161,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(4, 80, 3000)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04a(self):
@@ -168,7 +169,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=16, rootdir=self.rootdir)
         sl = slice(1, 2)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04ab(self):
@@ -176,7 +177,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         sl = slice(1, 8000)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04b(self):
@@ -184,7 +185,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         sl = slice(None, 8000)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04c(self):
@@ -192,7 +193,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         sl = slice(8000, None)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test04d(self):
@@ -200,7 +201,7 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         sl = slice(None, None, 2)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
     def test05(self):
@@ -208,11 +209,13 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e3)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         sl = slice(None, None, -3)
-        #print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         self.assertRaises(NotImplementedError, b.__getitem__, sl)
+
 
 class getitemMemoryTest(getitemTest, TestCase):
     disk = False
+
 
 class getitemDiskTest(getitemTest, TestCase):
     disk = True
@@ -226,7 +229,7 @@ class setitemTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         b[1] = 10.
         a[1] = 10.
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test00b(self):
@@ -235,7 +238,7 @@ class setitemTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         b[(1,)] = 10.
         a[(1,)] = 10.
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test01(self):
@@ -244,7 +247,7 @@ class setitemTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         b[10:100] = np.arange(1e2 - 10.)
         a[10:100] = np.arange(1e2 - 10.)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test02(self):
@@ -253,7 +256,7 @@ class setitemTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         b[10:100] = 10.
         a[10:100] = 10.
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test03(self):
@@ -262,7 +265,7 @@ class setitemTest(MayBeDiskTest):
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
         b[:] = np.arange(10., 1e2 + 10.)
         a[:] = np.arange(10., 1e2 + 10.)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test04a(self):
@@ -272,7 +275,7 @@ class setitemTest(MayBeDiskTest):
         sl = slice(10, 100, 3)
         b[sl] = 10.
         a[sl] = 10.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test04b(self):
@@ -282,7 +285,7 @@ class setitemTest(MayBeDiskTest):
         sl = slice(10, 11, 3)
         b[sl] = 10.
         a[sl] = 10.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test04c(self):
@@ -292,7 +295,7 @@ class setitemTest(MayBeDiskTest):
         sl = slice(96, 100, 3)
         b[sl] = 10.
         a[sl] = 10.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test04d(self):
@@ -302,7 +305,7 @@ class setitemTest(MayBeDiskTest):
         sl = slice(2, 99, 30)
         b[sl] = 10.
         a[sl] = 10.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
     def test05(self):
@@ -312,8 +315,10 @@ class setitemTest(MayBeDiskTest):
         sl = slice(2, 99, -30)
         self.assertRaises(NotImplementedError, b.__setitem__, sl, 3.)
 
+
 class setitemMemoryTest(setitemTest, TestCase):
     disk = False
+
 
 class setitemDiskTest(setitemTest, TestCase):
     disk = True
@@ -326,7 +331,7 @@ class appendTest(MayBeDiskTest):
         a = np.arange(1000)
         b = bcolz.carray(a, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
+        # print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
@@ -335,7 +340,7 @@ class appendTest(MayBeDiskTest):
         a = np.arange(1000)
         b = bcolz.carray(a, chunklen=1, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
+        # print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
@@ -344,7 +349,7 @@ class appendTest(MayBeDiskTest):
         a = np.arange(1000)
         b = bcolz.carray(a, chunklen=10*1000, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
+        # print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
@@ -353,7 +358,7 @@ class appendTest(MayBeDiskTest):
         a = np.arange(100*1000)
         b = bcolz.carray(a, chunklen=10*1000, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
+        # print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
@@ -362,7 +367,7 @@ class appendTest(MayBeDiskTest):
         a = np.arange(1000*1000)
         b = bcolz.carray(a, chunklen=100*1000-1, rootdir=self.rootdir)
         b.append(a)
-        #print "b->", `b`
+        # print "b->", `b`
         c = np.concatenate((a, a))
         assert_array_equal(c, b[:], "Arrays are not equal")
 
@@ -372,12 +377,14 @@ class appendTest(MayBeDiskTest):
         c = np.arange(2e5)
         b = bcolz.carray(a, rootdir=self.rootdir)
         b.append(c)
-        #print "b->", `b`
+        # print "b->", `b`
         d = np.concatenate((a, c))
         assert_array_equal(d, b[:], "Arrays are not equal")
 
+
 class appendMemoryTest(appendTest, TestCase):
     disk = False
+
 
 class appendDiskTest(appendTest, TestCase):
     disk = True
@@ -390,7 +397,7 @@ class trimTest(MayBeDiskTest):
         b = bcolz.arange(1e3, rootdir=self.rootdir)
         b.trim(3)
         a = np.arange(1e3-3)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01(self):
@@ -398,7 +405,7 @@ class trimTest(MayBeDiskTest):
         b = bcolz.arange(1e2, chunklen=2, rootdir=self.rootdir)
         b.trim(5)
         a = np.arange(1e2-5)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test02(self):
@@ -406,7 +413,7 @@ class trimTest(MayBeDiskTest):
         a = np.arange(2)
         b = bcolz.arange(1e4, rootdir=self.rootdir)
         b.trim(1e4-2)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test03(self):
@@ -414,14 +421,14 @@ class trimTest(MayBeDiskTest):
         a = np.arange(0.)
         b = bcolz.arange(1e4, rootdir=self.rootdir)
         b.trim(1e4)
-        #print "b->", `b`
+        # print "b->", `b`
         self.assertTrue(len(a) == len(b), "Lengths are not equal")
 
     def test04(self):
         """Testing `trim()` method (trimming more than available items)"""
         a = np.arange(0.)
         b = bcolz.arange(1e4, rootdir=self.rootdir)
-        #print "b->", `b`
+        # print "b->", `b`
         self.assertRaises(ValueError, b.trim, 1e4+1)
 
     def test05(self):
@@ -429,7 +436,7 @@ class trimTest(MayBeDiskTest):
         a = np.arange(1e1)
         b = bcolz.arange(1e1, rootdir=self.rootdir)
         b.trim(0)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test06(self):
@@ -438,11 +445,13 @@ class trimTest(MayBeDiskTest):
         b = bcolz.arange(1e1, rootdir=self.rootdir)
         b.trim(-10)
         a[10:] = 0
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
+
 
 class trimMemoryTest(trimTest, TestCase):
     disk = False
+
 
 class trimDiskTest(trimTest, TestCase):
     disk = True
@@ -455,7 +464,7 @@ class resizeTest(MayBeDiskTest):
         b = bcolz.arange(self.N, rootdir=self.rootdir)
         b.resize(self.N-3)
         a = np.arange(self.N-3)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test00b(self):
@@ -464,7 +473,7 @@ class resizeTest(MayBeDiskTest):
         b.resize(self.N+3)
         a = np.arange(self.N+3)
         a[self.N:] = 0
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01a(self):
@@ -472,7 +481,7 @@ class resizeTest(MayBeDiskTest):
         b = bcolz.arange(self.N, rootdir=self.rootdir)
         b.resize(3)
         a = np.arange(3)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test01b(self):
@@ -481,7 +490,7 @@ class resizeTest(MayBeDiskTest):
         b.resize(self.N*3)
         a = np.arange(self.N*3)
         a[self.N:] = 1
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
     def test02(self):
@@ -489,23 +498,27 @@ class resizeTest(MayBeDiskTest):
         b = bcolz.arange(self.N, rootdir=self.rootdir)
         b.resize(0)
         a = np.arange(0)
-        #print "b->", `b`
+        # print "b->", `b`
         assert_array_equal(a, b[:], "Arrays are not equal")
 
 
 class resize_smallTest(resizeTest, TestCase):
     N = 10
 
+
 class resize_smallDiskTest(resizeTest, TestCase):
     N = 10
     disk = True
 
+
 class resize_largeTest(resizeTest, TestCase):
     N = 10000
+
 
 class resize_largeDiskTest(resizeTest, TestCase):
     N = 10000
     disk = True
+
 
 class miscTest(MayBeDiskTest):
 
@@ -519,22 +532,24 @@ class miscTest(MayBeDiskTest):
         """Testing __sizeof__() (big carrays)"""
         a = np.arange(2e5)
         b = bcolz.carray(a, rootdir=self.rootdir)
-        #print "size b uncompressed-->", b.nbytes
-        #print "size b compressed  -->", b.cbytes
+        # print "size b uncompressed-->", b.nbytes
+        # print "size b compressed  -->", b.cbytes
         self.assertTrue(sys.getsizeof(b) < b.nbytes,
-                     "carray does not seem to compress at all")
+                        "carray does not seem to compress at all")
 
     def test02(self):
         """Testing __sizeof__() (small carrays)"""
         a = np.arange(111)
         b = bcolz.carray(a)
-        #print "size b uncompressed-->", b.nbytes
-        #print "size b compressed  -->", b.cbytes
+        # print "size b uncompressed-->", b.nbytes
+        # print "size b compressed  -->", b.cbytes
         self.assertTrue(sys.getsizeof(b) > b.nbytes,
-                     "carray compress too much??")
+                        "carray compress too much??")
+
 
 class miscMemoryTest(miscTest, TestCase):
     disk = False
+
 
 class miscDiskTest(miscTest, TestCase):
     disk = True
@@ -565,7 +580,7 @@ class copyTest(MayBeDiskTest):
         a = np.linspace(-1., 1., self.N)
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = b.copy(cparams=bcolz.cparams(clevel=9))
-        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        # print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes > c.cbytes, "clevel not changed")
 
     def test02(self):
@@ -574,7 +589,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(clevel=1)
         c = b.copy()
-        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        # print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "clevel not changed")
 
     def test03a(self):
@@ -583,7 +598,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(clevel=1)
         c = b.copy(cparams=bcolz.cparams(shuffle=False))
-        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        # print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
 
     def test03b(self):
@@ -592,11 +607,13 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(shuffle=False)
         c = b.copy()
-        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        # print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
+
 
 class copyMemoryTest(copyTest, TestCase):
     disk = False
+
 
 class copyDiskTest(copyTest, TestCase):
     disk = True
@@ -637,17 +654,21 @@ class viewTest(MayBeDiskTest):
         self.assertEqual(sum(a[3:]), sum(u))
         self.assertEqual(sum(a[2:]), sum(w))
 
+
 class small_viewMemoryTest(viewTest, TestCase):
     N = 111
     disk = False
+
 
 class small_viewDiskTest(viewTest, TestCase):
     N = 111
     disk = True
 
+
 class large_viewMemoryTest(viewTest, TestCase):
     N = int(1e5)
     disk = False
+
 
 class large_viewDiskTest(viewTest, TestCase):
     N = int(1e5)
@@ -667,8 +688,8 @@ class iterTest(MayBeDiskTest):
         """Testing `iter()` method"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter1->", sum(b)
-        #print "sum iter2->", sum((v for v in b))
+        # print "sum iter1->", sum(b)
+        # print "sum iter2->", sum((v for v in b))
         self.assertEqual(sum(a), sum(b))
         self.assertEqual(sum((v for v in a)), sum((v for v in b)))
 
@@ -676,54 +697,55 @@ class iterTest(MayBeDiskTest):
         """Testing `iter()` method with a positive start"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(3))
+        # print "sum iter->", sum(b.iter(3))
         self.assertTrue(sum(a[3:]) == sum(b.iter(3)), "Sums are not equal")
 
     def test01b(self):
         """Testing `iter()` method with a negative start"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(-3))
+        # print "sum iter->", sum(b.iter(-3))
         self.assertTrue(sum(a[-3:]) == sum(b.iter(-3)), "Sums are not equal")
 
     def test02a(self):
         """Testing `iter()` method with positive start, stop"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(3, 24))
-        self.assertTrue(sum(a[3:24]) == sum(b.iter(3, 24)), "Sums are not equal")
+        # print "sum iter->", sum(b.iter(3, 24))
+        self.assertTrue(sum(a[3:24]) == sum(b.iter(3, 24)),
+                        "Sums are not equal")
 
     def test02b(self):
         """Testing `iter()` method with negative start, stop"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(-24, -3))
+        # print "sum iter->", sum(b.iter(-24, -3))
         self.assertTrue(sum(a[-24:-3]) == sum(b.iter(-24, -3)),
-                     "Sums are not equal")
+                        "Sums are not equal")
 
     def test02c(self):
         """Testing `iter()` method with positive start, negative stop"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(24, -3))
+        # print "sum iter->", sum(b.iter(24, -3))
         self.assertTrue(sum(a[24:-3]) == sum(b.iter(24, -3)),
-                     "Sums are not equal")
+                        "Sums are not equal")
 
     def test03a(self):
         """Testing `iter()` method with only step"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(step=4))
+        # print "sum iter->", sum(b.iter(step=4))
         self.assertTrue(sum(a[::4]) == sum(b.iter(step=4)),
-                     "Sums are not equal")
+                        "Sums are not equal")
 
     def test03b(self):
         """Testing `iter()` method with start, stop, step"""
         a = np.arange(101)
         b = bcolz.carray(a, chunklen=2, rootdir=self.rootdir)
-        #print "sum iter->", sum(b.iter(3, 24, 4))
+        # print "sum iter->", sum(b.iter(3, 24, 4))
         self.assertTrue(sum(a[3:24:4]) == sum(b.iter(3, 24, 4)),
-                     "Sums are not equal")
+                        "Sums are not equal")
 
     def test03c(self):
         """Testing `iter()` method with negative step"""
@@ -736,7 +758,7 @@ class iterTest(MayBeDiskTest):
         a = np.zeros(int(1e4), dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b), dtype='f8', count=len(a))
-        #print "c ->", repr(c)
+        # print "c ->", repr(c)
         assert_allclose(a, c[:], err_msg="iterator fails on zeros")
 
     def test05(self):
@@ -744,8 +766,8 @@ class iterTest(MayBeDiskTest):
         a = np.arange(1e4, dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b.iter(limit=1010)), dtype='f8',
-                        count=1010)
-        #print "c ->", repr(c)
+                           count=1010)
+        # print "c ->", repr(c)
         assert_allclose(a[:1010], c, err_msg="iterator fails on zeros")
 
     def test06(self):
@@ -753,8 +775,8 @@ class iterTest(MayBeDiskTest):
         a = np.arange(1e4, dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b.iter(skip=1010)), dtype='f8',
-                        count=10000-1010)
-        #print "c ->", repr(c)
+                           count=10000-1010)
+        # print "c ->", repr(c)
         assert_allclose(a[1010:], c, err_msg="iterator fails on zeros")
 
     def test07(self):
@@ -762,9 +784,9 @@ class iterTest(MayBeDiskTest):
         a = np.arange(1e4, dtype='f8')
         b = bcolz.carray(a, chunklen=100, rootdir=self.rootdir)
         c = bcolz.fromiter((v for v in b.iter(limit=1010, skip=1010)),
-                            dtype='f8',
-                            count=1010)
-        #print "c ->", repr(c)
+                           dtype='f8',
+                           count=1010)
+        # print "c ->", repr(c)
         assert_allclose(a[1010:2020], c, err_msg="iterator fails on zeros")
 
     def test08a(self):
@@ -795,18 +817,18 @@ class iterTest(MayBeDiskTest):
         b2 = iter(b)
         a1 = iter(a)
         a2 = iter(a)
-        #print "result:",  [i for i in zip(b1, b2)]
+        # print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
     def test09b(self):
         """Testing several iterators in parallel (II)"""
         a = np.arange(10)
         b = bcolz.carray(a, rootdir=self.rootdir)
-        b1 = b.iter(2,10,2)
-        b2 = b.iter(1,5,1)
+        b1 = b.iter(2, 10, 2)
+        b2 = b.iter(1, 5, 1)
         a1 = iter(a[2:10:2])
         a2 = iter(a[1:5:1])
-        #print "result:",  [i for i in zip(b1, b2)]
+        # print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
     def test10a(self):
@@ -822,14 +844,16 @@ class iterTest(MayBeDiskTest):
         """Testing the reuse of exhausted iterators (II)"""
         a = np.arange(10)
         b = bcolz.carray(a, rootdir=self.rootdir)
-        bi = b.iter(2,10,2)
+        bi = b.iter(2, 10, 2)
         ai = iter(a[2:10:2])
-        #print "result:", [i for i in bi]
+        # print "result:", [i for i in bi]
         self.assertEqual([i for i in ai], [i for i in bi])
         self.assertEqual([i for i in ai], [i for i in bi])
 
+
 class iterMemoryTest(iterTest, TestCase):
     disk = False
+
 
 class iterDiskTest(iterTest, TestCase):
     disk = True
@@ -847,7 +871,8 @@ class iterblocksTest(MayBeDiskTest):
             l += len(block)
             s += block.sum()
         self.assertEqual(l, N)
-        self.assertEqual(s, (N - 1) * (N / 2))  # as per Gauss summation formula
+        # as per Gauss summation formula
+        self.assertEqual(s, (N - 1) * (N / 2))
 
     def test01(self):
         """Testing `iterblocks` method with no start, no stop"""
@@ -888,17 +913,21 @@ class iterblocksTest(MayBeDiskTest):
         slen = min(N, 3*blen + 2)
         self.assertEqual(s, np.arange(blen-1, slen).sum())
 
+
 class small_iterblocksMemoryTest(iterblocksTest, TestCase):
     N = 120
     disk = False
+
 
 class small_iterblocksDiskTest(iterblocksTest, TestCase):
     N = 120
     disk = True
 
+
 class large_iterblocksMemoryTest(iterblocksTest, TestCase):
     N = 10000
     disk = False
+
 
 class large_iterblocksDiskTest(iterblocksTest, TestCase):
     N = 10030
@@ -913,8 +942,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()
         cwt = [i for i in b.wheretrue()]
-        #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.wheretrue()]
+        # print "numpy ->", a.nonzero()[0].tolist()
+        # print "where ->", [i for i in b.wheretrue()]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test01(self):
@@ -923,8 +952,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()
         cwt = [i for i in b.wheretrue()]
-        #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.wheretrue()]
+        # print "numpy ->", a.nonzero()[0].tolist()
+        # print "where ->", [i for i in b.wheretrue()]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test02(self):
@@ -933,8 +962,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()
         cwt = [i for i in b.wheretrue()]
-        #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.wheretrue()]
+        # print "numpy ->", a.nonzero()[0].tolist()
+        # print "where ->", [i for i in b.wheretrue()]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test03(self):
@@ -943,8 +972,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()
         cwt = [i for i in b.wheretrue()]
-        #print "numpy ->", a.nonzero()[0].tolist()
-        #print "where ->", [i for i in b.wheretrue()]
+        # print "numpy ->", a.nonzero()[0].tolist()
+        # print "where ->", [i for i in b.wheretrue()]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test04(self):
@@ -953,8 +982,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()[:3]
         cwt = [i for i in b.wheretrue(limit=3)]
-        #print "numpy ->", a.nonzero()[0].tolist()[:3]
-        #print "where ->", [i for i in b.wheretrue(limit=3)]
+        # print "numpy ->", a.nonzero()[0].tolist()[:3]
+        # print "where ->", [i for i in b.wheretrue(limit=3)]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test05(self):
@@ -963,8 +992,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()[2:]
         cwt = [i for i in b.wheretrue(skip=2)]
-        #print "numpy ->", a.nonzero()[0].tolist()[2:]
-        #print "where ->", [i for i in b.wheretrue(skip=2)]
+        # print "numpy ->", a.nonzero()[0].tolist()[2:]
+        # print "where ->", [i for i in b.wheretrue(skip=2)]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test06(self):
@@ -973,8 +1002,8 @@ class wheretrueTest(TestCase):
         b = bcolz.carray(a)
         wt = a.nonzero()[0].tolist()[2:4]
         cwt = [i for i in b.wheretrue(skip=2, limit=2)]
-        #print "numpy ->", a.nonzero()[0].tolist()[2:4]
-        #print "where ->", [i for i in b.wheretrue(limit=2,skip=2)]
+        # print "numpy ->", a.nonzero()[0].tolist()[2:4]
+        # print "where ->", [i for i in b.wheretrue(limit=2,skip=2)]
         self.assertTrue(wt == cwt, "wheretrue() does not work correctly")
 
     def test07(self):
@@ -1004,7 +1033,7 @@ class wheretrueTest(TestCase):
         b2 = b.wheretrue(skip=1030, limit=1020)
         a1 = a.nonzero()[0].tolist()[1020:2040]
         a2 = a.nonzero()[0].tolist()[1030:2050]
-        #print "result:",  [i for i in zip(b1, b2)]
+        # print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
     def test10(self):
@@ -1023,90 +1052,90 @@ class whereTest(TestCase):
         """Testing `where()` iterator (all true values)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v>0]
-        cwt = [v for v in b.where(a>0)]
-        #print "numpy ->", [v for v in a if v>0]
-        #print "where ->", [v for v in b.where(a>0)]
+        wt = [v for v in a if v > 0]
+        cwt = [v for v in b.where(a > 0)]
+        # print "numpy ->", [v for v in a if v>0]
+        # print "where ->", [v for v in b.where(a>0)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test01(self):
         """Testing `where()` iterator (all false values)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<0]
-        cwt = [v for v in b.where(a<0)]
-        #print "numpy ->", [v for v in a if v<0]
-        #print "where ->", [v for v in b.where(a<0)]
+        wt = [v for v in a if v < 0]
+        cwt = [v for v in b.where(a < 0)]
+        # print "numpy ->", [v for v in a if v<0]
+        # print "where ->", [v for v in b.where(a<0)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02a(self):
         """Testing `where()` iterator (mix of true/false values, I)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5]
-        cwt = [v for v in b.where(a<=5)]
-        #print "numpy ->", [v for v in a if v<=5]
-        #print "where ->", [v for v in b.where(a<=5)]
+        wt = [v for v in a if v <= 5]
+        cwt = [v for v in b.where(a <= 5)]
+        # print "numpy ->", [v for v in a if v<=5]
+        # print "where ->", [v for v in b.where(a<=5)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02b(self):
         """Testing `where()` iterator (mix of true/false values, II)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5 and v>2]
-        cwt = [v for v in b.where((a<=5) & (a>2))]
-        #print "numpy ->", [v for v in a if v<=5 and v>2]
-        #print "where ->", [v for v in b.where((a<=5) & (a>2))]
+        wt = [v for v in a if v <= 5 and v > 2]
+        cwt = [v for v in b.where((a <= 5) & (a > 2))]
+        # print "numpy ->", [v for v in a if v<=5 and v>2]
+        # print "where ->", [v for v in b.where((a<=5) & (a>2))]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test02c(self):
         """Testing `where()` iterator (mix of true/false values, III)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5 or v>8]
-        cwt = [v for v in b.where((a<=5) | (a>8))]
-        #print "numpy ->", [v for v in a if v<=5 or v>8]
-        #print "where ->", [v for v in b.where((a<=5) | (a>8))]
+        wt = [v for v in a if v <= 5 or v > 8]
+        cwt = [v for v in b.where((a <= 5) | (a > 8))]
+        # print "numpy ->", [v for v in a if v<=5 or v>8]
+        # print "where ->", [v for v in b.where((a<=5) | (a>8))]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test03(self):
         """Testing `where()` iterator (using a boolean carray)"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5]
-        cwt = [v for v in b.where(bcolz.carray(a<=5))]
-        #print "numpy ->", [v for v in a if v<=5]
-        #print "where ->", [v for v in b.where(bcolz.carray(a<=5))]
+        wt = [v for v in a if v <= 5]
+        cwt = [v for v in b.where(bcolz.carray(a <= 5))]
+        # print "numpy ->", [v for v in a if v<=5]
+        # print "where ->", [v for v in b.where(bcolz.carray(a<=5))]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test04(self):
         """Testing `where()` iterator using `limit`"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5][:3]
-        cwt = [v for v in b.where(bcolz.carray(a<=5), limit=3)]
-        #print "numpy ->", [v for v in a if v<=5][:3]
-        #print "where ->", [v for v in b.where(bcolz.carray(a<=5), limit=3)]
+        wt = [v for v in a if v <= 5][:3]
+        cwt = [v for v in b.where(bcolz.carray(a <= 5), limit=3)]
+        # print "numpy ->", [v for v in a if v<=5][:3]
+        # print "where ->", [v for v in b.where(bcolz.carray(a<=5), limit=3)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test05(self):
         """Testing `where()` iterator using `skip`"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5][2:]
-        cwt = [v for v in b.where(bcolz.carray(a<=5), skip=2)]
-        #print "numpy ->", [v for v in a if v<=5][2:]
-        #print "where ->", [v for v in b.where(bcolz.carray(a<=5), skip=2)]
+        wt = [v for v in a if v <= 5][2:]
+        cwt = [v for v in b.where(bcolz.carray(a <= 5), skip=2)]
+        # print "numpy ->", [v for v in a if v<=5][2:]
+        # print "where ->", [v for v in b.where(bcolz.carray(a<=5), skip=2)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
     def test06(self):
         """Testing `where()` iterator using `limit` and `skip`"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        wt = [v for v in a if v<=5][1:4]
-        cwt = [v for v in b.where(bcolz.carray(a<=5), limit=3, skip=1)]
-        #print "numpy ->", [v for v in a if v<=5][1:4]
-        #print "where ->", [v for v in b.where(bcolz.carray(a<=5),
+        wt = [v for v in a if v <= 5][1:4]
+        cwt = [v for v in b.where(bcolz.carray(a <= 5), limit=3, skip=1)]
+        # print "numpy ->", [v for v in a if v<=5][1:4]
+        # print "where ->", [v for v in b.where(bcolz.carray(a<=5),
         #                                      limit=3, skip=1)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
@@ -1114,11 +1143,12 @@ class whereTest(TestCase):
         """Testing `where()` iterator using `limit` and `skip` (zeros)"""
         a = np.arange(10000)
         b = bcolz.carray(a,)
-        wt = [v for v in a if v<=5000][1010:2020]
-        cwt = [v for v in b.where(bcolz.carray(a<=5000, chunklen=100),
+        wt = [v for v in a if v <= 5000][1010:2020]
+        cwt = [v for v in b.where(bcolz.carray(a <= 5000, chunklen=100),
                                   limit=1010, skip=1010)]
         # print "numpy ->", [v for v in a if v>=5000][1010:2020]
-        # print "where ->", [v for v in b.where(bcolz.carray(a>=5000,chunklen=100),
+        # print "where ->", [v for v in b.where(bcolz.carray(a>=5000,
+        #                                                    chunklen=100),
         #                                       limit=1010, skip=1010)]
         self.assertTrue(wt == cwt, "where() does not work correctly")
 
@@ -1126,10 +1156,10 @@ class whereTest(TestCase):
         """Testing several iterators in stage"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        ul = [v for v in a if v<=5]
-        u = b.where(a<=5)
-        wl = [v for v in a if v<=6]
-        w = b.where(a<=6)
+        ul = [v for v in a if v <= 5]
+        u = b.where(a <= 5)
+        wl = [v for v in a if v <= 6]
+        w = b.where(a <= 6)
         self.assertEqual(ul, list(u))
         self.assertEqual(wl, list(w))
 
@@ -1137,35 +1167,36 @@ class whereTest(TestCase):
         """Testing several iterators in parallel"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        b1 = b.where(a<=5)
-        b2 = b.where(a<=6)
-        a1 = [v for v in a if v<=5]
-        a2 = [v for v in a if v<=6]
-        #print "result:",  [i for i in zip(b1, b2)]
+        b1 = b.where(a <= 5)
+        b2 = b.where(a <= 6)
+        a1 = [v for v in a if v <= 5]
+        a2 = [v for v in a if v <= 6]
+        # print "result:",  [i for i in zip(b1, b2)]
         self.assertEqual([i for i in zip(a1, a2)], [i for i in zip(b1, b2)])
 
     def test10(self):
         """Testing the reuse of exhausted iterators"""
         a = np.arange(1, 11)
         b = bcolz.carray(a)
-        bi = b.where(a<=5)
-        ai = (v for v in a if v<=5)
+        bi = b.where(a <= 5)
+        ai = (v for v in a if v <= 5)
         self.assertEqual([i for i in ai], [i for i in bi])
         self.assertEqual([i for i in ai], [i for i in bi])
+
 
 class fancy_indexing_getitemTest(TestCase):
 
     def test00(self):
         """Testing fancy indexing (short list)"""
-        a = np.arange(1,111)
+        a = np.arange(1, 111)
         b = bcolz.carray(a)
-        c = b[[3,1]]
-        r = a[[3,1]]
+        c = b[[3, 1]]
+        r = a[[3, 1]]
         assert_array_equal(c, r, "fancy indexing does not work correctly")
 
     def test01(self):
         """Testing fancy indexing (large list, numpy)"""
-        a = np.arange(1,1e4)
+        a = np.arange(1, 1e4)
         b = bcolz.carray(a)
         idx = np.random.randint(1000, size=1000)
         c = b[idx]
@@ -1182,7 +1213,7 @@ class fancy_indexing_getitemTest(TestCase):
 
     def test03(self):
         """Testing fancy indexing (list of floats)"""
-        a = np.arange(1,101)
+        a = np.arange(1, 101)
         b = bcolz.carray(a)
         c = b[[1.1, 3.3]]
         r = a[[1.1, 3.3]]
@@ -1190,7 +1221,7 @@ class fancy_indexing_getitemTest(TestCase):
 
     def test04(self):
         """Testing fancy indexing (list of floats, numpy)"""
-        a = np.arange(1,101)
+        a = np.arange(1, 101)
         b = bcolz.carray(a)
         idx = np.array([1.1, 3.3], dtype='f8')
         self.assertRaises(IndexError, b.__getitem__, idx)
@@ -1199,20 +1230,20 @@ class fancy_indexing_getitemTest(TestCase):
         """Testing `where()` iterator (using bool in fancy indexing)"""
         a = np.arange(1, 110)
         b = bcolz.carray(a, chunklen=10)
-        wt = a[a<5]
-        cwt = b[a<5]
-        #print "numpy ->", a[a<5]
-        #print "where ->", b[a<5]
+        wt = a[a < 5]
+        cwt = b[a < 5]
+        # print "numpy ->", a[a<5]
+        # print "where ->", b[a<5]
         assert_array_equal(wt, cwt, "where() does not work correctly")
 
     def test06(self):
         """Testing `where()` iterator (using carray bool in fancy indexing)"""
         a = np.arange(1, 110)
         b = bcolz.carray(a, chunklen=10)
-        wt = a[(a<5)|(a>9)]
-        cwt = b[bcolz.carray((a<5)|(a>9))]
-        #print "numpy ->", a[(a<5)|(a>9)]
-        #print "where ->", b[bcolz.carray((a<5)|(a>9))]
+        wt = a[(a < 5) | (a > 9)]
+        cwt = b[bcolz.carray((a < 5) | (a > 9))]
+        # print "numpy ->", a[(a<5)|(a>9)]
+        # print "where ->", b[bcolz.carray((a<5)|(a>9))]
         assert_array_equal(wt, cwt, "where() does not work correctly")
 
 
@@ -1220,64 +1251,64 @@ class fancy_indexing_setitemTest(TestCase):
 
     def test00(self):
         """Testing fancy indexing with __setitem__ (small values)"""
-        a = np.arange(1,111)
+        a = np.arange(1, 111)
         b = bcolz.carray(a, chunklen=10)
         sl = [3, 1]
         b[sl] = (10, 20)
         a[sl] = (10, 20)
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
     def test01(self):
         """Testing fancy indexing with __setitem__ (large values)"""
-        a = np.arange(1,1e3)
+        a = np.arange(1, 1e3)
         b = bcolz.carray(a, chunklen=10)
         sl = [0, 300, 998]
         b[sl] = (5, 10, 20)
         a[sl] = (5, 10, 20)
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
     def test02(self):
         """Testing fancy indexing with __setitem__ (large list)"""
-        a = np.arange(0,1000)
+        a = np.arange(0, 1000)
         b = bcolz.carray(a, chunklen=10)
         sl = np.random.randint(0, 1000, size=3*30)
         vals = np.random.randint(1, 1000, size=3*30)
         b[sl] = vals
         a[sl] = vals
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
     def test03(self):
         """Testing fancy indexing with __setitem__ (bool array)"""
-        a = np.arange(1,1e2)
+        a = np.arange(1, 1e2)
         b = bcolz.carray(a, chunklen=10)
         sl = a > 5
         b[sl] = 3.
         a[sl] = 3.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
     def test04(self):
         """Testing fancy indexing with __setitem__ (bool carray)"""
-        a = np.arange(1,1e2)
+        a = np.arange(1, 1e2)
         b = bcolz.carray(a, chunklen=10)
         bc = (a > 5) & (a < 40)
         sl = bcolz.carray(bc)
         b[sl] = 3.
         a[bc] = 3.
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
     def test05(self):
         """Testing fancy indexing with __setitem__ (bool, value not scalar)"""
-        a = np.arange(1,1e2)
+        a = np.arange(1, 1e2)
         b = bcolz.carray(a, chunklen=10)
         sl = a < 5
         b[sl] = range(6, 10)
         a[sl] = range(6, 10)
-        #print "b[%s] -> %r" % (sl, b)
+        # print "b[%s] -> %r" % (sl, b)
         assert_array_equal(b[:], a, "fancy indexing does not work correctly")
 
 
@@ -1285,7 +1316,7 @@ class fromiterTest(TestCase):
 
     def test00(self):
         """Testing fromiter (short iter)"""
-        a = np.arange(1,111)
+        a = np.arange(1, 111)
         b = bcolz.fromiter(iter(a), dtype='i4', count=len(a))
         assert_array_equal(b[:], a, "fromiter does not work correctly")
 
@@ -1352,7 +1383,7 @@ class evalTest(MayBeDiskTest):
         """Testing eval() with only scalars and constants"""
         a = 3
         cr = bcolz.eval("2 * a", rootdir=self.rootdir)
-        #print "bcolz.eval ->", cr
+        # print "bcolz.eval ->", cr
         self.assertTrue(cr == 6, "eval does not work correctly")
 
     def test01(self):
@@ -1366,8 +1397,8 @@ class evalTest(MayBeDiskTest):
         d = bcolz.carray(b, rootdir=dird)
         cr = bcolz.eval("c * d")
         nr = a * b
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test02(self):
@@ -1375,8 +1406,8 @@ class evalTest(MayBeDiskTest):
         a, b = np.arange(self.N), np.arange(1, self.N+1)
         cr = bcolz.eval("a * b", rootdir=self.rootdir)
         nr = a * b
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test03(self):
@@ -1390,8 +1421,8 @@ class evalTest(MayBeDiskTest):
         d = bcolz.carray(b, rootdir=dird)
         cr = bcolz.eval("a * d")
         nr = a * b
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test04(self):
@@ -1405,8 +1436,8 @@ class evalTest(MayBeDiskTest):
         d = bcolz.carray(b, rootdir=dird)
         cr = bcolz.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test05(self):
@@ -1415,8 +1446,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), b
         cr = bcolz.eval("a + 2 * d - 3")
         nr = a + 2 * b - 3
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test06(self):
@@ -1425,8 +1456,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), b
         cr = bcolz.eval("d - 3")
         nr = b - 3
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test07(self):
@@ -1435,8 +1466,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), b
         cr = c["a + 2 * d - 3 > 0"]
         nr = a[(a + 2 * b - 3) > 0]
-        #print "ca[expr] ->", cr
-        #print "numpy   ->", nr
+        # print "ca[expr] ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "carray[expr] does not work correctly")
 
     def test08(self):
@@ -1456,8 +1487,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), b
         c["a + 2 * d - 3 > 0"] = 3
         a[(a + 2 * b - 3) > 0] = 3
-        #print "carray ->", c
-        #print "numpy  ->", a
+        # print "carray ->", c
+        # print "numpy  ->", a
         assert_array_equal(c[:], a, "carray[expr] = v does not work correctly")
 
     def test10(self):
@@ -1466,8 +1497,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), b
         c["a + 2 * d - 3 > 1000"] = 0
         a[(a + 2 * b - 3) > 1000] = 0
-        #print "carray ->", c
-        #print "numpy  ->", a
+        # print "carray ->", c
+        # print "numpy  ->", a
         assert_array_equal(c[:], a, "carray[expr] = v does not work correctly")
 
     def test11(self):
@@ -1479,8 +1510,8 @@ class evalTest(MayBeDiskTest):
         else:
             cr = bcolz.eval("sin(c) + 2 * log(d) - 3")
         nr = np.sin(a) + 2 * np.log(b) - 3
-        #print "bcolz.eval ->", cr
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr
+        # print "numpy   ->", nr
         assert_array_equal(cr[:], nr, "eval does not work correctly")
 
     def test12(self):
@@ -1489,37 +1520,45 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a), bcolz.carray(b, rootdir=self.rootdir)
         cr = bcolz.eval("c + 2 * d - 3", out_flavor='numpy')
         nr = a + 2 * b - 3
-        #print "bcolz.eval ->", cr, type(cr)
-        #print "numpy   ->", nr
+        # print "bcolz.eval ->", cr, type(cr)
+        # print "numpy   ->", nr
         self.assertTrue(type(cr) == np.ndarray)
         assert_array_equal(cr, nr, "eval does not work correctly")
 
+
 class evalSmall(evalTest):
     N = 10
+
 
 class evalDiskSmall(evalTest):
     N = 10
     disk = True
 
+
 class evalBig(evalTest):
     N = 1e4
+
 
 class evalDiskBig(evalTest):
     N = 1e4
     disk = True
 
+
 class evalSmallNE(evalTest):
     N = 10
     vm = "numexpr"
+
 
 class evalDiskSmallNE(evalTest):
     N = 10
     vm = "numexpr"
     disk = True
 
+
 class evalBigNE(evalTest):
     N = 1e4
     vm = "numexpr"
+
 
 class evalDiskBigNE(evalTest):
     N = 1e4
@@ -1535,9 +1574,10 @@ class computeMethodsTest(TestCase):
         sa = a.sum()
         ac = bcolz.carray(a)
         sac = ac.sum()
-        #print "numpy sum-->", sa
-        #print "carray sum-->", sac
-        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        # print "numpy sum-->", sa
+        # print "carray sum-->", sac
+        self.assertTrue(sa.dtype == sac.dtype,
+                        "sum() is not working correctly.")
         self.assertTrue(sa == sac, "sum() is not working correctly.")
 
     def test01(self):
@@ -1546,9 +1586,10 @@ class computeMethodsTest(TestCase):
         sa = a.sum(dtype='i8')
         ac = bcolz.carray(a)
         sac = ac.sum(dtype='i8')
-        #print "numpy sum-->", sa
-        #print "carray sum-->", sac
-        self.assertTrue(sa.dtype == sac.dtype, "sum() is not working correctly.")
+        # print "numpy sum-->", sa
+        # print "carray sum-->", sac
+        self.assertTrue(sa.dtype == sac.dtype,
+                        "sum() is not working correctly.")
         self.assertTrue(sa == sac, "sum() is not working correctly.")
 
     def test02(self):
@@ -1583,17 +1624,21 @@ class arangeTest(MayBeDiskTest):
         ac = bcolz.arange(self.N, dtype="i1", rootdir=self.rootdir)
         self.assertTrue(np.all(a == ac))
 
+
 class arange_smallTest(arangeTest, TestCase):
     N = 10
     disk = False
+
 
 class arange_bigTest(arangeTest, TestCase):
     N = 1e4
     disk = False
 
+
 class arange_smallDiskTest(arangeTest, TestCase):
     N = 10
     disk = True
+
 
 class arange_bigDiskTest(arangeTest, TestCase):
     N = 1e4
@@ -1622,7 +1667,7 @@ class constructorTest(MayBeDiskTest):
         """Testing zeros() constructor, with a `dtype`."""
         a = np.zeros(self.N, dtype='i4')
         ac = bcolz.zeros(self.N, dtype='i4', rootdir=self.rootdir)
-        #print "dtypes-->", a.dtype, ac.dtype
+        # print "dtypes-->", a.dtype, ac.dtype
         self.assertTrue(a.dtype == ac.dtype)
         self.assertTrue(np.all(a == ac[:]))
 
@@ -1630,7 +1675,7 @@ class constructorTest(MayBeDiskTest):
         """Testing zeros() constructor, with a string type."""
         a = np.zeros(self.N, dtype='S5')
         ac = bcolz.zeros(self.N, dtype='S5', rootdir=self.rootdir)
-        #print "ac-->", `ac`
+        # print "ac-->", `ac`
         self.assertTrue(a.dtype == ac.dtype)
         self.assertTrue(np.all(a == ac[:]))
 
@@ -1652,7 +1697,7 @@ class constructorTest(MayBeDiskTest):
         """Testing ones() constructor, with a string type"""
         a = np.ones(self.N, dtype='S3')
         ac = bcolz.ones(self.N, dtype='S3', rootdir=self.rootdir)
-        #print "a-->", a, ac
+        # print "a-->", a, ac
         self.assertTrue(a.dtype == ac.dtype)
         self.assertTrue(np.all(a == ac[:]))
 
@@ -1674,7 +1719,7 @@ class constructorTest(MayBeDiskTest):
         """Testing fill() constructor, with a string type"""
         a = np.ones(self.N, dtype='S3')
         ac = bcolz.fill(self.N, "1", dtype='S3', rootdir=self.rootdir)
-        #print "a-->", a, ac
+        # print "a-->", a, ac
         self.assertTrue(a.dtype == ac.dtype)
         self.assertTrue(np.all(a == ac[:]))
 
@@ -1682,12 +1727,15 @@ class constructorTest(MayBeDiskTest):
 class constructorSmallTest(constructorTest, TestCase):
     N = 10
 
+
 class constructorSmallDiskTest(constructorTest, TestCase):
     N = 10
     disk = True
 
+
 class constructorBigTest(constructorTest, TestCase):
     N = 50000
+
 
 class constructorBigDiskTest(constructorTest, TestCase):
     N = 50000
@@ -1721,7 +1769,7 @@ class dtypesTest(TestCase):
         ac = bcolz.carray(a, dtype=dtype)
         self.assertTrue(ac.dtype == dtype)
         self.assertTrue(a.dtype == ac.dtype)
-        #print "ac-->", `ac`
+        # print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
 
     def test03(self):
@@ -1731,7 +1779,7 @@ class dtypesTest(TestCase):
         ac = bcolz.carray(a, dtype=dtype)
         self.assertTrue(ac.dtype == dtype)
         self.assertTrue(a.dtype == ac.dtype)
-        #print "ac-->", `ac`
+        # print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
 
     def test04(self):
@@ -1740,7 +1788,7 @@ class dtypesTest(TestCase):
         ac = bcolz.carray(a, dtype='S4')
         self.assertTrue(ac.dtype == np.dtype('S4'))
         self.assertTrue(a.dtype == ac.dtype)
-        #print "ac-->", `ac`
+        # print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test05(self):
@@ -1749,7 +1797,7 @@ class dtypesTest(TestCase):
         ac = bcolz.carray(a, dtype='U4')
         self.assertTrue(ac.dtype == np.dtype('U4'))
         self.assertTrue(a.dtype == ac.dtype)
-        #print "ac-->", `ac`
+        # print "ac-->", `ac`
         assert_array_equal(a, ac, "Arrays are not equal")
 
     def test06(self):
@@ -1769,7 +1817,7 @@ class dtypesTest(TestCase):
                  np.complex64, np.complex128]
         if hasattr(np, 'float128'):
             types.extend([np.float128, np.complex256])
-        shapes = [(10,), (10,10), (10,10,10)]
+        shapes = [(10,), (10, 10), (10, 10, 10)]
         for shape in shapes:
             for t in types:
                 a = bcolz.zeros(shape, t)
@@ -1841,9 +1889,11 @@ class largeCarrayTest(MayBeDiskTest):
 
         self.assertTrue(cn.sum() == 10)
 
+
 @skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
 class largeCarrayMemoryTest(largeCarrayTest, TestCase):
     disk = False
+
 
 @skipUnless(is_64bit and common.heavy, "not 64bit or not --heavy")
 class largeCarrayDiskTest(largeCarrayTest, TestCase):
@@ -1871,7 +1921,7 @@ class persistenceTest(MayBeDiskTest, TestCase):
         self.assertTrue(len(cn) == N-2)
 
         # Now check some accesses (no errors should be raised)
-        cn.append([1,1])
+        cn.append([1, 1])
         self.assertTrue(len(cn) == N)
         cn[1] = 2
         self.assertTrue(cn[1] == 2)
@@ -1911,7 +1961,7 @@ class persistenceTest(MayBeDiskTest, TestCase):
         self.assertTrue(len(cn) == 0)
 
         # Now check some accesses (no errors should be raised)
-        cn.append([1,1])
+        cn.append([1, 1])
         self.assertTrue(len(cn) == 2)
         cn[1] = 2
         self.assertTrue(cn[1] == 2)
@@ -1927,7 +1977,7 @@ class persistenceTest(MayBeDiskTest, TestCase):
         self.assertTrue(len(cn) == N)
 
         # Now check some accesses (no errors should be raised)
-        cn.append([1,1])
+        cn.append([1, 1])
         self.assertTrue(len(cn) == N+2)
         cn[1] = 2
         self.assertTrue(cn[1] == 2)
@@ -1948,13 +1998,13 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         cnames = bcolz.blosc_compressor_list()
         if common.verbose:
             print("Checking compressors:", cnames)
-        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             b = bcolz.carray(a, rootdir=self.rootdir,
                              cparams=bcolz.cparams(clevel=9, cname=cname))
-            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assertTrue(sys.getsizeof(b) > b.nbytes,
-                         "compression does not seem to have any overhead")
+                            "compression does not seem to have any overhead")
             assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:
@@ -1966,11 +2016,11 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         cnames = bcolz.blosc_compressor_list()
         if common.verbose:
             print("Checking compressors:", cnames)
-        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             bcolz.cparams.setdefaults(clevel=9, cname=cname)
             b = bcolz.carray(a, rootdir=self.rootdir)
-            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
                             "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
@@ -1984,12 +2034,12 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         cnames = bcolz.blosc_compressor_list()
         if common.verbose:
             print("Checking compressors:", cnames)
-        #print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             bcolz.defaults.cparams = {
                 'clevel': 9, 'shuffle': True, 'cname': cname}
             b = bcolz.carray(a, rootdir=self.rootdir)
-            #print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
                             "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
@@ -2000,8 +2050,10 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         bcolz.defaults.cparams = {
             'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}
 
+
 class compressorsMemoryTest(bloscCompressorsTest, TestCase):
     disk = False
+
 
 class compressorsDiskTest(bloscCompressorsTest, TestCase):
     disk = True
@@ -2011,8 +2063,8 @@ if __name__ == '__main__':
     unittest.main(verbosity=2)
 
 
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 72
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 72
+# End:

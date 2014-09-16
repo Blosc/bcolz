@@ -160,8 +160,8 @@ if __name__ == '__main__':
     print(human_readable_size(10234*1000000000))
 
 
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 72
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 72
+# End:
