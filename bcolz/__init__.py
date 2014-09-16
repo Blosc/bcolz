@@ -66,6 +66,35 @@ from bcolz.defaults import defaults
 from bcolz.version import __version__
 from bcolz.tests import test
 
+
+def get_git_descrtiption(path_):
+    """ Get the output of git-describe when executed in a given path. """
+
+    # imports in function because:
+    # a) easier to refactor
+    # b) clear they are only used here
+    import subprocess
+    import os
+    import os.path as path
+
+    # make an absolute path if required, for example when running in a clone
+    if not path.isabs(path_):
+        path_ = path.join(os.environ['PWD'], path_)
+    # look up the commit using subprocess and git describe
+    try:
+        # redirect stderr to stdout to make sure the git error message in case
+        # we are not in a git repo doesn't appear on the screen and confuse the
+        # user.
+        label = subprocess.check_output(["git", "describe"], cwd=path_,
+                                        stderr=subprocess.STDOUT).strip()
+        return label
+    except OSError:  # in case git wasn't found
+        pass
+    except subprocess.CalledProcessError:  # not in git repo
+        pass
+
+git_description = get_git_descrtiption(__path__[0])
+
 # Initialization code for the Blosc and numexpr libraries
 _blosc_init()
 ncores = detect_number_of_cores()
