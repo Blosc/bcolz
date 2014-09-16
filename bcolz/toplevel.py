@@ -12,14 +12,14 @@
 from __future__ import absolute_import
 
 import sys
-import os, os.path
+import os
+import os.path
 import glob
 import itertools as it
 import numpy as np
 import bcolz
 from bcolz.ctable import ROOTDIRS
 from .py2help import xrange, _inttypes
-
 
 
 def print_versions():
@@ -37,7 +37,7 @@ def print_versions():
         print("Numexpr version:   %s" % bcolz.numexpr.__version__)
     else:
         print("Numexpr version:   not available "
-              "(version >= %s not detected)" %  bcolz.min_numexpr_version)
+              "(version >= %s not detected)" % bcolz.min_numexpr_version)
     print("Python version:    %s" % sys.version)
     if os.name == "posix":
         (sysname, nodename, release, version, machine) = os.uname()
@@ -61,14 +61,15 @@ def detect_number_of_cores():
             ncpus = os.sysconf("SC_NPROCESSORS_ONLN")
             if isinstance(ncpus, int) and ncpus > 0:
                 return ncpus
-        else: # OSX:
+        else:  # OSX:
             return int(os.popen2("sysctl -n hw.ncpu")[1].read())
     # Windows:
     if "NUMBER_OF_PROCESSORS" in os.environ:
-        ncpus = int(os.environ["NUMBER_OF_PROCESSORS"]);
+        ncpus = int(os.environ["NUMBER_OF_PROCESSORS"])
         if ncpus > 0:
             return ncpus
-    return 1 # Default
+    return 1  # Default
+
 
 def set_nthreads(nthreads):
     """
@@ -99,6 +100,7 @@ def set_nthreads(nthreads):
         bcolz.numexpr.set_num_threads(nthreads)
     return nthreads_old
 
+
 def open(rootdir, mode='a'):
     """
     open(rootdir, mode='a')
@@ -128,6 +130,7 @@ def open(rootdir, mode='a'):
         return bcolz.ctable(rootdir=rootdir, mode=mode)
     else:
         return bcolz.carray(rootdir=rootdir, mode=mode)
+
 
 def fromiter(iterable, dtype, count, **kwargs):
     """
@@ -224,6 +227,7 @@ def fromiter(iterable, dtype, count, **kwargs):
     obj.flush()
     return obj
 
+
 def fill(shape, dflt=None, dtype=np.float, **kwargs):
     """
     fill(shape, dtype=float, dflt=None, **kwargs)
@@ -284,6 +288,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     obj.flush()
     return obj
 
+
 def zeros(shape, dtype=np.float, **kwargs):
     """
     zeros(shape, dtype=float, **kwargs)
@@ -313,6 +318,7 @@ def zeros(shape, dtype=np.float, **kwargs):
     dtype = np.dtype(dtype)
     return fill(shape=shape, dflt=np.zeros((), dtype), dtype=dtype, **kwargs)
 
+
 def ones(shape, dtype=np.float, **kwargs):
     """
     ones(shape, dtype=float, **kwargs)
@@ -341,6 +347,7 @@ def ones(shape, dtype=np.float, **kwargs):
     """
     dtype = np.dtype(dtype)
     return fill(shape=shape, dflt=np.ones((), dtype), dtype=dtype, **kwargs)
+
 
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     """
@@ -423,6 +430,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
         bstop += incr
     obj.flush()
     return obj
+
 
 def iterblocks(cobj, blen=None, start=0, stop=None):
     """iterblocks(blen=None, start=0, stop=None)
@@ -613,9 +621,12 @@ class cparams(object):
         """
         clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
         dflts = bcolz.defaults.cparams
-        if clevel is not None: dflts['clevel'] = clevel
-        if shuffle is not None: dflts['shuffle'] = shuffle
-        if cname is not None: dflts['cname'] = cname
+        if clevel is not None:
+            dflts['clevel'] = clevel
+        if shuffle is not None:
+            dflts['shuffle'] = shuffle
+        if cname is not None:
+            dflts['cname'] = cname
 
     def __init__(self, clevel=None, shuffle=None, cname=None):
         clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
@@ -632,10 +643,8 @@ class cparams(object):
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 
 
-
-
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 78
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 78
+# End:

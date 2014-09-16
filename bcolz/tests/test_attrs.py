@@ -12,10 +12,7 @@ from __future__ import absolute_import
 import os
 import tempfile
 
-import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
 import bcolz
-from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless)
 
@@ -27,7 +24,7 @@ class basicTest(MayBeDiskTest):
             obj = bcolz.zeros(10, dtype="i1", rootdir=self.rootdir)
             assert type(obj) == bcolz.carray
         elif self.flavor == 'ctable':
-            obj = bcolz.fromiter(((i,i*2) for i in range(10)), dtype='i2,f4',
+            obj = bcolz.fromiter(((i, i*2) for i in range(10)), dtype='i2,f4',
                                  count=10, rootdir=self.rootdir)
             assert type(obj) == bcolz.ctable
         return obj
@@ -130,7 +127,7 @@ class basicTest(MayBeDiskTest):
             count += 1
         self.assertTrue(count, 3)
 
-    @skipUnless(bcolz.tables_here , "PyTables not here")
+    @skipUnless(bcolz.tables_here, "PyTables not here")
     def test03(self):
         """Checking roundtrip of attrs in HDF5 files."""
 
@@ -151,30 +148,33 @@ class basicTest(MayBeDiskTest):
         self.assertEqual(cn.attrs['attr3'], 'val3')
         self.assertEqual(len(cn.attrs), 3)
 
+
 class carrayTest(basicTest, TestCase):
     flavor = "carray"
     disk = False
+
 
 class carrayDiskTest(basicTest, TestCase):
     flavor = "carray"
     disk = True
 
+
 class ctableTest(basicTest, TestCase):
     flavor = "ctable"
     disk = False
+
 
 class ctableDiskTest(basicTest, TestCase):
     flavor = "ctable"
     disk = True
 
 
-
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
 
-## Local Variables:
-## mode: python
-## tab-width: 4
-## fill-column: 72
-## End:
+# Local Variables:
+# mode: python
+# tab-width: 4
+# fill-column: 72
+# End:

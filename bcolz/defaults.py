@@ -35,8 +35,8 @@ class Defaults(object):
                 "this needs to be a dictionary and you "
                 "passed '%s' " % type(value))
         if ('clevel' not in value or
-            'shuffle' not in value or
-            'cname' not in value):
+                'shuffle' not in value or
+                'cname' not in value):
             raise ValueError(
                 "The dictionary must have the next entries: "
                 "'clevel', 'shuffle' and 'cname'")

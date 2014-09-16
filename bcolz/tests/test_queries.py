@@ -8,14 +8,12 @@
 
 from __future__ import absolute_import
 
-import sys
 
 import numpy as np
 import bcolz
 from bcolz.py2help import xrange
-from bcolz.tests import common
 from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless)
+    MayBeDiskTest, TestCase, unittest)
 
 
 class listTest(MayBeDiskTest):
@@ -26,7 +24,7 @@ class listTest(MayBeDiskTest):
         a[30:40] = bcolz.ones(10, dtype="bool")
         alist = list(a)
         blist1 = [r for r in a.wheretrue()]
-        self.assertTrue(blist1 == list(range(30,40)))
+        self.assertTrue(blist1 == list(range(30, 40)))
         alist2 = list(a)
         self.assertTrue(alist == alist2, "wheretrue() not working correctly")
 
@@ -43,7 +41,7 @@ class listTest(MayBeDiskTest):
         b = bcolz.arange(self.N, dtype="f4")
         blist = list(b)
         blist1 = [r for r in b.where(a)]
-        self.assertTrue(blist1 == list(range(30,40)))
+        self.assertTrue(blist1 == list(range(30, 40)))
         blist2 = list(b)
         self.assertTrue(blist == blist2, "where() not working correctly")
 
@@ -51,15 +49,15 @@ class listTest(MayBeDiskTest):
         """Testing where() with a multidimensional array"""
         a = bcolz.zeros((self.N, 10), dtype="bool", rootdir=self.rootdir)
         a[30:40] = bcolz.ones(10, dtype="bool")
-        b = bcolz.arange(self.N*10, dtype="f4").reshape((self.N, 10))
+        b = bcolz.arange(self.N * 10, dtype="f4").reshape((self.N, 10))
         self.assertRaises(NotImplementedError, b.where, a)
 
     def test02(self):
         """Testing iter() in combination with a list constructor"""
         b = bcolz.arange(self.N, dtype="f4", rootdir=self.rootdir)
         blist = list(b)
-        blist1 = [r for r in b.iter(3,10)]
-        self.assertTrue(blist1 == list(range(3,10)))
+        blist1 = [r for r in b.iter(3, 10)]
+        self.assertTrue(blist1 == list(range(3, 10)))
         blist2 = list(b)
         self.assertTrue(blist == blist2, "iter() not working correctly")
 
@@ -67,12 +65,15 @@ class listTest(MayBeDiskTest):
 class small_listTest(listTest, TestCase):
     N = 100
 
+
 class big_listTest(listTest, TestCase):
     N = 10000
+
 
 class small_listDiskTest(listTest, TestCase):
     N = 100
     disk = True
+
 
 class big_listDiskTest(listTest, TestCase):
     N = 10000
@@ -84,7 +85,8 @@ class whereblocksTest(MayBeDiskTest):
     def test00(self):
         """Testing `whereblocks` method with only an expression"""
         N = self.N
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
         for block in t.whereblocks('f1 < f2'):
@@ -96,7 +98,8 @@ class whereblocksTest(MayBeDiskTest):
     def test01(self):
         """Testing `whereblocks` method with a `blen`"""
         N = self.N
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
         for block in t.whereblocks('f0 <= f1', blen=100):
@@ -111,11 +114,11 @@ class whereblocksTest(MayBeDiskTest):
     def test02(self):
         """Testing `whereblocks` method with a `outfields` with 2 fields"""
         N = self.N
-        ra = np.fromiter(((i, i, i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in t.whereblocks('f1 < f2', outfields=('f1','f2')):
-            self.assertEqual(block.dtype.names, ('f1','f2'))
+        for block in t.whereblocks('f1 < f2', outfields=('f1', 'f2')):
+            self.assertEqual(block.dtype.names, ('f1', 'f2'))
             l += len(block)
             s += block['f1'].sum()
         self.assertEqual(l, N - 1)
@@ -124,7 +127,7 @@ class whereblocksTest(MayBeDiskTest):
     def test03(self):
         """Testing `whereblocks` method with a `outfields` with 1 field"""
         N = self.N
-        ra = np.fromiter(((i, i, i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
         for block in t.whereblocks('f1 < f2', outfields=('f1',)):
@@ -137,7 +140,8 @@ class whereblocksTest(MayBeDiskTest):
     def test04(self):
         """Testing `whereblocks` method with a `limit` parameter"""
         N, M = self.N, 101
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
         for block in t.whereblocks('f1 < f2', limit=M):
@@ -149,7 +153,8 @@ class whereblocksTest(MayBeDiskTest):
     def test05(self):
         """Testing `whereblocks` method with a `limit` parameter"""
         N, M = self.N, 101
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
         for block in t.whereblocks('f1 < f2', limit=M):
@@ -161,37 +166,42 @@ class whereblocksTest(MayBeDiskTest):
     def test06(self):
         """Testing `whereblocks` method with a `skip` parameter"""
         N, M = self.N, 101
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in t.whereblocks('f1 < f2', skip=N-M):
+        for block in t.whereblocks('f1 < f2', skip=N - M):
             l += len(block)
             s += block['f0'].sum()
         self.assertEqual(l, M - 1)
-        self.assertEqual(s, np.arange(N-M+1, N).sum())
+        self.assertEqual(s, np.arange(N - M + 1, N).sum())
 
     def test07(self):
         """Testing `whereblocks` method with a `limit`, `skip` parameter"""
         N, M = self.N, 101
-        ra = np.fromiter(((i, i*2., i*3) for i in xrange(N)), dtype='i4,f8,i8')
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in t.whereblocks('f1 < f2', limit=N-M-2, skip=M):
+        for block in t.whereblocks('f1 < f2', limit=N - M - 2, skip=M):
             l += len(block)
             s += block['f0'].sum()
         self.assertEqual(l, N - M - 2)
-        self.assertEqual(s, np.arange(M+1, N-1).sum())
+        self.assertEqual(s, np.arange(M + 1, N - 1).sum())
 
 
 class small_whereblocksTest(whereblocksTest, TestCase):
     N = 120
 
+
 class big_whereblocksTest(whereblocksTest, TestCase):
     N = 10000
+
 
 class small_whereblocksDiskTest(whereblocksTest, TestCase):
     N = 120
     disk = True
+
 
 class big_whereblocksDiskTest(whereblocksTest, TestCase):
     N = 10000
@@ -202,9 +212,9 @@ if __name__ == '__main__':
     unittest.main(verbosity=2)
 
 
-## Local Variables:
-## mode: python
-## py-indent-offset: 4
-## tab-width: 4
-## fill-column: 72
-## End:
+# Local Variables:
+# mode: python
+# py-indent-offset: 4
+# tab-width: 4
+# fill-column: 72
+# End:

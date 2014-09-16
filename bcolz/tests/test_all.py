@@ -16,17 +16,17 @@ import os
 import numpy
 import bcolz
 from bcolz.tests import common
-from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
+from bcolz.tests.common import unittest
 
 
 # Recommended minimum versions
 min_numpy_version = "1.7"
 
+
 def suite():
     this_dir = os.path.dirname(__file__)
     return unittest.TestLoader().discover(
-        start_dir=this_dir, pattern = "test_*.py")
+        start_dir=this_dir, pattern="test_*.py")
 
 
 def print_heavy(heavy):
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         unittest.TextTestRunner().run(suite())
 
 
-## Local Variables:
-## mode: python
-## fill-column: 72
-## End:
+# Local Variables:
+# mode: python
+# fill-column: 72
+# End:

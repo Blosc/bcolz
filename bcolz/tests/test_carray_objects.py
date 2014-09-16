@@ -28,6 +28,7 @@ import numpy as np
 import bcolz
 from bcolz.tests.common import MayBeDiskTest
 
+
 class ObjectCarrayTest(MayBeDiskTest):
     def test_carray_1d_source(self):
         """Testing carray of objects, 1d source"""
@@ -79,7 +80,8 @@ class ObjectCarrayTest(MayBeDiskTest):
         not supported
         """
         src_data = [(i, 's'*i) for i in range(10)]
-        self.assertRaises(TypeError, bcolz.carray, src_data, dtype=np.dtype('O,O'))
+        self.assertRaises(TypeError, bcolz.carray,
+                          src_data, dtype=np.dtype('O,O'))
 
     def test_carray_record_as_object(self):
         src_data = np.empty((10,), dtype=np.dtype('u1,O'))
@@ -131,6 +133,7 @@ class ObjectCarrayTest(MayBeDiskTest):
 class ObjectCarraymemoryTest(ObjectCarrayTest, TestCase):
     disk = False
 
+
 class ObjectCarrayDiskTest(ObjectCarrayTest, TestCase):
     disk = True
 
@@ -139,9 +142,8 @@ if __name__ == '__main__':
     unittest.main(verbosity=2)
 
 
-## Local Variables:
-## mode: python
-## coding: utf-8
-## fill-column: 78
-## End:
-
+# Local Variables:
+# mode: python
+# coding: utf-8
+# fill-column: 78
+# End:

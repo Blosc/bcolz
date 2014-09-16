@@ -17,7 +17,6 @@ __docformat__ = 'restructuredtext'
 
 import sys
 
-import numpy as np
 from numpy.core import numerictypes as _nt
 from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
 from numpy.core.multiarray import format_longfloat
@@ -30,7 +29,8 @@ except ImportError:
     pass
 
 
-def product(x, y): return x * y
+def product(x, y):
+    return x * y
 
 
 _summaryEdgeItems = 3  # repr N leading and trailing items of each dimension
@@ -325,7 +325,7 @@ def _array2string(a, max_line_width, precision, suppress_small, separator=' ',
         elif issubclass(dtypeobj, (_nt.unicode_, _nt.string_)):
             format_function = formatdict['numpystr']
         elif (hasattr(_nt, "datetime64") and
-                  issubclass(dtypeobj, _nt.datetime64)):
+              issubclass(dtypeobj, _nt.datetime64)):
             format_function = formatdict['datetime']
         else:
             format_function = formatdict['str']
@@ -786,4 +786,3 @@ class TimedeltaFormat(object):
 
     def __call__(self, x):
         return self.format % x.astype('i8')
-
