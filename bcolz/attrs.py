@@ -9,12 +9,14 @@
 
 from __future__ import absolute_import
 
-import os, os.path
+import os
+import os.path
 import json
-from .py2help import xrange, dict_iteritems
+from .py2help import dict_iteritems
 
 
 ATTRSDIR = "__attrs__"
+
 
 class attrs(object):
     """Accessor for attributes in carray/ctable objects.
@@ -106,7 +108,7 @@ class attrs(object):
                 "Cannot remove an attribute when in 'r'ead-only mode")
         del self.attrs[name]
         self._update_meta()
-    
+
     def __iter__(self):
         return dict_iteritems(self.attrs)
 
@@ -118,7 +120,7 @@ class attrs(object):
             return "*no attrs*"
         fullrepr = ""
         for name in self.attrs:
-            fullrepr += "%s : %s" % (name, self.attrs[name]) 
+            fullrepr += "%s : %s" % (name, self.attrs[name])
         return fullrepr
 
     def __repr__(self):
@@ -126,5 +128,5 @@ class attrs(object):
             return str(self)
         fullrepr = ""
         for name in self.attrs:
-            fullrepr += "%s : %r\n" % (name, self.attrs[name]) 
+            fullrepr += "%s : %r\n" % (name, self.attrs[name])
         return fullrepr

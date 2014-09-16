@@ -75,4 +75,3 @@ else:
         c_ssize_t = ctypes.c_int32
     else:
         c_ssize_t = ctypes.c_int64
-

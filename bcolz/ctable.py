@@ -14,14 +14,16 @@ from bcolz import utils, attrs, array2string
 import itertools
 from collections import namedtuple
 import json
-import os, os.path
+import os
+import os.path
 import shutil
-from .py2help import _inttypes, _strtypes, imap, xrange
+from .py2help import _inttypes, imap, xrange
 
 _inttypes += (np.integer,)
 islice = itertools.islice
 
 ROOTDIRS = '__rootdirs__'
+
 
 class cols(object):
     """Class for accessing the columns on the ctable object."""
@@ -82,17 +84,17 @@ class cols(object):
         col = self._cols[name]
         self.update_meta()
         return col
-    
+
     def __str__(self):
         fullrepr = ""
         for name in self.names:
-            fullrepr += "%s : %s" % (name, str(self._cols[name])) 
+            fullrepr += "%s : %s" % (name, str(self._cols[name]))
         return fullrepr
 
     def __repr__(self):
         fullrepr = ""
         for name in self.names:
-            fullrepr += "%s : %s\n" % (name, repr(self._cols[name])) 
+            fullrepr += "%s : %s\n" % (name, repr(self._cols[name]))
         return fullrepr
 
 
@@ -173,7 +175,6 @@ class ctable(object):
         "The size of this object."
         return np.prod(self.shape)
 
-
     def __init__(self, columns=None, names=None, **kwargs):
 
         # Important optional params
@@ -214,7 +215,7 @@ class ctable(object):
 
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
-            
+
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -230,7 +231,7 @@ class ctable(object):
             if isinstance(columns, np.ndarray):  # ratype case
                 names = list(columns.dtype.names)
             else:
-                names = ["f%d"%i for i in range(len(columns))]
+                names = ["f%d" % i for i in range(len(columns))]
         else:
             if type(names) == tuple:
                 names = list(names)
@@ -287,7 +288,7 @@ class ctable(object):
                     shutil.rmtree(self.rootdir)
                 raise ValueError("all `columns` must have the same length")
             clen = len(column)
- 
+
         self.len = clen
 
     def open_ctable(self):
@@ -539,7 +540,7 @@ class ctable(object):
 
         # Check that origin and destination do not overlap
         rootdir = kwargs.get('rootdir', None)
-        if rootdir and self.rootdir and  rootdir == self.rootdir:
+        if rootdir and self.rootdir and rootdir == self.rootdir:
                 raise IOError("rootdir cannot be the same during copies")
 
         # Remove possible unsupported args for columns
@@ -548,9 +549,9 @@ class ctable(object):
         # Copy the columns
         if rootdir:
             # A copy is always made during creation with a rootdir
-            cols = [ self.cols[name] for name in self.names ]
+            cols = [self.cols[name] for name in self.names]
         else:
-            cols = [ self.cols[name].copy(**kwargs) for name in self.names ]
+            cols = [self.cols[name].copy(**kwargs) for name in self.names]
         # Create the ctable
         ccopy = ctable(cols, names, **kwargs)
         return ccopy
@@ -600,7 +601,8 @@ class ctable(object):
         cols = []
         # Remove a possible rootdir argument to prevent copies going to disk
         ckwargs = kwargs.copy()
-        if 'rootdir' in ckwargs: del ckwargs['rootdir']
+        if 'rootdir' in ckwargs:
+            del ckwargs['rootdir']
         for key in names:
             vals = df[key].values  # just a view as a numpy array
             if vals.dtype == np.object:
@@ -612,12 +614,14 @@ class ctable(object):
                 #     maxitemsize = pd.lib.max_len_string_array(vals)
                 #     print "maxitemsize:", maxitesize
                 #     # Convert the view into a carray of Unicode strings
-                #     col = bcolz.carray(vals, dtype='U%d'%maxitemsize, **ckwargs)
+                #     col = bcolz.carray(vals,
+                #                        dtype='U%d' % maxitemsize, **ckwargs)
                 # elif inferred_type == 'string':
                 if inferred_type == 'string':
                     maxitemsize = pd.lib.max_len_string_array(vals)
                     # Convert the view into a carray of regular strings
-                    col = bcolz.carray(vals, dtype='S%d'%maxitemsize, **ckwargs)
+                    col = bcolz.carray(vals, dtype='S%d' %
+                                       maxitemsize, **ckwargs)
                 else:
                     col = vals
                 cols.append(col)
@@ -727,7 +731,8 @@ class ctable(object):
     def tohdf5(self, filepath, nodepath='/ctable', mode='w',
                cparams=None, cname=None):
         """
-        tohdf5(filepath, nodepath='/ctable', mode='w', cparams=None, cname=None)
+        tohdf5(filepath, nodepath='/ctable', mode='w',
+               cparams=None, cname=None)
 
         Write this object into an HDF5 file.
 
@@ -900,7 +905,8 @@ class ctable(object):
             try:
                 dtype = [(name, self[name].dtype) for name in outfields]
             except IndexError:
-                raise ValueError("Some names in `outfields` are not real fields")
+                raise ValueError(
+                    "Some names in `outfields` are not real fields")
 
         buf = np.empty(blen, dtype=dtype)
         nrow = 0
@@ -1044,7 +1050,7 @@ class ctable(object):
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
-            if step and step <= 0 :
+            if step and step <= 0:
                 raise NotImplementedError("step in slice can only be positive")
         # Multidimensional keys
         elif isinstance(key, tuple):
@@ -1077,7 +1083,7 @@ class ctable(object):
                 return np.array([self[i] for i in key], dtype=self.dtype)
             else:
                 raise IndexError(
-                      "arrays used as indices must be integer (or boolean)")
+                    "arrays used as indices must be integer (or boolean)")
         # Column name or expression
         elif type(key) is str:
             if key not in self.names:
@@ -1133,7 +1139,7 @@ class ctable(object):
         # Check if key is a condition actually
         if type(key) is bytes:
             # Convert key into a boolean array
-            #key = self.eval(key)
+            # key = self.eval(key)
             # The method below is faster (specially for large ctables)
             rowval = 0
             for nrow in self.where(key, outcols=["nrow__"]):
@@ -1223,7 +1229,7 @@ class ctable(object):
 
         """
 
-        nbytes, cbytes, ratio = 0, 0, 0.0
+        nbytes, cbytes = 0, 0
         names, cols = self.names, self.cols
         for name in names:
             column = cols[name]

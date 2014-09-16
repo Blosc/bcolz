@@ -21,7 +21,6 @@ if bcolz.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
 
-
 def _getvars(expression, user_dict, depth, vm):
     """Get the variables in `expression`.
 
@@ -31,16 +30,15 @@ def _getvars(expression, user_dict, depth, vm):
 
     cexpr = compile(expression, '<string>', 'eval')
     if vm == "python":
-        exprvars = [ var for var in cexpr.co_names
-                     if var not in ['None', 'False', 'True'] ]
+        exprvars = [var for var in cexpr.co_names
+                    if var not in ['None', 'False', 'True']]
     else:
         # Check that var is not a numexpr function here.  This is useful for
         # detecting unbound variables in expressions.  This is not necessary
         # for the 'python' engine.
-        exprvars = [ var for var in cexpr.co_names
-                     if var not in ['None', 'False', 'True']
-                     and var not in numexpr_functions ]
-
+        exprvars = [var for var in cexpr.co_names
+                    if var not in ['None', 'False', 'True']
+                    and var not in numexpr_functions]
 
     # Get the local and global variable mappings of the user frame
     user_locals, user_globals = {}, {}
@@ -65,12 +63,12 @@ def _getvars(expression, user_dict, depth, vm):
         # Check the value.
         if (vm == "numexpr" and
             hasattr(val, 'dtype') and hasattr(val, "__len__") and
-            val.dtype.str[1:] == 'u8'):
+                val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "
                 "a 64-bit unsigned integer object, that is "
                 "not yet supported in numexpr expressions; "
-                "rather, use the 'python' vm." % var )
+                "rather, use the 'python' vm." % var)
         if val is not None:
             reqvars[var] = val
     return reqvars
@@ -78,6 +76,7 @@ def _getvars(expression, user_dict, depth, vm):
 
 # Assign function `eval` to a variable because we are overriding it
 _eval = eval
+
 
 def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
@@ -154,6 +153,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                         **kwargs)
 
+
 def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                  **kwargs):
     """Perform the evaluation in blocks."""
@@ -213,13 +213,13 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             res_block = _eval(expression, vars_)
         else:
             try:
-                res_block = bcolz.numexpr.evaluate(expression, local_dict=vars_)
+                res_block = bcolz.numexpr.evaluate(expression,
+                                                   local_dict=vars_)
             except ValueError:
                 # numexpr cannot handle this. Fall back to a pure "python" VM.
                 return _eval_blocks(
                     expression, vars, vlen, typesize, "python",
                     out_flavor, **kwargs)
-
 
         if i == 0:
             # Detection of reduction operations
