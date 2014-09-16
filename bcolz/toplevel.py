@@ -26,6 +26,8 @@ def print_versions():
     """Print all the versions of packages that bcolz relies on."""
     print("-=" * 38)
     print("bcolz version:     %s" % bcolz.__version__)
+    if bcolz.git_description:
+        print("bcolz git info:    %s" % bcolz.git_description)
     print("NumPy version:     %s" % np.__version__)
     tinfo = bcolz.blosc_version()
     blosc_cnames = bcolz.blosc_compressor_list()
