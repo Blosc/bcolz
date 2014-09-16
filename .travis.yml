@@ -5,6 +5,7 @@ python:
 - 3.4
 install:
 - pip install -r requirements.txt
+- pip install cython==0.20.2
 - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2 --upgrade; fi
 - python setup.py build_ext --inplace
 script:
