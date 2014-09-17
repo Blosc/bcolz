@@ -82,20 +82,21 @@ else:
 
 # Check if Cython is installed or not (requisite)
 try:
+    import Cython
+    cur_cython_version = Cython.__version__
     from Cython.Distutils import build_ext
-    from Cython.Compiler.Main import Version
 except:
     exit_with_error(
         "You need %(pkgname)s %(pkgver)s or greater to compile bcolz!"
         % {'pkgname': 'Cython', 'pkgver': min_cython_version})
 
-if Version.version < min_cython_version:
+if cur_cython_version < min_cython_version:
     exit_with_error(
         "At least Cython %s is needed so as to generate extensions!"
         % (min_cython_version))
 else:
     print("* Found %(pkgname)s %(pkgver)s package installed."
-          % {'pkgname': 'Cython', 'pkgver': Version.version})
+          % {'pkgname': 'Cython', 'pkgver': cur_cython_version})
 
 # Check for NumPy
 check_import('numpy', min_numpy_version)
