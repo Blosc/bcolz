@@ -26,7 +26,7 @@ compressed containers, can be used for performing out-of-core
 computations efficiently, but most importantly *transparently*.
 
 Just to wet your appetite, here it is an example with real data, where
-bcolz is already fullfilling the promise of accelerating memory I/O by
+bcolz is already fulfilling the promise of accelerating memory I/O by
 using compression:
 
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb
