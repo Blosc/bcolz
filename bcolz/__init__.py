@@ -76,6 +76,7 @@ def get_git_descrtiption(path_):
     import subprocess
     import os
     import os.path as path
+    from bcolz.py2help import check_output
 
     # make an absolute path if required, for example when running in a clone
     if not path.isabs(path_):
@@ -85,8 +86,8 @@ def get_git_descrtiption(path_):
         # redirect stderr to stdout to make sure the git error message in case
         # we are not in a git repo doesn't appear on the screen and confuse the
         # user.
-        label = subprocess.check_output(["git", "describe"], cwd=path_,
-                                        stderr=subprocess.STDOUT).strip()
+        label = check_output(["git", "describe"], cwd=path_,
+                             stderr=subprocess.STDOUT).strip()
         return label
     except OSError:  # in case git wasn't found
         pass
