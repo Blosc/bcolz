@@ -136,7 +136,7 @@ LFLAGS = os.environ.get('LFLAGS', '').split()
 BLOSC_DIR = os.environ.get('BLOSC_DIR', '')
 
 # Sources & libraries
-inc_dirs = []
+inc_dirs = ['bcolz']
 lib_dirs = []
 libs = []
 def_macros = []
