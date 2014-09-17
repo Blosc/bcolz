@@ -646,7 +646,7 @@ class viewTest(MayBeDiskTest):
 
     def test02(self):
         """Testing view() and iterators"""
-        a = np.arange(self.N)
+        a = np.arange(self.N, dtype='uint64')
         b = bcolz.carray(a, rootdir=self.rootdir)
         c = iter(b.view())
         u = c.iter(3)
