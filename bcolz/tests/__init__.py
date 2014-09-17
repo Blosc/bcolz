@@ -15,4 +15,4 @@ function (with no arguments) which returns a test suite for some
 bcolz functionality.
 """
 
-from bcolz.tests.test_all import test, suite  # noqa
+from bcolz.tests.all import test, suite  # noqa
