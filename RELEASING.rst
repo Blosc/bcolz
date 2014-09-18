@@ -19,11 +19,11 @@ Preliminaries
 Testing
 -------
 
-* After compiling, run:
+* After compiling, run::
 
-$ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
-$ export PYTHONPATH=.  (not needed on Win)
-$ python -c "import bcolz; bcolz.test()"
+  $ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
+  $ export PYTHONPATH=.  (not needed on Win)
+  $ python -c "import bcolz; bcolz.test()"
 
 * Run the test suite in different platforms (at least Linux and
   Windows) and make sure that all tests passes.
@@ -56,7 +56,7 @@ Updating the online documentation site
 
   $ ssh blosc@xodo.blosc.org "rm -r $UPSTREAM/docs/html.bck"
 
-* Go up to the root directory for further proceeding with packging::
+* Go up to the root directory for further proceeding with packaging::
 
   $ cd ..
 
