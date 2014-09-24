@@ -453,7 +453,7 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
     Returns
     -------
     out : iterable
-        This iterable returns buffers as NumPy arays of homogeneous or
+        This iterable returns buffers as NumPy arrays of homogeneous or
         structured types, depending on whether `cobj` is a carray or a
         ctable object.
 
