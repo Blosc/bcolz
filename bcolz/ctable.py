@@ -1077,7 +1077,8 @@ class ctable(object):
         """
 
         outcols = groupby_cols + measure_cols
-        col_dtype_set = {col: self.dtype[col] for col in outcols}
+        col_dtype_set = dict((key, self.dtype[col]) for col in outcols)
+	# col_dtype_set = {col: self.dtype[col] for col in outcols}
 
         if where is not None:
             iter_gen = self.where(where, outcols=outcols)
