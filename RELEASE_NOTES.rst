@@ -41,9 +41,9 @@ Changes from 0.7.1 to 0.7.2
 
 - Fix writing absolute paths into the persistent metadata
 
-- next(carray) calls now work as they should.
+- ``next(carray)`` calls now work as they should.
 
-- Fix the ``repr`` method of the ``chunk`` class
+- Fix the ``__repr__`` method of the ``chunk`` class
 
 - Prevent sometimes incorrect assignment of dtype to name with fromhdf5
 
