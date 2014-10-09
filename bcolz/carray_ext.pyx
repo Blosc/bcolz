@@ -2612,15 +2612,17 @@ def factorize_cython(carray carray_):
     cdef dict lookup = {}
     cdef npy_intp n = len(carray_)
     cdef npy_intp i, idx
-    cdef carray labels = carray([], dtype='uint64', expectedlen=len(carray_))
+    cdef carray labels = carray([], dtype='uint8', expectedlen=len(carray_))
 
     cdef ndarray buffer
+    cdef ndarray decompressed
+    cdef char * element
 
-    buffer = np.empty(len(carray_.chunks[0][:]), dtype='uint64')
+    buffer = np.empty(len(carray_.chunks[0][:]), dtype='uint8')
 
     for chunk_ in carray_.chunks:
-
-        for i, element in enumerate(chunk_[:]):
+        decompressed = chunk_[:]
+        for i, element in enumerate(decompressed):
             try:
                 idx = lookup[element]
             except KeyError:
