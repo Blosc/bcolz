@@ -294,6 +294,7 @@ cdef class chunk:
                        object cparams)
     cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory)
+    cpdef ndarray _to_ndarray(self)
 
     property dtype:
         "The NumPy dtype for this chunk."
@@ -483,6 +484,14 @@ cdef class chunk:
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
+
+    cpdef ndarray _to_ndarray(self):
+        cdef int nitems
+        cdef ndarray return_value
+        nitems = cython.cdiv(self.nbytes, self.itemsize)
+        return_value = np.empty(nitems, dtype=self.dtype)
+        blosc_decompress(self.data, <char *> return_value.data, self.nbytes)
+        return return_value
 
     def __getitem__(self, object key):
         """__getitem__(self, key) -> values."""
