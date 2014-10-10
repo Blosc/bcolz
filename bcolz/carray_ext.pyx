@@ -61,6 +61,7 @@ IntType = np.dtype(np.int_)
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
+    npy_uint8, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
@@ -2621,7 +2622,8 @@ cdef class carray:
         fullrepr = header + str(self)
         return fullrepr
 
-
+@cython.wraparound(False)
+@cython.boundscheck(False)
 def factorize_cython(carray carray_):
     cdef chunk chunk_
     cdef npy_intp count = 0
@@ -2632,7 +2634,8 @@ def factorize_cython(carray carray_):
     cdef npy_intp i, idx
     cdef carray labels = carray([], dtype='uint8', expectedlen=len(carray_))
 
-    cdef ndarray in_buffer, out_buffer
+    cdef ndarray in_buffer
+    cdef ndarray[npy_uint8] out_buffer
     cdef char * element
 
     cdef kh_str_t *table
