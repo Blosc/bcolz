@@ -549,6 +549,9 @@ cdef class chunk:
         """__setitem__(self, key, value) -> None."""
         raise NotImplementedError()
 
+    def __len__(self):
+        return cython.cdiv(self.nbytes, self.itemsize)
+
     def __str__(self):
         """Represent the chunk as an string."""
         return str(self[:])
