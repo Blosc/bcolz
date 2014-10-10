@@ -486,11 +486,15 @@ cdef class chunk:
                 "fatal error during Blosc decompression: %d" % ret)
 
     cpdef ndarray _to_ndarray(self):
-        cdef int nitems
+        cdef int nitems, ret
         cdef ndarray return_value
         nitems = cython.cdiv(self.nbytes, self.itemsize)
         return_value = np.empty(nitems, dtype=self.dtype)
-        blosc_decompress(self.data, <char *> return_value.data, self.nbytes)
+        with nogil:
+            ret = blosc_decompress(self.data, <char *> return_value.data, self.nbytes)
+        if ret < 0:
+            raise RuntimeError(
+                "fatal error during Blosc decompression: %d" % ret)
         return return_value
 
     def __getitem__(self, object key):
