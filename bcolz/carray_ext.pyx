@@ -22,7 +22,7 @@ import cython
 
 import bcolz
 from bcolz import utils, attrs, array2string
-
+from khash cimport *
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
@@ -2625,7 +2625,9 @@ cdef class carray:
 def factorize_cython(carray carray_):
     cdef chunk chunk_
     cdef npy_intp count = 0
+    cdef int ret = 0
     cdef dict lookup = {}
+    cdef dict reverse = {}
     cdef npy_intp n = len(carray_)
     cdef npy_intp i, idx
     cdef carray labels = carray([], dtype='uint8', expectedlen=len(carray_))
@@ -2633,23 +2635,33 @@ def factorize_cython(carray carray_):
     cdef ndarray in_buffer, out_buffer
     cdef char * element
 
+    cdef kh_str_t *table
+    cdef khiter_t k
+
     out_buffer = np.empty(carray_.chunklen, dtype='uint8')
     in_buffer = np.empty(carray_.chunklen, dtype=carray_.dtype)
+    table = kh_init_str()
 
     for chunk_ in carray_.chunks:
         # decompress into in_buffer
         chunk_._getitem(0, len(in_buffer), in_buffer.data)
-        for i, element in enumerate(in_buffer):
-            try:
-                idx = lookup[element]
-            except KeyError:
-                lookup[element] = idx = count
+        for i in xrange(carray_.chunklen):
+            element = in_buffer[i]
+            k = kh_get_str(table, element)
+            if k != table.n_buckets:
+                idx = table.vals[k]
+            else:
+                k = kh_put_str(table, element, &ret)
+                table.vals[k] = count
+                idx = count
+                reverse[count] = element
                 count += 1
             out_buffer[i] = idx
+
         # compress out_buffer into labels
         labels.append(out_buffer)
 
-    return labels, lookup
+    return labels, reverse
 
 ## Local Variables:
 ## mode: python
