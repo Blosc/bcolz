@@ -1,14 +1,11 @@
 ======================
-Announcing bcolz 0.7.2
+Announcing bcolz 0.7.3
 ======================
 
 What's new
 ==========
 
-This is a maintenance release that fixes various bits and pieces. Importantly,
-compatibility with Numpy 1.9 and Cython 0.21 has been fixed and the test suit
-no longer segfaults on 32 bit UNIX. Feature-wise a new ``carray.view()`` method
-has been introduced which allows carrays to share the same raw data.
+  #XXX version-specific blurb XXX#
 
 ``bcolz`` is a renaming of the ``carray`` project.  The new goals for
 the project are to create simple, yet flexible compressed containers,
