@@ -9,7 +9,9 @@ Release notes for bcolz
 Changes from 0.7.1 to 0.7.2
 ===========================
 
-- Fix various test that were failing on 32 bit.
+- Fix various test that were failing on 32 bit, especially a segfault
+
+- Fix compatibility with Numpy 1.9
 
 - Fix compatibility with Cython 0.21.
 
