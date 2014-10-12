@@ -64,11 +64,11 @@ Updating the online documentation site
 Packaging
 ---------
 
-* Make the tarball with the command:
+* Make the tarball with the command::
 
   $ python setup.py sdist
 
-  Do a quick check that the tarball is sane.
+Do a quick check that the tarball is sane.
 
 
 Uploading
