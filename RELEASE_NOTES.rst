@@ -9,17 +9,17 @@ Release notes for bcolz
 Changes from 0.7.1 to 0.7.2
 ===========================
 
-- Fix various test that were failing on 32 bit
+- Fix various test that were failing on 32 bit.
 
-- Fix compatibility with Cython 0.21
+- Fix compatibility with Cython 0.21.
 
-- Allow tests to be executed with ``nosetests``
+- Allow tests to be executed with ``nosetests``.
 
-- Include git hash in version info when applicable
+- Include git hash in version info when applicable.
 
-- Initial support for testing on Travis CI
+- Initial support for testing on Travis CI.
 
-- Close file handle when ``nodepath`` arg to ``ctable.fromhdf5`` is incorrect
+- Close file handle when ``nodepath`` arg to ``ctable.fromhdf5`` is incorrect.
 
 - Introduced a new `carray.view()` method returning a light-weight
   carray object describing the same data than the original carray.  This
@@ -39,15 +39,15 @@ Changes from 0.7.1 to 0.7.2
 
 - Added a workaround for dealing with Unicode types.
 
-- Fix writing absolute paths into the persistent metadata
+- Fix writing absolute paths into the persistent metadata.
 
 - ``next(carray)`` calls now work as they should.
 
-- Fix the ``__repr__`` method of the ``chunk`` class
+- Fix the ``__repr__`` method of the ``chunk`` class.
 
-- Prevent sometimes incorrect assignment of dtype to name with fromhdf5
+- Prevent sometimes incorrect assignment of dtype to name with fromhdf5.
 
-- Various miscellaneous bug-fixes, pep8 improvements and typo-fixes
+- Various miscellaneous bug-fixes, pep8 improvements and typo-fixes.
 
 
 Changes from 0.7.0 to 0.7.1
