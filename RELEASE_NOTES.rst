@@ -5,6 +5,10 @@ Release notes for bcolz
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
 
+Changes from 0.7.1 to 0.7.3
+===========================
+
+- INSERT NEW FEATURE HERE
 
 Changes from 0.7.1 to 0.7.2
 ===========================
@@ -23,7 +27,7 @@ Changes from 0.7.1 to 0.7.2
 
 - Close file handle when ``nodepath`` arg to ``ctable.fromhdf5`` is incorrect.
 
-- Introduced a new `carray.view()` method returning a light-weight
+- Introduced a new ``carray.view()`` method returning a light-weight
   carray object describing the same data than the original carray.  This
   is mostly useful for iterators, but other uses could be devised as
   well.
