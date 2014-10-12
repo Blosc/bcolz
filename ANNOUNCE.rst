@@ -46,9 +46,9 @@ typically tested on both UNIX and Windows operating systems.
 Installing
 ==========
 
-bcolz is in the PyPI repository, so installing it is easy:
+bcolz is in the PyPI repository, so installing it is easy::
 
-$ pip install -U bcolz
+    $ pip install -U bcolz
 
 
 Resources
