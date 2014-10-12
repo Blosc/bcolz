@@ -5,6 +5,10 @@ Release notes for bcolz
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
 
+Changes from 0.7.1 to 0.7.3
+===========================
+
+- INSERT NEW FEATURE HERE
 
 Changes from 0.7.1 to 0.7.2
 ===========================
