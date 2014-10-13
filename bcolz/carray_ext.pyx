@@ -67,7 +67,7 @@ from definitions cimport import_array, ndarray, dtype, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
     PyArray_GETITEM, PyArray_SETITEM, \
-    npy_intp, PyBuffer_FromMemory, Py_uintptr_t
+    npy_intp, PyBuffer_FromMemory, Py_uintptr_t, Py_ssize_t
 
 #-----------------------------------------------------------------
 
@@ -2626,34 +2626,37 @@ cdef class carray:
 @cython.wraparound(False)
 @cython.boundscheck(False)
 def factorize_cython(carray carray_):
-    cdef chunk chunk_
-    cdef npy_intp count = 0
-    cdef int ret = 0
-    cdef dict lookup = {}
-    cdef dict reverse = {}
-    cdef npy_intp n = len(carray_)
-    cdef npy_intp i, idx
-    cdef carray labels = carray([], dtype='uint8', expectedlen=len(carray_))
+    cdef:
+        chunk chunk_
+        Py_ssize_t n, i, idx, count, chunklen, leftover_elements
+        int ret
+        dict reverse
+        carray labels
+        ndarray in_buffer
+        ndarray[npy_uint8] out_buffer
+        char * element
+        char * insert
+        kh_str_t *table
+        khiter_t k
 
     #TODO: check that the input is a string_ dtype type
+    #
+    count = 0
+    ret = 0
+    reverse = {}
 
+    n = len(carray_)
+    chunklen = carray_.chunklen
+    labels = carray([], dtype='uint8', expectedlen=n)
     # in-buffer isn't typed, because cython doesn't support string arrays (?)
-    cdef ndarray in_buffer
-    cdef ndarray[npy_uint8] out_buffer
-    cdef char * element
-    cdef char * insert
-
-    cdef kh_str_t *table
-    cdef khiter_t k
-
-    out_buffer = np.empty(carray_.chunklen, dtype='uint8')
-    in_buffer = np.empty(carray_.chunklen, dtype=carray_.dtype)
+    out_buffer = np.empty(chunklen, dtype='uint8')
+    in_buffer = np.empty(chunklen, dtype=carray_.dtype)
     table = kh_init_str()
 
     for chunk_ in carray_.chunks:
         # decompress into in_buffer
-        chunk_._getitem(0, len(in_buffer), in_buffer.data)
-        for i in xrange(carray_.chunklen):
+        chunk_._getitem(0, chunklen, in_buffer.data)
+        for i in range(chunklen):
             element = in_buffer[i]
             k = kh_get_str(table, element)
             if k != table.n_buckets:
@@ -2665,17 +2668,18 @@ def factorize_cython(carray carray_):
                 # TODO: is strcpy really the best way to copy a string?
                 strcpy(insert, element)
                 k = kh_put_str(table, insert, &ret)
-                table.vals[k] = count
-                idx = count
+                table.vals[k] = idx = count
                 reverse[count] = element
                 count += 1
             out_buffer[i] = idx
         # compress out_buffer into labels
         labels.append(out_buffer)
 
+    leftover_elements = cython.cdiv(carray_.leftover, carray_.atomsize)
+
     # now for the leftovers:
-    out_buffer = np.empty(cython.cdiv(carray_.leftover, carray_.atomsize), dtype='uint8')
-    for i in xrange(cython.cdiv(carray_.leftover, carray_.atomsize)):
+    out_buffer = np.empty(leftover_elements, dtype='uint8')
+    for i in range(leftover_elements):
         element = carray_.leftover_array[i]
         k = kh_get_str(table, element)
         if k != table.n_buckets:
@@ -2687,8 +2691,7 @@ def factorize_cython(carray carray_):
             # TODO: is strcpy really the best way to copy a string?
             strcpy(insert, element)
             k = kh_put_str(table, insert, &ret)
-            table.vals[k] = count
-            idx = count
+            table.vals[k] = idx = count
             reverse[count] = element
             count += 1
         out_buffer[i] = idx
