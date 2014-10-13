@@ -2643,6 +2643,7 @@ cdef void _factorize_helper(Py_ssize_t iter_range,
     ret = 0
 
     for i in range(iter_range):
+        # TODO: Consider indexing directly into the array for efficiency
         element = in_buffer[i]
         k = kh_get_str(table, element)
         if k != table.n_buckets:
