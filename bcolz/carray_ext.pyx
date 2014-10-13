@@ -2672,6 +2672,7 @@ def factorize_cython(carray carray_):
         ndarray[npy_uint8] out_buffer
         kh_str_t *table
 
+    #TODO: add a keyword argument to allow passing in an output carray.
     #TODO: check that the input is a string_ dtype type
     #
     count = 0
