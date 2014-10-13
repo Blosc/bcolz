@@ -2625,19 +2625,51 @@ cdef class carray:
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
+cdef void _factorize_helper(Py_ssize_t iter_range,
+                       Py_ssize_t allocation_size,
+                       ndarray in_buffer,
+                       ndarray[npy_uint8] out_buffer,
+                       kh_str_t *table,
+                       Py_ssize_t * count,
+                       dict reverse,
+                       ):
+    cdef:
+        Py_ssize_t i, idx
+        int ret
+        char * element
+        char * insert
+        khiter_t k
+
+    ret = 0
+
+    for i in range(iter_range):
+        element = in_buffer[i]
+        k = kh_get_str(table, element)
+        if k != table.n_buckets:
+            idx = table.vals[k]
+        else:
+            # allocate enough memory to hold the string, add one for the
+            # null byte that marks the end of the string.
+            insert = <char *>malloc(allocation_size)
+            # TODO: is strcpy really the best way to copy a string?
+            strcpy(insert, element)
+            k = kh_put_str(table, insert, &ret)
+            table.vals[k] = idx = count[0]
+            reverse[count[0]] = element
+            count[0] += 1
+        out_buffer[i] = idx
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
 def factorize_cython(carray carray_):
     cdef:
         chunk chunk_
-        Py_ssize_t n, i, idx, count, chunklen, leftover_elements
-        int ret
+        Py_ssize_t n, count, chunklen, leftover_elements
         dict reverse
         carray labels
         ndarray in_buffer
         ndarray[npy_uint8] out_buffer
-        char * element
-        char * insert
         kh_str_t *table
-        khiter_t k
 
     #TODO: check that the input is a string_ dtype type
     #
@@ -2656,48 +2688,30 @@ def factorize_cython(carray carray_):
     for chunk_ in carray_.chunks:
         # decompress into in_buffer
         chunk_._getitem(0, chunklen, in_buffer.data)
-        for i in range(chunklen):
-            element = in_buffer[i]
-            k = kh_get_str(table, element)
-            if k != table.n_buckets:
-                idx = table.vals[k]
-            else:
-                # allocate enough memory to hold the string, add one for the
-                # null byte that marks the end of the string.
-                insert = <char *>malloc(carray_.dtype.itemsize + 1)
-                # TODO: is strcpy really the best way to copy a string?
-                strcpy(insert, element)
-                k = kh_put_str(table, insert, &ret)
-                table.vals[k] = idx = count
-                reverse[count] = element
-                count += 1
-            out_buffer[i] = idx
+        _factorize_helper(chunklen,
+                        carray_.dtype.itemsize + 1,
+                        in_buffer,
+                        out_buffer,
+                        table,
+                        &count,
+                        reverse,
+                        )
         # compress out_buffer into labels
         labels.append(out_buffer)
 
     leftover_elements = cython.cdiv(carray_.leftover, carray_.atomsize)
 
-    # now for the leftovers:
-    out_buffer = np.empty(leftover_elements, dtype='uint8')
-    for i in range(leftover_elements):
-        element = carray_.leftover_array[i]
-        k = kh_get_str(table, element)
-        if k != table.n_buckets:
-            idx = table.vals[k]
-        else:
-            # allocate enough memory to hold the string, add one for the
-            # null byte that marks the end of the string.
-            insert = <char *>malloc(carray_.dtype.itemsize + 1)
-            # TODO: is strcpy really the best way to copy a string?
-            strcpy(insert, element)
-            k = kh_put_str(table, insert, &ret)
-            table.vals[k] = idx = count
-            reverse[count] = element
-            count += 1
-        out_buffer[i] = idx
+    _factorize_helper(leftover_elements,
+                      carray_.dtype.itemsize + 1,
+                      carray_.leftover_array,
+                      out_buffer,
+                      table,
+                      &count,
+                      reverse,
+                      )
 
     # compress out_buffer into labels
-    labels.append(out_buffer)
+    labels.append(out_buffer[:leftover_elements])
 
     # TODO: deallocate the hashtable and all the keys to avoid leaking memory.
 
