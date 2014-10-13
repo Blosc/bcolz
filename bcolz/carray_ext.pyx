@@ -2635,6 +2635,9 @@ def factorize_cython(carray carray_):
     cdef npy_intp i, idx
     cdef carray labels = carray([], dtype='uint8', expectedlen=len(carray_))
 
+    #TODO: check that the input is a string_ dtype type
+
+    # in-buffer isn't typed, because cython doesn't support string arrays (?)
     cdef ndarray in_buffer
     cdef ndarray[npy_uint8] out_buffer
     cdef char * element
@@ -2656,7 +2659,10 @@ def factorize_cython(carray carray_):
             if k != table.n_buckets:
                 idx = table.vals[k]
             else:
-                insert = <char *>malloc(3)
+                # allocate enough memory to hold the string, add one for the
+                # null byte that marks the end of the string.
+                insert = <char *>malloc(carray_.dtype.itemsize + 1)
+                # TODO: is strcpy really the best way to copy a string?
                 strcpy(insert, element)
                 k = kh_put_str(table, insert, &ret)
                 table.vals[k] = count
@@ -2664,7 +2670,6 @@ def factorize_cython(carray carray_):
                 reverse[count] = element
                 count += 1
             out_buffer[i] = idx
-
         # compress out_buffer into labels
         labels.append(out_buffer)
 
