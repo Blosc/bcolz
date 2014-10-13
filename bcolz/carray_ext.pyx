@@ -2700,7 +2700,7 @@ def factorize_cython(carray carray_):
         labels.append(out_buffer)
 
     leftover_elements = cython.cdiv(carray_.leftover, carray_.atomsize)
-
+    # TODO what if there are no leftover elements
     _factorize_helper(leftover_elements,
                       carray_.dtype.itemsize + 1,
                       carray_.leftover_array,
