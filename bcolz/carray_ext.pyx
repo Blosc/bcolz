@@ -2673,6 +2673,31 @@ def factorize_cython(carray carray_):
         # compress out_buffer into labels
         labels.append(out_buffer)
 
+    # now for the leftovers:
+    out_buffer = np.empty(cython.cdiv(carray_.leftover, carray_.atomsize), dtype='uint8')
+    for i in xrange(cython.cdiv(carray_.leftover, carray_.atomsize)):
+        element = carray_.leftover_array[i]
+        k = kh_get_str(table, element)
+        if k != table.n_buckets:
+            idx = table.vals[k]
+        else:
+            # allocate enough memory to hold the string, add one for the
+            # null byte that marks the end of the string.
+            insert = <char *>malloc(carray_.dtype.itemsize + 1)
+            # TODO: is strcpy really the best way to copy a string?
+            strcpy(insert, element)
+            k = kh_put_str(table, insert, &ret)
+            table.vals[k] = count
+            idx = count
+            reverse[count] = element
+            count += 1
+        out_buffer[i] = idx
+
+    # compress out_buffer into labels
+    labels.append(out_buffer)
+
+    # TODO: deallocate the hashtable and all the keys to avoid leaking memory.
+
     return labels, reverse
 
 ## Local Variables:
