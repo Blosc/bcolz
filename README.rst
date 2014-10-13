@@ -115,7 +115,7 @@ You can find the online manual at:
 http://bcolz.blosc.org
 
 but of course, you can always access docstrings from the console
-(i.e. help(bcolz.ctable)).
+(i.e. ``help(bcolz.ctable)``).
 
 Also, you may want to look at the bench/ directory for some examples
 of use.
