@@ -23,6 +23,7 @@ import cython
 import bcolz
 from bcolz import utils, attrs, array2string
 from khash cimport *
+from libc.string cimport strcpy
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
@@ -2637,6 +2638,7 @@ def factorize_cython(carray carray_):
     cdef ndarray in_buffer
     cdef ndarray[npy_uint8] out_buffer
     cdef char * element
+    cdef char * insert
 
     cdef kh_str_t *table
     cdef khiter_t k
@@ -2654,7 +2656,9 @@ def factorize_cython(carray carray_):
             if k != table.n_buckets:
                 idx = table.vals[k]
             else:
-                k = kh_put_str(table, element, &ret)
+                insert = <char *>malloc(3)
+                strcpy(insert, element)
+                k = kh_put_str(table, insert, &ret)
                 table.vals[k] = count
                 idx = count
                 reverse[count] = element
