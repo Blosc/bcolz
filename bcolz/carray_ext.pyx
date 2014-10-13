@@ -2715,7 +2715,7 @@ def factorize_cython(carray carray_):
     # compress out_buffer into labels
     labels.append(out_buffer[:leftover_elements])
 
-    # TODO: deallocate the hashtable and all the keys to avoid leaking memory.
+    kh_destroy_str(table)
 
     return labels, reverse
 
