@@ -863,10 +863,22 @@ cdef class carray:
 
     """
 
-    property leftovers:
+    property leftover_ptr:
         def __get__(self):
             # Pointer to the leftovers chunk
             return self.lastchunkarr.ctypes.data
+
+    property leftover_array:
+        def __get__(self):
+            return self.lastchunkarr
+
+    property leftover_bytes:
+        def __get__(self):
+            return self.leftover
+
+    property leftover_elements:
+        def __get__(self):
+            return cython.cdiv(self.leftover, self.atomsize)
 
     property nchunks:
         def __get__(self):
@@ -882,9 +894,6 @@ cdef class carray:
             return [(i * chunklen, (i + 1) * chunklen) for i in
                     xrange(nchunks)]
 
-    property leftover_array:
-        def __get__(self):
-            return self.lastchunkarr
 
     property attrs:
         "The attribute accessor."
