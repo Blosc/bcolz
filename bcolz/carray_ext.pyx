@@ -2662,12 +2662,11 @@ cdef void _factorize_helper(Py_ssize_t iter_range,
 
 @cython.wraparound(False)
 @cython.boundscheck(False)
-def factorize_cython(carray carray_):
+def factorize_cython(carray carray_, carray labels=None):
     cdef:
         chunk chunk_
         Py_ssize_t n, count, chunklen, leftover_elements
         dict reverse
-        carray labels
         ndarray in_buffer
         ndarray[npy_uint8] out_buffer
         kh_str_t *table
@@ -2681,7 +2680,8 @@ def factorize_cython(carray carray_):
 
     n = len(carray_)
     chunklen = carray_.chunklen
-    labels = carray([], dtype='uint8', expectedlen=n)
+    if labels is None:
+        labels = carray([], dtype='uint8', expectedlen=n)
     # in-buffer isn't typed, because cython doesn't support string arrays (?)
     out_buffer = np.empty(chunklen, dtype='uint8')
     in_buffer = np.empty(chunklen, dtype=carray_.dtype)
