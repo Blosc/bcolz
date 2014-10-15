@@ -62,7 +62,7 @@ IntType = np.dtype(np.int_)
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
-    npy_uint8, \
+    npy_uint64, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
@@ -2628,7 +2628,7 @@ cdef class carray:
 cdef void _factorize_helper(Py_ssize_t iter_range,
                        Py_ssize_t allocation_size,
                        ndarray in_buffer,
-                       ndarray[npy_uint8] out_buffer,
+                       ndarray[npy_uint64] out_buffer,
                        kh_str_t *table,
                        Py_ssize_t * count,
                        dict reverse,
@@ -2668,12 +2668,10 @@ def factorize_cython(carray carray_, carray labels=None):
         Py_ssize_t n, i, count, chunklen, leftover_elements
         dict reverse
         ndarray in_buffer
-        ndarray[npy_uint8] out_buffer
+        ndarray[npy_uint64] out_buffer
         kh_str_t *table
 
-    #TODO: add a keyword argument to allow passing in an output carray.
     #TODO: check that the input is a string_ dtype type
-    #
     count = 0
     ret = 0
     reverse = {}
@@ -2681,9 +2679,9 @@ def factorize_cython(carray carray_, carray labels=None):
     n = len(carray_)
     chunklen = carray_.chunklen
     if labels is None:
-        labels = carray([], dtype='uint8', expectedlen=n)
+        labels = carray([], dtype='uint64', expectedlen=n)
     # in-buffer isn't typed, because cython doesn't support string arrays (?)
-    out_buffer = np.empty(chunklen, dtype='uint8')
+    out_buffer = np.empty(chunklen, dtype='uint64')
     in_buffer = np.empty(chunklen, dtype=carray_.dtype)
     table = kh_init_str()
 
