@@ -2665,7 +2665,7 @@ cdef void _factorize_helper(Py_ssize_t iter_range,
 def factorize_cython(carray carray_, carray labels=None):
     cdef:
         chunk chunk_
-        Py_ssize_t n, count, chunklen, leftover_elements
+        Py_ssize_t n, i, count, chunklen, leftover_elements
         dict reverse
         ndarray in_buffer
         ndarray[npy_uint8] out_buffer
@@ -2687,7 +2687,8 @@ def factorize_cython(carray carray_, carray labels=None):
     in_buffer = np.empty(chunklen, dtype=carray_.dtype)
     table = kh_init_str()
 
-    for chunk_ in carray_.chunks:
+    for i in range(carray_.nchunks):
+        chunk_ = carray_.chunks[i]
         # decompress into in_buffer
         chunk_._getitem(0, chunklen, in_buffer.data)
         _factorize_helper(chunklen,
