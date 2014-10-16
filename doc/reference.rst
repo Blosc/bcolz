@@ -529,7 +529,7 @@ carray methods
 
     This call should typically be done after performing modifications
     (__settitem__(), append()) in persistence mode.  If you don't do this, you
-    risk loosing part of your modifications.
+    risk losing part of your modifications.
 
 
   .. py:method:: free_cachemem()
@@ -891,7 +891,7 @@ ctable methods
 
     This call should typically be done after performing modifications
     (__settitem__(), append()) in persistence mode.  If you don't do this, you
-    risk loosing part of your modifications.
+    risk losing part of your modifications.
 
 
   .. py:method:: free_cachemem()

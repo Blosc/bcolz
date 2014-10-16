@@ -2562,7 +2562,7 @@ cdef class carray:
 
         This call should typically be done after performing modifications
         (__settitem__(), append()) in persistence mode.  If you don't do this,
-        you risk loosing part of your modifications.
+        you risk losing part of your modifications.
 
         """
         cdef chunk chunk_
