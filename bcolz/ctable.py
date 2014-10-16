@@ -1197,7 +1197,7 @@ class ctable(object):
 
         This call should typically be done after performing modifications
         (__settitem__(), append()) in persistence mode.  If you don't do this,
-        you risk loosing part of your modifications.
+        you risk losing part of your modifications.
 
         """
         for name in self.names:
