@@ -14,6 +14,7 @@ import glob
 from distutils.core import Extension
 from distutils.core import setup
 import textwrap
+import re, platform
 
 
 ########### Some utils for version checking ################
@@ -181,7 +182,8 @@ else:
     libs += ['blosc']
 
 # Add -msse2 flag for optimizing shuffle in included c-blosc
-if os.name == 'posix':
+# (only necessary for 32-bit Intel architectures)
+if os.name == 'posix' and re.match("i.86", platform.machine()) != None:
     CFLAGS.append("-msse2")
 
 
