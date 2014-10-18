@@ -22,7 +22,8 @@ import cython
 
 import bcolz
 from bcolz import utils, attrs, array2string
-
+from khash cimport *
+from libc.string cimport strcpy
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
@@ -61,11 +62,12 @@ IntType = np.dtype(np.int_)
 # numpy functions & objects
 from definitions cimport import_array, ndarray, dtype, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
+    npy_uint64, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
     PyArray_GETITEM, PyArray_SETITEM, \
-    npy_intp, PyBuffer_FromMemory, Py_uintptr_t
+    npy_intp, PyBuffer_FromMemory, Py_uintptr_t, Py_ssize_t
 
 #-----------------------------------------------------------------
 
@@ -294,6 +296,7 @@ cdef class chunk:
                        object cparams)
     cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory)
+    cpdef ndarray _to_ndarray(self)
 
     property dtype:
         "The NumPy dtype for this chunk."
@@ -484,6 +487,18 @@ cdef class chunk:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
 
+    cpdef ndarray _to_ndarray(self):
+        cdef int nitems, ret
+        cdef ndarray return_value
+        nitems = cython.cdiv(self.nbytes, self.itemsize)
+        return_value = np.empty(nitems, dtype=self.dtype)
+        with nogil:
+            ret = blosc_decompress(self.data, <char *> return_value.data, self.nbytes)
+        if ret < 0:
+            raise RuntimeError(
+                "fatal error during Blosc decompression: %d" % ret)
+        return return_value
+
     def __getitem__(self, object key):
         """__getitem__(self, key) -> values."""
         cdef ndarray array
@@ -535,6 +550,9 @@ cdef class chunk:
     def __setitem__(self, object key, object value):
         """__setitem__(self, key, value) -> None."""
         raise NotImplementedError()
+
+    def __len__(self):
+        return cython.cdiv(self.nbytes, self.itemsize)
 
     def __str__(self):
         """Represent the chunk as an string."""
@@ -2605,7 +2623,100 @@ cdef class carray:
         fullrepr = header + str(self)
         return fullrepr
 
+@cython.wraparound(False)
+@cython.boundscheck(False)
+cdef void _factorize_helper(Py_ssize_t iter_range,
+                       Py_ssize_t allocation_size,
+                       ndarray in_buffer,
+                       ndarray[npy_uint64] out_buffer,
+                       kh_str_t *table,
+                       Py_ssize_t * count,
+                       dict reverse,
+                       ):
+    cdef:
+        Py_ssize_t i, idx
+        int ret
+        char * element
+        char * insert
+        khiter_t k
 
+    ret = 0
+
+    for i in range(iter_range):
+        # TODO: Consider indexing directly into the array for efficiency
+        element = in_buffer[i]
+        k = kh_get_str(table, element)
+        if k != table.n_buckets:
+            idx = table.vals[k]
+        else:
+            # allocate enough memory to hold the string, add one for the
+            # null byte that marks the end of the string.
+            insert = <char *>malloc(allocation_size)
+            # TODO: is strcpy really the best way to copy a string?
+            strcpy(insert, element)
+            k = kh_put_str(table, insert, &ret)
+            table.vals[k] = idx = count[0]
+            reverse[count[0]] = element
+            count[0] += 1
+        out_buffer[i] = idx
+
+@cython.wraparound(False)
+@cython.boundscheck(False)
+def factorize_cython(carray carray_, carray labels=None):
+    cdef:
+        chunk chunk_
+        Py_ssize_t n, i, count, chunklen, leftover_elements
+        dict reverse
+        ndarray in_buffer
+        ndarray[npy_uint64] out_buffer
+        kh_str_t *table
+
+    #TODO: check that the input is a string_ dtype type
+    count = 0
+    ret = 0
+    reverse = {}
+
+    n = len(carray_)
+    chunklen = carray_.chunklen
+    if labels is None:
+        labels = carray([], dtype='uint64', expectedlen=n)
+    # in-buffer isn't typed, because cython doesn't support string arrays (?)
+    out_buffer = np.empty(chunklen, dtype='uint64')
+    in_buffer = np.empty(chunklen, dtype=carray_.dtype)
+    table = kh_init_str()
+
+    for i in range(carray_.nchunks):
+        chunk_ = carray_.chunks[i]
+        # decompress into in_buffer
+        chunk_._getitem(0, chunklen, in_buffer.data)
+        _factorize_helper(chunklen,
+                        carray_.dtype.itemsize + 1,
+                        in_buffer,
+                        out_buffer,
+                        table,
+                        &count,
+                        reverse,
+                        )
+        # compress out_buffer into labels
+        labels.append(out_buffer)
+
+    leftover_elements = cython.cdiv(carray_.leftover, carray_.atomsize)
+    # TODO what if there are no leftover elements
+    _factorize_helper(leftover_elements,
+                      carray_.dtype.itemsize + 1,
+                      carray_.leftover_array,
+                      out_buffer,
+                      table,
+                      &count,
+                      reverse,
+                      )
+
+    # compress out_buffer into labels
+    labels.append(out_buffer[:leftover_elements])
+
+    kh_destroy_str(table)
+
+    return labels, reverse
 
 ## Local Variables:
 ## mode: python

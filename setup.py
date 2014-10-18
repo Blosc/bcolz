@@ -141,7 +141,7 @@ inc_dirs = ['bcolz']
 lib_dirs = []
 libs = []
 def_macros = []
-sources = ["bcolz/carray_ext.pyx"]
+sources = ["bcolz/carray_ext.pyx", "bcolz/khash.pxd"]
 
 # Include NumPy header dirs
 from numpy.distutils.misc_util import get_numpy_include_dirs
