@@ -18,6 +18,9 @@ from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless)
 import bcolz
 from bcolz.py2help import xrange
+import pickle
+import os
+import shutil
 
 
 class createTest(MayBeDiskTest):
@@ -1860,6 +1863,29 @@ class conversionTest(TestCase):
         for key in ct.names:
             assert_allclose(ct2[key][:], ct[key][:])
         os.remove(tmpfile)
+
+
+class pickleTest(TestCase):
+    def setUp(self):
+        self.rootdir = 'foo.bcolz'
+        if os.path.exists(self.rootdir):
+            shutil.rmtree(self.rootdir)
+
+    def tearDown(self):
+        if os.path.exists(self.rootdir):
+            shutil.rmtree(self.rootdir)
+
+    def test_pickleable(self):
+        a = np.arange(1e2)
+        b = bcolz.ctable([[1, 2, 3], [1, 2, 3]],
+                         names=['a', 'b'],
+                         rootdir=self.rootdir)
+        s = pickle.dumps(b)
+        self.assertEquals(type(s), str)
+
+        b2 = pickle.loads(s)
+        self.assertEquals(b2.rootdir, b.rootdir)
+        self.assertEquals(type(b2), type(b))
 
 
 if __name__ == '__main__':
