@@ -23,7 +23,7 @@ import cython
 import bcolz
 from bcolz import utils, attrs, array2string
 
-from .pickle_support import build_carray
+from .utils import build_carray
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
