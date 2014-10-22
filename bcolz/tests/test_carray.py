@@ -61,16 +61,8 @@ class chunkTest(TestCase):
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
 
-class pickleTest(TestCase):
-    def setUp(self):
-        self.rootdir = 'foo.bcolz'
-        if os.path.exists(self.rootdir):
-            shutil.rmtree(self.rootdir)
-
-    def tearDown(self):
-        if os.path.exists(self.rootdir):
-            shutil.rmtree(self.rootdir)
-
+class pickleTest(MayBeDiskTest, TestCase):
+    disk=True
     def test_pickleable(self):
         a = np.arange(1e2)
         b = bcolz.carray(a, rootdir=self.rootdir)
