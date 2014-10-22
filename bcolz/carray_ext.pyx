@@ -1714,8 +1714,9 @@ cdef class carray:
 
         """
         cdef chunk chunk_
-        cdef npy_intp nchunk, nchunks
+        cdef npy_intp nchunk, nchunks, nelements
         cdef object result
+        cdef ndarray buffer_
 
         if dtype is None:
             dtype = self._dtype.base
@@ -1732,6 +1733,11 @@ cdef class carray:
         result = np.zeros(1, dtype=dtype)[0]
 
         nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
+        if self.ndim == 1:
+            nelements = self.chunklen
+        else:
+            nelements = self.chunklen * reduce(lambda x, y: x * y, self.shape[1:])
+        buffer_ = np.zeros(nelements, dtype=self.dtype)
         for nchunk from 0 <= nchunk < nchunks:
             chunk_ = self.chunks[nchunk]
             if chunk_.isconstant:
@@ -1739,7 +1745,8 @@ cdef class carray:
             elif self._dtype.type == np.bool_:
                 result += chunk_.true_count
             else:
-                result += chunk_[:].sum(dtype=dtype)
+                chunk_._getitem(0, self.chunklen, buffer_.data)
+                result += buffer_.sum(dtype=dtype)
         if self.leftover:
             leftover = self.len - nchunks * self._chunklen
             result += self.lastchunkarr[:leftover].sum(dtype=dtype)
