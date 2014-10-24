@@ -1866,9 +1866,10 @@ class conversionTest(TestCase):
 
 
 class pickleTest(MayBeDiskTest, TestCase):
+
     disk = True
+
     def test_pickleable(self):
-        a = np.arange(1e2)
         b = bcolz.ctable([[1, 2, 3], [1, 2, 3]],
                          names=['a', 'b'],
                          rootdir=self.rootdir)
