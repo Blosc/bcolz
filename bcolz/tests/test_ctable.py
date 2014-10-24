@@ -1865,16 +1865,8 @@ class conversionTest(TestCase):
         os.remove(tmpfile)
 
 
-class pickleTest(TestCase):
-    def setUp(self):
-        self.rootdir = 'foo.bcolz'
-        if os.path.exists(self.rootdir):
-            shutil.rmtree(self.rootdir)
-
-    def tearDown(self):
-        if os.path.exists(self.rootdir):
-            shutil.rmtree(self.rootdir)
-
+class pickleTest(MayBeDiskTest, TestCase):
+    disk = True
     def test_pickleable(self):
         a = np.arange(1e2)
         b = bcolz.ctable([[1, 2, 3], [1, 2, 3]],
