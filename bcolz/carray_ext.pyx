@@ -23,6 +23,7 @@ import cython
 import bcolz
 from bcolz import utils, attrs, array2string
 
+from .utils import build_carray
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
@@ -2605,7 +2606,8 @@ cdef class carray:
         fullrepr = header + str(self)
         return fullrepr
 
-
+    def __reduce__(self):
+        return (build_carray, (self.rootdir,))
 
 ## Local Variables:
 ## mode: python
