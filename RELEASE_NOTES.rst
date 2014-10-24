@@ -5,13 +5,15 @@ Release notes for bcolz
 :Author: Francesc Alted
 :Contact: francesc@blosc.io
 
-Changes from 0.7.1 to 0.7.3
+Changes from 0.7.2 to 0.7.3
 ===========================
 
 - Added support for pickling persistent carray/ctable objects.  Basically,
   what is serialized is the `rootdir` so the data is still sitting on disk
-  and the original `rootdir` is still needed for unpickling.  Thanks to
-  Matthew Rocklin and Hugo Shi.
+  and the original contents in `rootdir` are still needed for unpickling.
+  This was PR #79.  Thanks to Matthew Rocklin and Hugo Shi.
+
+- Various typo fixes. (@talumbau and others )
 
 Changes from 0.7.1 to 0.7.2
 ===========================
