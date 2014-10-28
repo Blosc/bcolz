@@ -32,8 +32,8 @@ using compression:
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb
 
 
-Rational
---------
+Rationale
+---------
 
 By using compression, you can deal with more data using the same
 amount of memory, which is very good on itself.  But in case you are
