@@ -283,18 +283,6 @@ cdef class chunk:
     This class is meant to be used only by the `carray` class.
 
     """
-    cdef char typekind, isconstant
-    cdef public int atomsize, itemsize, blocksize
-    cdef public int nbytes, cbytes, cdbytes
-    cdef int true_count
-    cdef char *data
-    cdef object atom, constant, dobject
-
-    cdef void _getitem(self, int start, int stop, char *dest)
-    cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
-                       object cparams)
-    cdef compress_arrdata(self, ndarray array, int itemsize,
-                          object cparams, object _memory)
 
     property dtype:
         "The NumPy dtype for this chunk."
@@ -353,7 +341,7 @@ cdef class chunk:
         self.cdbytes = cbytes
         self.blocksize = blocksize
 
-    cdef compress_arrdata(self, ndarray array, int itemsize,
+    cdef compress_arrdata(self, ndarray_t array, int itemsize,
                           object cparams, object _memory):
         """Compress data in `array` and put it in ``self.data``"""
         cdef size_t nbytes, cbytes, blocksize, footprint
@@ -653,11 +641,6 @@ cdef decode_blosc_header(buffer_):
 
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
-    cdef object _rootdir, _mode
-    cdef object dtype, cparams, lastchunkarr
-    cdef object chunk_cached
-    cdef npy_intp nchunks, nchunk_cached, len
-
     property mode:
         "The mode used to create/open the `mode`."
         def __get__(self):
@@ -859,29 +842,6 @@ cdef class carray:
 
     """
 
-    cdef public int itemsize, atomsize
-    cdef int _chunksize, _chunklen, leftover
-    cdef int nrowsinbuf, _row
-    cdef int sss_mode, wheretrue_mode, where_mode
-    cdef npy_intp startb, stopb
-    cdef npy_intp start, stop, step, nextelement
-    cdef npy_intp _nrow, nrowsread
-    cdef npy_intp _nbytes, _cbytes
-    cdef npy_intp nhits, limit, skip
-    cdef npy_intp expectedlen
-    cdef char *lastchunk
-    cdef object lastchunkarr, where_arr, arr1
-    cdef object _cparams, _dflt
-    cdef object _dtype
-    cdef public object chunks
-    cdef object _rootdir, datadir, metadir, _mode
-    cdef object _attrs, iter_exhausted
-    cdef ndarray iobuf, where_buf
-    # For block cache
-    cdef int idxcache
-    cdef ndarray blockcache
-    cdef char *datacache
-
     property leftovers:
         def __get__(self):
             # Pointer to the leftovers chunk
@@ -1018,17 +978,17 @@ cdef class carray:
         self.where_mode = False
         self.idxcache = -1  # cache not initialized
 
-    cdef _adapt_dtype(self, dtype, shape):
+    cdef _adapt_dtype(self, dtype_, shape):
         """adapt the dtype to one supported in carray.
         returns the adapted type with the shape modified accordingly.
         """
-        if dtype.hasobject:
-            if dtype != np.object_:
-                raise TypeError(repr(dtype) + " is not a supported dtype")
+        if dtype_.hasobject:
+            if dtype_ != np.object_:
+                raise TypeError(repr(dtype_) + " is not a supported dtype")
         else:
-            dtype = np.dtype((dtype, shape[1:]))
+            dtype_ = np.dtype((dtype_, shape[1:]))
 
-        return dtype
+        return dtype_
 
     def create_carray(self, array, cparams, dtype, dflt,
                       expectedlen, chunklen, rootdir, mode):
