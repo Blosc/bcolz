@@ -1,0 +1,27 @@
+package:
+  name: bcolz 
+  version: "0.7.2"
+
+build:
+    number: {{environ.get('BINSTAR_BUILD', 1)}}
+
+requirements:
+  build:
+    - python
+    - cython
+    - numpy
+    - unittest2 [py26]
+
+  run:
+    - python
+    - numpy
+
+test:
+  requires:
+    - unittest2 [py26]
+  commands:
+    - python -c "import bcolz; bcolz.test()"
+
+about:
+  home: http://bcolz.blosc.org/
+  license: BSD
