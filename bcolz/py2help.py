@@ -91,5 +91,8 @@ else:
             cmd = kwargs.get("args")
             if cmd is None:
                 cmd = popenargs[0]
-            raise CalledProcessError(retcode, cmd, output=output)
+            try:
+                raise CalledProcessError(retcode, cmd, output=output)
+            except TypeError:  # py26 doesn't have the output argument
+                raise CalledProcessError(retcode, cmd)
         return output
