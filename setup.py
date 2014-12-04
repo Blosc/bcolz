@@ -73,7 +73,7 @@ if sys.version_info[0] == 2:
         try:
             import unittest2
         except ImportError:
-            print("You need unittest2 for running blz tests with Python 2.6!")
+            print("You need unittest2 for running bcolz tests with Python 2.6!")
 elif sys.version_info[0] == 3:
     if sys.version_info[1] < 2:
         exit_with_error("You need Python 3.2 or greater to run bcolz!")
