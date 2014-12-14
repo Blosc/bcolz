@@ -64,7 +64,12 @@ from bcolz.toplevel import (
 from bcolz.chunked_eval import eval
 from bcolz.defaults import defaults
 from bcolz.version import __version__
-from bcolz.tests import test
+try:
+    from bcolz.tests import test
+except ImportError:
+    def test(*args, **kwargs):
+        print("Could not import tests.\n"
+              "If on Python2.6 please install unittest2")
 
 
 def get_git_descrtiption(path_):
