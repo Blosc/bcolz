@@ -1085,7 +1085,7 @@ class ctable(object):
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
         # Column name or expression
-        elif type(key) is str:
+        elif isinstance(key, basestring):
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key, depth=4)
