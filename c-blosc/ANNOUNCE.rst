@@ -1,14 +1,14 @@
 ===============================================================
- Announcing c-blosc 1.4.1
+ Announcing c-blosc 1.5.0
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release, where a bug in blosc_getitem() introduced
-in 1.4.0 has been tracked down and squashed.  If you use this function,
-please update your c-blosc copy.
+This is maintenance release, where quite a few improvements happened
+in the included HDF5 filter, better support for non SSE2 platforms and
+LZ4 sources have been updated to 1.5.0.
 
 For more info, please see the release notes in:
 
@@ -60,9 +60,3 @@ http://groups.google.es/group/blosc
 
 Enjoy Data!
 
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 70
-.. End:
