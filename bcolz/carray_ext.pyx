@@ -1341,7 +1341,7 @@ cdef class carray:
 
         # Appending a single row should be supported
         shapez = shape_to_tuple(arrcpy.shape, arrcpy.ndim)
-        print shapez
+        #print shapez
         if shapez == self._dtype.shape:
             arrcpy = arrcpy.reshape((1,) + shape_to_tuple(arrcpy.shape, arrcpy.ndim))
         if  shape_to_tuple(arrcpy.shape + 1, arrcpy.ndim - 1) != self._dtype.shape:
