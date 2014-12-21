@@ -104,6 +104,12 @@ class createTest(MayBeDiskTest):
         mt = t[:]
         t.free_cachemem()
 
+    def test05(self):
+        """Testing unicode string in column names. """
+        t = bcolz.ctable(([1], [2]), (u'f0', u'f1'), rootdir=self.rootdir)
+        # this should not raise an error
+        t[u'f0'].rootdir
+
 
 class createMemoryTest(createTest, TestCase):
     disk = False
