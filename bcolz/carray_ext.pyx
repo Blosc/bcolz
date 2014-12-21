@@ -309,16 +309,19 @@ cdef class chunk:
         self.atom = atom
         self.atomsize = atom.itemsize
         dtype_ = atom.base
-        self.typekind = dtype_.kind
+        # this here is probably wrong, it should be kind, but the dtype that
+        # comes from the numpy.pxd instead of definitions.pxd doesn't seem to
+        # have kind.
+        self.typekind = dtype_.type_num
         # Hack for allowing strings with len > BLOSC_MAX_TYPESIZE
         if self.typekind == 'S':
             itemsize = 1
         elif self.typekind == 'U':
             itemsize = 4
-        elif self.typekind == 'V' and dtype_.elsize > BLOSC_MAX_TYPESIZE:
+        elif self.typekind == 'V' and dtype_.itemsize > BLOSC_MAX_TYPESIZE:
             itemsize = 1
         else:
-            itemsize = dtype_.elsize
+            itemsize = dtype_.itemsize
         if itemsize > BLOSC_MAX_TYPESIZE:
             raise TypeError(
                 "typesize is %d and bcolz does not currently support data "
