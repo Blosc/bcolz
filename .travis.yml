@@ -10,6 +10,6 @@ install:
 - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2 --upgrade; fi
 - python setup.py build_ext --inplace
 script:
-- python -c "import bcolz; bcolz.test()"
+- python -c "import bcolz; bcolz.test(heavy=True)"
 notifications:
 email: false
