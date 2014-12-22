@@ -18,7 +18,7 @@ from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
-from bcolz.py2help import xrange
+from bcolz.py2help import xrange, PY2
 from bcolz.carray_ext import chunk
 import pickle
 import os
@@ -67,7 +67,10 @@ class pickleTest(MayBeDiskTest, TestCase):
         a = np.arange(1e2)
         b = bcolz.carray(a, rootdir=self.rootdir)
         s = pickle.dumps(b)
-        self.assertEquals(type(s), str)
+        if PY2:
+            self.assertTrue(type(s), str)
+        else:
+            self.assertTrue(type(s), bytes)
 
         b2 = pickle.loads(s)
         self.assertEquals(b2.rootdir, b.rootdir)
