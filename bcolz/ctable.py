@@ -17,7 +17,7 @@ import json
 import os
 import os.path
 import shutil
-from .py2help import _inttypes, imap, xrange
+from .py2help import _inttypes, _strtypes, imap, xrange
 
 _inttypes += (np.integer,)
 islice = itertools.islice
@@ -1085,7 +1085,7 @@ class ctable(object):
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
         # Column name or expression
-        elif type(key) is str:
+        elif isinstance(key, _strtypes):
             if key not in self.names:
                 # key is not a column name, try to evaluate
                 arr = self.eval(key, depth=4)
