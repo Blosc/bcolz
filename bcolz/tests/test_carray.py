@@ -20,9 +20,8 @@ from bcolz.tests.common import (
 import bcolz
 from bcolz.py2help import xrange, PY2
 from bcolz.carray_ext import chunk
+from bcolz import carray
 import pickle
-import os
-import shutil
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -2075,6 +2074,23 @@ class compressorsMemoryTest(bloscCompressorsTest, TestCase):
 
 class compressorsDiskTest(bloscCompressorsTest, TestCase):
     disk = True
+
+
+class reprTest(TestCase):
+    def test_datetime_carray_day(self):
+        ct = carray(np.array(['2010-01-01', '2010-01-02'],
+                             dtype='datetime64[D]'))
+        result = repr(ct)
+        self.assertTrue("['2010-01-01' '2010-01-02']" in result)
+
+    def test_datetime_carray_nanos(self):
+        x = ['2014-12-29T17:57:59.000000123',
+             '2014-12-29T17:57:59.000000456']
+        ct = carray(np.array(x, dtype='datetime64[ns]'))
+        result = repr(ct)
+        for el in x:
+            self.assertTrue(el in result)
+
 
 
 if __name__ == '__main__':

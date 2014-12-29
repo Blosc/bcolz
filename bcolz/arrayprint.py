@@ -259,7 +259,7 @@ def _array2string(a, max_line_width, precision, suppress_small, separator=' ',
         data = _leading_trailing(a)
     else:
         summary_insert = ""
-        data = ravel(a)
+        data = ravel(a[:])  # read in otherwise we have an object array
 
     formatdict = {'bool': _boolFormatter,
                   'int': IntegerFormat(data),
@@ -770,7 +770,9 @@ class DatetimeFormat(object):
         self.casting = casting
 
     def __call__(self, x):
-        return "'%s'" % datetime_as_string(x,
+        # numpy cannot handle Python datetime or date objects in
+        # datetime_as_string
+        return "'%s'" % datetime_as_string(_nt.datetime64(x, self.unit),
                                            unit=self.unit,
                                            timezone=self.timezone,
                                            casting=self.casting)

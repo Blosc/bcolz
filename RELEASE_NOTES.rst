@@ -13,7 +13,9 @@ Changes from 0.7.2 to 0.7.3
   and the original contents in `rootdir` are still needed for unpickling.
   This was PR #79.  Thanks to Matthew Rocklin and Hugo Shi.
 
-- Various typo fixes. (@talumbau and others )
+- Various typo fixes. (@talumbau and others)
+
+- Fixed repr-ing of ``datetime64`` ``carray`` objects
 
 Changes from 0.7.1 to 0.7.2
 ===========================
