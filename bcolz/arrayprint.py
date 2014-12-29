@@ -772,7 +772,7 @@ class DatetimeFormat(object):
     def __call__(self, x):
         # numpy cannot handle Python datetime or date objects in
         # datetime_as_string
-        return "'%s'" % datetime_as_string(_nt.datetime64(x),
+        return "'%s'" % datetime_as_string(_nt.datetime64(x, self.unit),
                                            unit=self.unit,
                                            timezone=self.timezone,
                                            casting=self.casting)
