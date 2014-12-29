@@ -2076,10 +2076,13 @@ class compressorsDiskTest(bloscCompressorsTest, TestCase):
     disk = True
 
 
-def test_repr_datetime_carray():
-    ct = carray(np.array(['2010-01-01', '2010-01-02'], dtype='datetime64[D]'))
-    result = repr(ct)
-    assert "['2010-01-01' '2010-01-02']" in result
+class reprTest(TestCase):
+    def test_datetime_carray(self):
+        ct = carray(np.array(['2010-01-01', '2010-01-02'],
+                             dtype='datetime64[D]'))
+        result = repr(ct)
+        self.assertTrue("['2010-01-01' '2010-01-02']" in result)
+
 
 
 if __name__ == '__main__':
