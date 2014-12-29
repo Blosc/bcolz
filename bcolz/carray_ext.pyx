@@ -18,6 +18,8 @@ import json
 import datetime
 
 import numpy as np
+cimport numpy as np
+from numpy cimport ndarray
 import cython
 
 import bcolz
@@ -60,7 +62,7 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, ndarray, dtype, \
+from definitions cimport import_array, dtype, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
@@ -341,7 +343,7 @@ cdef class chunk:
         self.cdbytes = cbytes
         self.blocksize = blocksize
 
-    cdef compress_arrdata(self, ndarray_t array, int itemsize,
+    cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory):
         """Compress data in `array` and put it in ``self.data``"""
         cdef size_t nbytes, cbytes, blocksize, footprint
@@ -1324,9 +1326,9 @@ cdef class carray:
             return
 
         # Appending a single row should be supported
-        if arrcpy.shape == self._dtype.shape:
-            arrcpy = arrcpy.reshape((1,) + arrcpy.shape)
-        if arrcpy.shape[1:] != self._dtype.shape:
+        if np.shape(arrcpy) == self._dtype.shape:
+            arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
+        if np.shape(arrcpy)[1:] != self._dtype.shape:
             raise ValueError(
                 "array trailing dimensions do not match with self")
 

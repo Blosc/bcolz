@@ -1,6 +1,6 @@
-from definitions cimport ndarray, dtype, npy_intp
+from numpy cimport ndarray
 
-ctypedef ndarray ndarray_t
+from definitions cimport dtype, npy_intp
 
 cdef class chunk:
     cdef char typekind, isconstant
