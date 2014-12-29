@@ -15,7 +15,7 @@ Changes from 0.7.2 to 0.7.3
 
 - Various typo fixes. (@talumbau and others)
 
-- Fixed repr-ing of ``datetime64`` ``carray`` objects
+- Fixed repr-ing of ``datetime64`` ``carray`` objects (@cpcloud)
 
 Changes from 0.7.1 to 0.7.2
 ===========================
