@@ -1,5 +1,3 @@
-import numpy as np
-
 from definitions cimport ndarray, dtype, npy_intp
 
 ctypedef ndarray ndarray_t
