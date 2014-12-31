@@ -85,7 +85,7 @@ def get_git_descrtiption(path_):
 
     # make an absolute path if required, for example when running in a clone
     if not path.isabs(path_):
-        path_ = path.join(os.environ['PWD'], path_)
+        path_ = path.join(os.getcwd(), path_)
     # look up the commit using subprocess and git describe
     try:
         # redirect stderr to stdout to make sure the git error message in case
