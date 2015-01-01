@@ -19,7 +19,7 @@ import datetime
 
 import numpy as np
 cimport numpy as np
-from numpy cimport ndarray
+from numpy cimport ndarray, dtype
 import cython
 
 import bcolz
@@ -62,7 +62,7 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, dtype, \
+from definitions cimport import_array, \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
@@ -301,16 +301,21 @@ cdef class chunk:
         self.atom = atom
         self.atomsize = atom.itemsize
         dtype_ = atom.base
-        self.typekind = dtype_.kind
+        # 'kind' isn't defined in the numpy.pxd
+        # kind is of type python str, typekind of type char
+        # in cython char is coerced to int
+        # kind[0] gives us the first character of the string
+        # ord gives us the ascii integer corresponding to that char
+        self.typekind = ord(dtype_.kind[0])
         # Hack for allowing strings with len > BLOSC_MAX_TYPESIZE
         if self.typekind == 'S':
             itemsize = 1
         elif self.typekind == 'U':
             itemsize = 4
-        elif self.typekind == 'V' and dtype_.elsize > BLOSC_MAX_TYPESIZE:
+        elif self.typekind == 'V' and dtype_.itemsize > BLOSC_MAX_TYPESIZE:
             itemsize = 1
         else:
-            itemsize = dtype_.elsize
+            itemsize = dtype_.itemsize
         if itemsize > BLOSC_MAX_TYPESIZE:
             raise TypeError(
                 "typesize is %d and bcolz does not currently support data "
