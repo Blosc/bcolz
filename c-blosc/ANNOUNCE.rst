@@ -1,14 +1,18 @@
 ===============================================================
- Announcing c-blosc 1.4.1
+ Announcing c-blosc 1.5.2
  A blocking, shuffling and lossless compression library
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release, where a bug in blosc_getitem() introduced
-in 1.4.0 has been tracked down and squashed.  If you use this function,
-please update your c-blosc copy.
+This is a maintenance release.  Basically, the new
+blosc_compress_ctx() / blosc_decompress_ctx() are used now inside the
+HDF5 compressor for allowing operation in multiprocess scenarios.
+See: https://github.com/PyTables/PyTables/issues/412
+
+The drawback of this quick fix is that the Blosc filter will be only
+able to use a single thread until another solution can be devised.
 
 For more info, please see the release notes in:
 
@@ -60,9 +64,3 @@ http://groups.google.es/group/blosc
 
 Enjoy Data!
 
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 70
-.. End:
