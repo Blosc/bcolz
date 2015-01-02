@@ -19,7 +19,8 @@ import datetime
 
 import numpy as np
 cimport numpy as np
-from numpy cimport ndarray, dtype
+from numpy cimport ndarray, dtype, import_array, PyArray_GETITEM, \
+    PyArray_SETITEM, npy_intp
 import cython
 
 import bcolz
@@ -62,13 +63,12 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, \
+from definitions cimport \
     malloc, realloc, free, memcpy, memset, strdup, strcmp, \
     PyString_AsString, PyString_GET_SIZE, \
     PyString_FromStringAndSize, \
     Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
-    PyArray_GETITEM, PyArray_SETITEM, \
-    npy_intp, PyBuffer_FromMemory, Py_uintptr_t
+    PyBuffer_FromMemory, Py_uintptr_t
 
 #-----------------------------------------------------------------
 
