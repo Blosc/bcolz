@@ -25,6 +25,35 @@ Installing from Windows binaries
 Just download the binary installer and run it.
 
 
+Using the Microsoft Python 2.7 Compiler
+=======================================
+
+As of Sept 2014 Microsoft has made a Visual C++ compiler for Python 2.7
+available for download:
+
+http://aka.ms/vcpython27
+
+This has been made available specifically to ease the handling of Python
+packages with C-extensions on Windows (installation and building wheels).
+
+It is possible to compile bcolz with this compiler (Jan 2015), however,
+you may need to use the following patch::
+
+    diff --git i/setup.py w/setup.py
+    index d77d37f233..b54bfd0fa1 100644
+    --- i/setup.py
+    +++ w/setup.py
+    @@ -11,8 +11,8 @@ from __future__ import absolute_import
+     import sys
+     import os
+     import glob
+    -from distutils.core import Extension
+    -from distutils.core import setup
+    +from setuptools import Extension
+    +from setuptools import setup
+     import textwrap
+     import re, platform
+
 Installing from tarball sources
 ===============================
 
