@@ -15,6 +15,8 @@ Preliminaries
 
 * Check that ``VERSION`` file contains the correct number.
 
+* Once a year: check that the copyright in ``LICENSES/BCOLZ.txt`` and
+  ``doc/conf.py``.
 
 Testing
 -------
