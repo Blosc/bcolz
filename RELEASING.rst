@@ -38,8 +38,8 @@ Updating the online documentation site
 
   $ cd doc
 
-* Make sure that the `version`/`release` variables are updated in
-  'conf.py'.
+* Make sure that the ``version``/``release`` variables are updated in
+  ``conf.py``.
 
 * Make the html version of the docs::
 
