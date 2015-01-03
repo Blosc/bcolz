@@ -3,7 +3,7 @@
 ===============================================================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.io
+:Contact: francesc@blosc.org
 :URL: http://www.blosc.org
 
 What is it?
@@ -90,56 +90,74 @@ similar solutions.
 Compiling your application with a minimalistic Blosc
 ====================================================
 
-The minimal Blosc consists of the next files (in blosc/ directory)::
+The minimal Blosc consists of the next files (in `blosc/ directory
+<https://github.com/Blosc/c-blosc/tree/master/blosc>`_)::
 
     blosc.h and blosc.c      -- the main routines
     shuffle.h and shuffle.c  -- the shuffle code
     blosclz.h and blosclz.c  -- the blosclz compressor
 
 Just add these files to your project in order to use Blosc.  For
-information on compression and decompression routines, see blosc.h.
+information on compression and decompression routines, see `blosc.h
+<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`_.
 
 To compile using GCC (4.4 or higher recommended) on Unix:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread
 
 Using Windows and MINGW:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc\*.c
+   $ gcc -O3 -msse2 -o myprog myprog.c -Iblosc blosc\*.c
 
 Using Windows and MSVC (2010 or higher recommended):
 
 .. code-block:: console
 
-  $ cl /Ox /Femyprog.exe myprog.c blosc\*.c
+  $ cl /Ox /Femyprog.exe /Iblosc myprog.c blosc\*.c
+
+In the `examples/ directory
+<https://github.com/Blosc/c-blosc/tree/master/examples>`_ you can find
+more hints on how to link your app with Blosc.
 
 A simple usage example is the benchmark in the bench/bench.c file.
 Another example for using Blosc as a generic HDF5 filter is in the
-hdf5/ directory.
+`hdf5/ directory
+<https://github.com/Blosc/c-blosc/tree/master/hdf5>`_.
 
 I have not tried to compile this with compilers other than GCC, clang,
 MINGW, Intel ICC or MSVC yet. Please report your experiences with your
 own platforms.
 
-Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Adding support for other compressors with a minimalistic Blosc
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to add support for the LZ4, LZ4HC, Snappy or Zlib
-compressors, just add the symbols HAVE_LZ4 (will include both LZ4 and
-LZ4HC), HAVE_SNAPPY and HAVE_ZLIB during compilation and add the
-libraries. For example, for compiling Blosc with Zlib support do:
+The official cmake files (see below) for Blosc try hard to include
+support for LZ4, LZ4HC, Snappy, Zlib inside the Blosc library, so
+using them is just a matter of calling the appropriate
+`blosc_set_compressor() API call
+<https://github.com/Blosc/c-blosc/blob/master/blosc/blosc.h>`_.  See
+an `example here
+<https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
+
+Having said this, it is also easy to use a minimalistic Blosc and just
+add the symbols HAVE_LZ4 (will include both LZ4 and LZ4HC),
+HAVE_SNAPPY and HAVE_ZLIB during compilation as well as the
+appropriate libraries. For example, for compiling with minimalistic
+Blosc but with added Zlib support do:
 
 .. code-block:: console
 
-   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -lpthread -DHAVE_ZLIB -lz
+   $ gcc -O3 -msse2 -o myprog myprog.c blosc/*.c -Iblosc -lpthread -DHAVE_ZLIB -lz
 
-In the bench/ directory there a couple of Makefile files (one for UNIX
-and the other for MinGW) with more complete building examples, like
-selecting between libraries or internal sources for the compressors.
+In the `bench/ directory
+<https://github.com/Blosc/c-blosc/tree/master/bench>`_ there a couple
+of Makefile files (one for UNIX and the other for MinGW) with more
+complete building examples, like switching between libraries or
+internal sources for the compressors.
 
 Compiling the Blosc library with CMake
 ======================================
@@ -190,13 +208,18 @@ CMAKE_INSTALL_PREFIX.
 
 .. _CMake: http://www.cmake.org
 
+Once you have compiled your Blosc library, you can easily link your
+apps with it as shown in the `example/ directory
+<https://github.com/Blosc/c-blosc/blob/master/examples>`_.
+
 Adding support for other compressors (LZ4, LZ4HC, Snappy, Zlib) with CMake
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The CMake files in Blosc are configured to automatically detect other
 compressors like LZ4, LZ4HC, Snappy or Zlib by default.  So as long as
 the libraries and the header files for these libraries are accessible,
-these will be used by default.
+these will be used by default.  See an `example here
+<https://github.com/Blosc/c-blosc/blob/master/examples/many_compressors.c>`_.
 
 *Note on Zlib*: the library should be easily found on UNIX systems,
 although on Windows, you can help CMake to find it by setting the
@@ -281,10 +304,15 @@ Other important contributions:
   script.
 
 * Thibault North, with ideas from Oscar Villellas, contributed a way
-  to call Blosc from different threads in a safe way.
+  to call Blosc from different threads in a safe way.  Christopher
+  Speller introduced contexts so that a global lock is not necessary
+  anymore.
 
 * The CMake support was initially contributed by Thibault North, and
   Antonio Valentino and Mark Wiebe made great enhancements to it.
+
+* Christopher Speller also introduced the two new '_ctx' calls to
+  avoid the use of the blosc_init() and blosc_destroy().
 
 
 ----
