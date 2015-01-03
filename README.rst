@@ -140,7 +140,7 @@ EuroPython 2014.  `Slides here
 License
 -------
 
-Please see BCOLZ.txt in LICENSES/ directory.
+Please see ``BCOLZ.txt`` in ``LICENSES/`` directory.
 
 Share your experience
 ---------------------
