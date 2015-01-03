@@ -25,7 +25,7 @@ Testing
 
   $ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
   $ export PYTHONPATH=.  (not needed on Win)
-  $ python -c "import bcolz; bcolz.test()"
+  $ python -c "import bcolz; bcolz.test(heavy=True)"
 
 * Run the test suite in different platforms (at least Linux and
   Windows) and make sure that all tests passes.
