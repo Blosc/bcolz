@@ -1,14 +1,11 @@
 ======================
-Announcing bcolz 0.7.3
+Announcing bcolz 0.7.4
 ======================
 
 What's new
 ==========
 
-This release includes the support for pickling persistent carray/ctable
-objects contributed by Matthew Rocklin. Also, the included version of Blosc is
-updated to ``v1.5.2``. Lastly, several minor issues and typos have been fixed,
-please the release notes for details.
+#XXX version-specific blurb XXX#
 
 ``bcolz`` is a renaming of the ``carray`` project.  The new goals for
 the project are to create simple, yet flexible compressed containers,
