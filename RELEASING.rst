@@ -119,7 +119,7 @@ Post-release actions
 * Edit ``VERSION`` in master to increment the version to the next
   minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev).
 
-* Also, update the `version` and `release` variables in doc/conf.py.
+* Also, update the ``version`` and ``release`` variables in doc/conf.py.
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
   and empty the release-specific information in ``ANNOUNCE.rst`` and
