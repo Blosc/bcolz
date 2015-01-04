@@ -19,11 +19,13 @@ or::
   $ pip install -U bcolz
 
 
-Installing from Windows binaries
-================================
+Installing Windows binaries
+===========================
 
-Just download the binary installer and run it.
+Unofficial Windows binaries are provided by Christoph Gohlke and can be
+downloaded from:
 
+http://www.lfd.uci.edu/~gohlke/pythonlibs/#bcolz
 
 Using the Microsoft Python 2.7 Compiler
 =======================================
