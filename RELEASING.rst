@@ -66,6 +66,8 @@ Updating the online documentation site
 Packaging
 ---------
 
+* Check that all Cython generated ``*.c`` files are present.
+
 * Make the tarball with the command::
 
   $ python setup.py sdist
