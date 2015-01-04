@@ -82,3 +82,4 @@ https://github.com/Blosc/bcolz/blob/master/LICENSES/BCOLZ.txt
 .. coding: utf-8
 .. fill-column: 72
 .. End:
+.. vim: set textwidth=72:
