@@ -10,7 +10,8 @@ What's new
 ``bcolz`` is a renaming of the ``carray`` project.  The new goals for
 the project are to create simple, yet flexible compressed containers,
 that can live either on-disk or in-memory, and with some
-high-performance iterators (like `iter()`, `where()`) for querying them.
+high-performance iterators (like ``iter()``, ``where()``) for querying
+them.
 
 Together, bcolz and the Blosc compressor, are finally fulfilling the
 promise of accelerating memory I/O, at least for some real scenarios:
