@@ -15,6 +15,8 @@ Preliminaries
 
 * Check that ``VERSION`` file contains the correct number.
 
+* Once a year: check that the copyright in ``LICENSES/BCOLZ.txt`` and
+  ``doc/conf.py``.
 
 Testing
 -------
@@ -23,7 +25,7 @@ Testing
 
   $ PYTHONPATH=.   (or "set PYTHONPATH=." on Win)
   $ export PYTHONPATH=.  (not needed on Win)
-  $ python -c "import bcolz; bcolz.test()"
+  $ python -c "import bcolz; bcolz.test(heavy=True)"
 
 * Run the test suite in different platforms (at least Linux and
   Windows) and make sure that all tests passes.
@@ -36,8 +38,8 @@ Updating the online documentation site
 
   $ cd doc
 
-* Make sure that the `version`/`release` variables are updated in
-  'conf.py'.
+* Make sure that the ``version``/``release`` variables are updated in
+  ``conf.py``.
 
 * Make the html version of the docs::
 

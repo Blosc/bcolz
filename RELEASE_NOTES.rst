@@ -2,20 +2,28 @@
 Release notes for bcolz
 =======================
 
-:Author: Francesc Alted
-:Contact: francesc@blosc.io
-
 Changes from 0.7.2 to 0.7.3
 ===========================
 
+- Update to Blosc ``v1.5.2``
+
 - Added support for pickling persistent carray/ctable objects.  Basically,
-  what is serialized is the `rootdir` so the data is still sitting on disk
-  and the original contents in `rootdir` are still needed for unpickling.
-  This was PR #79.  Thanks to Matthew Rocklin and Hugo Shi.
+  what is serialized is the ``rootdir`` so the data is still sitting on disk
+  and the original contents in ``rootdir`` are still needed for unpickling.
+  (#79 @mrocklin)
 
-- Various typo fixes. (@talumbau and others)
+- Fixed repr-ing of ``datetime64`` ``carray`` objects (#99 @cpcloud)
 
-- Fixed repr-ing of ``datetime64`` ``carray`` objects (@cpcloud)
+- Fixed Unicode handling for column addressing (#91 @CarstVaartjes)
+
+- Conda recipe and ``.binstar.yml`` (#88 @mrocklin and @cpcloud)
+
+- Removed ``unittest2`` as a run-time dependency (#90 @mrocklin)
+
+- Various typo fixes. (#75 @talumbau, #86 @catawbasam and #83 @bgrant)
+
+- Other miscellaneous fixes and improvements
+
 
 Changes from 0.7.1 to 0.7.2
 ===========================
