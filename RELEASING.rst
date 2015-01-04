@@ -90,7 +90,11 @@ Tagging
 
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
-* Push the tag to the Github repo (assuming origin is correct)::
+* Or, alternatively, make a signed tag (requires gpg correctly configured)::
+
+    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
+
+* Push the tag to the Github repo (assuming ``origin`` is correct)::
 
     $ git push origin vX.Y.Z
 
