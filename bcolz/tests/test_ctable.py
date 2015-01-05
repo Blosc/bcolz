@@ -14,13 +14,11 @@ import tempfile
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
-from bcolz.tests.common import (
-    MayBeDiskTest, TestCase, unittest, skipUnless)
+from bcolz.tests.common import MayBeDiskTest, TestCase, unittest, skipUnless
 import bcolz
 from bcolz.py2help import xrange, PY2
 import pickle
 import os
-import shutil
 
 
 class createTest(MayBeDiskTest):
@@ -379,6 +377,38 @@ class add_del_colMemoryTest(add_del_colTest, TestCase):
 
 class add_del_colDiskTest(add_del_colTest, TestCase):
     disk = True
+
+    def test_add_new_column_ondisk(self):
+        """Testing adding a new column properly creates a new disk array (list
+        flavor)
+        """
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        c = np.fromiter(("s%d" % i for i in xrange(N)), dtype='S2')
+        t.addcol(c.tolist(), 'f2')
+        ra = np.fromiter(((i, i * 2., "s%d" % i) for i in xrange(N)),
+                         dtype='i4,f8,S2')
+        newpath = os.path.join(self.rootdir, 'f2')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+        assert_array_equal(bcolz.carray(rootdir=newpath)[:], ra['f2'])
+
+    def test_del_new_column_ondisk(self):
+        """Testing adding a new column properly creates a new disk array (list
+        flavor)
+        """
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        c = np.fromiter(("s%d" % i for i in xrange(N)), dtype='S2')
+        t.addcol(c.tolist(), 'f2')
+        ra = np.fromiter(((i, i * 2., "s%d" % i) for i in xrange(N)),
+                         dtype='i4,f8,S2')
+        newpath = os.path.join(self.rootdir, 'f2')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+        assert_array_equal(bcolz.carray(rootdir=newpath)[:], ra['f2'])
+        t.delcol('f2')
+        self.assertFalse(os.path.exists(newpath))
 
 
 class getitemTest(MayBeDiskTest):
