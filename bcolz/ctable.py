@@ -460,7 +460,7 @@ class ctable(object):
 
         kwargs.setdefault('cparams', self.cparams)
 
-        if isinstance(newcol, np.ndarray):
+        if isinstance(newcol, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
             newcol = bcolz.carray(newcol, **kwargs)
