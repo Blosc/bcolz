@@ -5,6 +5,13 @@ Release notes for bcolz
 Changes from 0.7.3 to 0.7.4 (Coming soon)
 =========================================
 
+- Public API for ``carray`` (#98 @FrancescElies and #esc)
+
+  A Cython definition file ``carrat_ext.pxd`` was added that contains the
+  definitions for the ``carray``, ``chunks`` and ``chunk`` classes. This was
+  done to allow more complex programs to be built on the compressed container
+  primitives provided by bcolz.
+
 - Overhaul the release procedure
 
 - Other miscellaneous fixes and improvements
