@@ -107,10 +107,6 @@ Tagging
 Announcing
 ----------
 
-* Update the release notes in the bcolz site:
-
-  https://github.com/Blosc/bcolz/wiki/Release-Notes
-
 * Send an announcement to the bcolz, blosc, numpy, pandas and
   python-announce lists.  Use the ``ANNOUNCE.rst`` file as skeleton
   (or possibly as the definitive version).
