@@ -34,6 +34,11 @@ Testing
 Updating the online documentation site
 --------------------------------------
 
+.. note::
+
+    This instructions are currently out-of-date and are to be considered under
+    construction.
+
 * Go to the doc directory::
 
   $ cd doc
