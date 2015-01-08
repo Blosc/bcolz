@@ -1,26 +1,29 @@
 ======================
-Announcing bcolz 0.7.4
+Announcing bcolz 0.8.0
 ======================
 
 What's new
 ==========
 
-#XXX version-specific blurb XXX#
+This version adds a public API in the form of a Cython definitions file
+(``carray_ext.pxd``) for the ``carray`` class!
 
-``bcolz`` is a renaming of the ``carray`` project.  The new goals for
-the project are to create simple, yet flexible compressed containers,
-that can live either on-disk or in-memory, and with some
-high-performance iterators (like ``iter()``, ``where()``) for querying
-them.
+This means, other libraries can use the Cython definitions to build more
+complex programs using the objects provided by bcolz. In fact, this
+fetaure was specifically requested and there already exists a nascent
+application called *bquery* which provides an efficient out-of-core
+groupby implementation for the ctable.
 
-Together, bcolz and the Blosc compressor, are finally fulfilling the
-promise of accelerating memory I/O, at least for some real scenarios:
+Because this is a fairly sweeping change the minor version number was
+incremented and no additional major features or bugfixes were added to
+this release.  We kindly ask any users of bcolz to try this version
+carefully and report back any issues, bugs, or even slow-downs you
+experience.  I.e. please, please be careful when deploying this version
+into production.
 
-http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
-
-For more detailed info, see the release notes in:
-https://github.com/Blosc/bcolz/wiki/Release-Notes
-
+Many, many kudos to Francesc Elies and Carst Vaartjes of Visualfabriq
+for their hard work, continued effort to push this feature and their
+work on bquery which makes use of it!
 
 What it is
 ==========
