@@ -96,6 +96,8 @@ http://groups.google.com/group/bcolz
 License is the new BSD:
 https://github.com/Blosc/bcolz/blob/master/LICENSES/BCOLZ.txt
 
+Release notes can be found in the Git repository:
+https://github.com/Blosc/bcolz/blob/master/RELEASE_NOTES.rst
 
 ----
 
