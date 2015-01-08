@@ -62,18 +62,19 @@ your browser at the links below.
 
 * Visualfabriq:
 
+  * *bquery*, A query and aggregation framework for Bcolz:
   * https://github.com/visualfabriq/bquery
 
-* Blaze links:
+* Blaze:
 
-  http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-bcolz.ipynb
-  http://matthewrocklin.com/blog/work/2014/12/30/Towards-OOC-Frontend/
-  http://matthewrocklin.com/blog/work/2014/12/27/Towards-OOC/
+  * Notebooks showing Blaze + Pandas + BColz interaction: 
+  * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-csv.ipynb
+  * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-bcolz.ipynb
 
-* Quantopian links:
+* Quantopian:
 
-  https://quantopian.github.io/talks/NeedForSpeed/slides.html
-
+  * Using compressed data containers for faster backtesting at scale:
+  * https://quantopian.github.io/talks/NeedForSpeed/slides.html
 
 Installing
 ==========
