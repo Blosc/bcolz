@@ -2,8 +2,8 @@
 Release notes for bcolz
 =======================
 
-Changes from 0.7.3 to 0.7.4
-===========================
+Changes from 0.7.3 to 0.7.4 (Coming soon)
+=========================================
 
 - Other miscellaneous fixes and improvements
 
