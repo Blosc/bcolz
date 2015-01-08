@@ -18,6 +18,14 @@ import json
 import datetime
 
 import numpy as np
+cimport numpy as np
+from numpy cimport (ndarray,
+                    dtype,
+                    import_array,
+                    PyArray_GETITEM,
+                    PyArray_SETITEM,
+                    npy_intp,
+                    )
 import cython
 
 import bcolz
@@ -60,13 +68,21 @@ IntType = np.dtype(np.int_)
 #-----------------------------------------------------------------
 
 # numpy functions & objects
-from definitions cimport import_array, ndarray, dtype, \
-    malloc, realloc, free, memcpy, memset, strdup, strcmp, \
-    PyString_AsString, PyString_GET_SIZE, \
-    PyString_FromStringAndSize, \
-    Py_BEGIN_ALLOW_THREADS, Py_END_ALLOW_THREADS, \
-    PyArray_GETITEM, PyArray_SETITEM, \
-    npy_intp, PyBuffer_FromMemory, Py_uintptr_t
+from definitions cimport (malloc,
+                          realloc,
+                          free,
+                          memcpy,
+                          memset,
+                          strdup,
+                          strcmp,
+                          PyString_AsString,
+                          PyString_GET_SIZE,
+                          PyString_FromStringAndSize,
+                          Py_BEGIN_ALLOW_THREADS,
+                          Py_END_ALLOW_THREADS,
+                          PyBuffer_FromMemory,
+                          Py_uintptr_t,
+                          )
 
 #-----------------------------------------------------------------
 
@@ -283,18 +299,6 @@ cdef class chunk:
     This class is meant to be used only by the `carray` class.
 
     """
-    cdef char typekind, isconstant
-    cdef public int atomsize, itemsize, blocksize
-    cdef public int nbytes, cbytes, cdbytes
-    cdef int true_count
-    cdef char *data
-    cdef object atom, constant, dobject
-
-    cdef void _getitem(self, int start, int stop, char *dest)
-    cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
-                       object cparams)
-    cdef compress_arrdata(self, ndarray array, int itemsize,
-                          object cparams, object _memory)
 
     property dtype:
         "The NumPy dtype for this chunk."
@@ -311,16 +315,21 @@ cdef class chunk:
         self.atom = atom
         self.atomsize = atom.itemsize
         dtype_ = atom.base
-        self.typekind = dtype_.kind
+        # 'kind' isn't defined in the numpy.pxd
+        # kind is of type python str, typekind of type char
+        # in cython char is coerced to int
+        # kind[0] gives us the first character of the string
+        # ord gives us the ascii integer corresponding to that char
+        self.typekind = ord(dtype_.kind[0])
         # Hack for allowing strings with len > BLOSC_MAX_TYPESIZE
         if self.typekind == 'S':
             itemsize = 1
         elif self.typekind == 'U':
             itemsize = 4
-        elif self.typekind == 'V' and dtype_.elsize > BLOSC_MAX_TYPESIZE:
+        elif self.typekind == 'V' and dtype_.itemsize > BLOSC_MAX_TYPESIZE:
             itemsize = 1
         else:
-            itemsize = dtype_.elsize
+            itemsize = dtype_.itemsize
         if itemsize > BLOSC_MAX_TYPESIZE:
             raise TypeError(
                 "typesize is %d and bcolz does not currently support data "
@@ -653,11 +662,6 @@ cdef decode_blosc_header(buffer_):
 
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
-    cdef object _rootdir, _mode
-    cdef object dtype, cparams, lastchunkarr
-    cdef object chunk_cached
-    cdef npy_intp nchunks, nchunk_cached, len
-
     property mode:
         "The mode used to create/open the `mode`."
         def __get__(self):
@@ -859,29 +863,6 @@ cdef class carray:
 
     """
 
-    cdef public int itemsize, atomsize
-    cdef int _chunksize, _chunklen, leftover
-    cdef int nrowsinbuf, _row
-    cdef int sss_mode, wheretrue_mode, where_mode
-    cdef npy_intp startb, stopb
-    cdef npy_intp start, stop, step, nextelement
-    cdef npy_intp _nrow, nrowsread
-    cdef npy_intp _nbytes, _cbytes
-    cdef npy_intp nhits, limit, skip
-    cdef npy_intp expectedlen
-    cdef char *lastchunk
-    cdef object lastchunkarr, where_arr, arr1
-    cdef object _cparams, _dflt
-    cdef object _dtype
-    cdef public object chunks
-    cdef object _rootdir, datadir, metadir, _mode
-    cdef object _attrs, iter_exhausted
-    cdef ndarray iobuf, where_buf
-    # For block cache
-    cdef int idxcache
-    cdef ndarray blockcache
-    cdef char *datacache
-
     property leftovers:
         def __get__(self):
             # Pointer to the leftovers chunk
@@ -1018,17 +999,17 @@ cdef class carray:
         self.where_mode = False
         self.idxcache = -1  # cache not initialized
 
-    cdef _adapt_dtype(self, dtype, shape):
+    cdef _adapt_dtype(self, dtype_, shape):
         """adapt the dtype to one supported in carray.
         returns the adapted type with the shape modified accordingly.
         """
-        if dtype.hasobject:
-            if dtype != np.object_:
-                raise TypeError(repr(dtype) + " is not a supported dtype")
+        if dtype_.hasobject:
+            if dtype_ != np.object_:
+                raise TypeError(repr(dtype_) + " is not a supported dtype")
         else:
-            dtype = np.dtype((dtype, shape[1:]))
+            dtype_ = np.dtype((dtype_, shape[1:]))
 
-        return dtype
+        return dtype_
 
     def create_carray(self, array, cparams, dtype, dflt,
                       expectedlen, chunklen, rootdir, mode):
@@ -1364,9 +1345,9 @@ cdef class carray:
             return
 
         # Appending a single row should be supported
-        if arrcpy.shape == self._dtype.shape:
-            arrcpy = arrcpy.reshape((1,) + arrcpy.shape)
-        if arrcpy.shape[1:] != self._dtype.shape:
+        if np.shape(arrcpy) == self._dtype.shape:
+            arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
+        if np.shape(arrcpy)[1:] != self._dtype.shape:
             raise ValueError(
                 "array trailing dimensions do not match with self")
 
