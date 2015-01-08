@@ -11,8 +11,9 @@ This version adds a public API in the form of a Cython definitions file
 This means, other libraries can use the Cython definitions to build more
 complex programs using the objects provided by bcolz. In fact, this
 fetaure was specifically requested and there already exists a nascent
-application called *bquery* which provides an efficient out-of-core
-groupby implementation for the ctable.
+application called *bquery* (https://github.com/visualfabriq/bquery)
+which provides an efficient out-of-core groupby implementation for the
+``ctable`` object
 
 Because this is a fairly sweeping change the minor version number was
 incremented and no additional major features or bugfixes were added to
@@ -54,9 +55,14 @@ promise of accelerating memory I/O, at least for some real scenarios:
 
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
 
-Other users of bcolz are the Blaze project (http://blaze.pydata.org/)
-and Quantopian (https://www.quantopian.com/) which you can read more
-about by pointing your browser at the links below.
+Other users of bcolz are Visualfabriq (http://www.visualfabriq.com/) the
+Blaze project (http://blaze.pydata.org/) and Quantopian
+(https://www.quantopian.com/) which you can read more about by pointing
+your browser at the links below.
+
+* Visualfabriq:
+
+  * https://github.com/visualfabriq/bquery
 
 * Blaze links:
 
