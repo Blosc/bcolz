@@ -34,6 +34,11 @@ Testing
 Updating the online documentation site
 --------------------------------------
 
+.. note::
+
+    This instructions are currently out-of-date and are to be considered under
+    construction.
+
 * Go to the doc directory::
 
   $ cd doc
@@ -66,6 +71,8 @@ Updating the online documentation site
 Packaging
 ---------
 
+* Check that all Cython generated ``*.c`` files are present.
+
 * Make the tarball with the command::
 
   $ python setup.py sdist
@@ -88,17 +95,17 @@ Tagging
 
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
-* Push the tag to the github repo::
+* Or, alternatively, make a signed tag (requires gpg correctly configured)::
 
-    $ git push --tags
+    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
+
+* Push the tag to the Github repo (assuming ``origin`` is correct)::
+
+    $ git push origin vX.Y.Z
 
 
 Announcing
 ----------
-
-* Update the release notes in the bcolz site:
-
-  https://github.com/Blosc/bcolz/wiki/Release-Notes
 
 * Send an announcement to the bcolz, blosc, numpy, pandas and
   python-announce lists.  Use the ``ANNOUNCE.rst`` file as skeleton
@@ -113,7 +120,7 @@ Post-release actions
 * Edit ``VERSION`` in master to increment the version to the next
   minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev).
 
-* Also, update the `version` and `release` variables in doc/conf.py.
+* Also, update the ``version`` and ``release`` variables in doc/conf.py.
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
   and empty the release-specific information in ``ANNOUNCE.rst`` and
