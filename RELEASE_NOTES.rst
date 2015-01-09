@@ -2,8 +2,8 @@
 Release notes for bcolz
 =======================
 
-Changes from 0.7.3 to 0.7.4 (Coming soon)
-=========================================
+Changes from 0.7.3 to 0.8.0
+===========================
 
 - Public API for ``carray`` (#98 @FrancescElies and #esc)
 
