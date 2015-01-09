@@ -10,7 +10,7 @@ This version adds a public API in the form of a Cython definitions file
 
 This means, other libraries can use the Cython definitions to build more
 complex programs using the objects provided by bcolz. In fact, this
-fetaure was specifically requested and there already exists a nascent
+feature was specifically requested and there already exists a nascent
 application called *bquery* (https://github.com/visualfabriq/bquery)
 which provides an efficient out-of-core groupby implementation for the
 ``ctable`` object
