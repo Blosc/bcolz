@@ -1,30 +1,13 @@
 ======================
-Announcing bcolz 0.8.0
+Announcing bcolz 0.8.1
 ======================
 
 What's new
 ==========
 
-This version adds a public API in the form of a Cython definitions file
-(``carray_ext.pxd``) for the ``carray`` class!
 
-This means, other libraries can use the Cython definitions to build more
-complex programs using the objects provided by bcolz. In fact, this
-feature was specifically requested and there already exists a nascent
-application called *bquery* (https://github.com/visualfabriq/bquery)
-which provides an efficient out-of-core groupby implementation for the
-``ctable`` object
+#XXX version-specific blurb XXX#
 
-Because this is a fairly sweeping change the minor version number was
-incremented and no additional major features or bugfixes were added to
-this release.  We kindly ask any users of bcolz to try this version
-carefully and report back any issues, bugs, or even slow-downs you
-experience.  I.e. please, please be careful when deploying this version
-into production.
-
-Many, many kudos to Francesc Elies and Carst Vaartjes of Visualfabriq
-for their hard work, continued effort to push this feature and their
-work on bquery which makes use of it!
 
 What it is
 ==========
