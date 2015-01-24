@@ -12,3 +12,4 @@ recursive-include bench *.py *.txt
 recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
 recursive-exclude doc/_build *
 recursive-include LICENSES *
+recursive-include c-blosc/LICENSES *
