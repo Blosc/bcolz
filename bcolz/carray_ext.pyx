@@ -2571,6 +2571,11 @@ cdef class carray:
     #   # Make a flush to disk if this object get disposed
     #   self.flush()
 
+    def purge(self):
+        """ Remove the underlying data for on-disk arrays. """
+        if self.rootdir:
+            shutil.rmtree(self.rootdir)
+
     def __str__(self):
         return array2string(self)
 
