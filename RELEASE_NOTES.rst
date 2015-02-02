@@ -5,7 +5,7 @@ Release notes for bcolz
 Changes from 0.8.0 to 0.8.1
 ===========================
 
-- pass
+- Implement ``purge``, which removes data for on-disk carrays. (@esc)
 
 Changes from 0.7.3 to 0.8.0
 ===========================
