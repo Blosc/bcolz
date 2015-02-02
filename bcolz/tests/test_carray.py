@@ -9,8 +9,10 @@
 
 from __future__ import absolute_import
 
+import os
 import sys
 import struct
+import shutil
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
@@ -2091,7 +2093,27 @@ class reprTest(TestCase):
         for el in x:
             self.assertTrue(el in result)
 
+class PurgeDiskArrayTest(MayBeDiskTest, TestCase):
+    disk = True
 
+    def test_purge(self):
+        b = bcolz.arange(1e2, rootdir=self.rootdir)
+        b.purge()
+        self.assertFalse(os.path.isdir(self.rootdir))
+
+    def test_purge_fails_for_missing_directory(self):
+        b = bcolz.arange(1e2, rootdir=self.rootdir)
+        shutil.rmtree(self.rootdir)
+        # OSError is fairly un-specific, but better than nothing
+        self.assertRaises(OSError, b.purge)
+
+class PurgeMemoryArrayTest(MayBeDiskTest, TestCase):
+    disk = False
+
+    def test_purge(self):
+        b = bcolz.arange(1e2, rootdir=self.rootdir)
+        # this should work and should be a noop
+        b.purge()
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
