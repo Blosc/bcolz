@@ -653,6 +653,9 @@ cdef decode_blosc_header(buffer_):
             'blocksize': decode_uint32(buffer_[8:12]),
             'ctbytes': decode_uint32(buffer_[12:16])}
 
+cdef class memory_chunks(list):
+    pass
+
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
     property mode:
@@ -1139,7 +1142,7 @@ cdef class carray:
 
         # Create layout for data and metadata
         self._cparams = cparams
-        self.chunks = []
+        self.chunks = memory_chunks()
         if rootdir is not None:
             self.mkdirs(rootdir, mode)
             metainfo = (
