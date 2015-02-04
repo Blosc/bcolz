@@ -670,6 +670,9 @@ class memory_chunks(object):
     def append(self, chunk_):
         self.container.append(chunk_)
 
+    def pop(self):
+        return self.container.pop()
+
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
     property mode:
