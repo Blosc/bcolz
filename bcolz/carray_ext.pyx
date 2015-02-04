@@ -939,6 +939,11 @@ cdef class carray:
         def __get__(self):
             return self._nbytes
 
+    property nleftover:
+        "The number of leftover elements."
+        def __get__(self):
+            return cython.cdiv(self.leftover, self.atomsize)
+
     property ndim:
         "The number of dimensions of this object."
         def __get__(self):

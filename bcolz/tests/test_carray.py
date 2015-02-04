@@ -2092,6 +2092,20 @@ class reprTest(TestCase):
             self.assertTrue(el in result)
 
 
+class nleftoversTest(TestCase):
+
+    def test_empty(self):
+        a = carray([])
+        self.assertEquals(0, a.nleftover)
+
+    def test_one(self):
+        a = carray([1])
+        self.assertEqual(1, a.nleftover)
+
+    def test_beyond_one(self):
+        a = carray(np.zeros(2049), chunklen=2048)
+        self.assertEqual(1, a.nleftover)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
