@@ -653,8 +653,22 @@ cdef decode_blosc_header(buffer_):
             'blocksize': decode_uint32(buffer_[8:12]),
             'ctbytes': decode_uint32(buffer_[12:16])}
 
-cdef class memory_chunks(list):
-    pass
+class memory_chunks(object):
+
+    def __init__(self):
+        self.container = []
+
+    def __getitem__(self, nchunk):
+        return self.container[nchunk]
+
+    def __setitem__(self, nchunk, chunk_):
+        self.container[nchunk] = chunk_
+
+    def __len__(self):
+        return len(self.container)
+
+    def append(self, chunk_):
+        self.container.append(chunk_)
 
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
