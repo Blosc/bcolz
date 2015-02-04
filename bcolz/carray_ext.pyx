@@ -654,6 +654,9 @@ cdef decode_blosc_header(buffer_):
             'ctbytes': decode_uint32(buffer_[12:16])}
 
 class memory_chunks(object):
+    """Store the different carray chunks as a structure in memory."""
+
+    has_cachemem = False
 
     def __init__(self):
         self.container = []
@@ -693,6 +696,8 @@ cdef class chunks(object):
         """The directory for data files."""
         def __get__(self):
             return os.path.join(self.rootdir, DATA_DIR)
+
+    has_cachemem = False
 
     def __cinit__(self, rootdir, metainfo=None, _new=False):
         cdef ndarray lastchunkarr
@@ -1848,7 +1853,7 @@ cdef class carray:
         return 1
 
     def free_cachemem(self):
-        if type(self.chunks) is not list:
+        if self.chunks.has_cachemem:
             self.chunks.free_cachemem()
         self.idxcache = -1
         self.blockcache = None
