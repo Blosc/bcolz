@@ -361,6 +361,7 @@ cdef class chunk:
         self.cbytes = cbytes + footprint
         self.cdbytes = cbytes
         self.blocksize = blocksize
+        self._chunklen = cython.cdiv(self.nbytes, self.atomsize)
 
     cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory):
@@ -533,6 +534,21 @@ cdef class chunk:
         if step > 1:
             return array[::step]
         return array
+
+    def __iter__(self):
+        self._iter_values = np.empty(shape=(self._chunklen,), dtype='int64')
+        self._iter_count = -1
+        self._getitem(0, self._chunklen, self._iter_values.data)
+
+        return self
+
+    def __next__(self):
+        self._iter_count += 1
+        if self._iter_count >= self._chunklen:
+            raise StopIteration
+
+        return self._iter_values[self._iter_count]
+
 
     @property
     def pointer(self):
