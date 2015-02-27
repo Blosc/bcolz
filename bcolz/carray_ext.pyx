@@ -361,6 +361,7 @@ cdef class chunk:
         self.cbytes = cbytes + footprint
         self.cdbytes = cbytes
         self.blocksize = blocksize
+        self._chunklen = cython.cdiv(self.nbytes, self.atomsize)
 
     cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory):
@@ -533,6 +534,21 @@ cdef class chunk:
         if step > 1:
             return array[::step]
         return array
+
+    def __iter__(self):
+        self._iter_values = np.empty(shape=(self._chunklen,), dtype='int64')
+        self._iter_count = -1
+        self._getitem(0, self._chunklen, self._iter_values.data)
+
+        return self
+
+    def __next__(self):
+        self._iter_count += 1
+        if self._iter_count >= self._chunklen:
+            raise StopIteration
+
+        return self._iter_values[self._iter_count]
+
 
     @property
     def pointer(self):
@@ -2589,6 +2605,69 @@ cdef class carray:
 
     def __reduce__(self):
         return (build_carray, (self.rootdir,))
+
+cpdef test_v1(carray c):
+    cdef:
+        Py_ssize_t i
+        ndarray[np.npy_int64] r
+
+    r = np.zeros(c.len, dtype='int64')
+    for i in c:
+        r[i] = c[i]
+
+    return r
+
+cpdef test_v2(carray c):
+    cdef:
+        Py_ssize_t i, j
+        Py_ssize_t input_chunk_nr, input_chunk_len, leftover_elements
+        chunk input_chunk
+        ndarray[np.npy_intp] r, in_buffer
+
+    r = np.zeros(c.len, dtype='int64')
+
+    in_buffer = np.empty(c.chunklen, dtype='int64')
+    input_chunk_len = c.chunklen
+    i = 0
+    for input_chunk_nr in range(c.nchunks):
+        # fill input buffer
+        input_chunk = c.chunks[input_chunk_nr]
+        input_chunk._getitem(0, input_chunk_len, in_buffer.data)
+        for j in range(input_chunk_len):
+            r[i] = in_buffer[j]
+            i += 1
+
+    leftover_elements = cython.cdiv(c.leftover, c.atomsize)
+    if leftover_elements > 0:
+        in_buffer = c.leftover_array
+        for j in range(leftover_elements):
+            r[i] = in_buffer[j]
+            i += 1
+    return r
+
+cpdef test_v3(carray c):
+    cdef:
+        Py_ssize_t i, j
+        ndarray[np.npy_int64] r
+        chunk chunk_
+
+    r = np.zeros(c.len, dtype='int64')
+
+    i = 0
+    for chunk_ in c.chunks:
+        # fill input buffer
+        for item in chunk_:
+            r[i] = item
+            i += 1
+
+    leftover_elements = cython.cdiv(c.leftover, c.atomsize)
+    if leftover_elements > 0:
+        # loop through rows
+        for j in range(leftover_elements):
+            r[i] = c.leftover_array[j]
+            i += 1
+
+    return r
 
 ## Local Variables:
 ## mode: python

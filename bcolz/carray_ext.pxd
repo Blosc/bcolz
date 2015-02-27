@@ -3,7 +3,9 @@ from numpy cimport ndarray, dtype, npy_intp
 cdef class chunk:
     cdef char typekind, isconstant
     cdef public int atomsize, itemsize, blocksize
-    cdef public int nbytes, cbytes, cdbytes
+    cdef public int nbytes, cbytes, cdbytes, _chunklen
+    cdef public int _iter_count
+    cdef public ndarray _iter_values
     cdef int true_count
     cdef char *data
     cdef object atom, constant, dobject
