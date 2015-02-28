@@ -499,6 +499,9 @@ class ctable(object):
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
+        if self.auto_flush:
+            self.flush()
+
     def delcol(self, name=None, pos=None, keep=False):
         """
         delcol(name=None, pos=None)
@@ -551,6 +554,9 @@ class ctable(object):
 
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+
+        if self.auto_flush:
+            self.flush()
 
     def copy(self, **kwargs):
         """
