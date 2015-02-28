@@ -315,12 +315,7 @@ cdef class chunk:
         self.atom = atom
         self.atomsize = atom.itemsize
         dtype_ = atom.base
-        # 'kind' isn't defined in the numpy.pxd
-        # kind is of type python str, typekind of type char
-        # in cython char is coerced to int
-        # kind[0] gives us the first character of the string
-        # ord gives us the ascii integer corresponding to that char
-        self.typekind = ord(dtype_.kind[0])
+        self.typekind = dtype_.kind
         # Hack for allowing strings with len > BLOSC_MAX_TYPESIZE
         if self.typekind == 'S':
             itemsize = 1
