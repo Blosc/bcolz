@@ -15,7 +15,6 @@ import itertools
 from collections import namedtuple
 import json
 import os
-import os.path
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
 
@@ -81,7 +80,7 @@ class cols(object):
         """Return the named column and remove it."""
         pos = self.names.index(name)
         name = self.names.pop(pos)
-        col = self._cols[name]
+        col = self._cols.pop(name)
         self.update_meta()
         return col
 
@@ -180,6 +179,10 @@ class ctable(object):
         # Important optional params
         self._cparams = kwargs.get('cparams', bcolz.cparams())
         self.rootdir = kwargs.get('rootdir', None)
+        if self.rootdir is not None:
+            self.auto_flush = kwargs.get('auto_flush', True)
+        else:
+            self.auto_flush = False
         "The directory where this object is saved."
         if self.rootdir is None and columns is None:
             raise ValueError(
@@ -291,8 +294,13 @@ class ctable(object):
 
         self.len = clen
 
+        if self.auto_flush:
+            self.flush()
+
     def open_ctable(self):
         """Open an existing ctable on-disk."""
+        if self.mode == 'r' and not os.path.exists(self.rootdir):
+            raise KeyError("Disk-based ctable opened with `r`ead mode yet `rootdir` does not exist")
 
         # Open the ctable by reading the metadata
         self.cols.read_meta_and_open()
@@ -370,6 +378,9 @@ class ctable(object):
             clen = clen2
         self.len += clen
 
+        if self.auto_flush:
+            self.flush()
+
     def trim(self, nitems):
         """
         trim(nitems)
@@ -406,7 +417,7 @@ class ctable(object):
             self.cols[name].resize(nitems)
         self.len = nitems
 
-    def addcol(self, newcol, name=None, pos=None, **kwargs):
+    def addcol(self, newcol, name=None, pos=None, move=False, **kwargs):
         """
         addcol(newcol, name=None, pos=None, **kwargs)
 
@@ -424,6 +435,10 @@ class ctable(object):
         pos : int, optional
             The column position.  If not passed, it will be appended
             at the end.
+        move: boolean, optional
+            If the new column is an existing, disk-based carray should it
+            a) copy the data directory (False) or
+            b) move the data directory (True)
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -456,13 +471,24 @@ class ctable(object):
         if len(newcol) != self.len:
             raise ValueError("`newcol` must have the same length than ctable")
 
-        if isinstance(newcol, np.ndarray):
-            if 'cparams' not in kwargs:
-                kwargs['cparams'] = self.cparams
+        if self.rootdir is not None:
+            col_rootdir = os.path.join(self.rootdir, name)
+            kwargs.setdefault('rootdir', col_rootdir)
+
+        kwargs.setdefault('cparams', self.cparams)
+
+        if isinstance(newcol, bcolz.carray) and \
+                        self.rootdir is not None and \
+                        newcol.rootdir is not None:
+            # a special case, where you have a disk-based carray is inserted in a disk-based ctable
+            if move:  # move the the carray
+                shutil.move(newcol.rootdir, col_rootdir)
+                newcol.rootdir = col_rootdir
+            else:  # copy the the carray
+                shutil.copytree(newcol.rootdir, col_rootdir)
+        elif isinstance(newcol, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
-            if 'cparams' not in kwargs:
-                kwargs['cparams'] = self.cparams
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) != bcolz.carray:
             raise ValueError(
@@ -473,7 +499,10 @@ class ctable(object):
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-    def delcol(self, name=None, pos=None):
+        if self.auto_flush:
+            self.flush()
+
+    def delcol(self, name=None, pos=None, keep=False):
         """
         delcol(name=None, pos=None)
 
@@ -485,6 +514,8 @@ class ctable(object):
             The name of the column to remove.
         pos: int, optional
             The position of the column to remove.
+        keep: boolean
+            For disk-backed columns: keep the data on disk?
 
         Notes
         -----
@@ -516,9 +547,16 @@ class ctable(object):
             name = self.names[pos]
 
         # Remove the column
-        self.cols.pop(name)
+        col = self.cols.pop(name)
+
+        if not keep:
+            col.purge()
+
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+
+        if self.auto_flush:
+            self.flush()
 
     def copy(self, **kwargs):
         """

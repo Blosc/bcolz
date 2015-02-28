@@ -7,6 +7,8 @@ Changes from 0.8.1 to 0.9.0
 
 - Implement ``purge``, which removes data for on-disk carrays. (#130 @esc)
 
+- Implement addcol/delcol to properly handle on-disk ctable (#112 @cpcloud)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
