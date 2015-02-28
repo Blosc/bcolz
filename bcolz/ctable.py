@@ -417,7 +417,7 @@ class ctable(object):
             self.cols[name].resize(nitems)
         self.len = nitems
 
-    def addcol(self, newcol, name=None, pos=None, **kwargs):
+    def addcol(self, newcol, name=None, pos=None, move=False, **kwargs):
         """
         addcol(newcol, name=None, pos=None, **kwargs)
 
@@ -435,6 +435,10 @@ class ctable(object):
         pos : int, optional
             The column position.  If not passed, it will be appended
             at the end.
+        move: boolean, optional
+            If the new column is an existing, disk-based carray should it
+            a) copy the data directory (False) or
+            b) move the data directory (True)
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -468,11 +472,21 @@ class ctable(object):
             raise ValueError("`newcol` must have the same length than ctable")
 
         if self.rootdir is not None:
-            kwargs.setdefault('rootdir', os.path.join(self.rootdir, name))
+            col_rootdir = os.path.join(self.rootdir, name)
+            kwargs.setdefault('rootdir', col_rootdir)
 
         kwargs.setdefault('cparams', self.cparams)
 
-        if isinstance(newcol, (np.ndarray, bcolz.carray)):
+        if isinstance(newcol, bcolz.carray) and \
+                        self.rootdir is not None and \
+                        newcol.rootdir is not None:
+            # a special case, where you have a disk-based carray is inserted in a disk-based ctable
+            if move:  # move the the carray
+                shutil.move(newcol.rootdir, col_rootdir)
+                newcol.rootdir = col_rootdir
+            else:  # copy the the carray
+                shutil.copytree(newcol.rootdir, col_rootdir)
+        elif isinstance(newcol, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
             newcol = bcolz.carray(newcol, **kwargs)
