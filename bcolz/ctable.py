@@ -518,10 +518,7 @@ class ctable(object):
         # Remove the column
         col = self.cols.pop(name)
 
-        # remove the data if we have a rootdir
-        if self.rootdir is not None and col.rootdir is not None:
-            # is the col.rootdir is not None check necessary?
-            shutil.rmtree(os.path.join(self.rootdir, name))
+        col.purge()
 
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
