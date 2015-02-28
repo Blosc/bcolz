@@ -7,6 +7,8 @@ Changes from 0.8.1 to 0.9.0
 
 - Implement ``purge``, which removes data for on-disk carrays. (#130 @esc)
 
+- Adding io-mode to the ``repr`` for carrays. (#124 @esc)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
