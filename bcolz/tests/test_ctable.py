@@ -394,8 +394,7 @@ class add_del_colDiskTest(add_del_colTest, TestCase):
         assert_array_equal(bcolz.carray(rootdir=newpath)[:], ra['f2'])
 
     def test_del_new_column_ondisk(self):
-        """Testing adding a new column properly creates a new disk array (list
-        flavor)
+        """Testing delcol removes data on disk.
         """
         N = 10
         ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
@@ -427,8 +426,7 @@ class add_del_colDiskTest(add_del_colTest, TestCase):
         self.assertTrue(os.path.exists(newpath))
 
     def test_add_new_column_ondisk_other_carray_rootdir(self):
-        """Testing adding a new column properly creates a new disk array (list
-        flavor)
+        """Testing addcol with different rootdir.
         """
         N = 10
         ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
