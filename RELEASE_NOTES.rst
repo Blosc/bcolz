@@ -5,7 +5,11 @@ Release notes for bcolz
 Changes from 0.8.0 to 0.8.1
 ===========================
 
-- pass
+- Downgrade to Blosc v1.4.1 (#144 @esc)
+
+- Fix license include (#143 @esc)
+
+- Upgrade to Cython 0.22 (#145 @esc)
 
 Changes from 0.7.3 to 0.8.0
 ===========================
