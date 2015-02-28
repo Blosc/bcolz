@@ -1,12 +1,11 @@
 ======================
-Announcing bcolz 0.8.1
+Announcing bcolz 0.9.0
 ======================
 
 What's new
 ==========
 
-This is a maintenence release that downgrades the included Blosc to
-v1.4.1. If you are experiencing issues with 0.8.0 please try this one.
+#XXX version-specific blurb XXX#
 
 What it is
 ==========
