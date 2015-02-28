@@ -59,7 +59,7 @@ def check_import(pkgname, pkgver):
 ########### Check versions ##########
 
 # The minimum version of Cython required for generating extensions
-min_cython_version = '0.20'
+min_cython_version = '0.22'
 # The minimum version of NumPy required
 min_numpy_version = '1.7'
 # The minimum version of Numexpr (optional)
