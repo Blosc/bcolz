@@ -473,7 +473,7 @@ class ctable(object):
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-    def delcol(self, name=None, pos=None):
+    def delcol(self, name=None, pos=None, keep=False):
         """
         delcol(name=None, pos=None)
 
@@ -485,6 +485,8 @@ class ctable(object):
             The name of the column to remove.
         pos: int, optional
             The position of the column to remove.
+        keep: boolean
+            For disk-backed columns: keep the data on disk?
 
         Notes
         -----
@@ -518,7 +520,8 @@ class ctable(object):
         # Remove the column
         col = self.cols.pop(name)
 
-        col.purge()
+        if not keep:
+            col.purge()
 
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
