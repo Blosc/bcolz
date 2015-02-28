@@ -179,6 +179,10 @@ class ctable(object):
         # Important optional params
         self._cparams = kwargs.get('cparams', bcolz.cparams())
         self.rootdir = kwargs.get('rootdir', None)
+        if self.rootdir is not None:
+            self.auto_flush = kwargs.get('auto_flush', True)
+        else:
+            self.auto_flush = False
         "The directory where this object is saved."
         if self.rootdir is None and columns is None:
             raise ValueError(
@@ -290,6 +294,9 @@ class ctable(object):
 
         self.len = clen
 
+        if self.auto_flush:
+            self.flush()
+
     def open_ctable(self):
         """Open an existing ctable on-disk."""
 
@@ -368,6 +375,9 @@ class ctable(object):
                     "all cols in `cols` must have the same length")
             clen = clen2
         self.len += clen
+
+        if self.auto_flush:
+            self.flush()
 
     def trim(self, nitems):
         """
