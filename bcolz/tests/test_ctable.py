@@ -410,6 +410,22 @@ class add_del_colDiskTest(add_del_colTest, TestCase):
         t.delcol('f2')
         self.assertFalse(os.path.exists(newpath))
 
+    def test_del_new_column_ondisk(self):
+        """Testing delcol with keep keeps the data.
+        """
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        c = np.fromiter(("s%d" % i for i in xrange(N)), dtype='S2')
+        t.addcol(c.tolist(), 'f2')
+        ra = np.fromiter(((i, i * 2., "s%d" % i) for i in xrange(N)),
+                         dtype='i4,f8,S2')
+        newpath = os.path.join(self.rootdir, 'f2')
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+        assert_array_equal(bcolz.carray(rootdir=newpath)[:], ra['f2'])
+        t.delcol('f2', keep=True)
+        self.assertTrue(os.path.exists(newpath))
+
     def test_add_new_column_ondisk_other_carray_rootdir(self):
         """Testing adding a new column properly creates a new disk array (list
         flavor)
