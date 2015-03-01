@@ -15,7 +15,6 @@ import itertools
 from collections import namedtuple
 import json
 import os
-import os.path
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
 
@@ -81,7 +80,7 @@ class cols(object):
         """Return the named column and remove it."""
         pos = self.names.index(name)
         name = self.names.pop(pos)
-        col = self._cols[name]
+        col = self._cols.pop(name)
         self.update_meta()
         return col
 
@@ -456,13 +455,14 @@ class ctable(object):
         if len(newcol) != self.len:
             raise ValueError("`newcol` must have the same length than ctable")
 
-        if isinstance(newcol, np.ndarray):
-            if 'cparams' not in kwargs:
-                kwargs['cparams'] = self.cparams
+        if self.rootdir is not None:
+            kwargs.setdefault('rootdir', os.path.join(self.rootdir, name))
+
+        kwargs.setdefault('cparams', self.cparams)
+
+        if isinstance(newcol, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
-            if 'cparams' not in kwargs:
-                kwargs['cparams'] = self.cparams
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) != bcolz.carray:
             raise ValueError(
@@ -516,7 +516,13 @@ class ctable(object):
             name = self.names[pos]
 
         # Remove the column
-        self.cols.pop(name)
+        col = self.cols.pop(name)
+
+        # remove the data if we have a rootdir
+        if self.rootdir is not None and col.rootdir is not None:
+            # is the col.rootdir is not None check necessary?
+            shutil.rmtree(os.path.join(self.rootdir, name))
+
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
