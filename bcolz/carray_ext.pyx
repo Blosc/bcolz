@@ -2584,6 +2584,7 @@ cdef class carray:
         header += "  cparams := %r\n" % self.cparams
         if self._rootdir:
             header += "  rootdir := '%s'\n" % self._rootdir
+            header += "  mode    := '%s'\n" % self.mode
         fullrepr = header + str(self)
         return fullrepr
 

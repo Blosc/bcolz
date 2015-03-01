@@ -13,6 +13,7 @@ import os
 import sys
 import struct
 import shutil
+import textwrap
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
@@ -2114,6 +2115,38 @@ class PurgeMemoryArrayTest(MayBeDiskTest, TestCase):
         b = bcolz.arange(1e2, rootdir=self.rootdir)
         # this should work and should be a noop
         b.purge()
+
+class reprDiskTest(MayBeDiskTest,TestCase):
+    disk = True
+
+    def _create_expected(self, mode):
+        expected = textwrap.dedent("""
+                   carray((0,), float64)
+                     nbytes: 0; cbytes: 16.00 KB; ratio: 0.00
+                     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+                     rootdir := '%s'
+                     mode    := '%s'
+                   []
+                   """ % (self.rootdir, mode)).strip()
+        return expected
+
+
+    def test_repr_disk_array_write(self):
+        x = carray([], rootdir=self.rootdir, mode='w')
+        expected = self._create_expected('w')
+        self.assertEqual(expected, repr(x))
+
+    def test_repr_disk_array_read(self):
+        x = carray([], rootdir=self.rootdir, mode='r')
+        expected = self._create_expected('r')
+        self.assertEqual(expected, repr(x))
+
+    def test_repr_disk_array_append(self):
+        x = carray([], rootdir=self.rootdir, mode='w')
+        y = carray(rootdir=self.rootdir)
+        expected = self._create_expected('a')
+        self.assertEqual(expected, repr(y))
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
