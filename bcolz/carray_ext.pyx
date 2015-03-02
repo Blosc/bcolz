@@ -730,6 +730,19 @@ cdef class chunks(object):
             scomp = schunk.read(ctbytes)
         return scomp
 
+    def __iter__(self):
+       self._iter_count = 0
+       return self
+
+    def __next__(self):
+        cdef int i
+        if self._iter_count < self.nchunks:
+            i = self._iter_count
+            self._iter_count += 1
+            return self.__getitem__(i)
+        else:
+            raise StopIteration()
+
     def __getitem__(self, nchunk):
         cdef void *decompressed
         cdef void *compressed
