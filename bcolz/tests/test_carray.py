@@ -2115,6 +2115,28 @@ class PurgeMemoryArrayTest(MayBeDiskTest, TestCase):
         # this should work and should be a noop
         b.purge()
 
+class FlushDiskTest(MayBeDiskTest, TestCase):
+    disk = True
+
+    def test_01(self):
+        '''Testing autoflush new disk-based carray'''
+        a = np.arange(1e2)
+        b = bcolz.carray(a, chunklen=30, rootdir=self.rootdir)
+
+        b = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(a, b[:], 'not working correctly')
+
+    def test_02(self):
+        '''Testing autoflush when appending data to a disk-based carray'''
+        a = np.arange(1e2)
+        b = bcolz.carray(a, chunklen=20, rootdir=self.rootdir)
+        b.append(-1)
+
+        b = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(np.append(a, -1), b[:], 'not working correctly')
+
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

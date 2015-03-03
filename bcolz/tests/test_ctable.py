@@ -1951,6 +1951,62 @@ class pickleTest(MayBeDiskTest, TestCase):
         self.assertEquals(type(b2), type(b))
 
 
+class FlushDiskTest(MayBeDiskTest, TestCase):
+    disk = True
+
+    def test_01(self):
+        '''Testing autoflush new disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (chunklen=30 and N=100)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+
+        t = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(a, t[:], 'not working correctly')
+
+    def test_02(self):
+        '''Testing autoflush when appending data to a disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+
+        y = np.array([(-1.0,-2.0)], dtype=[('f0', 'i4'), ('f1', 'f8')])
+        t.append(y)
+
+        t = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(np.append(a, y, 0), t[:], 'not working correctly')
+
+    def test_03(self):
+        '''Testing autoflush adding column data to a disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+
+        y = np.fromiter(((i * 3) for i in xrange(N)), dtype='i8')
+        t.addcol(y)
+
+        t = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(a['f0'], t['f0'], 'not working correctly')
+        assert_array_equal(a['f1'], t['f1'], 'not working correctly')
+        assert_array_equal(y, t['f2'], 'not working correctly')
+
+    def test_04(self):
+        '''Testing autoflush deleting a column to a disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+
+        y = np.fromiter(((i * 3) for i in xrange(N)), dtype='i8')
+        t.delcol('f1')
+
+        t = bcolz.open(rootdir=self.rootdir)
+        assert_array_equal(a['f0'], t['f0'], 'not working correctly')
+        self.assertTrue('f1' not in t.cols.names)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
