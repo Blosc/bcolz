@@ -19,6 +19,7 @@ import bcolz
 from bcolz.py2help import xrange, PY2
 import pickle
 import os
+from mock import Mock
 
 
 class createTest(MayBeDiskTest):
@@ -2006,6 +2007,56 @@ class FlushDiskTest(MayBeDiskTest, TestCase):
         assert_array_equal(a['f0'], t['f0'], 'not working correctly')
         self.assertTrue('f1' not in t.cols.names)
 
+    def test_05(self):
+        '''Testing flush call on a new disk-based ctable'''
+        tmp_var = bcolz.ctable.flush
+        bcolz.ctable.flush = Mock()
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (chunklen=30 and N=100)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+
+        t.flush.assert_called_with()
+        bcolz.ctable.flush = tmp_var
+
+    def test_06(self):
+        '''Testing flush call when appending data disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+        t.flush = Mock()
+
+        y = np.array([(-1.0,-2.0)], dtype=[('f0', 'i4'), ('f1', 'f8')])
+        t.append(y)
+
+        t.flush.assert_called_with()
+
+    def test_07(self):
+        '''Testing flush call after adding column data to a disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+        t.flush = Mock()
+
+        y = np.fromiter(((i * 3) for i in xrange(N)), dtype='i8')
+        t.addcol(y)
+
+        t.flush.assert_called_with()
+
+    def test_08(self):
+        '''Testing flush call after deleting a column to a disk-based ctable'''
+        N = 100
+        a = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        # force ctable with leftovers (N is not a multiple of chunklen)
+        t = bcolz.ctable(a, chunklen=30, rootdir=self.rootdir)
+        t.flush = Mock()
+
+        y = np.fromiter(((i * 3) for i in xrange(N)), dtype='i8')
+        t.delcol('f1')
+
+        t.flush.assert_called_with()
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
