@@ -2603,6 +2603,12 @@ cdef class carray:
     def __reduce__(self):
         return (build_carray, (self.rootdir,))
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.flush()
+
 ## Local Variables:
 ## mode: python
 ## tab-width: 4

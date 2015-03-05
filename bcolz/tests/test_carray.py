@@ -2155,9 +2155,9 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
 
         with carray([], rootdir=self.rootdir, mode='w') as x:
             x.append(1)
-        received = np.array(rootdir=self.rootdir)
+        received = np.array(carray(rootdir=self.rootdir))
         expected = np.array([1])
-        npt.assert_array_equal(expected, received)
+        assert_array_equal(expected, received)
 
 
 if __name__ == '__main__':
