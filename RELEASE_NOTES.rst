@@ -11,6 +11,14 @@ Changes from 0.8.1 to 0.9.0
 
 - Adding io-mode to the ``repr`` for carrays. (#124 @esc)
 
+- Implement ``auto_flush`` which allows ctables to flush themselves during
+  operations that modify (write) data.
+  (#140 #152 @FrancescElies @CarstVaartjes)
+
+- Implement ``move`` for ctable, which allows disk-based carray to be moved
+  (``mv``) into the root directory of the ctable.
+  (#140 #152 @FrancescElies @CarstVaartjes)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
