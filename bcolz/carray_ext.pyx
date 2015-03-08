@@ -27,6 +27,7 @@ from numpy cimport (ndarray,
                     npy_intp,
                     )
 import cython
+from libc.stdint cimport uintptr_t
 
 import bcolz
 from bcolz import utils, attrs, array2string
@@ -464,30 +465,69 @@ cdef class chunk:
 
     cdef void _getitem(self, int start, int stop, char *dest):
         """Read data from `start` to `stop` and return it as a numpy array."""
-        cdef int ret, bsize, blen, nitems, nstart
-        cdef ndarray constants
+        cdef int ret, bsize, blen, nitems, nstart, constant_nbytes
+        cdef char * constant_ptr
+
+        constant_ptr = NULL
+        constant_nbytes = 0
+
+        if self.constant is not None:
+            constant_ptr = <char*><uintptr_t>self.constant \
+                .__array_interface__['data'][0]
+            constant_nbytes = self.constant.nbytes
+
+        self._getitem_r(start, stop, dest, 
+                        data=self.data, 
+                        nbytes=self.nbytes, 
+                        atomsize=self.atomsize, 
+                        itemsize=self.itemsize, 
+                        isconstant=self.isconstant, 
+                        constant=constant_ptr,
+                        constant_nbytes=constant_nbytes)
+
+    cdef void _getitem_r(self, int start, int stop, char *dest, char *data, 
+                         int nbytes, int atomsize, int itemsize, 
+                         int isconstant, char *constant_ptr, int constant_nbytes) nogil:
+        """Thread-safe version of _getitem(...)."""
+        cdef:
+            int ret, bsize, blen, nitems, nstart
+            char * start_ptr
+            char * current_ptr
+            char * end_ptr
 
         blen = stop - start
-        bsize = blen * self.atomsize
-        nitems = cython.cdiv(bsize, self.itemsize)
-        nstart = cython.cdiv(start * self.atomsize, self.itemsize)
+        bsize = blen * atomsize
+        nitems = cython.cdiv(bsize, itemsize)
+        nstart = cython.cdiv(start * atomsize, itemsize)
 
-        if self.isconstant:
-            # The chunk is made of constants
-            constants = np.ndarray(shape=(blen,), dtype=self.dtype,
-                                   buffer=self.constant, strides=(0,)).copy()
-            memcpy(dest, constants.data, bsize)
+        if isconstant:
+            if constant_nbytes == 1:
+                memset(dest, constant_ptr[0], bsize)
+            else:
+                # multi-byte constant: create repeating pattern of the constant
+                # by copying increasingly longer repeated sequences of the 
+                # constant until the entire destination buffer is filled
+                memcpy(dest, constant_ptr, constant_nbytes)
+                start_ptr = dest
+                current_ptr = dest + constant_nbytes
+                end_ptr = start_ptr + bsize
+                while constant_nbytes < end_ptr - current_ptr:
+                    memcpy(current_ptr, start_ptr, constant_nbytes)
+                    current_ptr += constant_nbytes
+                    constant_nbytes *= 2
+                memcpy(current_ptr, start_ptr, end_ptr-current_ptr);
             return
 
         # Fill dest with uncompressed data
-        with nogil:
-            if bsize == self.nbytes:
-                ret = blosc_decompress(self.data, dest, bsize)
-            else:
-                ret = blosc_getitem(self.data, nstart, nitems, dest)
+        if bsize == nbytes:
+            ret = blosc_decompress(data, dest, bsize)
+        else:
+            ret = blosc_getitem(data, nstart, nitems, dest)
+
         if ret < 0:
-            raise RuntimeError(
-                "fatal error during Blosc decompression: %d" % ret)
+            with gil:
+                raise RuntimeError(
+                    "fatal error during Blosc decompression: %d" % ret)
 
     def __getitem__(self, object key):
         """__getitem__(self, key) -> values."""
