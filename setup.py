@@ -234,5 +234,5 @@ for binary data.
                     extra_compile_args=CFLAGS),
       ],
       packages=['bcolz', 'bcolz.tests'],
-
+      package_data={'bcolz': ['carray_ext.pxd']},
 )
