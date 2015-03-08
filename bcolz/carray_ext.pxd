@@ -18,7 +18,6 @@ cdef class chunk:
                           object cparams, object _memory)
 
 
-
 cdef class chunks(object):
     cdef object _rootdir, _mode
     cdef object dtype, cparams, lastchunkarr

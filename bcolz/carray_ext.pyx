@@ -476,14 +476,15 @@ cdef class chunk:
                 .__array_interface__['data'][0]
             constant_nbytes = self.constant.nbytes
 
-        self._getitem_r(start, stop, dest, 
-                        data=self.data, 
-                        nbytes=self.nbytes, 
-                        atomsize=self.atomsize, 
-                        itemsize=self.itemsize, 
-                        isconstant=self.isconstant, 
-                        constant=constant_ptr,
-                        constant_nbytes=constant_nbytes)
+        with nogil:
+            self._getitem_r(start, stop, dest, 
+                            data=self.data, 
+                            nbytes=self.nbytes, 
+                            atomsize=self.atomsize, 
+                            itemsize=self.itemsize, 
+                            isconstant=self.isconstant, 
+                            constant=constant_ptr,
+                            constant_nbytes=constant_nbytes)
 
     cdef void _getitem_r(self, int start, int stop, char *dest, char *data, 
                          int nbytes, int atomsize, int itemsize, 
