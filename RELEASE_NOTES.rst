@@ -19,6 +19,8 @@ Changes from 0.8.1 to 0.9.0
   (``mv``) into the root directory of the ctable.
   (#140 #152 @FrancescElies @CarstVaartjes)
 
+- Distribute ``carray_ext.pxd`` as part of the package. (#159 @ARF)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
