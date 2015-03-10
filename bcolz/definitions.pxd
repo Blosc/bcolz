@@ -24,8 +24,8 @@ cdef extern from "string.h":
     char *strncpy(char *dest, char *src, size_t n)
     int strcmp(char *s1, char *s2)
     char *strdup(char *s)
-    void *memcpy(void *dest, void *src, size_t n)
-    void *memset(void *s, int c, size_t n)
+    void *memcpy(void *dest, void *src, size_t n) nogil
+    void *memset(void *s, int c, size_t n) nogil
 
 cdef extern from "time.h":
     ctypedef int time_t

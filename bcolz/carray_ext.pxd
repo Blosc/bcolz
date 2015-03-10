@@ -9,6 +9,9 @@ cdef class chunk:
     cdef object atom, constant, dobject
 
     cdef void _getitem(self, int start, int stop, char *dest)
+    cdef void _getitem_r(self, int start, int stop, char *dest, char *data, 
+                         int nbytes, int atomsize, int itemsize, 
+                         int isconstant, char *constant, int constant_nbytes) nogil
     cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
                        object cparams)
     cdef compress_arrdata(self, ndarray array, int itemsize,
