@@ -7,6 +7,10 @@ Changes from 0.9.0 to 0.10.0
 
 - Fix pickle for in-memory carrays (#193 #194 @dataisle @esc)
 
+- Implement chunks iterator, which allows the following syntax
+  ``for chunk_ in ca._chunks``, added "internal use" indicator to carray 
+  chunks attribute (#153 @FrancescElies and @esc)
+
 Changes from 0.8.1 to 0.9.0
 ===========================
 
