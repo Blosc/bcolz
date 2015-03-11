@@ -2160,6 +2160,31 @@ class reprDiskTest(MayBeDiskTest,TestCase):
         expected = self._create_expected('a')
         self.assertEqual(expected, repr(y))
 
+class chunksIterTest(MayBeDiskTest):
+    def test00(self):
+        """Testing chunk iterator"""
+        _dtype = 'int64'
+        chunklen_ = 10
+        N = 1e2 + 3
+        a = np.arange(N, dtype=_dtype)
+        b = bcolz.carray(a, dtype=_dtype, chunklen=chunklen_,
+                         rootdir=self.rootdir)
+        # print 'nchunks', b.nchunks
+        for n, chunk_ in enumerate(b.chunks):
+            # print 'chunk nr.', n, '-->', chunk_
+            assert_array_equal(chunk_[0:chunklen_],
+                               a[n * chunklen_:(n + 1) * chunklen_],
+                               "iter chunks not working correctly")
+
+        self.assertEquals(n, len(a) // chunklen_ - 1)
+
+
+class chunksIterMemoryTest(chunksIterTest, TestCase):
+    disk = False
+
+
+class chunksIterDiskTest(chunksIterTest, TestCase):
+    disk = True
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
