@@ -99,8 +99,11 @@ def get_len_of_range(start, stop, step):
     return n
 
 
-def to_ndarray(array, dtype, arrlen=None):
+def to_ndarray(array, dtype, arrlen=None, safe=True):
     """Convert object to a ndarray."""
+
+    if not safe:
+        return array
 
     if dtype is None:
         return np.array(array)
