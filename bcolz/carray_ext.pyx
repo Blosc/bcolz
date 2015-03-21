@@ -847,7 +847,8 @@ cdef class carray:
         restored in other session, e.g. via the `open()` top-level function).
     safe : bool (defaults to True)
         Coerces inputs to array types.  Set to false if you always give
-        correctly typed and strided arrays.
+        correctly typed, strided, and shaped arrays and if you never use Object
+        dtype
     mode : str, optional
         The mode that a *persistent* carray should be created/opened.  The
         values can be:
@@ -1335,25 +1336,28 @@ cdef class carray:
         cdef ndarray remainder, arrcpy, dflts
         cdef chunk chunk_
 
-        if self.mode == "r":
-            raise IOError(
-                "cannot modify data because mode is '%s'" % self.mode)
+        if self.safe:
+            if self.mode == "r":
+                raise IOError(
+                    "cannot modify data because mode is '%s'" % self.mode)
 
-        arrcpy = utils.to_ndarray(array, self._dtype, safe=self._safe)
-        if arrcpy.dtype != self._dtype.base:
-            raise TypeError("array dtype does not match with self")
+            arrcpy = utils.to_ndarray(array, self._dtype, safe=self._safe)
+            if arrcpy.dtype != self._dtype.base:
+                raise TypeError("array dtype does not match with self")
 
-        # Object dtype requires special storage
-        if arrcpy.dtype.char == 'O':
-            self.store_obj(array)
-            return
+            # Object dtype requires special storage
+            if arrcpy.dtype.char == 'O':
+                self.store_obj(array)
+                return
 
-        # Appending a single row should be supported
-        if np.shape(arrcpy) == self._dtype.shape:
-            arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
-        if np.shape(arrcpy)[1:] != self._dtype.shape:
-            raise ValueError(
-                "array trailing dimensions do not match with self")
+            # Appending a single row should be supported
+            if np.shape(arrcpy) == self._dtype.shape:
+                arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
+            if np.shape(arrcpy)[1:] != self._dtype.shape:
+                raise ValueError(
+                    "array trailing dimensions do not match with self")
+        else:
+            arrcpy = array
 
         atomsize = self.atomsize
         itemsize = self.itemsize
