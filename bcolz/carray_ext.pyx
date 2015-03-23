@@ -480,11 +480,11 @@ cdef class chunk:
             return
 
         # Fill dest with uncompressed data
-        with nogil:
-            if bsize == self.nbytes:
-                ret = blosc_decompress(self.data, dest, bsize)
-            else:
-                ret = blosc_getitem(self.data, nstart, nitems, dest)
+        # TODO: Release GIL once segfault issues cease
+        if bsize == self.nbytes:
+            ret = blosc_decompress(self.data, dest, bsize)
+        else:
+            ret = blosc_getitem(self.data, nstart, nitems, dest)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
