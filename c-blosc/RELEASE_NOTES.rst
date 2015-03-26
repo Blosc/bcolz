@@ -1,10 +1,69 @@
 ================================
- Release notes for c-blosc 1.4.1
+ Release notes for c-blosc 1.5.2
 ================================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.io
+:Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.5.1 to 1.5.2
+===========================
+
+* Using blosc_compress_ctx() / blosc_decompress_ctx() inside the HDF5
+  compressor for allowing operation in multiprocess scenarios.  See:
+  https://github.com/PyTables/PyTables/issues/412
+
+  The drawback of this quick fix is that the Blosc filter will be only
+  able to use a single thread until another solution can be devised.
+
+
+Changes from 1.5.0 to 1.5.1
+===========================
+
+* Updated to LZ4 1.5.0.  Closes #74.
+
+* Added the 'const' qualifier to non SSE2 shuffle functions. Closes #75.
+
+* Explicitly call blosc_init() in HDF5 blosc_filter.c, fixing a
+  segfault.
+
+* Quite a few improvements in cmake files for HDF5 support.  Thanks to
+  Dana Robinson (The HDF Group).
+
+* Variable 'class' caused problems compiling the HDF5 filter with g++.
+  Thanks to Laurent Chapon.
+
+* Small improvements on docstrings of c-blosc main functions.
+
+
+Changes from 1.4.1 to 1.5.0
+===========================
+
+* Added new calls for allowing Blosc to be used *simultaneously*
+  (i.e. lock free) from multi-threaded environments.  The new
+  functions are:
+
+  - blosc_compress_ctx(...)
+  - blosc_decompress_ctx(...)
+
+  See the new docstrings in blosc.h for how to use them.  The previous
+  API should be completely unaffected.  Thanks to Christopher Speller.
+
+* Optimized copies during BloscLZ decompression.  This can make BloscLZ
+  to decompress up to 1.5x faster in some situations.
+
+* LZ4 and LZ4HC compressors updated to version 1.3.1.
+
+* Added an examples directory on how to link apps with Blosc.
+
+* stdlib.h moved from blosc.c to blosc.h as suggested by Rob Lathm.
+
+* Fix a warning for {snappy,lz4}-free compilation.  Thanks to Andrew Schaaf.
+
+* Several improvements for CMakeLists.txt (cmake).
+
+* Fixing C99 compatibility warnings.  Thanks to Christopher Speller.
 
 
 Changes from 1.4.0 to 1.4.1
@@ -364,11 +423,3 @@ Changes from 0.8.0 to 0.9
   necessary on Mac because 16 bytes alignment is ensured by default.
   Thanks to Ivan Vilata.  Fixes #3.
 
-
-
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 72
-.. End:
