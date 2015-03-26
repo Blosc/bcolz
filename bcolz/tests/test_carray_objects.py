@@ -129,6 +129,14 @@ class ObjectCarrayTest(MayBeDiskTest):
             self.assertEqual(carr[i][0], src_data[i][0])
             self.assertEqual(carr[i][1], src_data[i][1])
 
+    def test_create_unsafe_carray_with_unsafe_data(self):
+        """ We introduce a safe keyword arg which removes dtype checking.
+        We don't want this to interfere with creation.
+        """
+        b = bcolz.carray([1, 2, 3], dtype='i4', safe=False)
+        self.assertEqual(b.safe, False)
+        self.assertEqual(b[0], 1)
+
 
 class ObjectCarraymemoryTest(ObjectCarrayTest, TestCase):
     disk = False

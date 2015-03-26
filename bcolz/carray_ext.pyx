@@ -845,6 +845,10 @@ cdef class carray:
         specified, then the carray object will be disk-based (i.e. all chunks
         will live on-disk, not in memory) and persistent (i.e. it can be
         restored in other session, e.g. via the `open()` top-level function).
+    safe : bool (defaults to True)
+        Coerces inputs to array types.  Set to false if you always give
+        correctly typed, strided, and shaped arrays and if you never use Object
+        dtype
     mode : str, optional
         The mode that a *persistent* carray should be created/opened.  The
         values can be:
@@ -939,6 +943,11 @@ cdef class carray:
         def __get__(self):
             return len(self.shape)
 
+    property safe:
+        "Whether or not to perform type/shape checks on every operation."
+        def __get__(self):
+            return self._safe
+
     property shape:
         "The shape of this object."
         def __get__(self):
@@ -963,12 +972,13 @@ cdef class carray:
     def __cinit__(self, object array=None, object cparams=None,
                   object dtype=None, object dflt=None,
                   object expectedlen=None, object chunklen=None,
-                  object rootdir=None, object mode="a"):
+                  object rootdir=None, object safe=True, object mode="a"):
 
         self._rootdir = rootdir
         if mode not in ('r', 'w', 'a'):
             raise ValueError("mode should be 'r', 'w' or 'a'")
         self._mode = mode
+        self._safe = safe
 
         if array is not None:
             self.create_carray(array, cparams, dtype, dflt,
@@ -1326,25 +1336,28 @@ cdef class carray:
         cdef ndarray remainder, arrcpy, dflts
         cdef chunk chunk_
 
-        if self.mode == "r":
-            raise IOError(
-                "cannot modify data because mode is '%s'" % self.mode)
+        if self.safe:
+            if self.mode == "r":
+                raise IOError(
+                    "cannot modify data because mode is '%s'" % self.mode)
 
-        arrcpy = utils.to_ndarray(array, self._dtype)
-        if arrcpy.dtype != self._dtype.base:
-            raise TypeError("array dtype does not match with self")
+            arrcpy = utils.to_ndarray(array, self._dtype, safe=self._safe)
+            if arrcpy.dtype != self._dtype.base:
+                raise TypeError("array dtype does not match with self")
 
-        # Object dtype requires special storage
-        if arrcpy.dtype.char == 'O':
-            self.store_obj(array)
-            return
+            # Object dtype requires special storage
+            if arrcpy.dtype.char == 'O':
+                self.store_obj(array)
+                return
 
-        # Appending a single row should be supported
-        if np.shape(arrcpy) == self._dtype.shape:
-            arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
-        if np.shape(arrcpy)[1:] != self._dtype.shape:
-            raise ValueError(
-                "array trailing dimensions do not match with self")
+            # Appending a single row should be supported
+            if np.shape(arrcpy) == self._dtype.shape:
+                arrcpy = arrcpy.reshape((1,) + np.shape(arrcpy))
+            if np.shape(arrcpy)[1:] != self._dtype.shape:
+                raise ValueError(
+                    "array trailing dimensions do not match with self")
+        else:
+            arrcpy = array
 
         atomsize = self.atomsize
         itemsize = self.itemsize
@@ -2061,7 +2074,8 @@ cdef class carray:
                 return
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                value = utils.to_ndarray(value, self._dtype, arrlen=len(key))
+                value = utils.to_ndarray(value, self._dtype, arrlen=len(key),
+                        safe=self._safe)
                 # XXX This could be optimised, but it works like this
                 for i, item in enumerate(key):
                     self[item] = value[i]
@@ -2094,7 +2108,8 @@ cdef class carray:
         if vlen == 0:
             # If range is empty, return immediately
             return
-        value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
+        value = utils.to_ndarray(value, self._dtype, arrlen=vlen,
+                safe=self._safe)
 
         # Fill it from data in chunks
         nwrow = 0
@@ -2186,7 +2201,8 @@ cdef class carray:
         cdef object cdata, boolb
 
         vlen = boolarr.sum()  # number of true values in bool array
-        value = utils.to_ndarray(value, self._dtype, arrlen=vlen)
+        value = utils.to_ndarray(value, self._dtype, arrlen=vlen,
+                safe=self._safe)
 
         # Fill it from data in chunks
         nwrow = 0
