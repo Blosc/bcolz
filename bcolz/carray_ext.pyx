@@ -944,7 +944,7 @@ cdef class carray:
             return len(self.shape)
 
     property safe:
-        "The size of this object."
+        "Whether or not to perform type/shape checks on every operation."
         def __get__(self):
             return self._safe
 
