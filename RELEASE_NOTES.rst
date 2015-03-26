@@ -21,6 +21,9 @@ Changes from 0.8.1 to 0.9.0
 
 - Distribute ``carray_ext.pxd`` as part of the package. (#159 @ARF)
 
+- Add ``safe=`` keyword argument to control dtype/stride checking on append
+  (#163 @mrocklin)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
