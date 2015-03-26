@@ -422,9 +422,8 @@ cdef class chunk:
             raise ValueError(
                 "Compressor '%s' is not available in this build" % cname)
         dest = <char *> malloc(nbytes + BLOSC_MAX_OVERHEAD)
-        with nogil:
-            ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                                 data, dest, nbytes + BLOSC_MAX_OVERHEAD)
+        ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                             data, dest, nbytes + BLOSC_MAX_OVERHEAD)
         if ret <= 0:
             raise RuntimeError(
                 "fatal error during Blosc compression: %d" % ret)
@@ -454,8 +453,7 @@ cdef class chunk:
 
         dest = <char *> malloc(self.nbytes)
         # Fill dest with uncompressed data
-        with nogil:
-            ret = blosc_decompress(self.data, dest, self.nbytes)
+        ret = blosc_decompress(self.data, dest, self.nbytes)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
@@ -480,7 +478,6 @@ cdef class chunk:
             return
 
         # Fill dest with uncompressed data
-        # TODO: Release GIL once segfault issues cease
         if bsize == self.nbytes:
             ret = blosc_decompress(self.data, dest, bsize)
         else:
@@ -709,8 +706,7 @@ cdef class chunks(object):
                 # Fill lastchunk with data on disk
                 scomp = self.read_chunk(self.nchunks)
                 compressed = PyString_AsString(scomp)
-                with nogil:
-                    ret = blosc_decompress(compressed, lastchunk, chunksize)
+                ret = blosc_decompress(compressed, lastchunk, chunksize)
                 if ret < 0:
                     raise RuntimeError(
                         "error decompressing the last chunk (error code: "
