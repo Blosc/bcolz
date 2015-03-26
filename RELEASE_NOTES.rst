@@ -24,6 +24,9 @@ Changes from 0.8.1 to 0.9.0
 - Add ``safe=`` keyword argument to control dtype/stride checking on append
   (#163 @mrocklin)
 
+- Hold GIL during c-blosc compression/decompression, avoiding some segfaults
+  (#166 @mrocklin)
+
 Changes from 0.8.0 to 0.8.1
 ===========================
 
