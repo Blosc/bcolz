@@ -2,6 +2,8 @@
 Library Reference
 -----------------
 
+.. currentmodule:: bcolz
+
 First level variables
 =====================
 
