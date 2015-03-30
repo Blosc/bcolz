@@ -25,7 +25,7 @@ First level variables
 
 
 Top level classes
-===================
+=================
 
 .. autoclass:: cparams
    :members: setdefaults
@@ -36,7 +36,7 @@ Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 .. _top-level-constructors:
 
 Top level functions
-=====================
+===================
 
 .. py:function:: array2string(a, max_line_width=None, precision=None, suppress_small=None, separator=' ', prefix="", style=repr, formatter=None)
 
@@ -56,7 +56,6 @@ Top level functions
 
 .. autofunction:: fromiter
 
-
 .. py:function:: get_printoptions()
 
     Return the current print options.
@@ -73,11 +72,9 @@ Top level functions
 
 .. autofunction:: open
 
-
 .. py:function:: print_versions()
 
     Print all the versions of packages that bcolz relies on.
-
 
 .. py:function:: set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None)
 
