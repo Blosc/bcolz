@@ -38,6 +38,31 @@ Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 Top level functions
 ===================
 
+.. autofunction:: arange
+
+.. autofunction:: eval
+
+.. autofunction:: fill
+
+.. autofunction:: fromiter
+
+.. autofunction:: iterblocks
+
+.. autofunction:: ones
+
+.. autofunction:: zeros
+
+.. autofunction:: open
+
+.. autofunction:: walk
+
+.. py:function:: print_versions()
+
+    Print all the versions of packages that bcolz relies on.
+
+Top level printing functions
+============================
+
 .. py:function:: array2string(a, max_line_width=None, precision=None, suppress_small=None, separator=' ', prefix="", style=repr, formatter=None)
 
     Return a string representation of a carray/ctable object.
@@ -47,14 +72,6 @@ Top level functions
 
     See Also:
       :py:func:`set_printoptions`, :py:func:`get_printoptions`
-
-.. autofunction:: arange
-
-.. autofunction:: eval
-
-.. autofunction:: fill
-
-.. autofunction:: fromiter
 
 .. py:function:: get_printoptions()
 
@@ -66,16 +83,6 @@ Top level functions
     See Also:
       :py:func:`array2string`, :py:func:`set_printoptions`
 
-.. autofunction:: iterblocks
-
-.. autofunction:: ones
-
-.. autofunction:: open
-
-.. py:function:: print_versions()
-
-    Print all the versions of packages that bcolz relies on.
-
 .. py:function:: set_printoptions(precision=None, threshold=None, edgeitems=None, linewidth=None, suppress=None, nanstr=None, infstr=None, formatter=None)
 
     Set printing options.
@@ -86,10 +93,6 @@ Top level functions
 
     See Also:
       :py:func:`array2string`, :py:func:`get_printoptions`
-
-.. autofunction:: zeros
-
-.. autofunction:: walk
 
 Utility functions
 =================
