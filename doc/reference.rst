@@ -56,9 +56,6 @@ Top level functions
 
 .. autofunction:: walk
 
-.. py:function:: print_versions()
-
-    Print all the versions of packages that bcolz relies on.
 
 Top level printing functions
 ============================
@@ -97,13 +94,15 @@ Top level printing functions
 Utility functions
 =================
 
-.. autofunction:: blosc_set_nthreads
+.. autofunction:: set_nthreads
 
-.. autofunction:: blosc_version
+.. autofunction:: blosc_set_nthreads
 
 .. autofunction:: detect_number_of_cores
 
-.. autofunction:: set_nthreads
+.. autofunction:: blosc_version
+
+.. autofunction:: print_versions
 
 .. autofunction:: test
 
