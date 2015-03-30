@@ -30,8 +30,11 @@
 # 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
 # `viewcode` dona alguns problemes:
 # http://bitbucket.org/birkenfeld/sphinx/issue/515/keyerror-while-building
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
-              'sphinx.ext.ifconfig']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.coverage',
+              'sphinx.ext.ifconfig',
+              'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
