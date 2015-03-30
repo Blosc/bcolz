@@ -48,119 +48,14 @@ Top level functions
     See Also:
       :py:func:`set_printoptions`, :py:func:`get_printoptions`
 
+.. autofunction:: arange
 
-.. py:function:: arange([start,] stop[, step,], dtype=None, **kwargs)
+.. autofunction:: eval
 
-    Return evenly spaced values within a given interval.
+.. autofunction:: fill
 
-    Values are generated within the half-open interval ``[start,
-    stop)`` (in other words, the interval including `start` but
-    excluding `stop`).  For integer arguments the function is
-    equivalent to the Python built-in `range
-    <http://docs.python.org/lib/built-in-funcs.html>`_ function, but
-    returns a carray rather than a list.
+.. autofunction:: fromiter
 
-    Parameters:
-      start : number, optional
-        Start of interval.  The interval includes this value.  The default
-        start value is 0.
-      stop : number
-        End of interval.  The interval does not include this value.
-      step : number, optional
-        Spacing between values.  For any output `out`, this is the
-        distance between two adjacent values, ``out[i+1] - out[i]``.
-        The default step size is 1.  If `step` is specified, `start`
-        must also be given.
-      dtype : dtype
-        The type of the output array.  If `dtype` is not given, infer
-        the data type from the other input arguments.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray
-        Array of evenly spaced values.
-
-        For floating point arguments, the length of the result is
-        ``ceil((stop - start)/step)``.  Because of floating point overflow,
-        this rule may result in the last element of `out` being greater
-        than `stop`.
-
-.. py:function:: eval(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
-
-    Evaluate an `expression` and return the result.
-
-    Parameters:
-      expression : string
-        A string forming an expression, like '2*a+3*b'. The values for
-        'a' and 'b' are variable names to be taken from the calling
-        function's frame.  These variables may be scalars, carrays or
-        NumPy arrays.
-      vm : string
-        The virtual machine to be used in computations.  It can be 'numexpr'
-        or 'python'.  The default is to use 'numexpr' if it is installed.
-      out_flavor : string
-        The flavor for the `out` object.  It can be 'carray' or 'numpy'.
-      user_dict : dict
-        An user-provided dictionary where the variables in expression
-        can be found by name.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray object
-        The outcome of the expression.  You can tailor the
-        properties of this carray by passing additional arguments
-        supported by carray constructor in `kwargs`.
-
-.. py:function:: fill(shape, dflt=None, dtype=float, **kwargs)
-
-    Return a new carray object of given shape and type, filled with `dflt`.
-
-    Parameters:
-      shape : int
-        Shape of the new array, e.g., ``(2,3)``.
-      dflt : Python or NumPy scalar
-        The value to be used during the filling process.  If None, values are
-        filled with zeros.  Also, the resulting carray will have this value as
-        its `dflt` value.
-      dtype : data-type, optional
-        The desired data-type for the array, e.g., `numpy.int8`.  Default is
-        `numpy.float64`.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray
-        Array filled with `dflt` values with the given shape and dtype.
-
-    See Also:
-      :py:func:`zeros`, :py:func:`ones`
-
-.. py:function:: fromiter(iterable, dtype, count, **kwargs)
-
-    Create a carray/ctable from an `iterable` object.
-
-    Parameters:
-      iterable : iterable object
-        An iterable object providing data for the carray.
-      dtype : numpy.dtype instance
-        Specifies the type of the outcome object.
-      count : int
-        The number of items to read from iterable. If set to -1, means
-        that the iterable will be used until exhaustion (not
-        recommended, see note below).
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray/ctable constructors.
-
-    Returns:
-      out : a carray/ctable object
-
-    Notes:
-      Please specify `count` to both improve performance and to save
-      memory.  It allows `fromiter` to avoid looping the iterable
-      twice (which is slooow).  It avoids memory leaks to happen too
-      (which can be important for large iterables).
 
 .. py:function:: get_printoptions()
 
@@ -172,71 +67,11 @@ Top level functions
     See Also:
       :py:func:`array2string`, :py:func:`set_printoptions`
 
+.. autofunction:: iterblocks
 
-.. py:function:: iterblocks(blen=None, start=0, stop=None)
+.. autofunction:: ones
 
-    Iterate over a `cobj` (carray/ctable) in blocks of size `blen`.
-
-    Parameters:
-      cobj : carray/ctable object
-        The bcolz object to be iterated over.
-      blen : int
-        The length of the block that is returned.  The default is the
-        chunklen, or for a ctable, the minimum of the different column
-        chunklens.
-      start : int
-        Where the iterator starts.  The default is to start at the beginning.
-      stop : int
-        Where the iterator stops. The default is to stop at the end.
-
-    Returns:
-      out : iterable
-        This iterable returns buffers as NumPy arays of homogeneous or
-        structured types, depending on whether `cobj` is a carray or a
-        ctable object.
-
-    See Also:
-      :py:meth:`ctable.whereblocks`
-
-
-.. py:function:: ones(shape, dtype=float, **kwargs)
-
-    Return a new carray object of given shape and type, filled with ones.
-
-    Parameters:
-      shape : int
-        Shape of the new array, e.g., ``(2,3)``.
-      dtype : data-type, optional
-        The desired data-type for the array, e.g., `numpy.int8`.  Default is
-        `numpy.float64`.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray
-        Array of ones with the given shape and dtype.
-
-    See Also:
-      :py:func:`fill`, :py:func:`ones`
-
-
-.. py:function:: open(rootdir, mode='a')
-
-    Open a disk-based carray/ctable.
-
-    Parameters:
-      rootdir : pathname (string)
-        The directory hosting the carray/ctable object.
-      mode : the open mode (string)
-        Specifies the mode in which the object is opened.  The supported
-        values are:
-
-          * 'r' for read-only
-          * 'w' for emptying the previous underlying data
-          * 'a' for allowing read/write on top of existing data
-
-    Returns:
-      out : a carray/ctable object or None (if not objects are found)
+.. autofunction:: open
 
 
 .. py:function:: print_versions()
@@ -255,46 +90,9 @@ Top level functions
     See Also:
       :py:func:`array2string`, :py:func:`get_printoptions`
 
+.. autofunction:: zeros
 
-.. py:function:: zeros(shape, dtype=float, **kwargs)
-
-    Return a new carray object of given shape and type, filled with zeros.
-
-    Parameters:
-      shape : int
-        Shape of the new array, e.g., ``(2,3)``.
-      dtype : data-type, optional
-        The desired data-type for the array, e.g., `numpy.int8`.  Default is
-        `numpy.float64`.
-      kwargs : list of parameters or dictionary
-        Any parameter supported by the carray constructor.
-
-    Returns:
-      out : carray
-        Array of zeros with the given shape and dtype.
-
-    See Also:
-      :py:func:`fill`, :py:func:`zeros`
-
-
-.. py:function:: walk(dir, classname=None, mode='a')
-
-    Recursively iterate over carray/ctable objects hanging from `dir`.
-
-    Parameters:
-      dir : string
-        The directory from which the listing starts.
-      classname : string
-        If specified, only object of this class are returned.  The values
-        supported are 'carray' and 'ctable'.
-      mode : string
-        The mode in which the object should be opened.
-
-    Returns:
-      out : iterator
-        Iterator over the objects found.
-
-
+.. autofunction:: walk
 
 Utility functions
 =================
