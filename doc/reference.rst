@@ -97,56 +97,15 @@ Top level printing functions
 Utility functions
 =================
 
-.. py:function:: blosc_set_nthreads(nthreads)
+.. autofunction:: blosc_set_nthreads
 
-    Sets the number of threads that Blosc can use.
+.. autofunction:: blosc_version
 
-    Parameters:
-      nthreads : int
-        The desired number of threads to use.
+.. autofunction:: detect_number_of_cores
 
-    Returns:
-      out : int
-        The previous setting for the number of threads.
+.. autofunction:: set_nthreads
 
-.. py:function:: blosc_version()
-
-    Return the version of the Blosc library.
-
-.. py:function:: detect_number_of_cores()
-
-    Return the number of cores on a system.
-
-.. py:function:: set_nthreads(nthreads)
-
-    Sets the number of threads to be used during bcolz operation.
-
-    This affects to both Blosc and Numexpr (if available).
-
-    Parameters:
-      nthreads : int
-        The number of threads to be used during bcolz operation.
-
-    Returns:
-      out : int
-        The previous setting for the number of threads.
-
-    See Also:
-      :py:func:`blosc_set_nthreads`
-
-
-.. py:function:: test(verbose=False, heavy=False)
-
-    Run all the tests in the test suite.
-
-    If `verbose` is set, the test suite will emit messages with full
-    verbosity (not recommended unless you are looking into a certain
-    problem).
-
-    If `heavy` is set, the test suite will be run in *heavy* mode (you
-    should be careful with this because it can take a lot of time and
-    resources from your computer).
-
+.. autofunction:: test
 
 The carray class
 ================
