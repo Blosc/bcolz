@@ -38,6 +38,7 @@ List of default values
 
 
 .. py:attribute:: cparams
+   :noindex:
 
     The defaults for parameters used in compression (dict).  The
     default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}.
