@@ -27,39 +27,8 @@ First level variables
 Top level classes
 ===================
 
-.. py:class:: cparams(clevel=None, shuffle=None, cname=None)
-
-    Class to host parameters for compression and other filters.
-
-    Parameters:
-      clevel : int (0 <= clevel < 10)
-        The compression level.
-      shuffle : bool
-        Whether the shuffle filter is active or not.
-      cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
-        Select the compressor to use inside Blosc.
-
-    In case some of the parameters are not passed, they will be set to
-    a default (see `setdefaults()` method).
-
-    See Also:
-        :py:func:`cparams.setdefaults`
-
-
-  .. py:method:: setdefaults(clevel=None, shuffle=None, cname=None)
-
-    Change the defaults for `clevel`, `shuffle` and `cname` params.
-
-    Parameters:
-      clevel : int (0 <= clevel < 10)
-        The compression level.
-      shuffle : bool
-        Whether the shuffle filter is active or not.
-      cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
-        Select the compressor to use inside Blosc.
-
-    If this method is not called, the defaults will be set as in
-    defaults.py (``{clevel=5, shuffle=True, cname='blosclz'}``).
+.. autoclass:: cparams
+   :members: setdefaults
 
 
 Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
