@@ -1701,8 +1701,8 @@ cdef class carray:
             default platform integer is used instead (NumPy convention).
 
 
-        Return value
-        ------------
+        Returns
+        -------
         out : NumPy scalar with `dtype`
 
         """
