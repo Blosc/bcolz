@@ -107,7 +107,7 @@ class ctable(object):
 
     Parameters
     ----------
-    columns : tuple or list of column objects
+    cols : tuple or list of column objects
         The list of column data to build the ctable object.  This can also be
         a pure NumPy structured array.  A list of lists or tuples is valid
         too, as long as they can be converted into carray objects.
