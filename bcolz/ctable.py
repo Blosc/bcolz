@@ -619,8 +619,8 @@ class ctable(object):
         out : ctable object
             A ctable filled with values from `df`.
 
-        Note
-        ----
+        Notes
+        -----
         The 'object' dtype will be converted into a 'S'tring type, if possible.
         This allows for much better storage savings in bcolz.
 
