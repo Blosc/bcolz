@@ -3,7 +3,7 @@ Releasing Blosc
 ================
 
 :Author: Francesc Alted
-:Contact: francesc@blosc.io
+:Contact: francesc@blosc.org
 :Date: 2014-01-15
 
 
@@ -20,7 +20,7 @@ Testing
 
 Create a new build/ directory, change into it and issue::
 
-  $ cmake ..
+  $ cmake -DBUILD_HDF5_FILTER=TRUE ..
   $ make
   $ make test
 

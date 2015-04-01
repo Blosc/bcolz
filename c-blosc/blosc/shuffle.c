@@ -1,7 +1,7 @@
 /*********************************************************************
   Blosc - Blocked Suffling and Compression Library
 
-  Author: Francesc Alted <francesc@blosc.io>
+  Author: Francesc Alted <francesc@blosc.org>
   Creation date: 2009-05-20
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
@@ -14,7 +14,14 @@
 #if defined(_WIN32) && !defined(__MINGW32__)
   #include <windows.h>
   #include "win32/stdint-windows.h"
-  #define __SSE2__          /* Windows does not define this by default */
+
+  /* Define the __SSE2__ symbol if compiling with Visual C++ and
+     targeting the minimum architecture level supporting SSE2.
+     Other compilers define this as expected and emit warnings
+     when it is re-defined. */
+  #if defined(_MSC_VER) && (defined(_M_X64) || (defined(_M_IX86) && _M_IX86_FP >= 2))
+    #define __SSE2__
+  #endif
 #else
   #include <stdint.h>
   #include <inttypes.h>
@@ -25,7 +32,7 @@
 
 /* Shuffle a block.  This can never fail. */
 static void _shuffle(size_t bytesoftype, size_t blocksize,
-	                 uint8_t* _src, uint8_t* _dest)
+                     const uint8_t* _src, uint8_t* _dest)
 {
   size_t i, j, neblock, leftover;
 
@@ -42,7 +49,7 @@ static void _shuffle(size_t bytesoftype, size_t blocksize,
 
 /* Unshuffle a block.  This can never fail. */
 static void _unshuffle(size_t bytesoftype, size_t blocksize,
-                       uint8_t* _src, uint8_t* _dest)
+                       const uint8_t* _src, uint8_t* _dest)
 {
   size_t i, j, neblock, leftover;
 
@@ -82,7 +89,7 @@ static void printxmm(__m128i xmm0)
 
 /* Routine optimized for shuffling a buffer for a type size of 2 bytes. */
 static void
-shuffle2(uint8_t* dest, uint8_t* src, size_t size)
+shuffle2(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
@@ -119,7 +126,7 @@ shuffle2(uint8_t* dest, uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 4 bytes. */
 static void
-shuffle4(uint8_t* dest, uint8_t* src, size_t size)
+shuffle4(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k;
   size_t numof16belem;
@@ -156,7 +163,7 @@ shuffle4(uint8_t* dest, uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 8 bytes. */
 static void
-shuffle8(uint8_t* dest, uint8_t* src, size_t size)
+shuffle8(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -196,7 +203,7 @@ shuffle8(uint8_t* dest, uint8_t* src, size_t size)
 
 /* Routine optimized for shuffling a buffer for a type size of 16 bytes. */
 static void
-shuffle16(uint8_t* dest, uint8_t* src, size_t size)
+shuffle16(uint8_t* dest, const uint8_t* src, size_t size)
 {
   size_t i, j, k, l;
   size_t numof16belem;
@@ -240,7 +247,7 @@ shuffle16(uint8_t* dest, uint8_t* src, size_t size)
 
 /* Shuffle a block.  This can never fail. */
 void shuffle(size_t bytesoftype, size_t blocksize,
-             uint8_t* _src, uint8_t* _dest) {
+             const uint8_t* _src, uint8_t* _dest) {
   int unaligned_dest = (int)((uintptr_t)_dest % 16);
   int multiple_of_block = (blocksize % (16 * bytesoftype)) == 0;
   int too_small = (blocksize < 256);
@@ -276,7 +283,7 @@ void shuffle(size_t bytesoftype, size_t blocksize,
 
 /* Routine optimized for unshuffling a buffer for a type size of 2 bytes. */
 static void
-unshuffle2(uint8_t* dest, uint8_t* orig, size_t size)
+unshuffle2(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, k;
   size_t neblock, numof16belem;
@@ -302,7 +309,7 @@ unshuffle2(uint8_t* dest, uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 4 bytes. */
 static void
-unshuffle4(uint8_t* dest, uint8_t* orig, size_t size)
+unshuffle4(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -340,7 +347,7 @@ unshuffle4(uint8_t* dest, uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 8 bytes. */
 static void
-unshuffle8(uint8_t* dest, uint8_t* orig, size_t size)
+unshuffle8(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -389,7 +396,7 @@ unshuffle8(uint8_t* dest, uint8_t* orig, size_t size)
 
 /* Routine optimized for unshuffling a buffer for a type size of 16 bytes. */
 static void
-unshuffle16(uint8_t* dest, uint8_t* orig, size_t size)
+unshuffle16(uint8_t* dest, const uint8_t* orig, size_t size)
 {
   size_t i, j, k;
   size_t neblock, numof16belem;
@@ -453,7 +460,7 @@ unshuffle16(uint8_t* dest, uint8_t* orig, size_t size)
 
 /* Unshuffle a block.  This can never fail. */
 void unshuffle(size_t bytesoftype, size_t blocksize,
-               uint8_t* _src, uint8_t* _dest) {
+               const uint8_t* _src, uint8_t* _dest) {
   int unaligned_src = (int)((uintptr_t)_src % 16);
   int unaligned_dest = (int)((uintptr_t)_dest % 16);
   int multiple_of_block = (blocksize % (16 * bytesoftype)) == 0;
@@ -490,12 +497,12 @@ void unshuffle(size_t bytesoftype, size_t blocksize,
 #else   /* no __SSE2__ available */
 
 void shuffle(size_t bytesoftype, size_t blocksize,
-             uint8_t* _src, uint8_t* _dest) {
+             const uint8_t* _src, uint8_t* _dest) {
   _shuffle(bytesoftype, blocksize, _src, _dest);
 }
 
 void unshuffle(size_t bytesoftype, size_t blocksize,
-               uint8_t* _src, uint8_t* _dest) {
+               const uint8_t* _src, uint8_t* _dest) {
   _unshuffle(bytesoftype, blocksize, _src, _dest);
 }
 
