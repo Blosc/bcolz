@@ -505,14 +505,6 @@ class getitemTest(MayBeDiskTest):
         assert_array_equal(t[colnames][:], ra2,
                            "ctable values are not correct")
 
-    def test05(self):
-        """Testing __getitem__ with total slice"""
-        N = 10
-        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
-        t = bcolz.ctable(ra, rootdir=self.rootdir)
-        assert_array_equal(t[:], ra[:],
-                           "ctable values are not correct")
-
     def test05a(self):
         """Testing __getitem__ with total slice"""
         N = 10
