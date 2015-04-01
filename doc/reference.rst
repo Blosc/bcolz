@@ -30,6 +30,7 @@ Top level classes
 .. autoclass:: cparams
    :members: setdefaults
 
+.. autoclass:: bcolz.attrs.attrs
 
 Also, see the :py:class:`carray` and :py:class:`ctable` classes below.
 
