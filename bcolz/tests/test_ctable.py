@@ -505,6 +505,34 @@ class getitemTest(MayBeDiskTest):
         assert_array_equal(t[colnames][:], ra2,
                            "ctable values are not correct")
 
+    def test05(self):
+        """Testing __getitem__ with total slice"""
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        assert_array_equal(t[:], ra[:],
+                           "ctable values are not correct")
+
+    def test05a(self):
+        """Testing __getitem__ with total slice"""
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        assert_array_equal(t[:], ra[:],
+                           "ctable values are not correct")
+
+    def test05b(self):
+        """Testing __getitem__ with total slice for table including a
+        multidimensional column"""
+        N = 10
+        # N.B., col1 is 2D
+        ra = np.fromiter(((i, (i * 2., i * 4.))
+                          for i in xrange(N)),
+                          dtype=[('col0', 'i4'), ('col1', ('f8', 2))])
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        assert_array_equal(t[:], ra[:],
+                           "ctable values are not correct")
+
 
 class getitemMemoryTest(getitemTest, TestCase):
     disk = False

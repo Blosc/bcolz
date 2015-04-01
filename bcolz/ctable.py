@@ -146,7 +146,15 @@ class ctable(object):
     def dtype(self):
         "The data type of this object (numpy dtype)."
         names, cols = self.names, self.cols
-        l = [(name, cols[name].dtype) for name in names]
+        l = []
+        for name in names:
+            col = cols[name]
+            if col.ndim == 1:
+                t = (name, col.dtype)
+            else:
+                # column is multidimensional
+                t = (name, (col.dtype, col.shape[1:]))
+            l.append(t)
         return np.dtype(l)
 
     @property
