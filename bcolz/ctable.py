@@ -149,11 +149,9 @@ class ctable(object):
         l = []
         for name in names:
             col = cols[name]
-            if col.ndim == 1:
-                t = (name, col.dtype)
-            else:
-                # column is multidimensional
-                t = (name, (col.dtype, col.shape[1:]))
+            # Need to account for multidimensional columns
+            t = (name, col.dtype) if col.ndim == 1 else \
+                (name, (col.dtype, col.shape[1:]))
             l.append(t)
         return np.dtype(l)
 
