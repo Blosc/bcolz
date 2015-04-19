@@ -491,7 +491,7 @@ class ctable(object):
                 shutil.move(newcol.rootdir, col_rootdir)
                 newcol.rootdir = col_rootdir
             else:  # copy the the carray
-                shutil.copytree(newcol.rootdir, col_rootdir)
+                newcol = newcol.copy(rootdir=col_rootdir)
         elif isinstance(newcol, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
