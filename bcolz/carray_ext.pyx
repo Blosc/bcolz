@@ -882,7 +882,14 @@ cdef class carray:
             return self.lastchunkarr
 
     property attrs:
-        "The attribute accessor."
+        """The attribute accessor.
+
+        See Also
+        --------
+
+        attrs.attrs
+
+        """
         def __get__(self):
             return self._attrs
 
@@ -1694,8 +1701,8 @@ cdef class carray:
             default platform integer is used instead (NumPy convention).
 
 
-        Return value
-        ------------
+        Returns
+        -------
         out : NumPy scalar with `dtype`
 
         """

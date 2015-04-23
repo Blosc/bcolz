@@ -15,7 +15,8 @@
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-# sys.path.insert(0, os.path.abspath('.'))
+import sys, os
+sys.path.insert(0, os.path.abspath('../'))
 
 # -- General configuration
 # -----------------------------------------------------
@@ -30,8 +31,13 @@
 # 'sphinx.ext.ifconfig', 'sphinx.ext.viewcode']
 # `viewcode` dona alguns problemes:
 # http://bitbucket.org/birkenfeld/sphinx/issue/515/keyerror-while-building
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.coverage',
-              'sphinx.ext.ifconfig']
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.coverage',
+              'sphinx.ext.ifconfig',
+              'numpydoc']
+
+numpydoc_class_members_toctree = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

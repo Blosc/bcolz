@@ -98,16 +98,13 @@ class cols(object):
 
 
 class ctable(object):
-    """
-    ctable(cols, names=None, **kwargs)
-
-    This class represents a compressed, column-wise, in-memory table.
+    """ This class represents a compressed, column-wise, in-memory table.
 
     Create a new ctable from `cols` with optional `names`.
 
     Parameters
     ----------
-    columns : tuple or list of column objects
+    cols : tuple or list of column objects
         The list of column data to build the ctable object.  This can also be
         a pure NumPy structured array.  A list of lists or tuples is valid
         too, as long as they can be converted into carray objects.
@@ -328,10 +325,7 @@ class ctable(object):
         os.mkdir(rootdir)
 
     def append(self, cols):
-        """
-        append(cols)
-
-        Append `cols` to this ctable.
+        """Append `cols` to this ctable.
 
         Parameters
         ----------
@@ -388,10 +382,7 @@ class ctable(object):
             self.flush()
 
     def trim(self, nitems):
-        """
-        trim(nitems)
-
-        Remove the trailing `nitems` from this instance.
+        """Remove the trailing `nitems` from this instance.
 
         Parameters
         ----------
@@ -405,10 +396,7 @@ class ctable(object):
         self.len -= nitems
 
     def resize(self, nitems):
-        """
-        resize(nitems)
-
-        Resize the instance to have `nitems`.
+        """Resize the instance to have `nitems`.
 
         Parameters
         ----------
@@ -424,10 +412,7 @@ class ctable(object):
         self.len = nitems
 
     def addcol(self, newcol, name=None, pos=None, move=False, **kwargs):
-        """
-        addcol(newcol, name=None, pos=None, **kwargs)
-
-        Add a new `newcol` object as column.
+        """Add a new `newcol` object as column.
 
         Parameters
         ----------
@@ -509,10 +494,7 @@ class ctable(object):
             self.flush()
 
     def delcol(self, name=None, pos=None, keep=False):
-        """
-        delcol(name=None, pos=None)
-
-        Remove the column named `name` or in position `pos`.
+        """Remove the column named `name` or in position `pos`.
 
         Parameters
         ----------
@@ -565,10 +547,7 @@ class ctable(object):
             self.flush()
 
     def copy(self, **kwargs):
-        """
-        copy(**kwargs)
-
-        Return a copy of this ctable.
+        """Return a copy of this ctable.
 
         Parameters
         ----------
@@ -602,10 +581,7 @@ class ctable(object):
 
     @staticmethod
     def fromdataframe(df, **kwargs):
-        """
-        fromdataframe(df, **kwargs)
-
-        Return a ctable object out of a pandas dataframe.
+        """Return a ctable object out of a pandas dataframe.
 
         Parameters
         ----------
@@ -619,8 +595,8 @@ class ctable(object):
         out : ctable object
             A ctable filled with values from `df`.
 
-        Note
-        ----
+        Notes
+        -----
         The 'object' dtype will be converted into a 'S'tring type, if possible.
         This allows for much better storage savings in bcolz.
 
@@ -678,10 +654,7 @@ class ctable(object):
 
     @staticmethod
     def fromhdf5(filepath, nodepath='/ctable', **kwargs):
-        """
-        fromhdf5(filepath, nodepath='/ctable', **kwargs)
-
-        Return a ctable object out of a compound HDF5 dataset (PyTables Table).
+        """Return a ctable object out of a compound HDF5 dataset (PyTables Table).
 
         Parameters
         ----------
@@ -736,10 +709,7 @@ class ctable(object):
         return ct
 
     def todataframe(self, columns=None, orient='columns'):
-        """
-        todataframe(columns=None, orient='columns')
-
-        Return a pandas dataframe out of this object.
+        """Return a pandas dataframe out of this object.
 
         Parameters
         ----------
@@ -774,11 +744,7 @@ class ctable(object):
 
     def tohdf5(self, filepath, nodepath='/ctable', mode='w',
                cparams=None, cname=None):
-        """
-        tohdf5(filepath, nodepath='/ctable', mode='w',
-               cparams=None, cname=None)
-
-        Write this object into an HDF5 file.
+        """Write this object into an HDF5 file.
 
         Parameters
         ----------
@@ -831,10 +797,7 @@ class ctable(object):
         return self.cbytes
 
     def where(self, expression, outcols=None, limit=None, skip=0):
-        """
-        where(expression, outcols=None, limit=None, skip=0)
-
-        Iterate over rows where `expression` is true.
+        """Iterate over rows where `expression` is true.
 
         Parameters
         ----------
@@ -901,9 +864,7 @@ class ctable(object):
 
     def whereblocks(self, expression, blen=None, outfields=None, limit=None,
                     skip=0):
-        """whereblocks(expression, blen=None, outfields=None, limit=None, skip=0)
-
-        Iterate over the rows that fullfill the `expression` condition on
+        """Iterate over the rows that fullfill the `expression` condition on
         this ctable, in blocks of size `blen`.
 
         Parameters
@@ -968,10 +929,7 @@ class ctable(object):
 
     def iter(self, start=0, stop=None, step=1, outcols=None,
              limit=None, skip=0):
-        """
-        iter(start=0, stop=None, step=1, outcols=None, limit=None, skip=0)
-
-        Iterator with `start`, `stop` and `step` bounds.
+        """Iterator with `start`, `stop` and `step` bounds.
 
         Parameters
         ----------
@@ -1062,12 +1020,10 @@ class ctable(object):
         return result
 
     def __getitem__(self, key):
-        """
-        x.__getitem__(key) <==> x[key]
+        """Returns values based on `key`.
 
-        Returns values based on `key`.  All the functionality of
-        ``ndarray.__getitem__()`` is supported (including fancy
-        indexing), plus a special support for expressions:
+        All the functionality of ``ndarray.__getitem__()`` is supported
+        (including fancy indexing), plus a special support for expressions:
 
         Parameters
         ----------
@@ -1157,12 +1113,10 @@ class ctable(object):
         return ra
 
     def __setitem__(self, key, value):
-        """
-        x.__setitem__(key, value) <==> x[key] = value
+        """Sets values based on `key`.
 
-        Sets values based on `key`.  All the functionality of
-        ``ndarray.__setitem__()`` is supported (including fancy
-        indexing), plus a special support for expressions:
+        All the functionality of ``ndarray.__setitem__()`` is supported
+        (including fancy indexing), plus a special support for expressions:
 
         Parameters
         ----------
@@ -1202,10 +1156,7 @@ class ctable(object):
         return
 
     def eval(self, expression, **kwargs):
-        """
-        eval(expression, **kwargs)
-
-        Evaluate the `expression` on columns and return the result.
+        """Evaluate the `expression` on columns and return the result.
 
         Parameters
         ----------
@@ -1259,10 +1210,7 @@ class ctable(object):
             self.cols[name].free_cachemem()
 
     def _get_stats(self):
-        """
-        _get_stats()
-
-        Get some stats (nbytes, cbytes and ratio) about this object.
+        """Get some stats (nbytes, cbytes and ratio) about this object.
 
         Returns
         -------
