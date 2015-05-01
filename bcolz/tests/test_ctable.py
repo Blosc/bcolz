@@ -2081,6 +2081,17 @@ class FlushDiskTest(MayBeDiskTest, TestCase):
 
         t.flush.assert_called_with()
 
+    def test_strings(self):
+        """Testing that we can add fixed length strings to a ctable"""
+        dtype = np.dtype([("a", "|S5"),
+                          ("b", np.uint8),
+                          ("c", np.int32),
+                          ("d", np.float32)])
+        t = bcolz.ctable(np.empty(0, dtype=dtype), mode="w")
+        t.append(("aaaaa", 23, 34567, 1.2355))
+        self.assertTrue(len(t) == 1)
+        self.assertTrue(t["a"][0] == b"aaaaa", t["a"][0])
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

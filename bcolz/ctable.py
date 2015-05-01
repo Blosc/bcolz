@@ -371,7 +371,7 @@ class ctable(object):
             if sclist and not hasattr(column, '__len__'):
                 clen2 = 1
             else:
-                clen2 = len(column)
+                clen2 = 1 if isinstance(column, _strtypes) else len(column)
             if clen >= 0 and clen != clen2:
                 raise ValueError(
                     "all cols in `cols` must have the same length")
