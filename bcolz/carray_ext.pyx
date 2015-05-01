@@ -954,7 +954,9 @@ cdef class carray:
     property shape:
         "The shape of this object."
         def __get__(self):
-            return tuple((self.len,) + self._dtype.shape)
+            # note: the int cast is in order to get a consistent type
+            # across windows and linux
+            return tuple((int(self.len),) + self._dtype.shape)
 
     property size:
         "The size of this object."
