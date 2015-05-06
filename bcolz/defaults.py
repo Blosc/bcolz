@@ -12,6 +12,7 @@
 from __future__ import absolute_import
 
 import bcolz
+from bcolz.ctable import OutputStructure_numpy
 
 
 class Defaults(object):
@@ -71,6 +72,27 @@ class Defaults(object):
         self.__eval_out_flavor = value
 
     @property
+    def ctable_out_implementation(self):
+        return self.__ctable_out_implementation
+
+    @ctable_out_implementation.setter
+    def ctable_out_implementation(self, value):
+        if value is None:
+            value = OutputStructure_numpy
+        try:
+            bcolz.ctable._outstruc_allocate = value.allocate
+            bcolz.ctable._outstruc_fromindices = value.fromindices
+            bcolz.ctable._outstruc_fromboolarr = value.fromboolarr
+            assert hasattr(value, '__setitem__')
+        except (AttributeError, AssertionError):
+            value = OutputStructure_numpy
+            bcolz.ctable._outstruc_allocate = value.allocate
+            bcolz.ctable._outstruc_fromindices = value.fromindices
+            bcolz.ctable._outstruc_fromboolarr = value.fromboolarr
+            raise NotImplementedError('The output structure implementation is incomplete')
+        self.__ctable_out_implementation = value
+
+    @property
     def cparams(self):
         return self.__cparams
 
@@ -88,6 +110,12 @@ defaults.eval_out_flavor = "carray"
 """
 The flavor for the output object in `eval()`.  It can be 'carray' or
 'numpy'.  Default is 'carray'.
+"""
+
+defaults.ctable_out_implementation = None
+"""
+The implementation of the output structure abstraction layer for the 
+output object in `__getitem__()`.
 """
 
 defaults.eval_vm = "numexpr" if bcolz.numexpr_here else "python"

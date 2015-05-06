@@ -1013,11 +1013,7 @@ class ctable(object):
 
         if colnames is None:
             colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
+        return self._outstruc_fromboolarr(boolarr, colnames).ra
 
     def __getitem__(self, key):
         """Returns values based on `key`.
@@ -1043,10 +1039,10 @@ class ctable(object):
         # First, check for integer
         if isinstance(key, _inttypes):
             # Get a copy of the len-1 array
-            ra = self._arr1.copy()
+            result = self._outstruc_allocate(1)
             # Fill it
-            ra[0] = tuple([self.cols[name][key] for name in self.names])
-            return ra[0]
+            result[0] = tuple([self.cols[name][key] for name in self.names])
+            return result.ra
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
@@ -1060,7 +1056,7 @@ class ctable(object):
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
             if len(key) == 0:
-                return np.empty(0, self.dtype)
+                return self._outstruc_allocate(0, self.dtype).ra
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
@@ -1072,15 +1068,14 @@ class ctable(object):
             except:
                 raise IndexError(
                     "key cannot be converted to an array of indices")
-            return np.fromiter((self[i] for i in key),
-                               dtype=self.dtype, count=len(key))
+            return self._outstruc_fromindices(key).ra
         # A boolean array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
                 return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self.dtype)
+                return self._outstruc_fromindices(key).ra
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
@@ -1105,12 +1100,12 @@ class ctable(object):
         (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step)
-        ra = np.empty(shape=(n,), dtype=self.dtype)
+        result = self._outstruc_allocate(n, self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self.cols[name][start:stop:step]
+            result[name] = self.cols[name][start:stop:step]
 
-        return ra
+        return result.ra
 
     def __setitem__(self, key, value):
         """Sets values based on `key`.
@@ -1245,6 +1240,39 @@ class ctable(object):
             header += "  rootdir := '%s'\n" % self.rootdir
         fullrepr = header + str(self)
         return fullrepr
+
+
+class OutputStructure_numpy(object):
+    @staticmethod
+    def allocate(ctable_, size, dtype=None):
+        result = object.__new__(OutputStructure_numpy)
+        if size == 1:
+            result.ra = ctable_._arr1.copy()
+        else:
+            result.ra = np.empty(size, dtype)
+        return result
+
+    @staticmethod
+    def fromindices(ctable_, iter):
+        result = object.__new__(OutputStructure_numpy)
+        result.ra = np.fromiter((ctable_[i] for i in iter), 
+                                dtype=ctable_.dtype, count=len(iter))
+        return result
+
+    @staticmethod
+    def fromboolarr(ctable_, boolarr, colnames):
+        result = object.__new__(OutputStructure_numpy)
+
+        dtype = np.dtype([(name, ctable_.cols[name].dtype) for name in colnames])
+        cols = [ctable_.cols[name][boolarr] for name in colnames]
+        result.ra = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+        return result
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            self.ra[key] = value
+        else:
+            self.ra[key][:] = value
 
 
 # Local Variables:
