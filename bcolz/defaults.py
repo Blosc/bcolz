@@ -80,17 +80,12 @@ class Defaults(object):
         if value is None:
             value = OutputStructure_numpy
         try:
-            bcolz.ctable._outstruc_allocate = value.allocate
-            bcolz.ctable._outstruc_fromindices = value.fromindices
-            bcolz.ctable._outstruc_fromboolarr = value.fromboolarr
-            assert hasattr(value, '__setitem__')
+            bcolz.ctable._update_outstruc_processor(value)
+            self.__ctable_out_implementation = value
         except (AttributeError, AssertionError):
-            value = OutputStructure_numpy
-            bcolz.ctable._outstruc_allocate = value.allocate
-            bcolz.ctable._outstruc_fromindices = value.fromindices
-            bcolz.ctable._outstruc_fromboolarr = value.fromboolarr
-            raise NotImplementedError('The output structure implementation is incomplete')
-        self.__ctable_out_implementation = value
+            bcolz.ctable._update_outstruc_processor(OutputStructure_numpy)
+            raise NotImplementedError(
+                'The output structure implementation is incomplete')
 
     @property
     def cparams(self):

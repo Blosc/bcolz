@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
+from weakref import WeakSet
 
 _inttypes += (np.integer,)
 islice = itertools.islice
@@ -222,8 +223,32 @@ class ctable(object):
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
 
-        # Cache a structured array of len 1 for ctable[int] acceleration
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Initialise output structure cache
+        self._outstruc_update_cache()
+
+    def __new__(cls, *args, **kwargs):
+        # keep track of all ctable instances to be able to update their
+        # output structure caches when the output processor changes
+        if not hasattr(cls, '_instances'):
+            cls._instances = WeakSet()
+        new_instance = object.__new__(cls)
+        cls._instances.add(new_instance)
+        return new_instance
+
+    @classmethod
+    def _update_outstruc_processor(cls, processor):
+        bcolz.ctable._outstruc_allocate = processor.allocate
+        bcolz.ctable._outstruc_update_cache = processor.update_cache
+        bcolz.ctable._outstruc_fromindices = processor.fromindices
+        bcolz.ctable._outstruc_fromboolarr = processor.fromboolarr
+        assert hasattr(processor, '__setitem__')
+
+        if not hasattr(cls, '_instances'):
+            return
+
+        for instance in cls._instances:
+            instance._outstruc_update_cache()
+
 
     def create_ctable(self, columns, names, **kwargs):
         """Create a ctable anew."""
@@ -487,8 +512,9 @@ class ctable(object):
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Update output structure cache
+        self._outstruc_update_cache()
+
 
         if self.auto_flush:
             self.flush()
@@ -540,8 +566,9 @@ class ctable(object):
         if not keep:
             col.purge()
 
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Update output structure cache
+        self._outstruc_update_cache()
+
 
         if self.auto_flush:
             self.flush()
@@ -1232,6 +1259,7 @@ class ctable(object):
         # if a custom output structure is configured, use numpy for 
         # bcolz string representation for consistent output formatting
         current_allocate_fn = self._outstruc_allocate
+        OutputStructure_numpy.update_cache(self)
         def tmp_allocate(*args, **kwargs):
             return OutputStructure_numpy.allocate(self, *args, **kwargs)
         self._outstruc_allocate = tmp_allocate
@@ -1239,6 +1267,7 @@ class ctable(object):
         result = array2string(self)
         
         del self._outstruc_allocate
+        self._outstruc_update_cache()
         return result
 
     def __repr__(self):
@@ -1257,10 +1286,14 @@ class ctable(object):
 
 class OutputStructure_numpy(object):
     @staticmethod
+    def update_cache(ctable_):
+        ctable_._outstruc_cache = np.empty(shape=(1,), dtype=ctable_.dtype)
+
+    @staticmethod
     def allocate(ctable_, size, dtype=None):
         result = object.__new__(OutputStructure_numpy)
         if size == 1:
-            result.ra = ctable_._arr1.copy()
+            result.ra = ctable_._outstruc_cache.copy()
         else:
             result.ra = np.empty(size, dtype)
         return result
