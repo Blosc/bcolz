@@ -17,7 +17,7 @@ import json
 import os
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
-from weakref import WeakSet
+import weakref
 
 _inttypes += (np.integer,)
 islice = itertools.islice
@@ -230,9 +230,9 @@ class ctable(object):
         # keep track of all ctable instances to be able to update their
         # output structure caches when the output processor changes
         if not hasattr(cls, '_instances'):
-            cls._instances = WeakSet()
+            cls._instances = set()
         new_instance = object.__new__(cls)
-        cls._instances.add(new_instance)
+        cls._instances.add(weakref.ref(new_instance))
         return new_instance
 
     @classmethod
@@ -246,8 +246,12 @@ class ctable(object):
         if not hasattr(cls, '_instances'):
             return
 
+        live_instances = set()
         for instance in cls._instances:
-            instance._outstruc_update_cache()
+            if instance() is not None:
+                instance()._outstruc_update_cache()
+                live_instances.add(instance)
+        cls._instances = live_instances
 
 
     def create_ctable(self, columns, names, **kwargs):
