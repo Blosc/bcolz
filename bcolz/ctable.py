@@ -1226,7 +1226,20 @@ class ctable(object):
         return (nbytes, cbytes, cratio)
 
     def __str__(self):
-        return array2string(self)
+        if self._outstruc_allocate.__func__ == OutputStructure_numpy.allocate:
+            return array2string(self)
+
+        # if a custom output structure is configured, use numpy for 
+        # bcolz string representation for consistent output formatting
+        current_allocate_fn = self._outstruc_allocate
+        def tmp_allocate(*args, **kwargs):
+            return OutputStructure_numpy.allocate(self, *args, **kwargs)
+        self._outstruc_allocate = tmp_allocate
+
+        result = array2string(self)
+        
+        del self._outstruc_allocate
+        return result
 
     def __repr__(self):
         nbytes, cbytes, cratio = self._get_stats()
