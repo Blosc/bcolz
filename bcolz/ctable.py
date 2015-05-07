@@ -230,9 +230,9 @@ class ctable(object):
         # keep track of all ctable instances to be able to update their
         # output structure caches when the output processor changes
         if not hasattr(cls, '_instances'):
-            cls._instances = set()
+            cls._instances = []
         new_instance = object.__new__(cls)
-        cls._instances.add(weakref.ref(new_instance))
+        cls._instances.append(weakref.ref(new_instance))
         return new_instance
 
     @classmethod
@@ -246,11 +246,11 @@ class ctable(object):
         if not hasattr(cls, '_instances'):
             return
 
-        live_instances = set()
+        live_instances = []
         for instance in cls._instances:
             if instance() is not None:
                 instance()._outstruc_update_cache()
-                live_instances.add(instance)
+                live_instances.append(instance)
         cls._instances = live_instances
 
 
@@ -1072,7 +1072,7 @@ class ctable(object):
             # Get a copy of the len-1 array
             result = self._outstruc_allocate(1)
             # Fill it
-            result[0] = tuple([self.cols[name][key] for name in self.names])
+            result[0] = [self.cols[name][key] for name in self.names]
             return result.ra
         # Slices
         elif type(key) == slice:
@@ -1289,6 +1289,8 @@ class ctable(object):
 
 
 class OutputStructure_numpy(object):
+    __slots__ = ['ra']
+
     @staticmethod
     def update_cache(ctable_):
         ctable_._outstruc_cache = np.empty(shape=(1,), dtype=ctable_.dtype)
@@ -1320,7 +1322,7 @@ class OutputStructure_numpy(object):
 
     def __setitem__(self, key, value):
         if isinstance(key, int):
-            self.ra[key] = value
+            self.ra[key] = tuple(value)
         else:
             self.ra[key][:] = value
 
