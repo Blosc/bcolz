@@ -139,11 +139,10 @@ class ctable(object):
         "The compression parameters for this object."
         return self._cparams
 
-    _dtype = None
     @property
     def dtype(self):
         "The data type of this object (numpy dtype)."
-        if self._dtype:
+        if getattr(self, '_dtype', None):
             return self._dtype
 
         names, cols = self.names, self.cols
