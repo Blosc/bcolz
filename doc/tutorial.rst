@@ -613,7 +613,7 @@ course, the `ctable` object also wears this capability.
 Tutorial on ctable objects
 ==========================
 
-The carray package comes with a handy object that arranges data by
+The bcolz package comes with a handy object that arranges data by
 column (and not by row, as in NumPy's structured arrays).  This allows
 for much better performance for walking tabular data by column and
 also for adding and deleting columns.
