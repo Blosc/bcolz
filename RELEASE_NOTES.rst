@@ -13,11 +13,11 @@ Changes from 0.8.1 to 0.9.0
 
 - Implement ``auto_flush`` which allows ctables to flush themselves during
   operations that modify (write) data.
-  (#140 #152 @FrancescElies @CarstVaartjes)
+  (#140 #152 @FrancescElies @CarstVaartjes @esc)
 
 - Implement ``move`` for ctable, which allows disk-based carray to be moved
   (``mv``) into the root directory of the ctable.
-  (#140 #152 @FrancescElies @CarstVaartjes)
+  (#140 #152 #170 @FrancescElies @CarstVaartjes @esc)
 
 - Distribute ``carray_ext.pxd`` as part of the package. (#159 @ARF)
 
@@ -26,6 +26,13 @@ Changes from 0.8.1 to 0.9.0
 
 - Hold GIL during c-blosc compression/decompression, avoiding some segfaults
   (#166 @mrocklin)
+
+- Fix ``dtype`` for multidimensional columns in a ctable (#136 #172 @alimanfoo)
+
+- Fix to allow adding strings > len 1 to ctable (#178 @brentp)
+
+- Sphinx based API documentation is now built from the docstrings in the Python
+  sourcecode (#171 @esc)
 
 Changes from 0.8.0 to 0.8.1
 ===========================

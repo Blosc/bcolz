@@ -433,16 +433,15 @@ class add_del_colDiskTest(add_del_colTest, TestCase):
         ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         c = np.fromiter(("s%d" % i for i in xrange(N)), dtype='S2')
-        _, fn = tempfile.mkstemp()
-        os.remove(fn)
-        c = bcolz.carray(c, rootdir=fn)
+        temp_dir = os.path.join(tempfile.mkdtemp('bcolz-'), 'c')
+        c = bcolz.carray(c, rootdir=temp_dir)
         t.addcol(c, 'f2')
         ra = np.fromiter(((i, i * 2., "s%d" % i) for i in xrange(N)),
                          dtype='i4,f8,S2')
         newpath = os.path.join(self.rootdir, 'f2')
         assert_array_equal(t[:], ra, "ctable values are not correct")
         assert_array_equal(bcolz.carray(rootdir=newpath)[:], ra['f2'])
-        self.assertEqual(fn, c.rootdir)
+        self.assertEqual(temp_dir, c.rootdir)
         self.assertEqual(newpath, t['f2'].rootdir)
 
 
