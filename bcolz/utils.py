@@ -150,14 +150,17 @@ def human_readable_size(size):
     else:
         return "%.2f TB" % (size / float(2**40))
 
-def build_carray(rootdir):
+def build_carray(array,rootdir):
     """ Used in ctable.__reduce__
 
     Pickling functions can't be in pyx files.  Putting this tiny helper
     function here instead.
     """
     from bcolz import carray
-    return carray(rootdir=rootdir)
+    if rootdir:
+        return carray(rootdir=rootdir)
+    else:
+        return carray(array)
 
 
 # Main part

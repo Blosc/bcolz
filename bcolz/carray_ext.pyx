@@ -2592,7 +2592,7 @@ cdef class carray:
 
     def __str__(self):
         return array2string(self)
-
+ 
     def __repr__(self):
         snbytes = utils.human_readable_size(self._nbytes)
         scbytes = utils.human_readable_size(self._cbytes)
@@ -2608,7 +2608,11 @@ cdef class carray:
         return fullrepr
 
     def __reduce__(self):
-        return (build_carray, (self.rootdir,))
+        if self.rootdir :
+            return (build_carray, (None,self.rootdir,))
+        else: 
+            return (build_carray,(self[:],None,))
+
 
 ## Local Variables:
 ## mode: python

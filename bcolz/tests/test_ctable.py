@@ -1974,6 +1974,18 @@ class pickleTest(MayBeDiskTest, TestCase):
         self.assertEquals(b2.rootdir, b.rootdir)
         self.assertEquals(type(b2), type(b))
 
+    def test_pickleable_memory(self):
+        b = bcolz.ctable([[1, 2, 3], [1, 2, 3]],
+                         names=['a', 'b'],
+                         rootdir=None)
+        s = pickle.dumps(b)
+        if PY2:
+            self.assertTrue(type(s), str)
+        else:
+            self.assertTrue(type(s), bytes)
+
+        b2 = pickle.loads(s)
+        self.assertEquals(type(b2), type(b))
 
 class FlushDiskTest(MayBeDiskTest, TestCase):
     disk = True
