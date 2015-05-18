@@ -77,9 +77,10 @@ class pickleTest(MayBeDiskTest):
             self.assertIsInstance(s, str)
         else:
             self.assertIsInstance(s, bytes)
-
         if self.disk:
             b2 = pickle.loads(s)
+            # this should probably be self.assertEquals(b, b2)
+            # but at the time == didn't work
             self.assertEquals(b2.rootdir, b.rootdir)
 
 
