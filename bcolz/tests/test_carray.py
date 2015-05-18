@@ -66,7 +66,7 @@ class chunkTest(TestCase):
 class pickleTest(MayBeDiskTest, TestCase):
     disk=True
     def test_pickleable(self):
-        a = np.arange(1e2)
+        a = bcolz.arange(1e2)
         b = bcolz.carray(a, rootdir=self.rootdir)
         s = pickle.dumps(b)
         if PY2:
@@ -76,6 +76,17 @@ class pickleTest(MayBeDiskTest, TestCase):
 
         b2 = pickle.loads(s)
         self.assertEquals(b2.rootdir, b.rootdir)
+
+class pickleTestMemory(MayBeDiskTest, TestCase):
+    disk=False
+    def test_pickleable(self):
+        a = np.arange(1e2)
+        b = bcolz.carray(a, )
+        s = pickle.dumps(b)
+        if PY2:
+            self.assertIsInstance(s, str)
+        else:
+            self.assertIsInstance(s, bytes)
 
 
 class getitemTest(MayBeDiskTest):

@@ -2610,7 +2610,11 @@ cdef class carray:
         return fullrepr
 
     def __reduce__(self):
-        return (build_carray, (self.rootdir,))
+        if self.rootdir :
+            return (build_carray, (None,self.rootdir,))
+        else: 
+            return (build_carray,(self[:],None,))
+
 
 ## Local Variables:
 ## mode: python
