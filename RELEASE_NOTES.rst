@@ -5,7 +5,7 @@ Release notes for bcolz
 Changes from 0.9.0 to 0.10.0
 ============================
 
-- pass
+- Fix pickle for in-memory carrays (#193 #194 @dataisle @esc)
 
 Changes from 0.8.1 to 0.9.0
 ===========================

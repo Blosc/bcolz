@@ -63,19 +63,32 @@ class chunkTest(TestCase):
         assert_array_equal(a[1:8000], b[1:8000], "Arrays are not equal")
 
 
-class pickleTest(MayBeDiskTest, TestCase):
-    disk=True
+class pickleTest(MayBeDiskTest):
+
+    disk = False
+
+    def generate_data(self):
+        return bcolz.arange(1e2)
+
     def test_pickleable(self):
-        a = np.arange(1e2)
-        b = bcolz.carray(a, rootdir=self.rootdir)
+        b = self.generate_data()
         s = pickle.dumps(b)
         if PY2:
-            self.assertTrue(type(s), str)
+            self.assertIsInstance(s, str)
         else:
-            self.assertTrue(type(s), bytes)
+            self.assertIsInstance(s, bytes)
+        if self.disk:
+            b2 = pickle.loads(s)
+            # this should probably be self.assertEquals(b, b2)
+            # but at the time == didn't work
+            self.assertEquals(b2.rootdir, b.rootdir)
 
-        b2 = pickle.loads(s)
-        self.assertEquals(b2.rootdir, b.rootdir)
+
+class pickleTestDisk(pickleTest):
+    disk = True
+
+    def generate_data(self):
+        return bcolz.arange(1e2, rootdir=self.rootdir)
 
 
 class getitemTest(MayBeDiskTest):
