@@ -2149,7 +2149,7 @@ cdef class carray:
             nwrow += blen
 
         # Safety check
-        assert (nwrow == vlen)
+        #assert (nwrow == vlen)
 
     # This is a private function that is specific for `eval`
     def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
@@ -2594,7 +2594,7 @@ cdef class carray:
 
     def __str__(self):
         return array2string(self)
- 
+    
     def __repr__(self):
         snbytes = utils.human_readable_size(self._nbytes)
         scbytes = utils.human_readable_size(self._cbytes)
