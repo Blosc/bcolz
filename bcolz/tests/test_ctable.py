@@ -1980,9 +1980,9 @@ class pickleTest(MayBeDiskTest, TestCase):
                          rootdir=None)
         s = pickle.dumps(b)
         if PY2:
-            self.assertTrue(type(s), str)
+            self.assertIsInstance(s, str)
         else:
-            self.assertTrue(type(s), bytes)
+            self.assertIsInstance(s, bytes)
 
         b2 = pickle.loads(s)
         self.assertEquals(type(b2), type(b))
