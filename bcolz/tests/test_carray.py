@@ -68,7 +68,6 @@ class pickleTest(MayBeDiskTest, TestCase):
     def test_pickleable(self):
         a = bcolz.arange(1e2)
         b = bcolz.carray(a, rootdir=self.rootdir)
-
         s = pickle.dumps(b)
         if PY2:
             self.assertTrue(type(s), str)
