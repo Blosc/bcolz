@@ -526,6 +526,9 @@ cdef class chunk:
             return array[::step]
         return array
 
+    def to_numpy_array(self):
+        return self[:]
+
     @property
     def pointer(self):
         return <Py_uintptr_t> self.data + BLOSCPACK_HEADER_LENGTH
