@@ -20,6 +20,7 @@ cdef class chunks(object):
     cdef object dtype, cparams, lastchunkarr
     cdef object chunk_cached
     cdef npy_intp nchunks, nchunk_cached, len
+    cdef int _iter_count
 
     cdef read_chunk(self, nchunk)
     cdef _save(self, nchunk, chunk_)
