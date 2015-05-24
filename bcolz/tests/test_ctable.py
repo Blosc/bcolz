@@ -1986,6 +1986,7 @@ class pickleTest(MayBeDiskTest, TestCase):
         b2 = pickle.loads(s)
         self.assertEquals(type(b2), type(b))
 
+
 class FlushDiskTest(MayBeDiskTest, TestCase):
     disk = True
 
