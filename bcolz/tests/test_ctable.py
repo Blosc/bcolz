@@ -2103,12 +2103,24 @@ class FlushDiskTest(MayBeDiskTest, TestCase):
         self.assertTrue(len(t) == 1)
         self.assertTrue(t["a"][0] == b"aaaaa", t["a"][0])
 
-    def test_auto_flush_constructor_keyword_true(self):
+    def test_auto_flush_constructor_keyword_true_memory(self):
         t = bcolz.ctable([np.empty(0, dtype='i8')], auto_flush=True)
+        #self.assertTrue(t.auto_flush)
+        # attribute will be False, since it is always false for MemCarray.
+        self.assertFalse(t.auto_flush)
+
+    def test_auto_flush_constructor_keyword_true_disk(self):
+        t = bcolz.ctable([np.empty(0, dtype='i8')],
+                         rootdir=self.rootdir, auto_flush=True)
         self.assertTrue(t.auto_flush)
 
-    def test_auto_flush_constructor_keyword_false(self):
+    def test_auto_flush_constructor_keyword_false_memory(self):
         t = bcolz.ctable([np.empty(0, dtype='i8')], auto_flush=False)
+        self.assertFalse(t.auto_flush)
+
+    def test_auto_flush_constructor_keyword_false_disk(self):
+        t = bcolz.ctable([np.empty(0, dtype='i8')],
+                         rootdir=self.rootdir, auto_flush=False)
         self.assertFalse(t.auto_flush)
 
 
