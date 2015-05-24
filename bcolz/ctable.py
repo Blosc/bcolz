@@ -183,9 +183,13 @@ class ctable(object):
         self._cparams = kwargs.get('cparams', bcolz.cparams())
         self.rootdir = kwargs.get('rootdir', None)
         if self.rootdir is not None:
-            self.auto_flush = kwargs.get('auto_flush', True)
+            self.auto_flush = kwargs.pop('auto_flush', True)
         else:
             self.auto_flush = False
+            try:
+                kwargs.pop('auto_flush')
+            except KeyError:
+                pass
         "The directory where this object is saved."
         if self.rootdir is None and columns is None:
             raise ValueError(
