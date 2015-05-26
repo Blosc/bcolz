@@ -712,10 +712,13 @@ cdef class chunks(object):
                         "error decompressing the last chunk (error code: "
                         "%d)" % ret)
 
+    cdef _chunk_file_name(self, nchunk):
+        """ Determine the name of a chunk file. """
+        return os.path.join(self.datadir, "__%d%s" % (nchunk, EXTENSION))
+
     cdef read_chunk(self, nchunk):
         """Read a chunk and return it in compressed form."""
-        dname = "__%d%s" % (nchunk, EXTENSION)
-        schunkfile = os.path.join(self.datadir, dname)
+        schunkfile = self._chunk_file_name(nchunk)
         if not os.path.exists(schunkfile):
             raise ValueError("chunkfile %s not found" % schunkfile)
         with open(schunkfile, 'rb') as schunk:
@@ -782,8 +785,7 @@ cdef class chunks(object):
             raise IOError(
                 "cannot modify data because mode is '%s'" % self.mode)
 
-        dname = "__%d%s" % (nchunk, EXTENSION)
-        schunkfile = os.path.join(self.datadir, dname)
+        schunkfile = self._chunk_file_name(nchunk)
         bloscpack_header = create_bloscpack_header(1)
         with open(schunkfile, 'wb') as schunk:
             schunk.write(bloscpack_header)
@@ -801,16 +803,14 @@ cdef class chunks(object):
         """Remove the last chunk and return it."""
         nchunk = self.nchunks - 1
         chunk_ = self.__getitem__(nchunk)
-        dname = "__%d%s" % (nchunk, EXTENSION)
-        schunkfile = os.path.join(self.datadir, dname)
+        schunkfile = self._chunk_file_name(nchunk)
         if not os.path.exists(schunkfile):
             raise IOError("chunk filename %s does exist" % schunkfile)
         os.remove(schunkfile)
 
         # When poping a chunk, we must be sure that we don't leave anything
         # behind (i.e. the lastchunk)
-        dname = "__%d%s" % (nchunk + 1, EXTENSION)
-        schunkfile = os.path.join(self.datadir, dname)
+        schunkfile = self._chunk_file_name(nchunk + 1)
         if os.path.exists(schunkfile):
             os.remove(schunkfile)
 
