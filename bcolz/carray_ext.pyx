@@ -1740,8 +1740,7 @@ cdef class carray:
         result = np.zeros(1, dtype=dtype)[0]
 
         nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
-        for nchunk from 0 <= nchunk < nchunks:
-            chunk_ = self.chunks[nchunk]
+        for chunk_ in self.chunks:
             if chunk_.isconstant:
                 result += chunk_.constant * self._chunklen
             elif self._dtype.type == np.bool_:
