@@ -75,9 +75,9 @@ from definitions cimport (malloc,
                           memset,
                           strdup,
                           strcmp,
-                          PyString_AsString,
-                          PyString_GET_SIZE,
-                          PyString_FromStringAndSize,
+                          PyBytes_AsString,
+                          PyBytes_GET_SIZE,
+                          PyBytes_FromStringAndSize,
                           Py_BEGIN_ALLOW_THREADS,
                           Py_END_ALLOW_THREADS,
                           PyBuffer_FromMemory,
@@ -335,15 +335,15 @@ cdef class chunk:
 
         if _compr:
             # Data comes in an already compressed state inside a Python String
-            self.data = PyString_AsString(dobject)
+            self.data = PyBytes_AsString(dobject)
             # Increment the reference so that data don't go away
             self.dobject = dobject
             # Set size info for the instance
             blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
         elif dtype_ == 'O':
             # The objects should arrive here already pickled
-            data = PyString_AsString(dobject)
-            nbytes = PyString_GET_SIZE(dobject)
+            data = PyBytes_AsString(dobject)
+            nbytes = PyBytes_GET_SIZE(dobject)
             cbytes, blocksize = self.compress_data(data, 1, nbytes, cparams)
         else:
             # Compress the data object (a NumPy object)
@@ -442,7 +442,7 @@ cdef class chunk:
 
         assert (not self.isconstant,
                 "This function can only be used for persistency")
-        string = PyString_FromStringAndSize(self.data,
+        string = PyBytes_FromStringAndSize(self.data,
                                             <Py_ssize_t> self.cdbytes)
         return string
 
@@ -457,7 +457,7 @@ cdef class chunk:
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
-        string = PyString_FromStringAndSize(dest, <Py_ssize_t> self.nbytes)
+        string = PyBytes_FromStringAndSize(dest, <Py_ssize_t> self.nbytes)
         return string
 
     cdef void _getitem(self, int start, int stop, char *dest):
@@ -705,7 +705,7 @@ cdef class chunks(object):
             if leftover:
                 # Fill lastchunk with data on disk
                 scomp = self.read_chunk(self.nchunks)
-                compressed = PyString_AsString(scomp)
+                compressed = PyBytes_AsString(scomp)
                 ret = blosc_decompress(compressed, lastchunk, chunksize)
                 if ret < 0:
                     raise RuntimeError(

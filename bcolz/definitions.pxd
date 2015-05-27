@@ -59,10 +59,10 @@ cdef extern from "PythonHelper.h":
     object PyFloat_FromDouble(double)
 
     # Functions for strings
-    object PyString_FromString(char *)
-    object PyString_FromStringAndSize(char *s, int len)
-    char *PyString_AsString(object string)
-    size_t PyString_GET_SIZE(object string)
+    object PyBytes_FromString(char *)
+    object PyBytes_FromStringAndSize(char *s, int len)
+    char *PyBytes_AsString(object string)
+    size_t PyBytes_GET_SIZE(object string)
 
     # Functions for lists
     int PyList_Append(object list, object item)
