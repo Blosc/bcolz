@@ -78,6 +78,7 @@ from definitions cimport (malloc,
                           PyBytes_AsString,
                           PyBytes_GET_SIZE,
                           PyBytes_FromStringAndSize,
+                          PyBytes_AS_STRING,
                           Py_BEGIN_ALLOW_THREADS,
                           Py_END_ALLOW_THREADS,
                           PyBuffer_FromMemory,
@@ -451,15 +452,14 @@ cdef class chunk:
         cdef int ret
         cdef char *dest
 
-        dest = <char *> malloc(self.nbytes)
-        # Fill dest with uncompressed data
+        result_str = PyBytes_FromStringAndSize(NULL, self.nbytes)
+        dest = PyBytes_AS_STRING(result_str);
+
         ret = blosc_decompress(self.data, dest, self.nbytes)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
-        string = PyBytes_FromStringAndSize(dest, <Py_ssize_t> self.nbytes)
-        free(dest)
-        return string
+        return result_str
 
     cdef void _getitem(self, int start, int stop, char *dest):
         """Read data from `start` to `stop` and return it as a numpy array."""
