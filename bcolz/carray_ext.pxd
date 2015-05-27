@@ -24,6 +24,7 @@ cdef class chunks(object):
 
     cdef read_chunk(self, nchunk)
     cdef _save(self, nchunk, chunk_)
+    cdef _chunk_file_name(self, nchunk)
 
 cdef class carray:
     cdef public int itemsize, atomsize
