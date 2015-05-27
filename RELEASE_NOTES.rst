@@ -5,18 +5,18 @@ Release notes for bcolz
 Changes from 0.9.0 to 0.10.0
 ============================
 
-- Fix pickle for in-memory carrays (#193 #194 @dataisle @esc)
+- Fix pickle for in-memory carrays. (#193 #194 @dataisle @esc)
 
 - Implement chunks iterator, which allows the following syntax
-  ``for chunk_ in ca._chunks``, added "internal use" indicator to carray 
-  chunks attribute (#153 @FrancescElies and @esc)
+  ``for chunk_ in ca._chunks``, added "internal use" indicator to carray
+  chunks attribute. (#153 @FrancescElies and @esc)
 
-- Fix a memory leak in the ``chunk.getudata`` method where  (#201 @esc)
+- Fix a memory leak in the ``chunk.getudata`` method where. (#201 @esc)
 
 - Fix the error message when trying to open a fresh ctable in an existing
   rootdir. (#191 @twiecki @esc)
 
-- Various refactorings and cleanups (#198 #199 #200)
+- Various refactorings and cleanups. (#198 #199 #200)
 
 Changes from 0.8.1 to 0.9.0
 ===========================
