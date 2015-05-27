@@ -13,6 +13,9 @@ Changes from 0.9.0 to 0.10.0
 
 - Fix a memory leak in the ``chunk.getudata`` method where  (#201 @esc)
 
+- Fix the error message when trying to open a fresh ctable in an existing
+  rootdir. (#191 @twiecki @esc)
+
 - Various refactorings and cleanups (#198 #199 #200)
 
 Changes from 0.8.1 to 0.9.0
