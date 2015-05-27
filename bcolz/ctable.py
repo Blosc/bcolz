@@ -186,6 +186,8 @@ class ctable(object):
             self.auto_flush = kwargs.pop('auto_flush', True)
         else:
             self.auto_flush = False
+            # We actually need to pop it from the kwargs, so it doesn't get
+            # passed down to the carray.
             try:
                 kwargs.pop('auto_flush')
             except KeyError:
