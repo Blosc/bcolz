@@ -62,6 +62,7 @@ cdef extern from "PythonHelper.h":
     object PyBytes_FromString(char *)
     object PyBytes_FromStringAndSize(char *s, int len)
     char *PyBytes_AsString(object string)
+    char *PyBytes_AS_STRING(object string)
     size_t PyBytes_GET_SIZE(object string)
 
     # Functions for lists
