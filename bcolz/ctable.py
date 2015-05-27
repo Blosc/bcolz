@@ -196,7 +196,9 @@ class ctable(object):
             self.mode = kwargs.setdefault('mode', 'a')
             if columns is not None and self.mode == 'a':
                 raise ValueError(
-                    "You cannot pass a `columns` param in 'a'ppend mode")
+                    "You cannot pass a `columns` param in 'a'ppend mode.\n"
+                    "(If you are trying to create a new ctable, perhaps the "
+                    "directory exists already.)")
         else:
             self.mode = kwargs.setdefault('mode', 'w')
 
