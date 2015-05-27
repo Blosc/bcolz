@@ -458,6 +458,7 @@ cdef class chunk:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
         string = PyBytes_FromStringAndSize(dest, <Py_ssize_t> self.nbytes)
+        free(dest)
         return string
 
     cdef void _getitem(self, int start, int stop, char *dest):
