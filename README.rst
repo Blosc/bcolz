@@ -3,6 +3,7 @@ bcolz: columnar and compressed data containers
 
 :Version: |version|
 :Travis CI: |travis|
+:Appveyor: |appveyor|
 :And...: |powered|
 
 .. |version| image:: https://pypip.in/v/bcolz/badge.png
@@ -10,6 +11,9 @@ bcolz: columnar and compressed data containers
 
 .. |travis| image:: https://travis-ci.org/Blosc/bcolz.png?branch=master
         :target: https://travis-ci.org/Blosc/bcolz
+
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/va0cathv8jskf5po/branch/master?svg=true
+        :target: https://ci.appveyor.com/project/esc/bcolz/branch/master
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
         :target: https://blosc.org
