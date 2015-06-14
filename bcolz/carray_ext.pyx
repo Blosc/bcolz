@@ -653,6 +653,29 @@ cdef decode_blosc_header(buffer_):
             'blocksize': decode_uint32(buffer_[8:12]),
             'ctbytes': decode_uint32(buffer_[12:16])}
 
+class memory_chunks(object):
+    """Store the different carray chunks as a structure in memory."""
+
+    has_cachemem = False
+
+    def __init__(self):
+        self.container = []
+
+    def __getitem__(self, nchunk):
+        return self.container[nchunk]
+
+    def __setitem__(self, nchunk, chunk_):
+        self.container[nchunk] = chunk_
+
+    def __len__(self):
+        return len(self.container)
+
+    def append(self, chunk_):
+        self.container.append(chunk_)
+
+    def pop(self):
+        return self.container.pop()
+
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
     property mode:
@@ -673,6 +696,8 @@ cdef class chunks(object):
         """The directory for data files."""
         def __get__(self):
             return os.path.join(self.rootdir, DATA_DIR)
+
+    has_cachemem = False
 
     def __cinit__(self, rootdir, metainfo=None, _new=False):
         cdef ndarray lastchunkarr
@@ -1139,7 +1164,7 @@ cdef class carray:
 
         # Create layout for data and metadata
         self._cparams = cparams
-        self.chunks = []
+        self.chunks = memory_chunks()
         if rootdir is not None:
             self.mkdirs(rootdir, mode)
             metainfo = (
@@ -1828,7 +1853,7 @@ cdef class carray:
         return 1
 
     def free_cachemem(self):
-        if type(self.chunks) is not list:
+        if self.chunks.has_cachemem:
             self.chunks.free_cachemem()
         self.idxcache = -1
         self.blockcache = None
