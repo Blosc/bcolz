@@ -1212,7 +1212,7 @@ cdef class carray:
 
         # Update some counters
         calen = shape[0]  # the length ot the carray
-        self.leftover = (calen % chunklen) * self.atomsize
+        self.leftover = cython.cmod(calen, chunklen) * self.atomsize
         self._cbytes = cbytes
         self._nbytes = calen * self.atomsize
 
@@ -1244,7 +1244,7 @@ cdef class carray:
                            _memory=self._rootdir is None)
             self.chunks.append(chunk_)
             cbytes += chunk_.cbytes
-        self.leftover = leftover = nbytes % self._chunksize
+        self.leftover = leftover = cython.cmod(nbytes, self._chunksize)
         if leftover:
             remainder = array_[nchunks * chunklen:]
             memcpy(self.lastchunk, remainder.data, leftover)
@@ -1432,7 +1432,7 @@ cdef class carray:
                 cbytes += chunk_.cbytes
 
             # Finally, deal with the leftover
-            leftover = nbytes % chunksize
+            leftover = cython.cmod(nbytes, chunksize)
             if leftover:
                 remainder = remainder[nchunks * chunklen:]
                 if arrcpy.strides[0] > 0:
@@ -1488,7 +1488,7 @@ cdef class carray:
         else:
             # nitems larger than last chunk
             nchunk = cython.cdiv((self.len - nitems), self._chunklen)
-            leftover2 = (self.len - nitems) % self._chunklen
+            leftover2 = cython.cmod((self.len - nitems), self._chunklen)
             leftover = leftover2 * atomsize
 
             # Remove complete chunks
