@@ -1141,7 +1141,7 @@ cdef class carray:
         self._cparams = cparams
         self.chunks = []
         if rootdir is not None:
-            self.mkdirs(rootdir, mode)
+            self._mkdirs(rootdir, mode)
             metainfo = (
             dtype, cparams, self.shape[0], lastchunkarr, self._mode)
             self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=True)
@@ -1251,7 +1251,7 @@ cdef class carray:
         cbytes += self._chunksize  # count the space in last chunk
         self._cbytes = cbytes
 
-    def mkdirs(self, object rootdir, object mode):
+    def _mkdirs(self, object rootdir, object mode):
         """Create the basic directory layout for persistent storage."""
         if os.path.exists(rootdir):
             if self._mode != "w":
@@ -2625,7 +2625,7 @@ cdef class carray:
     def __reduce__(self):
         if self.rootdir :
             return (build_carray, (None,self.rootdir,))
-        else: 
+        else:
             return (build_carray,(self[:],None,))
 
 
