@@ -1005,7 +1005,7 @@ cdef class carray:
             _new = True
         elif rootdir is not None:
             meta_info = self._read_meta()
-            self.open_carray(*meta_info)
+            self._open_carray(*meta_info)
             _new = False
         else:
             raise ValueError(
@@ -1159,7 +1159,7 @@ cdef class carray:
         # and flush the data pending...
         self.flush()
 
-    def open_carray(self, shape, cparams, dtype, dflt,
+    def _open_carray(self, shape, cparams, dtype, dflt,
                     expectedlen, cbytes, chunklen, xchunks=None):
         """Open an existing array."""
         cdef ndarray lastchunkarr
@@ -1698,7 +1698,7 @@ cdef class carray:
         # And populate it with metainfo (including chunks)
         meta_info = (self.shape, self.cparams, self.dtype, self.dflt,
                      self.expectedlen, self.cbytes, self.chunklen)
-        cview.open_carray(*meta_info, xchunks=(self.chunks, self.lastchunkarr))
+        cview._open_carray(*meta_info, xchunks=(self.chunks, self.lastchunkarr))
         return cview
 
     def sum(self, dtype=None):
