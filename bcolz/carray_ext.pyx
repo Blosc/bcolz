@@ -1000,12 +1000,12 @@ cdef class carray:
         self._safe = safe
 
         if array is not None:
-            self.create_carray(array, cparams, dtype, dflt,
+            self._create_carray(array, cparams, dtype, dflt,
                                expectedlen, chunklen, rootdir, mode)
             _new = True
         elif rootdir is not None:
-            meta_info = self.read_meta()
-            self.open_carray(*meta_info)
+            meta_info = self._read_meta()
+            self._open_carray(*meta_info)
             _new = False
         else:
             raise ValueError(
@@ -1035,7 +1035,7 @@ cdef class carray:
 
         return dtype_
 
-    def create_carray(self, array, cparams, dtype, dflt,
+    def _create_carray(self, array, cparams, dtype, dflt,
                       expectedlen, chunklen, rootdir, mode):
         """Create a new array.
 
@@ -1141,25 +1141,25 @@ cdef class carray:
         self._cparams = cparams
         self.chunks = []
         if rootdir is not None:
-            self.mkdirs(rootdir, mode)
+            self._mkdirs(rootdir, mode)
             metainfo = (
             dtype, cparams, self.shape[0], lastchunkarr, self._mode)
             self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=True)
             # We can write the metainfo already
-            self.write_meta()
+            self._write_meta()
 
         # Finally, fill the chunks
         # Object dtype requires special storage
         if array_.dtype.char == 'O':
             for obj in array_:
-                self.store_obj(obj)
+                self._store_obj(obj)
         else:
-            self.fill_chunks(array_)
+            self._fill_chunks(array_)
 
         # and flush the data pending...
         self.flush()
 
-    def open_carray(self, shape, cparams, dtype, dflt,
+    def _open_carray(self, shape, cparams, dtype, dflt,
                     expectedlen, cbytes, chunklen, xchunks=None):
         """Open an existing array."""
         cdef ndarray lastchunkarr
@@ -1220,7 +1220,7 @@ cdef class carray:
             # Remove all entries when mode is 'w'
             self.resize(0)
 
-    def fill_chunks(self, object array_):
+    def _fill_chunks(self, object array_):
         """Fill chunks, either in-memory or on-disk."""
         cdef int leftover, chunklen
         cdef npy_intp i, nchunks
@@ -1251,7 +1251,7 @@ cdef class carray:
         cbytes += self._chunksize  # count the space in last chunk
         self._cbytes = cbytes
 
-    def mkdirs(self, object rootdir, object mode):
+    def _mkdirs(self, object rootdir, object mode):
         """Create the basic directory layout for persistent storage."""
         if os.path.exists(rootdir):
             if self._mode != "w":
@@ -1268,7 +1268,7 @@ cdef class carray:
         self.metadir = os.path.join(rootdir, META_DIR)
         os.mkdir(self.metadir)
 
-    def write_meta(self):
+    def _write_meta(self):
         """Write metadata persistently."""
         storagef = os.path.join(self.metadir, STORAGE_FILE)
         with open(storagef, 'wb') as storagefh:
@@ -1294,7 +1294,7 @@ cdef class carray:
             }, ensure_ascii=True).encode('ascii'))
             storagefh.write(b"\n")
 
-    def read_meta(self):
+    def _read_meta(self):
         """Read persistent metadata."""
 
         # First read the size info
@@ -1321,7 +1321,7 @@ cdef class carray:
         dflt = data["dflt"]
         return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
-    def store_obj(self, object arrobj):
+    def _store_obj(self, object arrobj):
         cdef chunk chunk_
         import pickle
 
@@ -1366,7 +1366,7 @@ cdef class carray:
 
             # Object dtype requires special storage
             if arrcpy.dtype.char == 'O':
-                self.store_obj(array)
+                self._store_obj(array)
                 return
 
             # Appending a single row should be supported
@@ -1698,7 +1698,7 @@ cdef class carray:
         # And populate it with metainfo (including chunks)
         meta_info = (self.shape, self.cparams, self.dtype, self.dflt,
                      self.expectedlen, self.cbytes, self.chunklen)
-        cview.open_carray(*meta_info, xchunks=(self.chunks, self.lastchunkarr))
+        cview._open_carray(*meta_info, xchunks=(self.chunks, self.lastchunkarr))
         return cview
 
     def sum(self, dtype=None):
@@ -1833,7 +1833,7 @@ cdef class carray:
         self.idxcache = -1
         self.blockcache = None
 
-    def getitem_object(self, start, stop=None, step=None):
+    def _getitem_object(self, start, stop=None, step=None):
         """Retrieve elements of type object."""
         import pickle
 
@@ -1844,7 +1844,7 @@ cdef class carray:
             return pickle.loads(chunk)
 
         # Range
-        objs = [self.getitem_object(i) for i in xrange(start, stop, step)]
+        objs = [self._getitem_object(i) for i in xrange(start, stop, step)]
         return np.array(objs, dtype=self._dtype)
 
     def __getitem__(self, object key):
@@ -1890,7 +1890,7 @@ cdef class carray:
                 raise IndexError("index out of range")
             arr1 = self.arr1
             if self.dtype.char == 'O':
-                return self.getitem_object(key)
+                return self._getitem_object(key)
             if self.getitem_cache(key, arr1.data):
                 if self.itemsize == self.atomsize:
                     return PyArray_GETITEM(arr1, arr1.data)
@@ -1977,7 +1977,7 @@ cdef class carray:
             return arr
 
         if self.dtype.char == 'O':
-            return self.getitem_object(start, stop, step)
+            return self._getitem_object(start, stop, step)
 
         # Fill it from data in chunks
         nwrow = 0
@@ -2625,7 +2625,7 @@ cdef class carray:
     def __reduce__(self):
         if self.rootdir :
             return (build_carray, (None,self.rootdir,))
-        else: 
+        else:
             return (build_carray,(self[:],None,))
 
 
