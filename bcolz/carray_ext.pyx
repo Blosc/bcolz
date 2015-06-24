@@ -1004,7 +1004,7 @@ cdef class carray:
                                expectedlen, chunklen, rootdir, mode)
             _new = True
         elif rootdir is not None:
-            meta_info = self.read_meta()
+            meta_info = self._read_meta()
             self.open_carray(*meta_info)
             _new = False
         else:
@@ -1294,7 +1294,7 @@ cdef class carray:
             }, ensure_ascii=True).encode('ascii'))
             storagefh.write(b"\n")
 
-    def read_meta(self):
+    def _read_meta(self):
         """Read persistent metadata."""
 
         # First read the size info
