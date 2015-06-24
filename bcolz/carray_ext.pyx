@@ -1146,7 +1146,7 @@ cdef class carray:
             dtype, cparams, self.shape[0], lastchunkarr, self._mode)
             self.chunks = chunks(self._rootdir, metainfo=metainfo, _new=True)
             # We can write the metainfo already
-            self.write_meta()
+            self._write_meta()
 
         # Finally, fill the chunks
         # Object dtype requires special storage
@@ -1268,7 +1268,7 @@ cdef class carray:
         self.metadir = os.path.join(rootdir, META_DIR)
         os.mkdir(self.metadir)
 
-    def write_meta(self):
+    def _write_meta(self):
         """Write metadata persistently."""
         storagef = os.path.join(self.metadir, STORAGE_FILE)
         with open(storagef, 'wb') as storagefh:
