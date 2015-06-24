@@ -1000,7 +1000,7 @@ cdef class carray:
         self._safe = safe
 
         if array is not None:
-            self.create_carray(array, cparams, dtype, dflt,
+            self._create_carray(array, cparams, dtype, dflt,
                                expectedlen, chunklen, rootdir, mode)
             _new = True
         elif rootdir is not None:
@@ -1035,7 +1035,7 @@ cdef class carray:
 
         return dtype_
 
-    def create_carray(self, array, cparams, dtype, dflt,
+    def _create_carray(self, array, cparams, dtype, dflt,
                       expectedlen, chunklen, rootdir, mode):
         """Create a new array.
 
