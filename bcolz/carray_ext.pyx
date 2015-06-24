@@ -1154,7 +1154,7 @@ cdef class carray:
             for obj in array_:
                 self.store_obj(obj)
         else:
-            self.fill_chunks(array_)
+            self._fill_chunks(array_)
 
         # and flush the data pending...
         self.flush()
@@ -1220,7 +1220,7 @@ cdef class carray:
             # Remove all entries when mode is 'w'
             self.resize(0)
 
-    def fill_chunks(self, object array_):
+    def _fill_chunks(self, object array_):
         """Fill chunks, either in-memory or on-disk."""
         cdef int leftover, chunklen
         cdef npy_intp i, nchunks
