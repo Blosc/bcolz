@@ -1152,7 +1152,7 @@ cdef class carray:
         # Object dtype requires special storage
         if array_.dtype.char == 'O':
             for obj in array_:
-                self.store_obj(obj)
+                self._store_obj(obj)
         else:
             self._fill_chunks(array_)
 
@@ -1321,7 +1321,7 @@ cdef class carray:
         dflt = data["dflt"]
         return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)
 
-    def store_obj(self, object arrobj):
+    def _store_obj(self, object arrobj):
         cdef chunk chunk_
         import pickle
 
@@ -1366,7 +1366,7 @@ cdef class carray:
 
             # Object dtype requires special storage
             if arrcpy.dtype.char == 'O':
-                self.store_obj(array)
+                self._store_obj(array)
                 return
 
             # Appending a single row should be supported
