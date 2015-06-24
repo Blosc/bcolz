@@ -1833,7 +1833,7 @@ cdef class carray:
         self.idxcache = -1
         self.blockcache = None
 
-    def getitem_object(self, start, stop=None, step=None):
+    def _getitem_object(self, start, stop=None, step=None):
         """Retrieve elements of type object."""
         import pickle
 
@@ -1844,7 +1844,7 @@ cdef class carray:
             return pickle.loads(chunk)
 
         # Range
-        objs = [self.getitem_object(i) for i in xrange(start, stop, step)]
+        objs = [self._getitem_object(i) for i in xrange(start, stop, step)]
         return np.array(objs, dtype=self._dtype)
 
     def __getitem__(self, object key):
@@ -1890,7 +1890,7 @@ cdef class carray:
                 raise IndexError("index out of range")
             arr1 = self.arr1
             if self.dtype.char == 'O':
-                return self.getitem_object(key)
+                return self._getitem_object(key)
             if self.getitem_cache(key, arr1.data):
                 if self.itemsize == self.atomsize:
                     return PyArray_GETITEM(arr1, arr1.data)
@@ -1977,7 +1977,7 @@ cdef class carray:
             return arr
 
         if self.dtype.char == 'O':
-            return self.getitem_object(start, stop, step)
+            return self._getitem_object(start, stop, step)
 
         # Fill it from data in chunks
         nwrow = 0
