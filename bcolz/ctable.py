@@ -1254,6 +1254,11 @@ class ctable(object):
         fullrepr = header + str(self)
         return fullrepr
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.flush()
 
 # Local Variables:
 # mode: python

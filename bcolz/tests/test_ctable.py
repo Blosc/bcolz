@@ -2125,6 +2125,24 @@ class FlushDiskTest(MayBeDiskTest, TestCase):
         self.assertFalse(t.auto_flush)
 
 
+class ContextManagerTest(MayBeDiskTest, TestCase):
+    disk = True
+
+    def test_with_statement_flushes(self):
+
+        with bcolz.ctable(np.empty(0, dtype="S2,i4,i8,f8"), rootdir=self.rootdir, mode="w") as x:
+            x.append(("a", 1, 2, 3.0))
+            x.append(("b", 4, 5, 6.0))
+
+        received = bcolz.ctable(rootdir=self.rootdir)[:]
+        expected = np.array([('a', 1, 2, 3.0), ('b', 4, 5, 6.0)],
+                            dtype=[('f0', 'S2'), ('f1', '<i4'), ('f2', '<i8'), ('f3', '<f8')])
+
+        assert_array_equal(expected, received)
+
+
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
