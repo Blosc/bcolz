@@ -2133,7 +2133,6 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
         with bcolz.ctable(np.empty(0, dtype="S2,i4,i8,f8"), rootdir=self.rootdir, mode="w") as x:
             x.append(("a", 1, 2, 3.0))
             x.append(("b", 4, 5, 6.0))
-            print x
 
         received = bcolz.ctable(rootdir=self.rootdir)[:]
         expected = np.array([('a', 1, 2, 3.0), ('b', 4, 5, 6.0)],
