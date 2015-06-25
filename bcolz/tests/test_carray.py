@@ -2186,6 +2186,18 @@ class chunksIterMemoryTest(chunksIterTest, TestCase):
 class chunksIterDiskTest(chunksIterTest, TestCase):
     disk = True
 
+class ContextManagerTest(MayBeDiskTest, TestCase):
+    disk = True
+
+    def test_with_statement_flushes(self):
+
+        with carray([], rootdir=self.rootdir, mode='w') as x:
+            x.append(1)
+        received = np.array(carray(rootdir=self.rootdir))
+        expected = np.array([1])
+        assert_array_equal(expected, received)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

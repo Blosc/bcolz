@@ -2629,6 +2629,12 @@ cdef class carray:
             return (build_carray,(self[:],None,))
 
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, tb):
+        self.flush()
+
 ## Local Variables:
 ## mode: python
 ## tab-width: 4
