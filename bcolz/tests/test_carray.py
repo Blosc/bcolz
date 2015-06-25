@@ -26,6 +26,9 @@ from bcolz.carray_ext import chunk
 from bcolz import carray
 import pickle
 
+
+import ctypes
+
 is_64bit = (struct.calcsize("P") == 8)
 
 if sys.version_info >= (3, 0):
@@ -2215,7 +2218,14 @@ class nleftoversTest(TestCase):
 class LeftoverTest(TestCase):
 
     def test_leftover_ptr(self):
-        raise NotImplementedError
+        typesize = 8
+        items = 7
+        a = carray([i for i in range(items)], dtype='i8')
+        for i in range(items):
+            out = ctypes.c_int64.from_address(a.leftover_ptr + i*8)
+            self.assertEqual(i, out.value)
+                    
+
 
     def test_leftover_array(self):
         raise NotImplementedError
