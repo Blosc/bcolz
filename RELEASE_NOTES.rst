@@ -19,7 +19,11 @@ Changes from 0.9.0 to 0.10.0
 - Solve #22 and be more specific about ``carray`` private methods.
   (#209 @FrancescElies @FrancescAlted)
 
+- Implement context manager for ``carray`` and ``ctable``.
+  (#135 #210 @FrancescElies and @esc)
+
 - Various refactorings and cleanups. (#198 #199 #200)
+
 
 Changes from 0.8.1 to 0.9.0
 ===========================
