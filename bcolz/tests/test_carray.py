@@ -2210,6 +2210,23 @@ class nleftoversTest(TestCase):
     def test_beyond_one(self):
         a = carray(np.zeros(2049), chunklen=2048)
         self.assertEqual(1, a.nleftover)
+
+
+class LeftoverTest(TestCase):
+
+    def test_leftover_ptr(self):
+        raise NotImplementedError
+
+    def test_leftover_array(self):
+        raise NotImplementedError
+
+    def test_leftover_bytes(self):
+        raise NotImplementedError
+
+    def test_leftover_elements(self):
+        raise NotImplementedError
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
