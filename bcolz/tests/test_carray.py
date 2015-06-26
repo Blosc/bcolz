@@ -2243,7 +2243,11 @@ class LeftoverTest(TestCase):
         assert_array_equal(reference, out)
 
     def test_leftover_bytes(self):
-        raise NotImplementedError
+        typesize = 8
+        items = 9
+        a = carray([i for i in range(items)], dtype='i8')
+        self.assertEqual(a.leftover_bytes, items*typesize)
+        
 
     def test_leftover_elements(self):
         raise NotImplementedError
