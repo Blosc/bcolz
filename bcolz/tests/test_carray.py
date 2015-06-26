@@ -2236,7 +2236,11 @@ class LeftoverTest(TestCase):
             self.assertEqual(chunklen + i, out.value)
 
     def test_leftover_array(self):
-        raise NotImplementedError
+        items = 7
+        a = carray([i for i in range(items)], dtype='i4')
+        reference = np.array([0, 1, 2, 3, 4, 5, 6], dtype='int32')
+        out = a.leftover_array[:items]
+        assert_array_equal(reference, out)
 
     def test_leftover_bytes(self):
         raise NotImplementedError
