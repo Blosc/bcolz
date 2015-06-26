@@ -2250,7 +2250,10 @@ class LeftoverTest(TestCase):
         
 
     def test_leftover_elements(self):
-        raise NotImplementedError
+        typesize = 8
+        items = 9
+        a = carray([i for i in range(items)], dtype='i8')
+        self.assertEqual(a.leftover_elements, items)
 
 
 if __name__ == '__main__':
