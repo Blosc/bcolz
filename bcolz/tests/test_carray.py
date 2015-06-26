@@ -2224,8 +2224,16 @@ class LeftoverTest(TestCase):
         for i in range(items):
             out = ctypes.c_int64.from_address(a.leftover_ptr + i*8)
             self.assertEqual(i, out.value)
-                    
 
+    
+    def test_leftover_ptr_after_chunks(self):
+        typesize = 4
+        items = 108
+        chunklen = 100
+        a = carray([i for i in range(items)], chunklen=chunklen, dtype='i4')
+        for i in range(items%chunklen):
+            out = ctypes.c_int32.from_address(a.leftover_ptr + i*4)
+            self.assertEqual(chunklen + i, out.value)
 
     def test_leftover_array(self):
         raise NotImplementedError
