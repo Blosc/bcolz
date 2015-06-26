@@ -2337,6 +2337,25 @@ cdef class carray:
             cview = self.view()
         return cview._init_iter(start, stop, step, limit, skip)
 
+    def iterchunk(self):
+        cdef:
+            chunk chunk_
+            Py_ssize_t chunklen, leftover_elements
+
+        chunklen = self.chunklen
+        # in-buffer ideally should be typed but that would need fusedtype?
+        in_buffer = np.empty(chunklen, dtype=self.dtype)
+
+        for i in range(self.nchunks):
+            chunk_ = self.chunks[i]
+            # decompress into in_buffer
+            chunk_._getitem(0, chunklen, in_buffer.data)
+            yield in_buffer
+
+        leftover_elements = cython.cdiv(self.leftover, self.atomsize)
+        if leftover_elements > 0:
+            yield self.leftover_array[:leftover_elements]
+
     def _init_iter(self, start, stop, step, limit, skip):
         self.reset_iter_sentinels()
         self.sss_mode = True
