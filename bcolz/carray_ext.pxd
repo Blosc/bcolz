@@ -45,6 +45,7 @@ cdef class carray:
     cdef public object chunks
     cdef object _rootdir, datadir, metadir, _mode
     cdef object _attrs, iter_exhausted
+    cdef object iterchunks
     cdef ndarray iobuf, where_buf
     # For block cache
     cdef int idxcache

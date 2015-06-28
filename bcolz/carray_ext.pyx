@@ -2337,7 +2337,7 @@ cdef class carray:
             cview = self.view()
         return cview._init_iter(start, stop, step, limit, skip)
 
-    def iterchunk(self):
+    def iterchunks(self):
         cdef:
             chunk chunk_
             Py_ssize_t chunklen, leftover_elements
