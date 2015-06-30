@@ -26,6 +26,9 @@ from bcolz.carray_ext import chunk
 from bcolz import carray
 import pickle
 
+
+import ctypes
+
 is_64bit = (struct.calcsize("P") == 8)
 
 if sys.version_info >= (3, 0):
@@ -2196,6 +2199,61 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
         received = np.array(carray(rootdir=self.rootdir))
         expected = np.array([1])
         assert_array_equal(expected, received)
+
+class nleftoversTest(TestCase):
+
+    def test_empty(self):
+        a = carray([])
+        self.assertEquals(0, a.nleftover)
+
+    def test_one(self):
+        a = carray([1])
+        self.assertEqual(1, a.nleftover)
+
+    def test_beyond_one(self):
+        a = carray(np.zeros(2049), chunklen=2048)
+        self.assertEqual(1, a.nleftover)
+
+
+class LeftoverTest(TestCase):
+
+    def test_leftover_ptr(self):
+        typesize = 8
+        items = 7
+        a = carray([i for i in range(items)], dtype='i8')
+        for i in range(items):
+            out = ctypes.c_int64.from_address(a.leftover_ptr + i*8)
+            self.assertEqual(i, out.value)
+
+    
+    def test_leftover_ptr_after_chunks(self):
+        typesize = 4
+        items = 108
+        chunklen = 100
+        a = carray([i for i in range(items)], chunklen=chunklen, dtype='i4')
+        for i in range(items%chunklen):
+            out = ctypes.c_int32.from_address(a.leftover_ptr + i*4)
+            self.assertEqual(chunklen + i, out.value)
+
+    def test_leftover_array(self):
+        items = 7
+        a = carray([i for i in range(items)], dtype='i4')
+        reference = np.array([0, 1, 2, 3, 4, 5, 6], dtype='int32')
+        out = a.leftover_array[:items]
+        assert_array_equal(reference, out)
+
+    def test_leftover_bytes(self):
+        typesize = 8
+        items = 9
+        a = carray([i for i in range(items)], dtype='i8')
+        self.assertEqual(a.leftover_bytes, items*typesize)
+        
+
+    def test_leftover_elements(self):
+        typesize = 8
+        items = 9
+        a = carray([i for i in range(items)], dtype='i8')
+        self.assertEqual(a.leftover_elements, items)
 
 
 if __name__ == '__main__':

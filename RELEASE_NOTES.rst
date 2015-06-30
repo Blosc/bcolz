@@ -66,6 +66,9 @@ Changes from 0.8.0 to 0.8.1
 
 - Upgrade to Cython 0.22 (#145 @esc)
 
+- Implement ``nleftover`` which returns the number of leftover and uncompressed
+  elements.
+
 Changes from 0.7.3 to 0.8.0
 ===========================
 
