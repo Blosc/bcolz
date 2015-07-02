@@ -2215,29 +2215,29 @@ class nleftoversTest(TestCase):
         self.assertEqual(1, a.nleftover)
 
 
-class LeftoverTest(TestCase):
+class LeftoverTest(MayBeDiskTest):
 
     def test_leftover_ptr(self):
         typesize = 8
         items = 7
-        a = carray([i for i in range(items)], dtype='i8')
+        a = carray([i for i in range(items)], dtype='i8', rootdir=self.rootdir)
         for i in range(items):
-            out = ctypes.c_int64.from_address(a.leftover_ptr + i*8)
+            out = ctypes.c_int64.from_address(a.leftover_ptr + (i * typesize))
             self.assertEqual(i, out.value)
 
-    
     def test_leftover_ptr_after_chunks(self):
         typesize = 4
         items = 108
         chunklen = 100
-        a = carray([i for i in range(items)], chunklen=chunklen, dtype='i4')
-        for i in range(items%chunklen):
-            out = ctypes.c_int32.from_address(a.leftover_ptr + i*4)
+        a = carray([i for i in range(items)], chunklen=chunklen, dtype='i4',
+                   rootdir=self.rootdir)
+        for i in range(items % chunklen):
+            out = ctypes.c_int32.from_address(a.leftover_ptr + (i * typesize))
             self.assertEqual(chunklen + i, out.value)
 
     def test_leftover_array(self):
         items = 7
-        a = carray([i for i in range(items)], dtype='i4')
+        a = carray([i for i in range(items)], dtype='i4', rootdir=self.rootdir)
         reference = np.array([0, 1, 2, 3, 4, 5, 6], dtype='int32')
         out = a.leftover_array[:items]
         assert_array_equal(reference, out)
@@ -2245,15 +2245,54 @@ class LeftoverTest(TestCase):
     def test_leftover_bytes(self):
         typesize = 8
         items = 9
-        a = carray([i for i in range(items)], dtype='i8')
-        self.assertEqual(a.leftover_bytes, items*typesize)
-        
+        a = carray([i for i in range(items)], dtype='i8', rootdir=self.rootdir)
+        self.assertEqual(a.leftover_bytes, items * typesize)
 
     def test_leftover_elements(self):
-        typesize = 8
         items = 9
-        a = carray([i for i in range(items)], dtype='i8')
+        a = carray([i for i in range(items)], dtype='i8', rootdir=self.rootdir)
         self.assertEqual(a.leftover_elements, items)
+
+
+class LeftoverMemoryTest(LeftoverTest, TestCase):
+    disk = False
+
+
+class LeftoverDiskTest(LeftoverTest, TestCase):
+    disk = True
+
+    def test_leftover_ptr_create_flush_open(self):
+        typesize = 8
+        items = 120
+        chunklen = 50
+        n_leftovers = items % chunklen
+        n_chunks = items // chunklen
+
+        a = carray([i for i in range(items)], chunklen=chunklen, dtype='i8',
+                   rootdir=self.rootdir)
+        a.flush()
+
+        b = carray(rootdir=self.rootdir)
+        for i in range(n_leftovers):
+            out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
+            self.assertEqual((n_chunks * chunklen) + i, out.value)
+
+    def test_leftover_ptr_with_statement_create_open(self):
+        typesize = 8
+        items = 120
+        chunklen = 50
+        n_leftovers = items % chunklen
+        n_chunks = items // chunklen
+
+        ca = carray([], chunklen=chunklen, dtype='i8', rootdir=self.rootdir)
+        with ca as a:
+            for i in range(items):
+                a.append(i)
+
+        b = carray(rootdir=self.rootdir)
+        for i in range(n_leftovers):
+            out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
+            self.assertEqual((n_chunks * chunklen) + i, out.value)
 
 
 if __name__ == '__main__':
