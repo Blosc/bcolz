@@ -2277,6 +2277,24 @@ class LeftoverDiskTest(LeftoverTest, TestCase):
             out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
             self.assertEqual((n_chunks * chunklen) + i, out.value)
 
+    def test_leftover_ptr_with_statement_create_open(self):
+        typesize = 8
+        items = 120
+        chunklen = 50
+        n_leftovers = items % chunklen
+        n_chunks = items // chunklen
+
+        ca = carray([], chunklen=chunklen, dtype='i8', rootdir=self.rootdir)
+        with ca as a:
+            for i in range(items):
+                a.append(i)
+
+        b = carray(rootdir=self.rootdir)
+        for i in range(n_leftovers):
+            out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
+            self.assertEqual((n_chunks * chunklen) + i, out.value)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 
