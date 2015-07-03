@@ -461,7 +461,7 @@ cdef class chunk:
                 "fatal error during Blosc decompression: %d" % ret)
         return result_str
 
-    cdef void _getitem(self, int start, int stop, char *dest):
+    cdef void _getitem(self, int start, int stop, buffer dest):
         """Read data from `start` to `stop` and return it as a numpy array."""
         cdef int ret, bsize, blen, nitems, nstart
         cdef ndarray constants
