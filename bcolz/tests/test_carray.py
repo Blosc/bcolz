@@ -947,7 +947,7 @@ class iterblocksTest(MayBeDiskTest):
         self.assertEqual(s, np.arange(blen-1, slen).sum())
 
 
-class iterchunksTest(MayBeDiskTest):
+class iterchunksTest(MayBeDiskTest, TestCase):
 
     def test00(self):
         """Testing `iterchunks` method with a simple carray with 2 chunks and a half full leftovers array"""
