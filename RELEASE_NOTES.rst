@@ -22,7 +22,9 @@ Changes from 0.9.0 to 0.10.0
 - Implement context manager for ``carray`` and ``ctable``.
   (#135 #210 @FrancescElies and @esc)
 
-- Fix handling and API for leftovers. (#72 #132 #211 @FrancescElies @esc)
+- Fix handling and API for leftovers. (#72 #132 #211 #213 @FrancescElies @esc)
+
+- Fix bug for incorrect leftover value. (#208 @waylonflinn)
 
 - Various refactorings and cleanups. (#198 #199 #200)
 
