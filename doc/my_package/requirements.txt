@@ -1,0 +1,3 @@
+cython>=0.20
+numpy>=1.7.0
+bcolz>=0.8.0
