@@ -632,17 +632,22 @@ easiest one is using the `fromiter` constructor::
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
-You can also build an empty ctable first and the append data::
+You can also build an empty ctable first and the append data, we encourage you
+to use the `with` statment for this, it will take care of flushing data to disk
+once you are done appending data.::
 
-  >>> ct = bcolz.ctable(np.empty(0, dtype="i4,f8"))
-  >>> for i in xrange(N):
-  ...:    ct.append((i, i**2))
+  >>> with bcolz.ctable(np.empty(0, dtype="i4,f8"),
+  ...:                     rootdir='mydir', mode="w") as ct:
+  ...:     for i in xrange(N):
+  ...:        ct.append((i, i**2))
   ...:
-  >>> ct
-  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 355.48 KB; ratio: 3.30
+  >>> bcolz.ctable(rootdir='mydir') 
+  ctable((100000,), [('f0', '<i4'), ('f1', '<f8')])
+    nbytes: 1.14 MB; cbytes: 247.18 KB; ratio: 4.74
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [(0, 0.0), (1, 1.0), (2, 4.0), ...,
-   (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
+    rootdir := 'mydir'
+  [(0, 0.0) (1, 1.0) (2, 4.0) ..., (99997, 9999400009.0)
+   (99998, 9999600004.0) (99999, 9999800001.0)]
 
 However, we can see how the latter approach does not compress as well.
 Why?  Well, carray has machinery for computing 'optimal' chunksizes
