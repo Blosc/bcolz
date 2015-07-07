@@ -12,13 +12,18 @@ A carray can be created from any NumPy ndarray by using its `carray`
 constructor::
 
   >>> a = np.arange(10)
-  >>> b = bcolz.carray(a)                   # for in-memory storage
-  >>> c = bcolz.carray(a, rootdir='mydir')  # for on-disk storage
+  >>> b = bcolz.carray(a)                          # for in-memory storage
+  >>> with bcolz.carray(a, rootdir='mydir') as _:  # for on-disk storage
+  ...:    c = _  # keep the reference to the Python object
+
+To avoid forgetting to flush your data to disk, you are encouraged to use the
+`with` statement for on-disk carrays.
 
 Or, you can also create it by using one of its multiple constructors
 (see :ref:`top-level-constructors` for the complete list)::
 
-  >>> d = bcolz.arange(10, rootdir='mydir')
+  >>> with bcolz.arange(10, rootdir='mydir') as _:
+  ,,,:    d = _
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
@@ -549,7 +554,8 @@ carray user attrs
 Besides the regular attributes like `shape`, `dtype` or `chunklen`,
 there is another set of attributes that can be added (and removed) by
 the user in another name space.  This space is accessible via the
-special `attrs` attribute::
+special `attrs` attribute, in the following example we will trigger flushing
+data to disk manually::
 
   >>> a = bcolz.carray([1,2], rootdir='mydata')
   >>> a.attrs
