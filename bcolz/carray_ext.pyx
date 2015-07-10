@@ -1352,10 +1352,7 @@ cdef class carray:
         self._nbytes += nbytes
 
     def append(self, object array):
-        """
-        append(array)
-
-        Append a numpy `array` to this instance.
+        """Append a numpy `array` to this instance.
 
         Parameters
         ----------
@@ -1463,10 +1460,7 @@ cdef class carray:
         return
 
     def trim(self, object nitems):
-        """
-        trim(nitems)
-
-        Remove the trailing `nitems` from this instance.
+        """Remove the trailing `nitems` from this instance.
 
         Parameters
         ----------
@@ -1534,10 +1528,7 @@ cdef class carray:
         self.flush()
 
     def resize(self, object nitems):
-        """
-        resize(nitems)
-
-        Resize the instance to have `nitems`.
+        """Resize the instance to have `nitems`.
 
         Parameters
         ----------
@@ -1569,10 +1560,7 @@ cdef class carray:
             self.trim(self.len - nitems)
 
     def reshape(self, newshape):
-        """
-        reshape(newshape)
-
-        Returns a new carray containing the same data with a new shape.
+        """Returns a new carray containing the same data with a new shape.
 
         Parameters
         ----------
@@ -1659,10 +1647,7 @@ cdef class carray:
         return out
 
     def copy(self, **kwargs):
-        """
-        copy(**kwargs)
-
-        Return a copy of this object.
+        """Return a copy of this object.
 
         Parameters
         ----------
@@ -1694,10 +1679,7 @@ cdef class carray:
         return ccopy
 
     def view(self):
-        """
-        view()
-
-        Create a light weight view of the data in the original carray.
+        """Create a light weight view of the data in the original carray.
 
         Returns
         -------
@@ -1718,10 +1700,7 @@ cdef class carray:
         return cview
 
     def sum(self, dtype=None):
-        """
-        sum(dtype=None)
-
-        Return the sum of the array elements.
+        """Return the sum of the array elements.
 
         Parameters
         ----------
@@ -1864,8 +1843,7 @@ cdef class carray:
         return np.array(objs, dtype=self._dtype)
 
     def __getitem__(self, object key):
-        """
-        x.__getitem__(key) <==> x[key]
+        """ x.__getitem__(key) <==> x[key]
 
         Returns values based on `key`.  All the functionality of
         ``ndarray.__getitem__()`` is supported (including fancy indexing),
@@ -2017,8 +1995,7 @@ cdef class carray:
         return arr
 
     def __setitem__(self, object key, object value):
-        """
-        x.__setitem__(key, value) <==> x[key] = value
+        """ x.__setitem__(key, value) <==> x[key] = value
 
         Sets values based on `key`.  All the functionality of
         ``ndarray.__setitem__()`` is supported (including fancy indexing),
@@ -2315,10 +2292,7 @@ cdef class carray:
         return self
 
     def iter(self, start=0, stop=None, step=1, limit=None, skip=0, _next=False):
-        """
-        iter(start=0, stop=None, step=1, limit=None, skip=0)
-
-        Iterator with `start`, `stop` and `step` bounds.
+        """Iterator with `start`, `stop` and `step` bounds.
 
         Parameters
         ----------
@@ -2364,10 +2338,7 @@ cdef class carray:
         return iter(self)
 
     def wheretrue(self, limit=None, skip=0):
-        """
-        wheretrue(limit=None, skip=0)
-
-        Iterator that returns indices where this object is true.
+        """Iterator that returns indices where this object is true.
 
         This is currently only useful for boolean carrays that are unidimensional.
 
@@ -2405,10 +2376,7 @@ cdef class carray:
         return iter(self)
 
     def where(self, boolarr, limit=None, skip=0):
-        """
-        where(boolarr, limit=None, skip=0)
-
-        Iterator that returns values of this object where `boolarr` is true.
+        """Iterator that returns values of this object where `boolarr` is true.
 
         This is currently only useful for boolean carrays that are unidimensional.
 
