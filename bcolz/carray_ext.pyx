@@ -1827,6 +1827,7 @@ cdef class carray:
         return 1
 
     def free_cachemem(self):
+        """Release in-memory cached chunk"""
         if type(self.chunks) is not list:
             self.chunks.free_cachemem()
         self.idxcache = -1
