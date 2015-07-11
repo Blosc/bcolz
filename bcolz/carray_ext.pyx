@@ -891,6 +891,7 @@ cdef class carray:
             return self.leftover
 
     property leftover_elements:
+        """Number of elements in the leftover_array"""
         def __get__(self):
             return cython.cdiv(self.leftover, self.atomsize)
 
