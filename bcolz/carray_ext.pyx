@@ -881,6 +881,7 @@ cdef class carray:
             return self.lastchunkarr.ctypes.data
 
     property leftover_array:
+        """Array containing the leftovers chunk (uncompressed chunk)"""
         def __get__(self):
             return self.lastchunkarr
 
