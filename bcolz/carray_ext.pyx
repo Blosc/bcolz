@@ -1,3 +1,5 @@
+#!python
+#cython: embedsignature=True
 #########################################################################
 #
 #       License: BSD
@@ -873,31 +875,35 @@ cdef class carray:
     """
 
     property leftover_ptr:
+        """Pointer referring to the leftover_array"""
         def __get__(self):
             # Pointer to the leftovers chunk
             return self.lastchunkarr.ctypes.data
 
     property leftover_array:
+        """Array containing the leftovers chunk (uncompressed chunk)"""
         def __get__(self):
             return self.lastchunkarr
 
     property leftover_bytes:
+        """Number of bytes in the leftover_array"""
         def __get__(self):
             return self.leftover
 
     property leftover_elements:
+        """Number of elements in the leftover_array"""
         def __get__(self):
             return cython.cdiv(self.leftover, self.atomsize)
 
     property nchunks:
+        """Number of chunks in the carray"""
         def __get__(self):
             # TODO: do we need to handle the last chunk specially?
             return <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
 
     property partitions:
+        """List of tuples indicating the bounds for each chunk"""
         def __get__(self):
-            # Return a sequence of tuples indicating the bounds
-            # of each of the chunks.
             nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
             chunklen = cython.cdiv(self._chunksize, self.atomsize)
             return [(i * chunklen, (i + 1) * chunklen) for i in
@@ -1350,10 +1356,7 @@ cdef class carray:
         self._nbytes += nbytes
 
     def append(self, object array):
-        """
-        append(array)
-
-        Append a numpy `array` to this instance.
+        """Append a numpy `array` to this instance.
 
         Parameters
         ----------
@@ -1461,10 +1464,7 @@ cdef class carray:
         return
 
     def trim(self, object nitems):
-        """
-        trim(nitems)
-
-        Remove the trailing `nitems` from this instance.
+        """Remove the trailing `nitems` from this instance.
 
         Parameters
         ----------
@@ -1532,10 +1532,7 @@ cdef class carray:
         self.flush()
 
     def resize(self, object nitems):
-        """
-        resize(nitems)
-
-        Resize the instance to have `nitems`.
+        """Resize the instance to have `nitems`.
 
         Parameters
         ----------
@@ -1567,10 +1564,7 @@ cdef class carray:
             self.trim(self.len - nitems)
 
     def reshape(self, newshape):
-        """
-        reshape(newshape)
-
-        Returns a new carray containing the same data with a new shape.
+        """Returns a new carray containing the same data with a new shape.
 
         Parameters
         ----------
@@ -1657,10 +1651,7 @@ cdef class carray:
         return out
 
     def copy(self, **kwargs):
-        """
-        copy(**kwargs)
-
-        Return a copy of this object.
+        """Return a copy of this object.
 
         Parameters
         ----------
@@ -1692,10 +1683,7 @@ cdef class carray:
         return ccopy
 
     def view(self):
-        """
-        view()
-
-        Create a light weight view of the data in the original carray.
+        """Create a light weight view of the data in the original carray.
 
         Returns
         -------
@@ -1716,10 +1704,7 @@ cdef class carray:
         return cview
 
     def sum(self, dtype=None):
-        """
-        sum(dtype=None)
-
-        Return the sum of the array elements.
+        """Return the sum of the array elements.
 
         Parameters
         ----------
@@ -1842,6 +1827,7 @@ cdef class carray:
         return 1
 
     def free_cachemem(self):
+        """Release in-memory cached chunk"""
         if type(self.chunks) is not list:
             self.chunks.free_cachemem()
         self.idxcache = -1
@@ -1862,8 +1848,7 @@ cdef class carray:
         return np.array(objs, dtype=self._dtype)
 
     def __getitem__(self, object key):
-        """
-        x.__getitem__(key) <==> x[key]
+        """ x.__getitem__(key) <==> x[key]
 
         Returns values based on `key`.  All the functionality of
         ``ndarray.__getitem__()`` is supported (including fancy indexing),
@@ -2015,8 +2000,7 @@ cdef class carray:
         return arr
 
     def __setitem__(self, object key, object value):
-        """
-        x.__setitem__(key, value) <==> x[key] = value
+        """ x.__setitem__(key, value) <==> x[key] = value
 
         Sets values based on `key`.  All the functionality of
         ``ndarray.__setitem__()`` is supported (including fancy indexing),
@@ -2313,10 +2297,7 @@ cdef class carray:
         return self
 
     def iter(self, start=0, stop=None, step=1, limit=None, skip=0, _next=False):
-        """
-        iter(start=0, stop=None, step=1, limit=None, skip=0)
-
-        Iterator with `start`, `stop` and `step` bounds.
+        """Iterator with `start`, `stop` and `step` bounds.
 
         Parameters
         ----------
@@ -2362,10 +2343,7 @@ cdef class carray:
         return iter(self)
 
     def wheretrue(self, limit=None, skip=0):
-        """
-        wheretrue(limit=None, skip=0)
-
-        Iterator that returns indices where this object is true.
+        """Iterator that returns indices where this object is true.
 
         This is currently only useful for boolean carrays that are unidimensional.
 
@@ -2403,10 +2381,7 @@ cdef class carray:
         return iter(self)
 
     def where(self, boolarr, limit=None, skip=0):
-        """
-        where(boolarr, limit=None, skip=0)
-
-        Iterator that returns values of this object where `boolarr` is true.
+        """Iterator that returns values of this object where `boolarr` is true.
 
         This is currently only useful for boolean carrays that are unidimensional.
 

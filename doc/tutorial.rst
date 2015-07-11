@@ -12,13 +12,18 @@ A carray can be created from any NumPy ndarray by using its `carray`
 constructor::
 
   >>> a = np.arange(10)
-  >>> b = bcolz.carray(a)                   # for in-memory storage
-  >>> c = bcolz.carray(a, rootdir='mydir')  # for on-disk storage
+  >>> b = bcolz.carray(a)                          # for in-memory storage
+  >>> with bcolz.carray(a, rootdir='mydir') as _:  # for on-disk storage
+  ...:    c = _  # keep the reference to the Python object
+
+To avoid forgetting to flush your data to disk, you are encouraged to use the
+`with` statement for on-disk carrays.
 
 Or, you can also create it by using one of its multiple constructors
 (see :ref:`top-level-constructors` for the complete list)::
 
-  >>> d = bcolz.arange(10, rootdir='mydir')
+  >>> with bcolz.arange(10, rootdir='mydir') as _:
+  ,,,:    d = _
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
@@ -549,7 +554,8 @@ carray user attrs
 Besides the regular attributes like `shape`, `dtype` or `chunklen`,
 there is another set of attributes that can be added (and removed) by
 the user in another name space.  This space is accessible via the
-special `attrs` attribute::
+special `attrs` attribute, in the following example we will trigger flushing
+data to disk manually::
 
   >>> a = bcolz.carray([1,2], rootdir='mydata')
   >>> a.attrs
@@ -632,17 +638,22 @@ easiest one is using the `fromiter` constructor::
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
-You can also build an empty ctable first and the append data::
+You can also build an empty ctable first and the append data, we encourage you
+to use the `with` statment for this, it will take care of flushing data to disk
+once you are done appending data.::
 
-  >>> ct = bcolz.ctable(np.empty(0, dtype="i4,f8"))
-  >>> for i in xrange(N):
-  ...:    ct.append((i, i**2))
+  >>> with bcolz.ctable(np.empty(0, dtype="i4,f8"),
+  ...:                     rootdir='mydir', mode="w") as ct:
+  ...:     for i in xrange(N):
+  ...:        ct.append((i, i**2))
   ...:
-  >>> ct
-  ctable((100000,), |V12) nbytes: 1.14 MB; cbytes: 355.48 KB; ratio: 3.30
+  >>> bcolz.ctable(rootdir='mydir') 
+  ctable((100000,), [('f0', '<i4'), ('f1', '<f8')])
+    nbytes: 1.14 MB; cbytes: 247.18 KB; ratio: 4.74
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [(0, 0.0), (1, 1.0), (2, 4.0), ...,
-   (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
+    rootdir := 'mydir'
+  [(0, 0.0) (1, 1.0) (2, 4.0) ..., (99997, 9999400009.0)
+   (99998, 9999600004.0) (99999, 9999800001.0)]
 
 However, we can see how the latter approach does not compress as well.
 Why?  Well, carray has machinery for computing 'optimal' chunksizes
@@ -836,3 +847,99 @@ resulting output is a ctable, and not a NumPy structured array.  This
 is so because the output of `eval()` is of the same length than the
 ctable, and thus it can be pretty large, so compression maybe of help
 to reduce its storage needs.
+
+
+Tutorial on writing extensions
+==============================
+
+Did you like Bcolz but you couldn't find exactly the functionality you were
+looking for? You could write an extension and implement complex operations on
+top of Bcolz containers.
+
+
+Before you start writing your own extension you let's see some examples of real
+projects made on top of Bcolz:
+  
+  - `Bquery`: a query and aggregation framework, among other things it provides
+      group-by functionality for Bcolz containers. See
+      https://github.com/visualfabriq/bquery
+
+  - `Bdot`: provides big dot products (by making your RAM bigger on the inside).
+      Supports ``matrix . vector`` and ``matrix . matrix`` for most common numpy
+      numeric data types. See https://github.com/tailwind/bdot
+
+Though not a extensions itself, it is worth pointing out `Dask`. Dask plays nicely
+with Bcolz and provides multi-core execution on larger-than-memory datasets
+using blocked algorithms and task scheduling. See
+https://github.com/ContinuumIO/dask. 
+
+Bcolz is designed to work together with `itertools`, `Pytoolz` or `Cytoolz` too,
+they might offer you already the amount of performance and functionality you are
+
+In the next section we will go through all the steps needed to write your own
+extension on top of Bcolz.
+
+How to use Bcolz as part of the infrastructure
+----------------------------------------------
+
+Go to the root directory of Bcolz, inside ``doc/my_package/`` you will find a
+small extension example.
+
+Before you can run this example you will need to install the following packages.
+Run ``pip install cython``, ``pip install numpy`` and ``pip install bcolz`` to
+install these packages.
+In case you prefer Conda package management system execute ``conda install
+cython numpy bcolz`` and you should be ready to go.
+See ``requirements.txt``:
+
+.. literalinclude:: my_package/requirements.txt
+    :language: python
+
+Once you have those packages installed, change your working directory to 
+``doc/my_package/``, please see 
+`pkg. example <https://github.com/Blosc/bcolz/tree/master/doc/my_package>`_
+and run ``python setup.py build_ext --inplace`` from the terminal, 
+if everything ran smoothly you should be able to see a binary file
+``my_extension/example_ext.so`` next to the ``.pyx`` file. 
+
+If you have any problems compiling this extensions, please make sure your bcolz
+version is at least ``0.8.0``, previous versions don't contain the necessary
+``.pxd`` file which provides a Cython interface to the carray Cython module.
+
+The ``setup.py`` file is where you will need to tell the compiler, the name of
+you package, the location of external libraries (in case you want to use them),
+compiler directives and so on. 
+See `bcolz setup.py <https://github.com/Blosc/bcolz/blob/master/setup.py>`_ as a
+possible reference for a more complete example.
+Along your project grows in complexity you might be interested in including
+other options to your `Extension` object, e.g. `include_dirs` to include a list
+of directories to search for C/C++ header files your code might be dependent on.
+
+See ``my_package/setup.py``:
+
+.. literalinclude:: my_package/setup.py 
+    :language: python
+
+The ``.pyx`` files is going to be the place where Cython code implementing the
+extension will be, in the example below the function will return a sum of all
+integers inside the carray.
+
+See ``my_package/my_extension/example_ext.pyx``
+
+Keep in mind that carrays are great for sequential access, but random access
+will highly likely trigger decompression of a different chunk for each
+randomly accessed value. 
+
+For more information about Cython visit http://docs.cython.org/index.html
+
+.. literalinclude:: my_package/my_extension/example_ext.pyx
+    :language: python
+
+Let's test our extension:
+
+        >>> import bcolz as bz
+        >>> import my_extension.example_ext as my_mod
+        >>> c = bz.carray([i for i in range(1000)], dtype='i8')
+        >>> my_mod.my_function(c)
+        499500
+
