@@ -902,9 +902,8 @@ cdef class carray:
             return <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
 
     property partitions:
+        """List of tuples indicating the bounds for each chunk"""
         def __get__(self):
-            # Return a sequence of tuples indicating the bounds
-            # of each of the chunks.
             nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
             chunklen = cython.cdiv(self._chunksize, self.atomsize)
             return [(i * chunklen, (i + 1) * chunklen) for i in
