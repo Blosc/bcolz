@@ -896,6 +896,7 @@ cdef class carray:
             return cython.cdiv(self.leftover, self.atomsize)
 
     property nchunks:
+        """Number of chunks in the carray"""
         def __get__(self):
             # TODO: do we need to handle the last chunk specially?
             return <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
