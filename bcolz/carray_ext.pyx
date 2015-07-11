@@ -875,6 +875,7 @@ cdef class carray:
     """
 
     property leftover_ptr:
+        """Pointer referring to the leftover_array"""
         def __get__(self):
             # Pointer to the leftovers chunk
             return self.lastchunkarr.ctypes.data
