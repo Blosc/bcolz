@@ -886,6 +886,7 @@ cdef class carray:
             return self.lastchunkarr
 
     property leftover_bytes:
+        """Number of bytes in the leftover_array"""
         def __get__(self):
             return self.leftover
 
