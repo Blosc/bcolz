@@ -11,7 +11,7 @@ Changes from 0.9.0 to 0.10.0
   ``for chunk_ in ca._chunks``, added "internal use" indicator to carray
   chunks attribute. (#153 @FrancescElies and @esc)
 
-- Fix a memory leak in the ``chunk.getudata`` method where. (#201 @esc)
+- Fix a memory leak and avoid copy in ``chunk.getudata``. (#201 #202 @esc)
 
 - Fix the error message when trying to open a fresh ctable in an existing
   rootdir. (#191 @twiecki @esc)
@@ -26,7 +26,10 @@ Changes from 0.9.0 to 0.10.0
 
 - Fix bug for incorrect leftover value. (#208 @waylonflinn)
 
-- Various refactorings and cleanups. (#198 #199 #200)
+- Documentation: document how to write extensions, update docstrings and
+  mention the with statement / context manager. (#214 @FrancescElies)
+
+- Various refactorings and cleanups. (#190 #198 #197 #199 #200)
 
 
 Changes from 0.8.1 to 0.9.0
