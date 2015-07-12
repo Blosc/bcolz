@@ -5,7 +5,31 @@ Announcing bcolz 0.10.0
 What's new
 ==========
 
-#XXX version-specific blurb XXX#
+This is a cleanup-and-refactor release with many internal optimizations
+and a few bug fixes. For users, the most important improvement is the
+new-and-shiny context manager for bcolz objects. For example for the
+ctable constructor::
+
+    >>> with bcolz.ctable(np.empty(0, dtype="i4,f8"),
+    ...:                     rootdir='mydir', mode="w") as ct:
+    ...:     for i in xrange(N):
+    ...:        ct.append((i, i**2))
+    ...:
+    >>> bcolz.ctable(rootdir='mydir')
+    ctable((100000,), [('f0', '<i4'), ('f1', '<f8')])
+      nbytes: 1.14 MB; cbytes: 247.18 KB; ratio: 4.74
+      cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+      rootdir := 'mydir'
+    [(0, 0.0) (1, 1.0) (2, 4.0) ..., (99997, 9999400009.0)
+     (99998, 9999600004.0) (99999, 9999800001.0)]
+
+This is very useful for on-disk objects since it takes care of flushing
+the data automatically. It works with all the top-level functions as
+listed in: http://bcolz.blosc.org/reference.html#top-level-functions.
+
+For a complete list of changes check the release notes at:
+
+https://github.com/Blosc/bcolz/blob/master/RELEASE_NOTES.rst
 
 
 What it is
