@@ -16,7 +16,7 @@ bcolz: columnar and compressed data containers
         :target: https://ci.appveyor.com/project/esc/bcolz/branch/master
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
-        :target: https://blosc.org
+        :target: http://blosc.org
 
 bcolz provides columnar, chunked data containers that can be
 compressed either in-memory and on-disk.  Column storage allows for
