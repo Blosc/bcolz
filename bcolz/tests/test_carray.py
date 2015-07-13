@@ -14,6 +14,7 @@ import sys
 import struct
 import shutil
 import textwrap
+from bcolz.utils import to_ndarray
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
@@ -33,6 +34,25 @@ is_64bit = (struct.calcsize("P") == 8)
 
 if sys.version_info >= (3, 0):
     long = int
+
+
+class initTest(TestCase):
+
+    def test_roundtrip_from_transpose1(self):
+        """Testing `__init__` called without `dtype` and a non-contiguous (transposed) array."""
+        transposed_array = np.array([[0, 1, 2], [2, 1, 0]]).T
+        assert_array_equal(transposed_array, carray(transposed_array, dtype=None))
+
+    def test_roundtrip_from_transpose2(self):
+        """Testing `__init__` called with `dtype` and a non-contiguous (transposed) array."""
+        transposed_array = np.array([[0, 1, 2], [2, 1, 0]]).T
+        assert_array_equal(transposed_array, carray(transposed_array, dtype=transposed_array.dtype))
+
+    def test_dtype_None(self):
+        """Testing `utils.to_ndarray` called without `dtype` and a non-contiguous (transposed) array."""
+        array = np.array([[0, 1, 2], [2, 1, 0]]).T
+        self.assertTrue(to_ndarray(array, None, safe=True).flags.contiguous,
+                        msg='to_ndarray: Non contiguous arrays are not being consolidated when dtype is None')
 
 
 class chunkTest(TestCase):
