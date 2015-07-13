@@ -1,12 +1,4 @@
 # -*- coding: utf-8 -*-
-########################################################################
-#
-#       License: BSD
-#       Created: July 13, 2015
-#       Author:  Francesc Alted - francesc@blosc.io
-#
-########################################################################
-
 import numpy as np
 from numpy.testing import assert_array_equal
 
