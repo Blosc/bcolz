@@ -106,7 +106,9 @@ def to_ndarray(array, dtype, arrlen=None, safe=True):
         return array
 
     if dtype is None:
-        return np.array(array)
+        if not isinstance(array, np.ndarray):
+            return np.array(array)
+        dtype = array.dtype
 
     # Arrays with a 0 stride are special
     if type(array) == np.ndarray and array.strides[0] == 0:
