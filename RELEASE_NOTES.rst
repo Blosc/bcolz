@@ -31,6 +31,9 @@ Changes from 0.9.0 to 0.10.0
 
 - Various refactorings and cleanups. (#190 #198 #197 #199 #200)
 
+- Fix bug creating carrays from transposed arrays without explicit dtype.
+  (#217 @sdvillal)
+
 
 Changes from 0.8.1 to 0.9.0
 ===========================
