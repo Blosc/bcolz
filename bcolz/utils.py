@@ -105,29 +105,29 @@ def to_ndarray(array, dtype, arrlen=None, safe=True):
     if not safe:
         return array
 
-    if not isinstance(array, np.ndarray):
+    if not isinstance(array, np.ndarray) and dtype is None:
         array = np.array(array)
-    if dtype is None:
-        dtype = array.dtype
 
     # Arrays with a 0 stride are special
-    if type(array) == np.ndarray and array.strides[0] == 0:
+    if type(array) == np.ndarray and len(array.strides) and array.strides[0] == 0:
         if array.dtype != dtype.base:
             raise TypeError("dtypes do not match")
         return array
 
     # Ensure that we have an ndarray of the correct dtype
-    if type(array) != np.ndarray or array.dtype != dtype.base:
-        try:
-            array = np.array(array, dtype=dtype.base)
-        except ValueError:
-            raise ValueError("cannot convert to an ndarray object")
+    if dtype is not None:
+        if type(array) != np.ndarray or array.dtype != dtype.base:
+            try:
+                array = np.array(array, dtype=dtype.base)
+            except ValueError:
+                raise ValueError("cannot convert to an ndarray object")
 
     # We need a contiguous array
     if not array.flags.contiguous:
         array = array.copy()
+
+    # We treat scalars like undimensional arrays
     if len(array.shape) == 0:
-        # We treat scalars like undimensional arrays
         array.shape = (1,)
 
     # Check if we need a broadcast
