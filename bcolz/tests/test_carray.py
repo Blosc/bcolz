@@ -48,6 +48,29 @@ class initTest(TestCase):
         transposed_array = np.array([[0, 1, 2], [2, 1, 0]]).T
         assert_array_equal(transposed_array, carray(transposed_array, dtype=transposed_array.dtype))
 
+    @unittest.skipIf(not bcolz.pandas_here, "cannot import pandas")
+    def test_roundtrip_from_dataframe1(self):
+        """Testing `__init__` called without `dtype` and a dataframe over non-contiguous data."""
+        import pandas as pd
+        df = pd.DataFrame(data={
+            'a': np.arange(3),
+            'b': np.arange(3)[::-1]
+        })
+        assert_array_equal(df, carray(df, dtype=None))
+
+    @unittest.skipIf(not bcolz.pandas_here, "cannot import pandas")
+    def test_roundtrip_from_dataframe2(self):
+        """Testing `__init__` called with `dtype` and a dataframe over non-contiguous data."""
+        import pandas as pd
+        df = pd.DataFrame(data={
+            'a': np.arange(3),
+            'b': np.arange(3)[::-1]
+        })
+        ca = carray(df, dtype=np.dtype(np.float))
+        assert_array_equal(df, ca)
+        self.assertEqual(ca.dtype, np.dtype(np.float),
+                         msg='carray has been created with invalid dtype')
+
     def test_dtype_None(self):
         """Testing `utils.to_ndarray` called without `dtype` and a non-contiguous (transposed) array."""
         array = np.array([[0, 1, 2], [2, 1, 0]]).T
