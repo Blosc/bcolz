@@ -8,11 +8,23 @@
 
 from __future__ import absolute_import
 
+# The minimum version of Cython required for generating extensions
+min_cython_version = '0.22'
+# The minimum version of NumPy required
+min_numpy_version = '1.7'
+# The minimum version of Numexpr (optional)
+min_numexpr_version = '1.4.1'
+
 import sys
 import os
 import glob
-from distutils.core import Extension
-from distutils.core import setup
+try:
+    import setuptools
+    from setuptools import setup, Extension
+    setuptools.dist.Distribution(dict(setup_requires=['cython>=' + min_cython_version, 'numpy>='+min_numpy_version]))
+except:
+    from distutils.core import setup, Extension
+
 import textwrap
 import re, platform
 
@@ -58,13 +70,6 @@ def check_import(pkgname, pkgver):
 
 ########### Check versions ##########
 
-# The minimum version of Cython required for generating extensions
-min_cython_version = '0.22'
-# The minimum version of NumPy required
-min_numpy_version = '1.7'
-# The minimum version of Numexpr (optional)
-min_numexpr_version = '1.4.1'
-
 # Check for Python
 if sys.version_info[0] == 2:
     if sys.version_info[1] < 6:
@@ -97,6 +102,9 @@ if cur_cython_version < min_cython_version:
 else:
     print("* Found %(pkgname)s %(pkgver)s package installed."
           % {'pkgname': 'Cython', 'pkgver': cur_cython_version})
+
+# Prevent numpy from thinking it is still in its setup process:
+__builtins__.__NUMPY_SETUP__ = False
 
 # Check for NumPy
 check_import('numpy', min_numpy_version)
@@ -222,6 +230,7 @@ for binary data.
       #download_url = 'http://github.com/downloads/Blosc/bcolz/python-bcolz
       # -%s.tar.gz' % (VERSION,),
       platforms=['any'],
+      install_requires=['cython>=' + min_cython_version, 'numpy>='+min_numpy_version],
       cmdclass={'build_ext': build_ext},
       ext_modules=[
           Extension("bcolz.carray_ext",
@@ -231,7 +240,7 @@ for binary data.
                     library_dirs=lib_dirs,
                     libraries=libs,
                     extra_link_args=LFLAGS,
-                    extra_compile_args=CFLAGS),
+                    extra_compile_args=CFLAGS)
       ],
       packages=['bcolz', 'bcolz.tests'],
       package_data={'bcolz': ['carray_ext.pxd']},
