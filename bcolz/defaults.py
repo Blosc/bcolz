@@ -12,6 +12,7 @@
 from __future__ import absolute_import
 
 import bcolz
+import warnings
 
 
 class Defaults(object):
@@ -22,6 +23,7 @@ class Defaults(object):
 
         # Choices setup
         self.choices['eval_out_flavor'] = ("carray", "numpy")
+        self.choices['ctable_out_flavor'] = ("numpy", "pandas")
         self.choices['eval_vm'] = ("numexpr", "python")
 
     def check_choices(self, name, value):
@@ -71,6 +73,21 @@ class Defaults(object):
         self.__eval_out_flavor = value
 
     @property
+    def ctable_out_flavor(self):
+        return self.__ctable_out_flavor
+
+    @ctable_out_flavor.setter
+    def ctable_out_flavor(self, value):
+        try:
+            self.check_choices('ctable_out_flavor', value)
+        except ValueError:
+            warnings.warn(
+                "'%s' is not implemented out of the box for '%s' default."
+                % (value, ctable_out_flavor)
+                + " Provide your own OutputStructure implementation.")
+        self.__ctable_out_flavor = value
+
+    @property
     def cparams(self):
         return self.__cparams
 
@@ -85,6 +102,12 @@ defaults = Defaults()
 # Default values start here...
 
 defaults.eval_out_flavor = "carray"
+"""
+The flavor for the output object in `eval()`.  It can be 'carray' or
+'numpy'.  Default is 'carray'.
+"""
+
+defaults.ctable_out_flavor = "numpy"
 """
 The flavor for the output object in `eval()`.  It can be 'carray' or
 'numpy'.  Default is 'carray'.

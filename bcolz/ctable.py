@@ -11,6 +11,8 @@ from __future__ import absolute_import
 import numpy as np
 import bcolz
 from bcolz import utils, attrs, array2string
+if bcolz.pandas_here:
+    import pandas as pd
 import itertools
 from collections import namedtuple
 import json
@@ -1021,11 +1023,9 @@ class ctable(object):
 
         if colnames is None:
             colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+        result = OutputStructure.fromboolarr(self, boolarr, colnames)
 
-        return result
+        return result.ra
 
     def __getitem__(self, key):
         """Returns values based on `key`.
@@ -1051,10 +1051,10 @@ class ctable(object):
         # First, check for integer
         if isinstance(key, _inttypes):
             # Get a copy of the len-1 array
-            ra = self._arr1.copy()
+            result = OutputStructure(1, self.dtype)
             # Fill it
-            ra[0] = tuple([self.cols[name][key] for name in self.names])
-            return ra[0]
+            result[0] = tuple([self.cols[name][key] for name in self.names])
+            return result.ra
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
@@ -1068,7 +1068,7 @@ class ctable(object):
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
             if len(key) == 0:
-                return np.empty(0, self.dtype)
+                return OutputStructure(0, self.dtype).ra
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
@@ -1080,15 +1080,16 @@ class ctable(object):
             except:
                 raise IndexError(
                     "key cannot be converted to an array of indices")
-            return np.fromiter((self[i] for i in key),
-                               dtype=self.dtype, count=len(key))
+            result = OutputStructure.fromindices(self, key)
+            return result.ra
         # A boolean array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
                 return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self.dtype)
+                result = OutputStructure.fromindices(self, key)
+                return result.ra
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
@@ -1113,12 +1114,12 @@ class ctable(object):
         (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step)
-        ra = np.empty(shape=(n,), dtype=self.dtype)
+        result = OutputStructure(n, self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self.cols[name][start:stop:step]
+            result[name] = self.cols[name][start:stop:step]
 
-        return ra
+        return result.ra
 
     def __setitem__(self, key, value):
         """Sets values based on `key`.
@@ -1260,7 +1261,221 @@ class ctable(object):
     def __exit__(self, type, value, tb):
         self.flush()
 
-# Local Variables:
+
+class OutputStructureEngine(object):
+    # holds the return array
+    ra = None
+    
+    # poor-man's cache, better would be a LRU cache from python3 or its backport
+    template_cache = {}
+    template_order = []
+    template_type = None
+    template_maxsize = 10
+
+    @classmethod
+    def _push_to_cache(cls, key, value):
+        if len(cls.template_cache) >= cls.template_maxsize:
+            # remove first inserted
+            del cls.template_cache[cls.template_order[0]]
+            del cls.template_order[0]
+        cls.template_order.append(key)
+        cls.template_cache[key] = value
+
+    @classmethod
+    def _try_cache(cls, key):
+        if cls.template_type != bcolz.defaults.ctable_out_flavor:
+            return None
+
+        if dtype not in cls.template_cache:
+            return None
+        else:
+            return cls.template_cache[key]
+
+    # dispatcher functions
+    def __init__(self, size, dtype):
+        """Allocate an output array and return it encapsulated in a class
+        abstracting data access."""
+
+        method = '_allocate_' + bcolz.defaults.ctable_out_flavor
+        allocate = getattr(self, method, self._fallback)
+        self.ra = allocate(size, dtype)
+
+    @classmethod
+    def fromindices(cls, ctable_, iter):
+        """Create an output array from an iterator or row indices and return 
+        it encapsulated in a class abstracting data access."""
+
+        method = '_fromindices_' + bcolz.defaults.ctable_out_flavor
+        fromindices = getattr(cls, method, cls._fallback)
+        return fromindices(ctable_, iter)
+
+    @classmethod
+    def fromboolarr(cls, ctable_, boolarr, colnames):
+        """Create an output array from a boolean row selector arrayand return 
+        it encapsulated in a class abstracting data access."""
+
+        method = '_fromboolarr_' + bcolz.defaults.ctable_out_flavor
+        fromboolarr = getattr(cls, method, cls._fallback)
+        return fromboolarr(ctable_, boolarr, colnames)
+
+    def __setitem__(self, key, value):
+        """Abstract data access to an output array."""
+
+        method = '_setitem_' + bcolz.defaults.ctable_out_flavor
+        setitem = getattr(self, method, self._fallback)
+        return setitem(key, value)
+
+    @classmethod
+    def _fallback(cls, *args, **kwargs):
+        import inspect
+        raise NotImplementedError('_%s_%s not implemented.' % 
+                                  (inspect.stack()[1][3].strip('_'), 
+                                   cls.out_flavor)
+                                  )
+
+
+class OutputStructure(OutputStructureEngine):
+    ### numpy implementation ###
+    @classmethod
+    def _allocate_numpy(cls, size, dtype):
+        if size == 1:
+            # only cache size-1 numpy arrays
+            result = cls._try_cache(dtype)
+            if result is None:
+                result = np.empty(shape=(1,), dtype=dtype)
+                cls._push_to_cache(dtype, result)
+
+            return result.copy()
+
+        else:
+            return np.empty(size, dtype)
+
+    @classmethod
+    def _fromindices_numpy(cls, ctable_, iter):
+        result = object.__new__(cls)
+        result.ra = np.fromiter((ctable_[i] for i in iter), 
+                                dtype=ctable_.dtype, count=len(iter))
+        return result
+
+    @classmethod
+    def _fromboolarr_numpy(cls, ctable_, boolarr, colnames):
+        result = object.__new__(cls)
+
+        dtype = np.dtype([(name, ctable_.cols[name].dtype) for name in colnames])
+        cols = [ctable_.cols[name][boolarr] for name in colnames]
+        result.ra = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+        return result
+
+    def _setitem_numpy(self, key, value):
+        if isinstance(key, int):
+            self.ra[key] = value
+        else:
+            self.ra[key][:] = value
+
+    ### pandas implementation ###
+    @classmethod
+    def _allocate_pandas(cls, size, dtype):
+        # cache templates of pandas dataframes for faster instantiation
+        template = cls._try_cache(dtype)
+        if template is None:
+            template = pd.DataFrame(np.empty(shape=(0,), dtype=dtype))
+            cls._push_to_cache(dtype, template)
+
+        return allocate_like(template, size)
+
+    @classmethod
+    def _fromindices_pandas(cls, ctable_, iter):
+        result = object.__new__(cls)
+        result.ra = cls._allocate_pandas(len(iter), ctable_.dtype)
+
+        for name in colnames:
+            result[name] = ctable_.cols[name][iter]
+
+        return result
+
+    @classmethod
+    def _fromboolarr_pandas(cls, ctable_, boolarr, colnames):
+        dtype = np.dtype([(name, ctable_.cols[name].dtype) for name in colnames])
+        result = object.__new__(cls)
+        result.ra = cls._allocate_pandas(len(boolarr[boolarr]), dtype)
+
+        for name in colnames:
+            result[name] = ctable_.cols[name][boolarr]
+
+        return result
+
+    def _setitem_pandas(self, key, value):
+        if isinstance(key, int):
+            blknos = self.ra._data._blknos[range(len(value))]
+            blklocs = self.ra._data._blklocs[range(len(value))]
+            for i, (blkno, blkloc) in enumerate(zip(blknos, blklocs)):
+                self.ra._data.blocks[blkno].values[blkloc, key] = value[i]
+        else:
+            # efficiently setting pandas columns
+            loc = self.ra._data.items.get_loc(key)
+            blkno = self.ra._data._blknos[loc]
+            blkloc = self.ra._data._blklocs[loc]
+            self.ra._data.blocks[blkno].values[blkloc, :] = value
+
+
+# avoid making pandas a requirement for bcolz
+# needs more polished solution eventualls
+try:
+    from pandas.core.internals import BlockManager
+    from pandas.core.frame import DataFrame
+    from pandas.core.common import CategoricalDtype
+    from pandas.core.categorical import Categorical
+except ImportError:
+    pass
+
+try:
+    from pandas.core.index import RangeIndex
+except ImportError:
+    try:
+        from pandas.core.index import Int64Index
+        def RangeIndex(start, stop, step, **kwargs):
+            return Int64Index(np.arange(start, stop, step), **kwargs)
+    except ImportError:
+        pass
+
+def allocate_like(df, size, keep_categories=False):
+    """High-performance pandas dataframe constructor for numpy dtype
+    columns + categoricals working from a template dataframe.
+    This significantly speed up dataframe instantiation for dataframes
+    with only a few rows, gains for large dataframes are minimal."""
+
+    # define axes (ideally uses PR #9977 for MUCH better performance)
+    axes = [df.columns.values.tolist(), RangeIndex(0, size, 1, fastpath=True)]
+
+    # allocate and create blocks
+    blocks = []
+    for block in df._data.blocks:
+        # special treatment for non-ordinary block types
+        if isinstance(block.dtype, CategoricalDtype):
+            if keep_categories:
+                categories = block.values.categories
+            else:
+                categories = Index([])
+            values = Categorical(values=np.empty(shape=block.values.shape,
+                                                 dtype=block.values.codes.dtype),
+                                 categories=categories,
+                                 fastpath=True)
+        # ordinary block types
+        else:
+            new_shape = (block.values.shape[0], size)
+            values = np.empty(shape=new_shape, dtype=block.dtype)
+
+        new_block = block.make_block_same_class(values=values,
+                                                placement=block.mgr_locs.as_array)
+        blocks.append(new_block)
+
+    # create block manager
+    mgr = BlockManager(blocks, axes)
+
+    # create dataframe
+    return DataFrame(mgr)
+
+
 # mode: python
 # tab-width: 4
 # fill-column: 78
