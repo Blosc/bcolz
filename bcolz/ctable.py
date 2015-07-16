@@ -17,6 +17,7 @@ import json
 import os
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
+import weakref
 
 _inttypes += (np.integer,)
 islice = itertools.islice
@@ -230,8 +231,36 @@ class ctable(object):
         # Attach the attrs to this object
         self.attrs = attrs.attrs(self.rootdir, self.mode, _new=_new)
 
-        # Cache a structured array of len 1 for ctable[int] acceleration
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Initialise output structure cache
+        self._outstruc_update_cache()
+
+    def __new__(cls, *args, **kwargs):
+        # keep track of all ctable instances to be able to update their
+        # output structure caches when the output processor changes
+        if not hasattr(cls, '_instances'):
+            cls._instances = []
+        new_instance = object.__new__(cls)
+        cls._instances.append(weakref.ref(new_instance))
+        return new_instance
+
+    @classmethod
+    def _update_outstruc_processor(cls, processor):
+        bcolz.ctable._outstruc_allocate = processor.allocate
+        bcolz.ctable._outstruc_update_cache = processor.update_cache
+        bcolz.ctable._outstruc_fromindices = processor.fromindices
+        bcolz.ctable._outstruc_fromboolarr = processor.fromboolarr
+        assert hasattr(processor, '__setitem__')
+
+        if not hasattr(cls, '_instances'):
+            return
+
+        live_instances = []
+        for instance in cls._instances:
+            if instance() is not None:
+                instance()._outstruc_update_cache()
+                live_instances.append(instance)
+        cls._instances = live_instances
+
 
     def create_ctable(self, columns, names, **kwargs):
         """Create a ctable anew."""
@@ -495,8 +524,9 @@ class ctable(object):
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Update output structure cache
+        self._outstruc_update_cache()
+
 
         if self.auto_flush:
             self.flush()
@@ -548,8 +578,9 @@ class ctable(object):
         if not keep:
             col.purge()
 
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Update output structure cache
+        self._outstruc_update_cache()
+
 
         if self.auto_flush:
             self.flush()
@@ -1021,11 +1052,7 @@ class ctable(object):
 
         if colnames is None:
             colnames = self.names
-        cols = [self.cols[name][boolarr] for name in colnames]
-        dtype = np.dtype([(name, self.cols[name].dtype) for name in colnames])
-        result = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
-
-        return result
+        return self._outstruc_fromboolarr(boolarr, colnames).ra
 
     def __getitem__(self, key):
         """Returns values based on `key`.
@@ -1051,10 +1078,10 @@ class ctable(object):
         # First, check for integer
         if isinstance(key, _inttypes):
             # Get a copy of the len-1 array
-            ra = self._arr1.copy()
+            result = self._outstruc_allocate(1)
             # Fill it
-            ra[0] = tuple([self.cols[name][key] for name in self.names])
-            return ra[0]
+            result[0] = [self.cols[name][key] for name in self.names]
+            return result.ra
         # Slices
         elif type(key) == slice:
             (start, stop, step) = key.start, key.stop, key.step
@@ -1068,7 +1095,7 @@ class ctable(object):
         # List of integers (case of fancy indexing), or list of column names
         elif type(key) is list:
             if len(key) == 0:
-                return np.empty(0, self.dtype)
+                return self._outstruc_allocate(0, self.dtype).ra
             strlist = [type(v) for v in key] == [str for v in key]
             # Range of column names
             if strlist:
@@ -1080,15 +1107,14 @@ class ctable(object):
             except:
                 raise IndexError(
                     "key cannot be converted to an array of indices")
-            return np.fromiter((self[i] for i in key),
-                               dtype=self.dtype, count=len(key))
+            return self._outstruc_fromindices(key).ra
         # A boolean array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
                 return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self.dtype)
+                return self._outstruc_fromindices(key).ra
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
@@ -1113,12 +1139,12 @@ class ctable(object):
         (start, stop, step) = slice(start, stop, step).indices(self.len)
         # Build a numpy container
         n = utils.get_len_of_range(start, stop, step)
-        ra = np.empty(shape=(n,), dtype=self.dtype)
+        result = self._outstruc_allocate(n, self.dtype)
         # Fill it
         for name in self.names:
-            ra[name][:] = self.cols[name][start:stop:step]
+            result[name] = self.cols[name][start:stop:step]
 
-        return ra
+        return result.ra
 
     def __setitem__(self, key, value):
         """Sets values based on `key`.
@@ -1239,7 +1265,22 @@ class ctable(object):
         return (nbytes, cbytes, cratio)
 
     def __str__(self):
-        return array2string(self)
+        if self._outstruc_allocate.__func__ == OutputStructure_numpy.allocate:
+            return array2string(self)
+
+        # if a custom output structure is configured, use numpy for 
+        # bcolz string representation for consistent output formatting
+        current_allocate_fn = self._outstruc_allocate
+        OutputStructure_numpy.update_cache(self)
+        def tmp_allocate(*args, **kwargs):
+            return OutputStructure_numpy.allocate(self, *args, **kwargs)
+        self._outstruc_allocate = tmp_allocate
+
+        result = array2string(self)
+        
+        del self._outstruc_allocate
+        self._outstruc_update_cache()
+        return result
 
     def __repr__(self):
         nbytes, cbytes, cratio = self._get_stats()
@@ -1259,6 +1300,45 @@ class ctable(object):
 
     def __exit__(self, type, value, tb):
         self.flush()
+
+class OutputStructure_numpy(object):
+    __slots__ = ['ra']
+
+    @staticmethod
+    def update_cache(ctable_):
+        ctable_._outstruc_cache = np.empty(shape=(1,), dtype=ctable_.dtype)
+
+    @staticmethod
+    def allocate(ctable_, size, dtype=None):
+        result = object.__new__(OutputStructure_numpy)
+        if size == 1:
+            result.ra = ctable_._outstruc_cache.copy()
+        else:
+            result.ra = np.empty(size, dtype)
+        return result
+
+    @staticmethod
+    def fromindices(ctable_, iter):
+        result = object.__new__(OutputStructure_numpy)
+        result.ra = np.fromiter((ctable_[i] for i in iter), 
+                                dtype=ctable_.dtype, count=len(iter))
+        return result
+
+    @staticmethod
+    def fromboolarr(ctable_, boolarr, colnames):
+        result = object.__new__(OutputStructure_numpy)
+
+        dtype = np.dtype([(name, ctable_.cols[name].dtype) for name in colnames])
+        cols = [ctable_.cols[name][boolarr] for name in colnames]
+        result.ra = np.rec.fromarrays(cols, dtype=dtype).view(np.ndarray)
+        return result
+
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            self.ra[key] = tuple(value)
+        else:
+            self.ra[key][:] = value
+
 
 # Local Variables:
 # mode: python
