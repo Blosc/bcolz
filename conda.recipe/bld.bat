@@ -1,5 +1,4 @@
-@echo off
-
+xcopy /e "%RECIPE_DIR%\.." "%SRC_DIR%"
 SET BLD_DIR=%CD%
 cd /D "%RECIPE_DIR%\.."
 FOR /F "delims=" %%i IN ('git describe --tags') DO set BCOLZ_VERSION=%%i
