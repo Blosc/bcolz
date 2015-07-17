@@ -23,7 +23,7 @@ Or, you can also create it by using one of its multiple constructors
 (see :ref:`top-level-constructors` for the complete list)::
 
   >>> with bcolz.arange(10, rootdir='mydir') as _:
-  ,,,:    d = _
+  ...:    d = _
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
@@ -856,7 +856,7 @@ Did you like bcolz but you couldn't find exactly the functionality you were
 looking for? You can write an extension and implement complex operations on
 top of bcolz containers.
 
-Before you start writing your own extension you let's see some
+Before you start writing your own extension, let's see some
 examples of real projects made on top of bcolz:
   
   - `Bquery`: a query and aggregation framework, among other things it
