@@ -16,10 +16,9 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 from bcolz.tests.common import MayBeDiskTest, TestCase, unittest, skipUnless
 import bcolz
-from bcolz.py2help import xrange, PY2
+from bcolz.py2help import xrange, PY2, Mock
 import pickle
 import os
-from mock import Mock
 
 
 class createTest(MayBeDiskTest):
