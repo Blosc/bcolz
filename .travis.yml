@@ -1,15 +1,30 @@
 sudo: false
 language: python
+
 python:
 - 2.6
 - 2.7
 - 3.4
+
 install:
-- pip install -r requirements.txt
-- pip install cython
-- if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install unittest2 --upgrade; fi
-- python setup.py build_ext --inplace
+  # Install conda
+  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update conda
+
+  # Install dependencies
+  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION numpy pandas cython
+  - source activate bcolz_env
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
+  
+  # Build bcolz
+  - python setup.py build_ext --inplace
+
 script:
-- python -c "import bcolz; bcolz.test(heavy=True)"
+  - python -c "import bcolz; bcolz.test(heavy=True)"
+
 notifications:
-email: false
+  email: false
