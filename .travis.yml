@@ -15,6 +15,7 @@ script:
 
 after_success:
   - coveralls
+  - python continuous-integration/move-conda-package.py conda.recipe
 
 notifications:
   email: false
