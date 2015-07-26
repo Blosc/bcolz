@@ -671,6 +671,14 @@ class appendTest(MayBeDiskTest):
         ra = np.fromiter(((i, i * 2.) for i in xrange(N + 10)), dtype='i4,f8')
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test05(self):
+        """Testing append() with void types"""
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra[:-1], rootdir=self.rootdir)
+        t.append(ra[-1])
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
 
 class appendMemoryTest(appendTest, TestCase):
     disk = False

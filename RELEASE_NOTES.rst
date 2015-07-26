@@ -5,7 +5,8 @@ Release notes for bcolz
 Changes from 0.10.0 to 0.11.0
 =============================
 
-- pass
+- Added support for appending a np.void to ctable objects
+  (closes ticket #229 @eumiro)
 
 Changes from 0.9.0 to 0.10.0
 ============================
