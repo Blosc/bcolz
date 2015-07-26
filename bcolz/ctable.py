@@ -262,10 +262,8 @@ class ctable(object):
         # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
         if type(columns) in (tuple, list):
-            calist = [type(v) for v in columns] == \
-                     [bcolz.carray for v in columns]
-            nalist = [type(v) for v in columns] == \
-                     [np.ndarray for v in columns]
+            calist = all(isinstance(v, bcolz.carray) for v in columns)
+            nalist = all(isinstance(v, np.ndarray) for v in columns)
         elif isinstance(columns, np.ndarray):
             ratype = hasattr(columns.dtype, "names")
             if ratype:
@@ -346,8 +344,8 @@ class ctable(object):
         # Guess the kind of cols input
         calist, nalist, sclist, ratype = False, False, False, False
         if type(cols) in (tuple, list):
-            calist = [type(v) for v in cols] == [bcolz.carray for v in cols]
-            nalist = [type(v) for v in cols] == [np.ndarray for v in cols]
+            calist = all(isinstance(v, bcolz.carray) for v in cols)
+            nalist = all(isinstance(v, np.ndarray) for v in cols)
             if not (calist or nalist):
                 # Try with a scalar list
                 sclist = True
@@ -479,9 +477,9 @@ class ctable(object):
 
         kwargs.setdefault('cparams', self.cparams)
 
-        if isinstance(newcol, bcolz.carray) and \
-                        self.rootdir is not None and \
-                        newcol.rootdir is not None:
+        if (isinstance(newcol, bcolz.carray) and
+            self.rootdir is not None and
+            newcol.rootdir is not None):
             # a special case, where you have a disk-based carray is inserted in a disk-based ctable
             if move:  # move the the carray
                 shutil.move(newcol.rootdir, col_rootdir)
@@ -1072,7 +1070,7 @@ class ctable(object):
         elif type(key) is list:
             if len(key) == 0:
                 return np.empty(0, self.dtype)
-            strlist = [type(v) for v in key] == [str for v in key]
+            strlist = all(isinstance(v, str) for v in key)
             # Range of column names
             if strlist:
                 cols = [self.cols[name] for name in key]
