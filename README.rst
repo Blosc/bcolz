@@ -65,14 +65,19 @@ column-wise order, and this turns out to offer better opportunities to
 improve compression ratio.  This is because data tends to expose more
 similarity in elements that sit in the same column rather than those
 in the same row, so compressors generally do a much better job when
-data is aligned in such column-wise order.
+data is aligned in such column-wise order.  In addition, when you have
+to deal with tables with a large number of columns and your operations
+only involve some of them, a columnar-wise storage tends to be much
+more effective because minimizes the amount of data that travels to
+CPU caches.
 
 So, the ultimate goal for bcolz is not only reducing the memory needs
 of large arrays/tables, but also making bcolz operations to go faster
-than using a traditional ndarray object from NumPy.  That is already
-the case in some real-life scenarios (see the notebook above) but that
-will become pretty more noticeable in combination with forthcoming,
-faster CPUs integrating more cores and wider vector units.
+than using a traditional data container like those in NumPy or Pandas.
+That is actually already the case in some real-life scenarios (see the
+notebook above) but that will become pretty more noticeable in
+combination with forthcoming, faster CPUs integrating more cores and
+wider vector units.
 
 Requisites
 ----------
@@ -166,5 +171,3 @@ Let us know of any bugs, suggestions, gripes, kudos, etc. you may
 have.
 
 **Enjoy Data!**
-
-Francesc Alted
