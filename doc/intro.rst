@@ -101,7 +101,7 @@ bcolz limitations
 bcolz does not currently come with good support in the next areas:
 
   * Reduced number of operations, at least when compared with NumPy.
-    The supported operations are basically vectorized ones (i.e. does
+    The supported operations are basically vectorized ones (i.e. those
     that are made element-by-element).  But this will change in the
     future, when support for more powerful computational kernels would
     be implemented.
