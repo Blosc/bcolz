@@ -353,6 +353,9 @@ class ctable(object):
                 sclist = True
         elif isinstance(cols, np.ndarray):
             ratype = hasattr(cols.dtype, "names")
+        elif isinstance(cols, np.void):
+            ratype = hasattr(cols.dtype, "names")
+            sclist = True
         elif isinstance(cols, bcolz.ctable):
             # Convert int a list of carrays
             cols = [cols[name] for name in self.names]
