@@ -2150,6 +2150,16 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
 
         assert_array_equal(expected, received)
 
+class ImportTest(TestCase):
+
+    def test_fork(self):
+            
+        if os.name == 'posix':
+            pid = os.fork()
+            # terminate nose on child process
+            if not pid:
+                with self.assertRaises(SystemExit):
+                    exit()
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
