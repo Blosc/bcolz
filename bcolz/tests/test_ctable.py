@@ -18,7 +18,6 @@ from bcolz.tests.common import MayBeDiskTest, TestCase, unittest, skipUnless
 import bcolz
 from bcolz.py2help import xrange, PY2, Mock
 import pickle
-import os
 
 
 class createTest(MayBeDiskTest):
