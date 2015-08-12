@@ -221,6 +221,20 @@ class persistentTest(MayBeDiskTest, TestCase):
         ra = np.rec.fromarrays([a[:], b[:]]).view(np.ndarray)
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test01d(self):
+        """Testing ctable opening in "r" mode with nonexistent directory"""
+        tempdir = tempfile.mkdtemp(prefix='bcolz-test01d')
+        non_existent_root = os.path.join(tempdir, 'not/a/real/path')
+        expected_message = (
+            "Disk-based ctable opened with `r`ead mode "
+            "yet `rootdir='{rootdir}'` does not exist".format(
+                rootdir=non_existent_root,
+            )
+        )
+
+        with self.assertRaisesRegexp(KeyError, expected_message):
+            bcolz.ctable(rootdir=non_existent_root, mode='r')
+
 
 class add_del_colTest(MayBeDiskTest):
 
