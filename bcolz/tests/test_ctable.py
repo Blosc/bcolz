@@ -232,8 +232,9 @@ class persistentTest(MayBeDiskTest, TestCase):
             )
         )
 
-        with self.assertRaisesRegexp(KeyError, expected_message):
+        with self.assertRaises(KeyError) as ctx:
             bcolz.ctable(rootdir=non_existent_root, mode='r')
+        self.assertEqual(ctx.exception.message, expected_message)
 
 
 class add_del_colTest(MayBeDiskTest):
