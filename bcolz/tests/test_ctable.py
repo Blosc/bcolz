@@ -18,7 +18,6 @@ from bcolz.tests.common import MayBeDiskTest, TestCase, unittest, skipUnless
 import bcolz
 from bcolz.py2help import xrange, PY2, Mock
 import pickle
-import os
 
 
 class createTest(MayBeDiskTest):
@@ -221,6 +220,21 @@ class persistentTest(MayBeDiskTest, TestCase):
         bcolz.ctable(rootdir=self.rootdir, mode='a')
         ra = np.rec.fromarrays([a[:], b[:]]).view(np.ndarray)
         assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test01d(self):
+        """Testing ctable opening in "r" mode with nonexistent directory"""
+        tempdir = tempfile.mkdtemp(prefix='bcolz-test01d')
+        non_existent_root = os.path.join(tempdir, 'not/a/real/path')
+        expected_message = (
+            "Disk-based ctable opened with `r`ead mode "
+            "yet `rootdir='{rootdir}'` does not exist".format(
+                rootdir=non_existent_root,
+            )
+        )
+
+        with self.assertRaises(KeyError) as ctx:
+            bcolz.ctable(rootdir=non_existent_root, mode='r')
+        self.assertEqual(ctx.exception.args[0], expected_message)
 
 
 class add_del_colTest(MayBeDiskTest):

@@ -309,7 +309,12 @@ class ctable(object):
     def open_ctable(self):
         """Open an existing ctable on-disk."""
         if self.mode == 'r' and not os.path.exists(self.rootdir):
-            raise KeyError("Disk-based ctable opened with `r`ead mode yet `rootdir` does not exist")
+            raise KeyError(
+                "Disk-based ctable opened with `r`ead mode "
+                "yet `rootdir='{rootdir}'` does not exist".format(
+                    rootdir=self.rootdir,
+                )
+            )
 
         # Open the ctable by reading the metadata
         self.cols.read_meta_and_open()
