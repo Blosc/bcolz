@@ -6,13 +6,13 @@ bcolz: columnar and compressed data containers
 :Appveyor: |appveyor|
 :And...: |powered|
 
-.. |version| image:: https://pypip.in/v/bcolz/badge.png
+.. |version| image:: https://img.shields.io/pypi/v/bcolz.png
         :target: https://pypi.python.org/pypi/bcolz
 
-.. |travis| image:: https://travis-ci.org/Blosc/bcolz.png?branch=master
+.. |travis| image:: https://img.shields.io/travis/Blosc/bcolz.png
         :target: https://travis-ci.org/Blosc/bcolz
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/va0cathv8jskf5po/branch/master?svg=true
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/esc/bcolz.png
         :target: https://ci.appveyor.com/project/esc/bcolz/branch/master
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
