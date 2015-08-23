@@ -12,7 +12,7 @@ from sys import version_info as v
 
 # Check this Python version is supported
 if any([v < (2, 6), (3,) < v < (3, 3)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.6 "
                     "or >= 3.3." % v[:2])
 
 import platform
