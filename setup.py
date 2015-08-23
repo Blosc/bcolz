@@ -8,8 +8,14 @@
 
 from __future__ import absolute_import
 
-import platform
 from sys import version_info as v
+
+# Check this Python version is supported
+if any([v < (2, 6), (3,) < v < (3, 3)]):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
+                    "or >= 3.3." % v[:2])
+
+import platform
 import os
 from os.path import join, abspath
 from glob import glob
@@ -19,8 +25,12 @@ import re
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
 
-class BuildExtNumpyInc(build_ext):
 
+# Prevent numpy from thinking it is still in its setup process:
+__builtins__.__NUMPY_SETUP__ = False
+
+
+class BuildExtNumpyInc(build_ext):
     def build_extensions(self):
         from numpy.distutils.misc_util import get_numpy_include_dirs
         for e in self.extensions:
@@ -28,13 +38,6 @@ class BuildExtNumpyInc(build_ext):
 
         build_ext.build_extensions(self)
 
-# Prevent numpy from thinking it is still in its setup process:
-__builtins__.__NUMPY_SETUP__ = False
-
-# Check for Python
-if any([v < (2, 6), (3,) < v < (3, 3)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
-                    "or >= 3.3." % v[:2])
 
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
@@ -89,24 +92,11 @@ else:
 if os.name == 'posix' and re.match("i.86", platform.machine()):
     CFLAGS.append("-msse2")
 
-
-classifiers = """\
-Development Status :: 4 - Beta
-Intended Audience :: Developers
-Intended Audience :: Information Technology
-Intended Audience :: Science/Research
-License :: OSI Approved :: BSD License
-Programming Language :: Python
-Topic :: Software Development :: Libraries :: Python Modules
-Operating System :: Microsoft :: Windows
-Operating System :: Unix
-"""
-
-tests_require = ['mock', 'tox']
+tests_require = []
 
 if v < (3,):
-    tests_require.append('unittest2')
-    
+    tests_require.extend(['unittest2', 'mock'])
+
 setup(
     name="bcolz",
     use_scm_version={
@@ -126,16 +116,29 @@ internally by Blosc, a high-performance compressor that is optimized
 for binary data.
 
 """,
-    classifiers=filter(None, classifiers.split("\n")),
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Information Technology',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Programming Language :: Python',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: Unix',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+    ],
     author='Francesc Alted',
     author_email='francesc@blosc.io',
     maintainer='Francesc Alted',
     maintainer_email='francesc@blosc.io',
     url='https://github.com/Blosc/bcolz',
-    license='http://www.opensource.org/licenses/bsd-license.php',
-    # It is better to upload manually to PyPI
-    #download_url = 'http://github.com/downloads/Blosc/bcolz/python-bcolz
-    # -%s.tar.gz' % (VERSION,),
+    license='BSD',
     platforms=['any'],
     ext_modules=[
         Extension(
@@ -152,16 +155,16 @@ for binary data.
     cmdclass={'build_ext': BuildExtNumpyInc},
     install_requires=['numpy>=1.7'],
     setup_requires=[
-        'cython>=0.22', 
-        'numpy>=1.7', 
+        'cython>=0.22',
+        'numpy>=1.7',
         'setuptools-scm>1.5.4'
     ],
     tests_require=tests_require,
     extras_require=dict(
         optional=[
-            'numexpr>=1.4.1', 
-            'pandas', 
-            'pytables'
+            'numexpr>=1.4.1',
+            'pandas',
+            'tables'
         ],
         test=tests_require
     ),
