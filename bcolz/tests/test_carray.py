@@ -2243,6 +2243,16 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
         expected = np.array([1])
         assert_array_equal(expected, received)
 
+    def test_with_read_only(self):
+        x = bcolz.arange(5, rootdir=self.rootdir, mode="w")
+        x.flush()
+        sx = sum(i for i in x)
+
+        with bcolz.open(self.rootdir, mode='r') as xreadonly:
+            sxreadonly = sum(i for i in xreadonly)
+        self.assertEquals(sx, sxreadonly)
+
+
 class nleftoversTest(TestCase):
 
     def test_empty(self):

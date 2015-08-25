@@ -8,6 +8,10 @@ Changes from 0.10.0 to 0.11.0
 - Added support for appending a np.void to ctable objects
   (closes ticket #229 @eumiro)
 
+- Do not try to flush when an carray is opened in 'r'ead-only mode.
+  (closes #241 @FrancescAlted).
+
+
 Changes from 0.9.0 to 0.10.0
 ============================
 

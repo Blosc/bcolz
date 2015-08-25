@@ -2612,7 +2612,7 @@ cdef class carray:
         return fullrepr
 
     def __reduce__(self):
-        if self.rootdir :
+        if self.rootdir:
             return (build_carray, (None,self.rootdir,))
         else:
             return (build_carray,(self[:],None,))
@@ -2622,7 +2622,9 @@ cdef class carray:
         return self
 
     def __exit__(self, type, value, tb):
-        self.flush()
+        if self.mode != 'r':
+            self.flush()
+
 
 ## Local Variables:
 ## mode: python
