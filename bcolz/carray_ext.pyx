@@ -909,7 +909,6 @@ cdef class carray:
             return [(i * chunklen, (i + 1) * chunklen) for i in
                     xrange(nchunks)]
 
-
     property attrs:
         """The attribute accessor.
 
@@ -1102,12 +1101,16 @@ cdef class carray:
         # convention).
         #
         # Note that objects are a special case. Carray does not support object
-        # arrays of more than one dimensions.
+        # arrays of more than one dimension.
         self._dtype = dtype = self._adapt_dtype(dtype, array_.shape)
 
         # Check that atom size is less than 2 GB
         if dtype.itemsize >= 2 ** 31:
             raise ValueError("atomic size is too large (>= 2 GB)")
+
+        # Check that atom size is larger than 0
+        if dtype.itemsize == 0:
+            raise TypeError("atomic size cannot be zero")
 
         self.atomsize = atomsize = dtype.itemsize
         self.itemsize = itemsize = dtype.base.itemsize
