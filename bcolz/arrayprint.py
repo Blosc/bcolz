@@ -115,6 +115,7 @@ def set_printoptions(precision=None, threshold=None, edgeitems=None,
     --------
     Floating point precision can be set:
 
+    >>> import numpy as np
     >>> np.set_printoptions(precision=4)
     >>> print(np.array([1.123456789]))
     [ 1.1235]
@@ -431,6 +432,7 @@ def array2string(a, max_line_width=None, precision=None,
 
     Examples
     --------
+    >>> import numpy as np
     >>> x = np.array([1e-16,1,2,3])
     >>> print(np.array2string(x, precision=2, separator=',',
     ...                       suppress_small=True))
