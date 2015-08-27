@@ -2603,7 +2603,10 @@ cdef class carray:
     def __repr__(self):
         snbytes = utils.human_readable_size(self._nbytes)
         scbytes = utils.human_readable_size(self._cbytes)
-        cratio = self._nbytes / float(self._cbytes)
+        if not self._cbytes:
+            cratio = np.nan
+        else:
+            cratio = self._nbytes / float(self._cbytes)
         header = "carray(%s, %s)\n" % (self.shape, self.dtype)
         header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
             snbytes, scbytes, cratio)
