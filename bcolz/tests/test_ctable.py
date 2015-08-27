@@ -2145,6 +2145,20 @@ class FlushDiskTest(MayBeDiskTest, TestCase):
                          rootdir=self.rootdir, auto_flush=False)
         self.assertFalse(t.auto_flush)
 
+    def test_repr_after_appending(self):
+        data = np.array([('data1', 1), ('data2', 2), ('data3', 3)],
+                        dtype=[('a', 'object'), ('b', 'int64')])
+        t = bcolz.ctable(data[:0].copy())
+        t.append(data)
+        self.assertTrue(bool(repr(t)))
+
+    def test_slice_after_appending(self):
+        data = np.array([('data1', 1), ('data2', 2), ('data3', 3)],
+                        dtype=[('a', 'object'), ('b', 'int64')])
+        t = bcolz.ctable(data[:0].copy())
+        t.append(data)
+        self.assertTrue((t[:1] == data[:1]).all())
+
 
 class ContextManagerTest(MayBeDiskTest, TestCase):
     disk = True
