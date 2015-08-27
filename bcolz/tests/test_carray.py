@@ -22,11 +22,10 @@ from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
-from bcolz.py2help import xrange, PY2
+from bcolz.py2help import xrange, PY2, _inttypes
 from bcolz.carray_ext import chunk
 from bcolz import carray
 import pickle
-
 
 import ctypes
 
@@ -2346,6 +2345,41 @@ class LeftoverDiskTest(LeftoverTest, TestCase):
         for i in range(n_leftovers):
             out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
             self.assertEqual((n_chunks * chunklen) + i, out.value)
+
+
+class MagicNumbers(MayBeDiskTest):
+
+    def test_type_i4(self):
+        N = 2**16
+        ca = carray([i for i in range(N)], dtype='i4', rootdir=self.rootdir)
+
+        for i in range(len(ca)):
+            v = ca[i]
+            self.assertTrue(isinstance(v, _inttypes))
+
+    def test_type_i8(self):
+        N = 2**15
+        ca = carray([i for i in range(N)], dtype='i8', rootdir=self.rootdir)
+
+        for i in range(len(ca)):
+            v = ca[i]
+            self.assertTrue(isinstance(v, _inttypes))
+
+    def test_type_f8(self):
+        N = 2**15
+        ca = carray([i for i in range(N)], dtype='f8', rootdir=self.rootdir)
+
+        for i in range(len(ca)):
+            v = ca[i]
+            self.assertTrue(isinstance(v, float))
+
+
+class MagicNumbersMemoryTest(MagicNumbers, TestCase):
+    disk = False
+
+
+class MagicNumbersDiskTest(MagicNumbers, TestCase):
+    disk = True
 
 
 if __name__ == '__main__':

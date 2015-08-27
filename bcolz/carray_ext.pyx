@@ -1798,7 +1798,7 @@ cdef class carray:
         blocksize = chunk_.blocksize
         blocklen = <npy_intp> cython.cdiv(blocksize, atomsize)
 
-        if ((atomsize > blocksize) or ((pos + blocklen) > chunklen)):
+        if (atomsize > blocksize):
             # This request cannot be resolved here
             return 0
 
