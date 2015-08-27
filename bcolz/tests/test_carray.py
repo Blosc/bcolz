@@ -2346,6 +2346,9 @@ class LeftoverDiskTest(LeftoverTest, TestCase):
             out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
             self.assertEqual((n_chunks * chunklen) + i, out.value)
 
+    def test_repr_of_empty_object_array(self):
+        assert 'ratio: nan' in repr(carray(np.array([], dtype=object)))
+
 
 class MagicNumbers(MayBeDiskTest):
 
