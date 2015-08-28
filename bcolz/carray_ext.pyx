@@ -1371,7 +1371,7 @@ cdef class carray:
         """
         cdef int atomsize, itemsize, chunksize, leftover
         cdef int nbytesfirst, chunklen, start, stop
-        cdef npy_intp nbytes, cbytes, bsize, i, nchunks
+        cdef npy_intp nbytes, cbytes, bsize, i, nchunks, j
         cdef ndarray remainder, arrcpy, dflts
         cdef chunk chunk_
 
@@ -1386,7 +1386,8 @@ cdef class carray:
 
             # Object dtype requires special storage
             if arrcpy.dtype.char == 'O':
-                self._store_obj(array)
+                for j in range(len(arrcpy)):
+                    self._store_obj(arrcpy[j])
                 return
 
             # Appending a single row should be supported
@@ -2603,7 +2604,10 @@ cdef class carray:
     def __repr__(self):
         snbytes = utils.human_readable_size(self._nbytes)
         scbytes = utils.human_readable_size(self._cbytes)
-        cratio = self._nbytes / float(self._cbytes)
+        if not self._cbytes:
+            cratio = np.nan
+        else:
+            cratio = self._nbytes / float(self._cbytes)
         header = "carray(%s, %s)\n" % (self.shape, self.dtype)
         header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
             snbytes, scbytes, cratio)
