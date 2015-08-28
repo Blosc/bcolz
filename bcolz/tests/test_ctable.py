@@ -14,7 +14,8 @@ import tempfile
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
-from bcolz.tests.common import MayBeDiskTest, TestCase, unittest, skipUnless
+from bcolz.tests.common import (
+        MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest ) 
 import bcolz
 from bcolz.py2help import xrange, PY2, Mock
 import pickle
@@ -2191,6 +2192,17 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
 
         assert_array_equal(expected, received)
 
+class ImportTest(TestCase):
+
+     @SkipTest 
+     def test_fork(self):
+            
+        if os.name == 'posix':
+            pid = os.fork()
+            # terminate nose on child process
+            if not pid:
+                with self.assertRaises(SystemExit):
+                    exit()
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
