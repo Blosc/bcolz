@@ -1094,7 +1094,7 @@ class ctable(object):
                 return self._where(key)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self[i] for i in key], dtype=self.dtype)
+                return np.array([tuple(self[i]) for i in key], dtype=self.dtype)
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
