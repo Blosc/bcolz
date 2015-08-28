@@ -4,6 +4,7 @@ bcolz: columnar and compressed data containers
 :Version: |version|
 :Travis CI: |travis|
 :Appveyor: |appveyor|
+:Coveralls: |coveralls|
 :And...: |powered|
 
 .. |version| image:: https://pypip.in/v/bcolz/badge.png
@@ -17,6 +18,9 @@ bcolz: columnar and compressed data containers
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
         :target: http://blosc.org
+
+.. |coveralls| image:: https://coveralls.io/repos/Blosc/bcolz/badge.png
+        :target: https://coveralls.io/r/Blosc/bcolz
 
 bcolz provides columnar, chunked data containers that can be
 compressed either in-memory and on-disk.  Column storage allows for
