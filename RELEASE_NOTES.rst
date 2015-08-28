@@ -11,6 +11,9 @@ Changes from 0.10.0 to 0.11.0
 - Do not try to flush when an carray is opened in 'r'ead-only mode.
   (closes #241 @FrancescAlted).
 
+- Great modernization of setup.py by using new versioning and many
+  other improvements (PR #239 @mindw).
+
 
 Changes from 0.9.0 to 0.10.0
 ============================
