@@ -12,7 +12,7 @@ Changes from 0.10.0 to 0.11.0
   (closes #241 @FrancescAlted).
 
 - Fix appending of object arrays to already existing carrays
-  (closes #243)
+  (closes #243 @cpcloud)
 
 - Great modernization of setup.py by using new versioning and many
   other improvements (PR #239 @mindw).
