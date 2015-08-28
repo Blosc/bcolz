@@ -11,6 +11,9 @@ Changes from 0.10.0 to 0.11.0
 - Do not try to flush when an carray is opened in 'r'ead-only mode.
   (closes #241 @FrancescAlted).
 
+- Fix appending of object arrays to already existing carrays
+  (closes #243)
+
 
 Changes from 0.9.0 to 0.10.0
 ============================
