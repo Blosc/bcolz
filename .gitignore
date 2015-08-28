@@ -3,3 +3,6 @@ bcolz/carray_ext.c
 bcolz/carray_ext.so
 bcolz/version.py
 **/*.pyc
+
+*.pyd
+bcolz.egg-info/

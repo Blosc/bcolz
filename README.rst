@@ -6,13 +6,13 @@ bcolz: columnar and compressed data containers
 :Appveyor: |appveyor|
 :And...: |powered|
 
-.. |version| image:: https://pypip.in/v/bcolz/badge.png
+.. |version| image:: https://img.shields.io/pypi/v/bcolz.png
         :target: https://pypi.python.org/pypi/bcolz
 
-.. |travis| image:: https://travis-ci.org/Blosc/bcolz.png?branch=master
+.. |travis| image:: https://img.shields.io/travis/Blosc/bcolz.png
         :target: https://travis-ci.org/Blosc/bcolz
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/va0cathv8jskf5po/branch/master?svg=true
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/esc/bcolz.png
         :target: https://ci.appveyor.com/project/esc/bcolz/branch/master
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
@@ -88,6 +88,12 @@ Requisites
 - Blosc >= 1.3.0 (optional, as the internal Blosc will be used by default)
 - unittest2 (optional, only in the case you are running Python 2.6)
 
+Optional:
+
+- numexpr>=1.4.1
+- pandas
+- tables
+
 Building
 --------
 
@@ -106,7 +112,7 @@ Using an environment variable::
 
   $ BLOSC_DIR=/usr/local     (or "set BLOSC_DIR=\blosc" on Win)
   $ export BLOSC_DIR         (not needed on Win)
-  $ python setup.py build_ext --inplace
+  $ python setup.py build_ext --inplace --force
 
 Using a flag::
 
@@ -127,7 +133,11 @@ Installing
 
 Install it as a typical Python package::
 
-  $ python setup.py install
+  $ pip install -U .
+
+Optionally Install the additional dependencies::
+
+  $ pip install .[optional]
 
 Documentation
 -------------

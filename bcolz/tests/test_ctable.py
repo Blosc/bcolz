@@ -693,6 +693,19 @@ class appendTest(MayBeDiskTest):
         t.append(ra[-1])
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test06(self):
+        """Extracting rows from table with np.object column"""
+        N = 4
+        dtype = np.dtype([("a", np.object), ("b", np.uint8), ("c", np.int32), 
+            ("d", np.float32) ])
+        with bcolz.ctable(np.empty(0, dtype=dtype), rootdir=self.rootdir) as t:
+            for i in xrange(N):
+                t.append((str(i), i*2, i*4, i*8))
+            result = t[np.array([1, 0, 2])]
+            assert_array_equal(result[0], t[1])
+            assert_array_equal(result[1], t[0])
+            assert_array_equal(result[2], t[2])
+
 
 class appendMemoryTest(appendTest, TestCase):
     disk = False
