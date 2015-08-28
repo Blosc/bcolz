@@ -13,10 +13,27 @@ Preliminaries
 * Make sure that ``RELEASE_NOTES.rst`` and ``ANNOUNCE.rst`` are up to
   date with the latest news in the release.
 
-* Check that ``VERSION`` file contains the correct number.
+* Tag the version.
 
 * Once a year: check that the copyright in ``LICENSES/BCOLZ.txt`` and
   ``doc/conf.py``.
+
+Tagging
+-------
+
+* Create a tag ``X.Y.Z`` from ``master``.  Use the next message::
+
+    $ git tag -a X.Y.Z -m "Tagging version X.Y.Z"
+
+* Or, alternatively, make a signed tag (requires gpg correctly configured)::
+
+    $ git tag -s X.Y.Z -m "Tagging version X.Y.Z"
+
+* Push the tag to the Github repo (assuming ``origin`` is correct)::
+
+    $ git push origin X.Y.Z
+
+
 
 Testing
 -------
@@ -39,23 +56,15 @@ Updating the online documentation site
     This instructions are currently out-of-date and are to be considered under
     construction.
 
-* Go to the doc directory::
+* Build the html::
 
-  $ cd doc
-
-* Make sure that the ``version``/``release`` variables are updated in
-  ``conf.py``.
-
-* Make the html version of the docs::
-
-  $ rm -rf _build/html
-  $ make html
+  $ python setup.py build_sphinx
 
 * Make a backup and upload the files in the doc site (xodo)::
 
   $ export UPSTREAM="/home/blosc/srv/www/bcolz.blosc.org"
   $ ssh blosc@xodo.blosc.org "mv $UPSTREAM/docs/html $UPSTREAM/docs/html.bck"
-  $ scp -r _build/html blosc@xodo.blosc.org:$UPSTREAM/docs
+  $ scp -r build/sphinx/html blosc@xodo.blosc.org:$UPSTREAM/docs
 
 * Check that the new manual is accessible in http://bcolz.blosc.org
 
@@ -88,22 +97,6 @@ Uploading
     $ python setup.py sdist upload
 
 
-Tagging
--------
-
-* Create a tag ``X.Y.Z`` from ``master``.  Use the next message::
-
-    $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
-
-* Or, alternatively, make a signed tag (requires gpg correctly configured)::
-
-    $ git tag -s vX.Y.Z -m "Tagging version X.Y.Z"
-
-* Push the tag to the Github repo (assuming ``origin`` is correct)::
-
-    $ git push origin vX.Y.Z
-
-
 Announcing
 ----------
 
@@ -116,11 +109,6 @@ Announcing
 
 Post-release actions
 --------------------
-
-* Edit ``VERSION`` in master to increment the version to the next
-  minor one (i.e. X.Y.Z --> X.Y.(Z+1).dev).
-
-* Also, update the ``version`` and ``release`` variables in doc/conf.py.
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
   and empty the release-specific information in ``ANNOUNCE.rst`` and

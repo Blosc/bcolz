@@ -1,7 +1,6 @@
 include MANIFEST.in
 include *.txt *.rst
 exclude RELEASING.rst
-include VERSION
 include pavement.py
 include setup.py
 
