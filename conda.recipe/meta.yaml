@@ -11,6 +11,7 @@ build:
 requirements:
   build:
     - python
+    - setuptools_scm 
     - cython
     - numpy
 
