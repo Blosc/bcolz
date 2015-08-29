@@ -1,5 +1,5 @@
 MINICONDA_URL="http://repo.continuum.io/miniconda"
-MINICONDA_FILE="Miniconda-3.5.5-Linux-x86_64.sh"
+MINICONDA_FILE="Miniconda-latest-Linux-x86_64.sh"
 wget "${MINICONDA_URL}/${MINICONDA_FILE}"
 bash $MINICONDA_FILE -b
 
