@@ -8,9 +8,9 @@ $MINICONDA_URL = "http://repo.continuum.io/miniconda/"
 function DownloadMiniconda ($python_version, $platform_suffix) {
     $webclient = New-Object System.Net.WebClient
     if ($python_version -match "3.4") {
-        $filename = "Miniconda3-3.5.5-Windows-" + $platform_suffix + ".exe"
+        $filename = "Miniconda3-latest-Windows-" + $platform_suffix + ".exe"
     } else {
-        $filename = "Miniconda-3.5.5-Windows-" + $platform_suffix + ".exe"
+        $filename = "Miniconda-latest-Windows-" + $platform_suffix + ".exe"
     }
     $url = $MINICONDA_URL + $filename
 
