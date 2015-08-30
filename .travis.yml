@@ -11,6 +11,7 @@ install:
   - source continuous-integration/travis/install.sh
 
 script:
+  - conda config --add channels elies
   - conda build conda.recipe --quiet
 
 after_success:

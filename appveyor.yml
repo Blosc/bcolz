@@ -63,6 +63,7 @@ test_script:
   # is set dynamically. This unfortunately mean that conda build --output
   # doesn't really work.
   #
+  - "%CMD_IN_ENV% conda config --add channels elies"
   - "%CMD_IN_ENV% conda build conda.recipe --quiet"
   # Move the conda package into the current directory, to register it
   # as an "artifact" for Appveyor. cmd.exe does't have good globbing, so
