@@ -1,3 +1,5 @@
+# cython: linetrace=True
+# distutils: define_macros=CYTHON_TRACE=1
 from numpy cimport ndarray, dtype, npy_intp
 
 cdef class chunk:
