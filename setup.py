@@ -97,6 +97,10 @@ tests_require = []
 if v < (3,):
     tests_require.extend(['unittest2', 'mock'])
 
+# compile and link code instrumented for coverage analysis
+CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
+LFLAGS.append("-lgcov")
+
 setup(
     name="bcolz",
     use_scm_version={
