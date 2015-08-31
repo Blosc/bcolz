@@ -19,7 +19,7 @@ install:
   - source activate bcolz_env
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
-  - pip install coveralls
+  - pip install cpp-coveralls
   
   # Build bcolz
   - python setup.py build_ext --inplace
