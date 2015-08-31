@@ -1,16 +1,13 @@
 package:
   name: bcolz 
-  version: "0.7.2"
 
-build:
-    number: {{environ.get('BINSTAR_BUILD', 1)}}
 
 requirements:
   build:
     - python
+    - setuptools_scm 
     - cython
     - numpy
-    - unittest2 [py26]
 
   run:
     - python
@@ -19,6 +16,9 @@ requirements:
 test:
   requires:
     - unittest2 [py26]
+    - mock [py2k]
+    - pandas
+
   commands:
     - python -c "import bcolz; bcolz.test()"
 

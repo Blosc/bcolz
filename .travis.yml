@@ -1,34 +1,22 @@
 sudo: false
 language: python
 
-python:
-- 2.6
-- 2.7
-- 3.4
+env:
+  matrix:
+    - python=2.6  CONDA_PY=26  CONDA_NPY=19
+    - python=2.7  CONDA_PY=27  CONDA_NPY=19
+    - python=3.4  CONDA_PY=34  CONDA_NPY=19
 
 install:
-  # Install conda
-  - wget http://repo.continuum.io/miniconda/Miniconda-latest-Linux-x86_64.sh -O miniconda.sh
-  - bash miniconda.sh -b -p $HOME/miniconda
-  - export PATH="$HOME/miniconda/bin:$PATH"
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update conda
-
-  # Install dependencies
-  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION numpy pandas cython nose
-  - source activate bcolz_env
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
-  - pip install coveralls
-  
-  # Build bcolz
-  - python setup.py build_ext --inplace
+  - source continuous-integration/travis/install.sh
 
 script:
-  - nosetests --with-coverage --cover-package bcolz bcolz/tests/test_*.py
+  - conda config --add channels elies
+  - conda build conda.recipe --quiet
 
 after_success:
   - coveralls
+  - python continuous-integration/move-conda-package.py conda.recipe
 
 notifications:
   email: false

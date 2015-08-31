@@ -63,8 +63,13 @@ test_script:
   # is set dynamically. This unfortunately mean that conda build --output
   # doesn't really work.
   #
-    - "%CMD_IN_ENV% conda install --yes --quiet cython pandas mock"
+  - "%CMD_IN_ENV% conda config --add channels elies"
+  - "%CMD_IN_ENV% conda build conda.recipe "
+  # Move the conda package into the current directory, to register it
+  # as an "artifact" for Appveyor. cmd.exe does't have good globbing, so
+  # we'll use a simple python script.
+  - python continuous-integration\move-conda-package.py conda.recipe
 
-  # Build the compiled extension and run the project tests
-    - "%CMD_IN_ENV% python setup.py build_ext --inplace"
-    - "%CMD_IN_ENV% python -c \"import bcolz; bcolz.test(heavy=True)\""
+artifacts:
+  # Archive the generated conda package in the ci.appveyor.com build report.
+  - path: '*.tar.bz2'
