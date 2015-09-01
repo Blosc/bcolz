@@ -15,11 +15,10 @@ install:
   - conda update conda
 
   # Install dependencies
-  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION numpy pandas cython nose
+  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION numpy pandas cython nose coverage
   - source activate bcolz_env
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
-  - pip install coveralls
   
   # Build bcolz
   - python setup.py build_ext --inplace
@@ -28,7 +27,7 @@ script:
   - nosetests --with-coverage --cover-package bcolz bcolz/tests/test_*.py
 
 after_success:
-  - coveralls
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then bash ./coveralls_after_test_succes.sh; fi
 
 notifications:
   email: false
