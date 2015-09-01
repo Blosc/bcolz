@@ -27,13 +27,7 @@ script:
   - nosetests --with-coverage --cover-package bcolz bcolz/tests/test_*.py
 
 after_success:
-  - pip install cpp-coveralls
-  - coveralls --exclude c-blosc/internal-complibs --gcov-options '\-lp' --dump .coverage_cpp
-  - pip uninstall -y cpp-coveralls
-  - pip install coveralls
-  - coveralls --merge=.coverage_cpp
-
-
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then bash ./coveralls_after_test_succes.sh; fi
 
 notifications:
   email: false

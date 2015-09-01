@@ -98,7 +98,7 @@ if v < (3,):
     tests_require.extend(['unittest2', 'mock'])
 
 # compile and link code instrumented for coverage analysis
-if os.getenv('TRAVIS') and os.getenv('CI'):
+if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
 
