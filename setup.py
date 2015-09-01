@@ -24,7 +24,7 @@ import re
 
 from setuptools import setup, Extension, find_packages
 from setuptools.command.build_ext import build_ext
-
+from distutils.dep_util import newer
 
 # Prevent numpy from thinking it is still in its setup process:
 __builtins__.__NUMPY_SETUP__ = False
@@ -101,6 +101,38 @@ if v < (3,):
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
+
+def get_cython_extfiles(extnames):
+    extdir = 'bcolz'
+    extfiles = {}
+
+    for extname in extnames:
+        extfile = os.path.join(extdir, extname)
+        extpfile = '%s.pyx' % extfile
+        extcfile = '%s.c' % extfile
+
+        if not os.path.exists(extcfile) or newer(extpfile, extcfile):
+            # This is the only place where Cython is needed, but every
+            # developer should have it installed, so it should not be
+            # a hard requisite
+            from Cython.Build import cythonize
+            cythonize(
+                    extpfile,
+                    include_dirs=inc_dirs,
+                    define_macros=def_macros,
+                    library_dirs=lib_dirs,
+                    libraries=libs,
+                    extra_link_args=LFLAGS,
+                    extra_compile_args=CFLAGS
+                    )
+        extfiles[extname] = extcfile
+
+    return extfiles
+
+cython_extnames = ['carray_ext']
+cython_extfiles = get_cython_extfiles(cython_extnames)
+print cython_extfiles
+exit()
 
 setup(
     name="bcolz",
