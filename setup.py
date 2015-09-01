@@ -2,7 +2,7 @@
 #
 # License: BSD
 #       Created: August 16, 2012
-#       Author:  Francesc Alted - francesc@blosc.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -139,9 +139,9 @@ for binary data.
         'Programming Language :: Python :: 3.4',
     ],
     author='Francesc Alted',
-    author_email='francesc@blosc.io',
+    author_email='francesc@blosc.org',
     maintainer='Francesc Alted',
-    maintainer_email='francesc@blosc.io',
+    maintainer_email='francesc@blosc.org',
     url='https://github.com/Blosc/bcolz',
     license='BSD',
     platforms=['any'],

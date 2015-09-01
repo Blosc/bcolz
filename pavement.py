@@ -2,7 +2,7 @@
 #
 #       License: BSD
 #       Created: December 14, 2010
-#       Author:  Francesc Alted - francesc@blosc.io
+#       Author:  Francesc Alted - francesc@blosc.org
 #
 ########################################################################
 
@@ -211,7 +211,7 @@ compressor that is optimized for binary data.
 """,
     classifiers=filter(None, classifiers.split("\n")),
     author='Francesc Alted',
-    author_email='francesc@blosc.io',
+    author_email='francesc@blosc.org',
     url="https://github.com/Blosc/bcolz",
     license='http://www.opensource.org/licenses/bsd-license.php',
     # It is better to upload manually to PyPI
