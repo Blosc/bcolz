@@ -107,7 +107,7 @@ Announcing
   python-announce lists.  Use the ``ANNOUNCE.rst`` file as skeleton
   (or possibly as the definitive version).
 
-* Tweet about the new release and enjoy!
+* Tweet about the new release and rejoice!
 
 
 Post-release actions
