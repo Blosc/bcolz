@@ -50,11 +50,6 @@ Testing
 Updating the online documentation site
 --------------------------------------
 
-.. note::
-
-    This instructions are currently out-of-date and are to be considered under
-    construction.
-
 * Build the html::
 
   $ python setup.py build_sphinx
@@ -71,13 +66,22 @@ Updating the online documentation site
 
   $ ssh blosc@xodo.blosc.org "rm -r $UPSTREAM/docs/html.bck"
 
-* Go up to the root directory for further proceeding with packaging::
-
-  $ cd ..
-
 
 Packaging
 ---------
+
+.. note::
+
+    This instructions are currently out-of-date and are to be considered under
+    construction.
+
+* Make sure that you are in a clean directory.  The best way is to
+  re-clone and re-build::
+
+  $ cd /tmp
+  $ git clone git@github.com:Blosc/bcolz.git
+  $ cd bcolz
+  $ python setup.py build_ext
 
 * Check that all Cython generated ``*.c`` files are present.
 
