@@ -34,7 +34,6 @@ Tagging
     $ git push origin X.Y.Z
 
 
-
 Testing
 -------
 

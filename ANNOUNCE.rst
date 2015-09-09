@@ -5,7 +5,20 @@ Announcing bcolz 0.11.0
 What's new
 ==========
 
-#XXX version-specific blurb XXX#
+Although this is mostly a maintenance release that fixes some bugs, the
+setup.py is enterily based now in setuptools and has been greatly
+modernized to use a new versioning system.  Just this deserves a bump in
+the minor version.  Thanks to Gabi Davar (@mindw) for such a nice
+improvement.
+
+Also, many improvements in the Continuous Integration part (and hence
+not directly visible to users) have been made by Francesc Elies
+(@FrancescElies).  Thanks for his quiet but effective work.
+
+And last but not least, I would like to announce that Valentin Haenel
+(@esc) just stepped down as release manager.  Thanks Valentin for all
+the hard work that you put in making bcolz a better piece of software!
+
 
 What it is
 ==========
