@@ -62,7 +62,7 @@ pointing your browser at the links below.
 * Scikit-Allel
 
   * Provides an alternative backend to work with compressed arrays
-  * https://scikit-allel.readthedocs.org/en/latest/bcolz.html
+  * https://scikit-allel.readthedocs.org/en/latest/model/bcolz.html
 
 Installing
 ==========
