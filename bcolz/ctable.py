@@ -1264,7 +1264,8 @@ class ctable(object):
         return self
 
     def __exit__(self, type, value, tb):
-        self.flush()
+        if self.mode != 'r':
+            self.flush()
 
 # Local Variables:
 # mode: python
