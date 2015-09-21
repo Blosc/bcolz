@@ -6,3 +6,8 @@ bcolz/version.py
 
 *.pyd
 bcolz.egg-info/
+
+# airspeed velocity
+env
+results
+project
