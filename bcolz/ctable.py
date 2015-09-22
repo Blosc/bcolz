@@ -262,7 +262,7 @@ class ctable(object):
         # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
         if type(columns) in (tuple, list):
-            calist = all(isinstance(v, bcolz.carray) for v in columns)
+            calist = all(issubclass(v.__class__, bcolz.carray) for v in columns)
             nalist = all(isinstance(v, np.ndarray) for v in columns)
         elif isinstance(columns, np.ndarray):
             ratype = hasattr(columns.dtype, "names")
@@ -349,7 +349,7 @@ class ctable(object):
         # Guess the kind of cols input
         calist, nalist, sclist, ratype = False, False, False, False
         if type(cols) in (tuple, list):
-            calist = all(isinstance(v, bcolz.carray) for v in cols)
+            calist = all(issubclass(v.__class__, bcolz.carray) for v in cols)
             nalist = all(isinstance(v, np.ndarray) for v in cols)
             if not (calist or nalist):
                 # Try with a scalar list
@@ -482,7 +482,7 @@ class ctable(object):
 
         kwargs.setdefault('cparams', self.cparams)
 
-        if (isinstance(newcol, bcolz.carray) and
+        if (issubclass(newcol.__class__, bcolz.carray) and
             self.rootdir is not None and
             newcol.rootdir is not None):
             # a special case, where you have a disk-based carray is inserted in a disk-based ctable
@@ -491,7 +491,7 @@ class ctable(object):
                 newcol.rootdir = col_rootdir
             else:  # copy the the carray
                 newcol = newcol.copy(rootdir=col_rootdir)
-        elif isinstance(newcol, (np.ndarray, bcolz.carray)):
+        elif issubclass(newcol.__class__, (np.ndarray, bcolz.carray)):
             newcol = bcolz.carray(newcol, **kwargs)
         elif type(newcol) in (list, tuple):
             newcol = bcolz.carray(newcol, **kwargs)
