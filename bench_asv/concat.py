@@ -23,6 +23,7 @@ import numpy
 
 import bcolz
 from bcolz.py2help import xrange
+from .bench_helper import ctime
 
 
 def concat(data):
@@ -44,6 +45,7 @@ def append(data, clevel):
 
     return alldata
 
+
 class Suite:
     a = None
     N = 1000000
@@ -51,6 +53,7 @@ class Suite:
     T = 3
     clevel = 1
     style = 'bcolz'
+    r = None
 
     def __init__(self, N=1000000, K=10, T=3, clevel=1, style='bcolz'):
         Suite.N = N
@@ -58,38 +61,38 @@ class Suite:
         Suite.T = T
         Suite.clevel = clevel
         Suite.style = style
+        Suite.r = None
 
     def setup(self):
         # The next datasets allow for very high compression ratios
         Suite.a = [numpy.arange(Suite.N, dtype='f8') for _ in range(Suite.K)]
-        print("problem size: (%d) x %d = 10^%g" % (Suite.N, Suite.K, 
-            math.log10(Suite.N * Suite.K)))
-    
+        print("problem size: (%d) x %d = 10^%g" % (Suite.N, Suite.K,
+                                                   math.log10(Suite.N * Suite.K)))
+
     def time_concatenate(self):
-        t = time.time()
         if Suite.style == 'numpy':
             for _ in xrange(Suite.T):
-                r = numpy.concatenate(Suite.a, 0)
+                Suite.r = numpy.concatenate(Suite.a, 0)
         elif Suite.style == 'concat':
             for _ in xrange(Suite.T):
-                r = concat(Suite.a)
+                Suite.r = concat(Suite.a)
         elif Suite.style == 'bcolz':
             for _ in xrange(Suite.T):
-                r = append(Suite.a, Suite.clevel)
+                Suite.r = append(Suite.a, Suite.clevel)
 
-        t = time.time() - t
-        print('time for concat: %.3fs' % (t / Suite.T))
-
+    def print_container_size(self):
         if Suite.style == 'bcolz':
-            size = r.cbytes
+            size = Suite.r.cbytes
         else:
-            size = r.size * r.dtype.itemsize
-        print("size of the final container: %.3f MB" % (size / float(1024 * 1024)) )
+            size = Suite.r.size * Suite.r.dtype.itemsize
+        print("size of the final container: %.3f MB" %
+              (size / float(1024 * 1024)))
 
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print("Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' ")
+        print(
+            "Pass at least one of these styles: 'numpy', 'concat' or 'bcolz' ")
         sys.exit(1)
 
     style = sys.argv[1]
@@ -105,4 +108,6 @@ if __name__ == '__main__':
     # run benchmark
     suite = Suite(N=N, K=K, T=T, clevel=clevel, style=style)
     suite.setup()
-    suite.time_concatenate()
+    with ctime("time_concatenate"):
+        suite.time_concatenate()
+    suite.print_container_size()
