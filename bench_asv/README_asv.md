@@ -1,9 +1,10 @@
 Airspeed velocity
 =================
-
-```
-asv run
-```
+For more information how to run it please visit
+http://asv.readthedocs.org/en/latest/using.html
+Some examples:
+`asv run`
+`asv run --skip-existing-commits -s 10 ALL`
 
 Preview results
 ---------------
