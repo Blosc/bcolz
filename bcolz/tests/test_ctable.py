@@ -109,6 +109,22 @@ class createTest(MayBeDiskTest):
         # this should not raise an error
         t[u'f0'].rootdir
 
+    def test06(self):
+        """Test create empty ctable"""
+        N = 0
+        dtype = "i4,i8,f8"
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
+    def test07(self):
+        """Test create ctable full of zeros"""
+        N = 10000
+        dtype = "i4,i8,f4"
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
 
 class createMemoryTest(createTest, TestCase):
     disk = False
