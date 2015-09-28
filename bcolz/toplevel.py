@@ -282,7 +282,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         if len(shape) > 1:
             # Multidimensional shape.
             # The atom will have shape[1:] dims (+ the dtype dims).
-            dtype = np.dtype((dtype.base, shape[1:]+dtype.shape))
+            dtype = np.dtype((dtype.base, shape[1:] + dtype.shape))
     length = shape[0]
 
     # Create the container
@@ -292,22 +292,21 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         base_rootdir = kwargs.pop('rootdir', None)
         if base_rootdir is not None:
             os.mkdir(base_rootdir)
-        for name,col_dype in dtype.descr:
+        for name, col_dype in dtype.descr:
             if base_rootdir is not None:
                 kwargs['rootdir'] = "{0}/{1}".format(base_rootdir, name)
             dflt = np.zeros((), dtype=col_dype)
-            ca = bcolz.carray([], dtype=col_dype, dflt=dflt, 
-                    expectedlen=expectedlen, **kwargs)
+            ca = bcolz.carray([], dtype=col_dype, dflt=dflt,
+                              expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
             list_carrays.append(ca)
         obj = bcolz.ctable(list_carrays, rootdir=base_rootdir)
     else:
         obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
-                       **kwargs)
+                           **kwargs)
         fill_helper(obj, dtype=dtype, length=length)
 
     return obj
-
 
 
 def zeros(shape, dtype=np.float, **kwargs):
