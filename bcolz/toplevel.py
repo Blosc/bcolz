@@ -261,10 +261,10 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
     def fill_helper(obj, dtype=None, length=None):
         """Helper function to fill a carray with default values"""
-        assert issubclass(obj.__class__, bcolz.carray)
+        assert isinstance(obj, bcolz.carray)
         assert dtype is not None
         assert length is not None
-        
+
         # Then fill it
         # We need an array for the default so as to keep the atom info
         dflt = np.array(obj.dflt, dtype=dtype)
