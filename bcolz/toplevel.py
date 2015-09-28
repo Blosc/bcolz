@@ -290,17 +290,13 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     if dtype.kind == "V" and dtype.shape == ():
         list_carrays = []
         base_rootdir = kwargs.pop('rootdir', None)
-        if base_rootdir is not None:
-            os.mkdir(base_rootdir)
         for name, col_dype in dtype.descr:
-            if base_rootdir is not None:
-                kwargs['rootdir'] = "{0}/{1}".format(base_rootdir, name)
             dflt = np.zeros((), dtype=col_dype)
-            ca = bcolz.carray([], dtype=col_dype, dflt=dflt,
-                              expectedlen=expectedlen, **kwargs)
+            ca = bcolz.carray([], dtype=col_dype, dflt=dflt, 
+                    expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
             list_carrays.append(ca)
-        obj = bcolz.ctable(list_carrays, rootdir=base_rootdir)
+        obj = bcolz.ctable(list_carrays, names=dtype.names, rootdir=base_rootdir)
     else:
         obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                            **kwargs)
