@@ -293,8 +293,8 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         base_rootdir = kwargs.pop('rootdir', None)
         for name, col_dype in dtype.descr:
             dflt = np.zeros((), dtype=col_dype)
-            ca = bcolz.carray([], dtype=col_dype, dflt=dflt, 
-                    expectedlen=expectedlen, **kwargs)
+            ca = bcolz.carray([], dtype=col_dype, dflt=dflt,
+                              expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
             list_ca.append(ca)
         # bring rootdir back, ctable should live either on-disk or in-memory
