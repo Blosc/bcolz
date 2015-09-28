@@ -137,6 +137,15 @@ class createTest(MayBeDiskTest):
         assert_array_equal(ct[:], ra, "ctable values are not correct")
         self.assertEqual(cparams, ct.cparams)
 
+    def test06d(self):
+        """Test create empty ctable and set expectedlen"""
+        N = 0
+        expectedlen = int(1e7)
+        ct = bcolz.zeros(0, dtype="i4,i8,f8", expectedlen=expectedlen)
+        self.assertEqual(131072, ct['f0'].chunklen)
+        self.assertEqual(65536, ct['f1'].chunklen)
+        self.assertEqual(65536, ct['f2'].chunklen)
+
     def test07a(self):
         """Test create ctable full of zeros"""
         N = 10000
