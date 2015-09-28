@@ -300,7 +300,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
                     expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
             list_carrays.append(ca)
-        obj = bcolz.ctable(list_carrays)
+        obj = bcolz.ctable(list_carrays, rootdir=base_rootdir)
     else:
         obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                        **kwargs)
