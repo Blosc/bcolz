@@ -294,7 +294,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
             os.mkdir(base_rootdir)
         for name,col_dype in dtype.descr:
             if base_rootdir is not None:
-                kwargs['rootdir'] = "{}/{}".format(base_rootdir, name)
+                kwargs['rootdir'] = "{0}/{1}".format(base_rootdir, name)
             dflt = np.zeros((), dtype=col_dype)
             ca = bcolz.carray([], dtype=col_dype, dflt=dflt, 
                     expectedlen=expectedlen, **kwargs)
