@@ -288,15 +288,15 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     # Create the container
     expectedlen = kwargs.pop("expectedlen", length)
     if dtype.kind == "V" and dtype.shape == ():
-        list_carrays = []
+        list_ca = []
         base_rootdir = kwargs.pop('rootdir', None)
         for name, col_dype in dtype.descr:
             dflt = np.zeros((), dtype=col_dype)
             ca = bcolz.carray([], dtype=col_dype, dflt=dflt, 
                     expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
-            list_carrays.append(ca)
-        obj = bcolz.ctable(list_carrays, names=dtype.names, rootdir=base_rootdir)
+            list_ca.append(ca)
+        obj = bcolz.ctable(list_ca, names=dtype.names, rootdir=base_rootdir)
     else:
         obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                            **kwargs)
