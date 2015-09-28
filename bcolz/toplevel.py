@@ -289,6 +289,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     expectedlen = kwargs.pop("expectedlen", length)
     if dtype.kind == "V" and dtype.shape == ():
         list_ca = []
+        # force carrays to live in memory
         base_rootdir = kwargs.pop('rootdir', None)
         for name, col_dype in dtype.descr:
             dflt = np.zeros((), dtype=col_dype)
@@ -296,7 +297,9 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
                     expectedlen=expectedlen, **kwargs)
             fill_helper(ca, dtype=ca.dtype, length=length)
             list_ca.append(ca)
-        obj = bcolz.ctable(list_ca, names=dtype.names, rootdir=base_rootdir)
+        # bring rootdir back, ctable should live either on-disk or in-memory
+        kwargs['rootdir'] = base_rootdir
+        obj = bcolz.ctable(list_ca, names=dtype.names, **kwargs)
     else:
         obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
                            **kwargs)
