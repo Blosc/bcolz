@@ -127,6 +127,16 @@ class createTest(MayBeDiskTest):
         self.assertEquals(ct.names, ['Alice', 'Bob', 'Charlie'])
         assert_array_equal(ct[:], ra, "ctable values are not correct")
 
+    def test06c(self):
+        """Test create empty ctable and set some cparams"""
+        N = 0
+        dtype = "i4,i8,f8"
+        ra = np.zeros(N, dtype=dtype)
+        cparams = bcolz.cparams(clevel=9, shuffle=False)
+        ct = bcolz.zeros(N, dtype=dtype, cparams=cparams, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+        self.assertEqual(cparams, ct.cparams)
+
     def test07a(self):
         """Test create ctable full of zeros"""
         N = 10000
