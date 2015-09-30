@@ -14,16 +14,17 @@ constructor::
   >>> a = np.arange(10)
   >>> b = bcolz.carray(a)                          # for in-memory storage
   >>> with bcolz.carray(a, rootdir='mydir') as _:  # for on-disk storage
-  ...:    c = _  # keep the reference to the Python object
+  ...     c = _  # keep the reference to the Python object
 
 To avoid forgetting to flush your data to disk, you are encouraged to use the
 `with` statement for on-disk carrays.
 
 Or, you can also create it by using one of its multiple constructors
-(see :ref:`top-level-constructors` for the complete list)::
+(see :ref:`top-level-constructors` for the complete list), write mode will
+overwrite contents of the folder where the carray is created::
 
-  >>> with bcolz.arange(10, rootdir='mydir') as _:
-  ...:    d = _
+  >>> with bcolz.arange(10, rootdir='mydir', mode='w') as _:
+  ...     d = _
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
