@@ -47,7 +47,8 @@ And get more info about uncompressed size (nbytes), compressed
 its representation form::
 
   >>> b   # <==> print repr(b)
-  carray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02
+  carray((10,), int64)
+    nbytes: 80; cbytes: 16.00 KB; ratio: 0.00
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9]
 
