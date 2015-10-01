@@ -122,9 +122,10 @@ it can be enlarged by 10 elements with::
 
   >>> b.append(np.arange(10.))
   >>> b
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
+  carray((10000010,), float64)
+    nbytes: 76.29 MB; cbytes: 2.94 MB; ratio: 25.92
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
+  [ 0.  1.  2. ...,  7.  8.  9.]
 
 Let's check how fast appending can be::
 
