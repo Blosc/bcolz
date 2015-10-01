@@ -86,16 +86,20 @@ Finally, you can get a copy of your created carrays by using the
 
   >>> c = b.copy()
   >>> c
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
+  carray((100000000,), float64)
+    nbytes: 762.94 MB; cbytes: 23.25 MB; ratio: 32.82
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 and you can control parameters for the newly created copy::
 
   >>> b.copy(cparams=bcolz.cparams(clevel=9))
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78
+  carray((100000000,), float64)
+    nbytes: 762.94 MB; cbytes: 8.09 MB; ratio: 94.27
     cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 Enlarging your carray
 ---------------------
