@@ -110,10 +110,13 @@ method.
 
 For example, if `b` is a carray with 10 million elements::
 
+  >>> b = bcolz.arange(10*1e6)
   >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 2.94 MB; ratio: 25.92
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 it can be enlarged by 10 elements with::
 
