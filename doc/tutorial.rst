@@ -132,11 +132,11 @@ Let's check how fast appending can be::
   >>> a = np.arange(1e7)
   >>> b = bcolz.arange(1e7)
   >>> %time b.append(a)
-  CPU times: user 0.06 s, sys: 0.00 s, total: 0.06 s
-  Wall time: 0.06 s
+  CPU times: user 51.2 ms, sys: 15.8 ms, total: 67 ms
+  Wall time: 24.5 ms
   >>> %time np.concatenate((a, a))
-  CPU times: user 0.08 s, sys: 0.04 s, total: 0.12 s
-  Wall time: 0.12 s  # 2x slower than carray
+  CPU times: user 44.4 ms, sys: 45 ms, total: 89.4 ms
+  Wall time: 91 ms # 3.7x slower than carray 
   array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,
            9.99999700e+06,   9.99999800e+06,   9.99999900e+06])
 
@@ -144,9 +144,9 @@ This is specially true when appending small bits to large arrays::
 
   >>> b = bcolz.carray(a)
   >>> %timeit b.append(np.arange(1e1))
-  100000 loops, best of 3: 3.17 µs per loop
+  100000 loops, best of 3: 3.24 µs per loop
   >>> %timeit np.concatenate((a, np.arange(1e1)))
-  10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
+  10 loops, best of 3: 25.2 ms per loop  # ~10000X slower than carray
 
 You can also enlarge your arrays by using the `resize()` method::
 
