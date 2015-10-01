@@ -64,9 +64,11 @@ comparison::
 
   >>> b = bcolz.arange(1e8)
   >>> b
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
-    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  carray((100000000,), float64)
+  nbytes: 762.94 MB; cbytes: 23.25 MB; ratio: 32.82
+  cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 The carray consumes less than 24 MB, while the original data would have
 taken more than 760 MB; that's a huge gain.  You can always get a hint
@@ -74,7 +76,7 @@ on how much space it takes your carray by using `sys.getsizeof()`::
 
   >>> import sys
   >>> sys.getsizeof(b)
-  24520482
+  24376698
 
 That moral here is that you can create very large arrays without the
 need to create a NumPy array first (that may not fit in memory).
