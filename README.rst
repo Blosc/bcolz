@@ -26,6 +26,9 @@ bcolz: columnar and compressed data containers
 .. |asv| image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
         :target: http://your-url-here
 
+
+.. image:: doc/bcolz.png
+
 bcolz provides columnar, chunked data containers that can be
 compressed either in-memory and on-disk.  Column storage allows for
 efficiently querying tables, as well as for cheap column addition and
