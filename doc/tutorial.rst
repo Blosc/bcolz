@@ -390,9 +390,9 @@ However, you must be aware that modifying a carray is expensive::
 although modifying values in latest chunk is somewhat more cheaper::
 
   >>> %timeit a[-1] = 3
-  10000000 loops, best of 3: 102 ns per loop
+  10000000 loops, best of 3: 95 ns per loop
   >>> %timeit b[-1] = 3
-  10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
+  100000 loops, best of 3: 9.66 µs per loop # 101x slower than NumPy
 
 In general, you should avoid modifications (if you can) when using
 carrays.
