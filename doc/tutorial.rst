@@ -153,7 +153,8 @@ You can also enlarge your arrays by using the `resize()` method::
   >>> b = bcolz.arange(10)
   >>> b.resize(20)
   >>> b
-  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+  carray((20,), int64)
+    nbytes: 160; cbytes: 16.00 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]
 
@@ -164,7 +165,8 @@ too::
   >>> b = bcolz.arange(10, dflt=1)
   >>> b.resize(20)
   >>> b
-  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+  carray((20,), int64)
+    nbytes: 160; cbytes: 16.00 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]
 
@@ -173,7 +175,8 @@ Also, you can trim carrays::
   >>> b = bcolz.arange(10)
   >>> b.resize(5)
   >>> b
-  carray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01
+  carray((5,), int64)
+    nbytes: 40; cbytes: 16.00 KB; ratio: 0.00
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4]
 
