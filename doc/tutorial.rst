@@ -383,9 +383,9 @@ However, you must be aware that modifying a carray is expensive::
   >>> a = np.arange(1e7)
   >>> b = bcolz.carray(a)
   >>> %timeit a[2] = 3
-  10000000 loops, best of 3: 101 ns per loop
+  10000000 loops, best of 3: 94.4 ns per loop
   >>> %timeit b[2] = 3
-  10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy
+  1000 loops, best of 3: 274 µs per loop # 2900x slower than NumPy
 
 although modifying values in latest chunk is somewhat more cheaper::
 
