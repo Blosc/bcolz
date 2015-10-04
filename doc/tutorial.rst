@@ -203,6 +203,7 @@ By default carrays are compressed using Blosc with compression level 5
 with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
+  >>> a = np.arange(1e7)
   >>> bcolz.carray(a, bcolz.cparams(clevel=1))
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
     cparams := cparams(clevel=1, shuffle=True, cname='blosclz')
