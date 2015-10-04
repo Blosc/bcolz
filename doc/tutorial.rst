@@ -294,12 +294,12 @@ powerful) way is by using its set of iterators::
   >>> a = np.arange(1e7)
   >>> b = bcolz.carray(a)
   >>> %time sum(v for v in a if v < 10)
-  CPU times: user 7.44 s, sys: 0.00 s, total: 7.45 s
-  Wall time: 7.57 s
+  CPU times: user 1.82 s, sys: 47.8 ms, total: 1.87 s
+  Wall time: 1.85 s
   45.0
   >>> %time sum(v for v in b if v < 10)
-  CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s
-  Wall time: 0.93 s   # 8x faster than NumPy
+  CPU times: user 624 ms, sys: 12.3 ms, total: 637 ms
+  Wall time: 605 ms # 3x faster than Numpy
   45.0
 
 The iterator also has support for looking into slices of the array::
