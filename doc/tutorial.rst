@@ -205,21 +205,27 @@ compression levels too::
 
   >>> a = np.arange(1e7)
   >>> bcolz.carray(a, bcolz.cparams(clevel=1))
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 10.16 MB; ratio: 7.51
     cparams := cparams(clevel=1, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
   >>> bcolz.carray(a, bcolz.cparams(clevel=9))
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 1.15 MB; ratio: 66.09
     cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
   >>> bcolz.carray(a, bcolz.cparams(shuffle=False))
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 36.70 MB; ratio: 2.08
     cparams := cparams(clevel=5, shuffle=False, cname='blosclz')
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 but, as can be seen, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
