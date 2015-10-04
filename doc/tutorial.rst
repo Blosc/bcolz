@@ -387,7 +387,7 @@ However, you must be aware that modifying a carray is expensive::
   >>> %timeit b[2] = 3
   1000 loops, best of 3: 274 µs per loop # 2900x slower than NumPy
 
-although modifying values in latest chunk is somewhat more cheaper::
+although modifying values in latest chunk is somewhat cheaper::
 
   >>> %timeit a[-1] = 3
   10000000 loops, best of 3: 95 ns per loop
