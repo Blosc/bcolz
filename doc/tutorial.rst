@@ -305,11 +305,11 @@ powerful) way is by using its set of iterators::
 The iterator also has support for looking into slices of the array::
 
   >>> %time sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
-  CPU times: user 0.00 s, sys: 0.00 s, total: 0.00 s
-  Wall time: 0.00 s
+  CPU times: user 1.6 ms, sys: 560 µs, total: 2.16 ms
+  Wall time: 1.35 ms
   15.0
   >>> %timeit sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
-  10000 loops, best of 3: 121 µs per loop
+  1000 loops, best of 3: 731 µs per loop
 
 See that the time taken in this case is much shorter because the slice
 to do the lookup is much shorter too.
@@ -328,7 +328,7 @@ And get the values where a boolean array is true::
   >>> [i for i in b.where(barr)]
   [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
   >>> %timeit [i for i in b.where(barr)]
-  1000 loops, best of 3: 1.59 ms per loop
+  100 loops, best of 3: 7.66 ms per loop
 
 Note how `wheretrue` and `where` iterators are really fast.  They are
 also very powerful.  For example, they support `limit` and `skip`
