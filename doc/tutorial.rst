@@ -14,16 +14,17 @@ constructor::
   >>> a = np.arange(10)
   >>> b = bcolz.carray(a)                          # for in-memory storage
   >>> with bcolz.carray(a, rootdir='mydir') as _:  # for on-disk storage
-  ...:    c = _  # keep the reference to the Python object
+  ...     c = _  # keep the reference to the Python object
 
 To avoid forgetting to flush your data to disk, you are encouraged to use the
 `with` statement for on-disk carrays.
 
 Or, you can also create it by using one of its multiple constructors
-(see :ref:`top-level-constructors` for the complete list)::
+(see :ref:`top-level-constructors` for the complete list), write mode will
+overwrite contents of the folder where the carray is created::
 
-  >>> with bcolz.arange(10, rootdir='mydir') as _:
-  ...:    d = _
+  >>> with bcolz.arange(10, rootdir='mydir', mode='w') as _:
+  ...     d = _
 
 Please note that carray allows to create disk-based arrays by just
 specifying the `rootdir` parameter in all the constructors.
@@ -46,7 +47,8 @@ And get more info about uncompressed size (nbytes), compressed
 its representation form::
 
   >>> b   # <==> print repr(b)
-  carray((10,), int64)  nbytes: 80; cbytes: 4.00 KB; ratio: 0.02
+  carray((10,), int64)
+    nbytes: 80; cbytes: 16.00 KB; ratio: 0.00
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9]
 
@@ -62,9 +64,11 @@ comparison::
 
   >>> b = bcolz.arange(1e8)
   >>> b
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
-    cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  carray((100000000,), float64)
+  nbytes: 762.94 MB; cbytes: 23.25 MB; ratio: 32.82
+  cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 The carray consumes less than 24 MB, while the original data would have
 taken more than 760 MB; that's a huge gain.  You can always get a hint
@@ -72,7 +76,7 @@ on how much space it takes your carray by using `sys.getsizeof()`::
 
   >>> import sys
   >>> sys.getsizeof(b)
-  24520482
+  24376698
 
 That moral here is that you can create very large arrays without the
 need to create a NumPy array first (that may not fit in memory).
@@ -82,16 +86,20 @@ Finally, you can get a copy of your created carrays by using the
 
   >>> c = b.copy()
   >>> c
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 23.38 MB; ratio: 32.63
+  carray((100000000,), float64)
+    nbytes: 762.94 MB; cbytes: 23.25 MB; ratio: 32.82
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 and you can control parameters for the newly created copy::
 
   >>> b.copy(cparams=bcolz.cparams(clevel=9))
-  carray((100000000,), float64)  nbytes: 762.94 MB; cbytes: 8.22 MB; ratio: 92.78
+  carray((100000000,), float64)
+    nbytes: 762.94 MB; cbytes: 8.09 MB; ratio: 94.27
     cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 99999997.0, 99999998.0, 99999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999970e+07
+     9.99999980e+07   9.99999990e+07]
 
 Enlarging your carray
 ---------------------
@@ -102,29 +110,33 @@ method.
 
 For example, if `b` is a carray with 10 million elements::
 
+  >>> b = bcolz.arange(10*1e6)
   >>> b
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 2691722; ratio: 29.72
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 2.94 MB; ratio: 25.92
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 it can be enlarged by 10 elements with::
 
   >>> b.append(np.arange(10.))
   >>> b
-  carray((10000010,), float64)  nbytes: 80000080; cbytes: 2691722;  ratio: 29.72
+  carray((10000010,), float64)
+    nbytes: 76.29 MB; cbytes: 2.94 MB; ratio: 25.92
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0... 7.0, 8.0, 9.0]
+  [ 0.  1.  2. ...,  7.  8.  9.]
 
 Let's check how fast appending can be::
 
   >>> a = np.arange(1e7)
   >>> b = bcolz.arange(1e7)
   >>> %time b.append(a)
-  CPU times: user 0.06 s, sys: 0.00 s, total: 0.06 s
-  Wall time: 0.06 s
+  CPU times: user 51.2 ms, sys: 15.8 ms, total: 67 ms
+  Wall time: 24.5 ms
   >>> %time np.concatenate((a, a))
-  CPU times: user 0.08 s, sys: 0.04 s, total: 0.12 s
-  Wall time: 0.12 s  # 2x slower than carray
+  CPU times: user 44.4 ms, sys: 45 ms, total: 89.4 ms
+  Wall time: 91 ms # 3.7x slower than carray 
   array([  0.00000000e+00,   1.00000000e+00,   2.00000000e+00, ...,
            9.99999700e+06,   9.99999800e+06,   9.99999900e+06])
 
@@ -132,16 +144,17 @@ This is specially true when appending small bits to large arrays::
 
   >>> b = bcolz.carray(a)
   >>> %timeit b.append(np.arange(1e1))
-  100000 loops, best of 3: 3.17 µs per loop
+  100000 loops, best of 3: 3.24 µs per loop
   >>> %timeit np.concatenate((a, np.arange(1e1)))
-  10 loops, best of 3: 64 ms per loop  # 2000x slower than carray
+  10 loops, best of 3: 25.2 ms per loop  # ~10000X slower than carray
 
 You can also enlarge your arrays by using the `resize()` method::
 
   >>> b = bcolz.arange(10)
   >>> b.resize(20)
   >>> b
-  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+  carray((20,), int64)
+    nbytes: 160; cbytes: 16.00 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 0 0 0 0 0 0 0 0 0 0]
 
@@ -152,7 +165,8 @@ too::
   >>> b = bcolz.arange(10, dflt=1)
   >>> b.resize(20)
   >>> b
-  carray((20,), int64)  nbytes: 160; cbytes: 4.00 KB; ratio: 0.04
+  carray((20,), int64)
+    nbytes: 160; cbytes: 16.00 KB; ratio: 0.01
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 1 1]
 
@@ -161,7 +175,8 @@ Also, you can trim carrays::
   >>> b = bcolz.arange(10)
   >>> b.resize(5)
   >>> b
-  carray((5,), int64)  nbytes: 40; cbytes: 4.00 KB; ratio: 0.01
+  carray((5,), int64)
+    nbytes: 40; cbytes: 16.00 KB; ratio: 0.00
     cparams := cparams(clevel=5, shuffle=True, cname='blosclz')
   [0 1 2 3 4]
 
@@ -188,22 +203,29 @@ By default carrays are compressed using Blosc with compression level 5
 with shuffle active.  But depending on you needs, you can use other
 compression levels too::
 
+  >>> a = np.arange(1e7)
   >>> bcolz.carray(a, bcolz.cparams(clevel=1))
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 9.88 MB; ratio: 7.72
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 10.16 MB; ratio: 7.51
     cparams := cparams(clevel=1, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
   >>> bcolz.carray(a, bcolz.cparams(clevel=9))
-  carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.11 MB; ratio: 68.60
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 1.15 MB; ratio: 66.09
     cparams := cparams(clevel=9, shuffle=True, cname='blosclz')
-  [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 Also, you can decide if you want to disable the shuffle filter that
 comes with Blosc::
 
   >>> bcolz.carray(a, bcolz.cparams(shuffle=False))
-  carray((10000000,), float64)  nbytes: 80000000; cbytes: 38203113; ratio: 2.09
+  carray((10000000,), float64)
+    nbytes: 76.29 MB; cbytes: 36.70 MB; ratio: 2.08
     cparams := cparams(clevel=5, shuffle=False, cname='blosclz')
-  [0.0, 1.0, 2.0... 9999997.0, 9999998.0, 9999999.0]
+  [  0.00000000e+00   1.00000000e+00   2.00000000e+00 ...,   9.99999700e+06
+     9.99999800e+06   9.99999900e+06]
 
 but, as can be seen, the compression ratio is much worse in this case.
 In general it is recommend to let shuffle active (unless you are
@@ -272,22 +294,22 @@ powerful) way is by using its set of iterators::
   >>> a = np.arange(1e7)
   >>> b = bcolz.carray(a)
   >>> %time sum(v for v in a if v < 10)
-  CPU times: user 7.44 s, sys: 0.00 s, total: 7.45 s
-  Wall time: 7.57 s
+  CPU times: user 1.82 s, sys: 47.8 ms, total: 1.87 s
+  Wall time: 1.85 s
   45.0
   >>> %time sum(v for v in b if v < 10)
-  CPU times: user 0.89 s, sys: 0.00 s, total: 0.90 s
-  Wall time: 0.93 s   # 8x faster than NumPy
+  CPU times: user 624 ms, sys: 12.3 ms, total: 637 ms
+  Wall time: 605 ms # 3x faster than Numpy
   45.0
 
 The iterator also has support for looking into slices of the array::
 
   >>> %time sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
-  CPU times: user 0.00 s, sys: 0.00 s, total: 0.00 s
-  Wall time: 0.00 s
+  CPU times: user 1.6 ms, sys: 560 µs, total: 2.16 ms
+  Wall time: 1.35 ms
   15.0
   >>> %timeit sum(v for v in b.iter(start=2, stop=20, step=3) if v < 10)
-  10000 loops, best of 3: 121 µs per loop
+  1000 loops, best of 3: 731 µs per loop
 
 See that the time taken in this case is much shorter because the slice
 to do the lookup is much shorter too.
@@ -306,7 +328,7 @@ And get the values where a boolean array is true::
   >>> [i for i in b.where(barr)]
   [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]
   >>> %timeit [i for i in b.where(barr)]
-  1000 loops, best of 3: 1.59 ms per loop
+  100 loops, best of 3: 7.66 ms per loop
 
 Note how `wheretrue` and `where` iterators are really fast.  They are
 also very powerful.  For example, they support `limit` and `skip`
@@ -361,16 +383,16 @@ However, you must be aware that modifying a carray is expensive::
   >>> a = np.arange(1e7)
   >>> b = bcolz.carray(a)
   >>> %timeit a[2] = 3
-  10000000 loops, best of 3: 101 ns per loop
+  10000000 loops, best of 3: 94.4 ns per loop
   >>> %timeit b[2] = 3
-  10000 loops, best of 3: 161 µs per loop  # 1600x slower than NumPy
+  1000 loops, best of 3: 274 µs per loop # 2900x slower than NumPy
 
-although modifying values in latest chunk is somewhat more cheaper::
+although modifying values in latest chunk is somewhat cheaper::
 
   >>> %timeit a[-1] = 3
-  10000000 loops, best of 3: 102 ns per loop
+  10000000 loops, best of 3: 95 ns per loop
   >>> %timeit b[-1] = 3
-  10000 loops, best of 3: 42.9 µs per loop  # 420x slower than NumPy
+  100000 loops, best of 3: 9.66 µs per loop # 101x slower than NumPy
 
 In general, you should avoid modifications (if you can) when using
 carrays.
