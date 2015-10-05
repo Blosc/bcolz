@@ -2,11 +2,15 @@
 Release notes for bcolz
 =======================
 
-Changes from 0.11.0 to 0.12.0
+Changes from 0.11.0 to 0.11.1
 =============================
 
 - Do not try to flush when a ctable is opened in 'r'ead-only mode.
   See issue #252.
+
+- Added the mock dependency for Python2.
+
+- Added a `setuptools>18.3` dependency.
 
 
 Changes from 0.10.0 to 0.11.0
