@@ -660,12 +660,12 @@ easiest one is using the `fromiter` constructor::
   [(0, 0.0), (1, 1.0), (2, 4.0), ...,
    (99997, 9999400009.0), (99998, 9999600004.0), (99999, 9999800001.0)]
 
-You can also build an empty ctable first and the append data, we encourage you
-to use the `with` statment for this, it will take care of flushing data to disk
-once you are done appending data.::
+You can also build an empty ctable with `bzolz.zeros` indicating zero length and
+appending data afterwards, we encourage you to use the `with` statement for
+this, it will take care of flushing data to disk once you are done appending
+data.::
 
-  >>> with bcolz.ctable(np.empty(0, dtype="i4,f8"),
-  ...:                     rootdir='mydir', mode="w") as ct:
+  >>> with bcolz.zeros(0, dtype="i4,f8", rootdir='mydir', mode="w") as ct:
   ...:     for i in xrange(N):
   ...:        ct.append((i, i**2))
   ...:
@@ -684,7 +684,7 @@ figure out the number of entries in final array, but not for the loop
 case.  You can solve this by passing the final length with the
 `expectedlen` argument to the ctable constructor::
 
-  >>> ct = bcolz.ctable(np.empty(0, dtype="i4,f8"), expectedlen=N)
+  >>> ct = bcolz.zeros(0, dtype="i4,f8", expectedlen=N)
   >>> for i in xrange(N):
   ...:    ct.append((i, i**2))
   ...:

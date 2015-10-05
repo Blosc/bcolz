@@ -1,13 +1,20 @@
 =======================
-Announcing bcolz 0.11.2
+Announcing bcolz 0.11.3
 =======================
 
 What's new
 ==========
 
-This is a maintenance release for fixing dependencies basically.  A fix
-for avoiding flushed for objects opened in 'r'ead-only mode is also in.
-Several fixes has gone into the tutorial as well.
+Implemented new feature (#255): bcolz.zeros() can create new ctables
+too, either empty or filled with zeros. (#256 @FrancescElies
+@FrancescAlted).
+
+Also, in previous, non announced versions (0.11.1 and 0.11.2), new
+dependencies were added and other fixes are there too.
+
+For a more detailed change log, see:
+
+https://github.com/Blosc/bcolz/blob/master/RELEASE_NOTES.rst
 
 
 What it is

@@ -232,7 +232,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     """
     fill(shape, dtype=float, dflt=None, **kwargs)
 
-    Return a new carray object of given shape and type, filled with `dflt`.
+    Return a new carray or ctable object of given shape and type, filled with `dflt`.
 
     Parameters
     ----------
@@ -259,6 +259,21 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
     """
 
+    def fill_helper(obj, dtype=None, length=None):
+        """Helper function to fill a carray with default values"""
+        assert isinstance(obj, bcolz.carray)
+        assert dtype is not None
+        assert length is not None
+
+        # Then fill it
+        # We need an array for the default so as to keep the atom info
+        dflt = np.array(obj.dflt, dtype=dtype)
+        # Making strides=(0,) below is a trick to create the array fast and
+        # without memory consumption
+        chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
+        obj.append(chunk)
+        obj.flush()
+
     dtype = np.dtype(dtype)
     if type(shape) in _inttypes + (float,):
         shape = (int(shape),)
@@ -267,25 +282,29 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         if len(shape) > 1:
             # Multidimensional shape.
             # The atom will have shape[1:] dims (+ the dtype dims).
-            dtype = np.dtype((dtype.base, shape[1:]+dtype.shape))
+            dtype = np.dtype((dtype.base, shape[1:] + dtype.shape))
     length = shape[0]
 
     # Create the container
     expectedlen = kwargs.pop("expectedlen", length)
     if dtype.kind == "V" and dtype.shape == ():
-        raise ValueError("fill does not support ctables objects")
-    obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
-                       **kwargs)
-    chunklen = obj.chunklen
+        list_ca = []
+        # force carrays to live in memory
+        base_rootdir = kwargs.pop('rootdir', None)
+        for name, col_dype in dtype.descr:
+            dflt = np.zeros((), dtype=col_dype)
+            ca = bcolz.carray([], dtype=col_dype, dflt=dflt,
+                              expectedlen=expectedlen, **kwargs)
+            fill_helper(ca, dtype=ca.dtype, length=length)
+            list_ca.append(ca)
+        # bring rootdir back, ctable should live either on-disk or in-memory
+        kwargs['rootdir'] = base_rootdir
+        obj = bcolz.ctable(list_ca, names=dtype.names, **kwargs)
+    else:
+        obj = bcolz.carray([], dtype=dtype, dflt=dflt, expectedlen=expectedlen,
+                           **kwargs)
+        fill_helper(obj, dtype=dtype, length=length)
 
-    # Then fill it
-    # We need an array for the default so as to keep the atom info
-    dflt = np.array(obj.dflt, dtype=dtype)
-    # Making strides=(0,) below is a trick to create the array fast and
-    # without memory consumption
-    chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
-    obj.append(chunk)
-    obj.flush()
     return obj
 
 

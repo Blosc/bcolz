@@ -109,6 +109,72 @@ class createTest(MayBeDiskTest):
         # this should not raise an error
         t[u'f0'].rootdir
 
+    def test06a(self):
+        """Test create empty ctable"""
+        N = 0
+        dtype = "i4,i8,f8"
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
+    def test06b(self):
+        """Test create empty ctable and assing names to their columns"""
+        N = 0
+        dtype = np.dtype(
+            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', np.float)])
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        self.assertEquals(ct.names, ['Alice', 'Bob', 'Charlie'])
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
+    def test06c(self):
+        """Test create empty ctable and set some cparams"""
+        N = 0
+        dtype = "i4,i8,f8"
+        ra = np.zeros(N, dtype=dtype)
+        cparams = bcolz.cparams(clevel=9, shuffle=False)
+        ct = bcolz.zeros(N, dtype=dtype, cparams=cparams, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+        self.assertEqual(cparams, ct.cparams)
+
+    def test06d(self):
+        """Test create empty ctable and set expectedlen"""
+        N = 0
+        expectedlen = int(1e7)
+        ct = bcolz.zeros(0, dtype="i4,i8,f8", expectedlen=expectedlen)
+        self.assertEqual(131072, ct['f0'].chunklen)
+        self.assertEqual(65536, ct['f1'].chunklen)
+        self.assertEqual(65536, ct['f2'].chunklen)
+
+    def test07a(self):
+        """Test create ctable full of zeros"""
+        N = 10000
+        dtype = "i4,i8,f4"
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
+    def test07b(self):
+        """Test create ctable full of zeros and assign names to their columns"""
+        N = 10000
+        dtype = np.dtype(
+            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', np.float)])
+        ra = np.zeros(N, dtype=dtype)
+        ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
+        self.assertEquals(ct.names, ['Alice', 'Bob', 'Charlie'])
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+
+    def test07c(self):
+        """Test create ctable full of zeros and set some cparams"""
+        N = 10000
+        dtype = "i4,i8,f8"
+        ra = np.zeros(N, dtype=dtype)
+        cparams = bcolz.cparams(clevel=9, shuffle=False)
+        ct = bcolz.zeros(N, dtype=dtype, cparams=cparams, rootdir=self.rootdir)
+        assert_array_equal(ct[:], ra, "ctable values are not correct")
+        self.assertEqual(cparams, ct.cparams)
+
+
 
 class createMemoryTest(createTest, TestCase):
     disk = False
