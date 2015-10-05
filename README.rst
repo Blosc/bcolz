@@ -14,8 +14,8 @@ bcolz: columnar and compressed data containers
 .. |travis| image:: https://img.shields.io/travis/Blosc/bcolz.png
         :target: https://travis-ci.org/Blosc/bcolz
 
-.. |appveyor| image:: https://img.shields.io/appveyor/ci/esc/bcolz.png
-        :target: https://ci.appveyor.com/project/esc/bcolz/branch/master
+.. |appveyor| image:: https://img.shields.io/appveyor/ci/FrancescAlted/bcolz.png
+        :target: https://ci.appveyor.com/project/FrancescAlted/bcolz/branch/master
 
 .. |powered| image:: http://b.repl.ca/v1/Powered--By-Blosc-blue.png
         :target: http://blosc.org
