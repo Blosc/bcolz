@@ -162,6 +162,7 @@ for binary data.
     setup_requires=[
         'cython>=0.22',
         'numpy>=1.7',
+        'setuptools>18.3',
         'setuptools-scm>1.5.4'
     ],
     tests_require=tests_require,
