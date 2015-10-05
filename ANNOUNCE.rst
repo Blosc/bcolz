@@ -1,16 +1,11 @@
 =======================
-Announcing bcolz 0.11.3
+Announcing bcolz 0.12.0
 =======================
 
 What's new
 ==========
 
-Implemented new feature (#255): bcolz.zeros() can create new ctables
-too, either empty or filled with zeros. (#256 @FrancescElies
-@FrancescAlted).
-
-Also, in previous, non announced versions (0.11.1 and 0.11.2), new
-dependencies were added and other fixes are there too.
+#XXX version-specific blurb XXX#
 
 For a more detailed change log, see:
 
