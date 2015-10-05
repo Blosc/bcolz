@@ -2,6 +2,13 @@
 Release notes for bcolz
 =======================
 
+Changes from 0.11.1 to 0.11.2
+=============================
+
+- Changed the `setuptools>18.3` dependency to `setuptools>18.0` because
+  Anaconda does not have `setuptools > 18.1` yet.
+
+
 Changes from 0.11.0 to 0.11.1
 =============================
 
@@ -11,6 +18,8 @@ Changes from 0.11.0 to 0.11.1
 - Added the mock dependency for Python2.
 
 - Added a `setuptools>18.3` dependency.
+
+- Several fixes in the tutorial (Francesc Elies).
 
 
 Changes from 0.10.0 to 0.11.0

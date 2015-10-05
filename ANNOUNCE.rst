@@ -1,11 +1,13 @@
 =======================
-Announcing bcolz 0.12.0
+Announcing bcolz 0.11.2
 =======================
 
 What's new
 ==========
 
-  #XXX version-specific blurb XXX#
+This is a maintenance release for fixing dependencies basically.  A fix
+for avoiding flushed for objects opened in 'r'ead-only mode is also in.
+Several fixes has gone into the tutorial as well.
 
 
 What it is
