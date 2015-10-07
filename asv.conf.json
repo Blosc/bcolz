@@ -4,7 +4,7 @@
     "version": 1,
 
     // The name of the project being benchmarked
-    "project": "bcolz",
+    "project": "_bcolz", // underscore is intentional
 
     // The project's homepage
     "project_url": "https://github.com/Blosc/bcolz",
