@@ -4,7 +4,7 @@
     "version": 1,
 
     // The name of the project being benchmarked
-    "project": "_bcolz", // underscore is intentional
+    "project": "bcolz", 
 
     // The project's homepage
     "project_url": "https://github.com/Blosc/bcolz",
@@ -51,7 +51,7 @@
 
     // The directory (relative to the current directory) that benchmarks are
     // stored in.  If not provided, defaults to "benchmarks"
-    "benchmark_dir": "bench_asv",
+    "benchmark_dir": "bench",
 
     // The directory (relative to the current directory) to cache the Python
     // environments in.  If not provided, defaults to "env"
