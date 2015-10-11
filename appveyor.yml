@@ -63,7 +63,7 @@ test_script:
   # is set dynamically. This unfortunately mean that conda build --output
   # doesn't really work.
   #
-    - "%CMD_IN_ENV% conda install --yes --quiet cython pandas mock"
+    - "%CMD_IN_ENV% conda install --yes --quiet numpy=1.9.2 cython pandas mock"
 
   # Build the compiled extension and run the project tests
     - "%CMD_IN_ENV% python setup.py build_ext --inplace"
