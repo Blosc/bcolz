@@ -2,10 +2,11 @@
 Release notes for bcolz
 =======================
 
-Changes from 0.11.3 to 0.12.0
+Changes from 0.11.3 to 0.11.4
 =============================
 
-#XXX version-specific blurb XXX#
+- The .pyx extension is not packed using the absolute path anymore.
+  (#266 @FrancescAlted)
 
 
 Changes from 0.11.2 to 0.11.3

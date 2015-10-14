@@ -50,7 +50,7 @@ inc_dirs = [abspath('bcolz')]
 lib_dirs = []
 libs = []
 def_macros = []
-sources = [abspath('bcolz/carray_ext.pyx')]
+sources = ['bcolz/carray_ext.pyx']
 
 optional_libs = []
 
