@@ -1,12 +1,11 @@
 =======================
-Announcing bcolz 0.11.4
+Announcing bcolz 0.12.0
 =======================
 
 What's new
 ==========
 
-A maintenance version fixing a distribution problem as reported in
-issue https://github.com/Blosc/bcolz/issues/266.
+#XXX version-specific blurb XXX#
 
 For a more detailed change log, see:
 
