@@ -7,6 +7,8 @@ Changes from 0.11.4 to 0.12.0
 
 - Fixes an installation glitch for Windows. (#268 @cgohlke).
 
+- The tutorial is now a Jupyter notebook. (#261 @FrancescElies).
+
 
 Changes from 0.11.3 to 0.11.4
 =============================
