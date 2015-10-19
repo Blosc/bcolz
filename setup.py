@@ -17,26 +17,16 @@ if any([v < (2, 6), (3,) < v < (3, 3)]):
 
 import platform
 import os
-from os.path import join, abspath
 from glob import glob
 import sys
 import re
 
 from setuptools import setup, Extension, find_packages
-from setuptools.command.build_ext import build_ext
 
+import numpy
 
 # Prevent numpy from thinking it is still in its setup process:
 __builtins__.__NUMPY_SETUP__ = False
-
-
-class BuildExtNumpyInc(build_ext):
-    def build_extensions(self):
-        from numpy.distutils.misc_util import get_numpy_include_dirs
-        for e in self.extensions:
-            e.include_dirs.extend(get_numpy_include_dirs())
-
-        build_ext.build_extensions(self)
 
 
 # Global variables
@@ -46,7 +36,7 @@ LFLAGS = os.environ.get('LFLAGS', '').split()
 BLOSC_DIR = os.environ.get('BLOSC_DIR', '')
 
 # Sources & libraries
-inc_dirs = [abspath('bcolz')]
+inc_dirs = ['bcolz', numpy.get_include()]
 lib_dirs = []
 libs = []
 def_macros = []
@@ -78,13 +68,13 @@ if not BLOSC_DIR:
     # Zlib sources
     sources += glob('c-blosc/internal-complibs/zlib*/*.c')
     # Finally, add all the include dirs...
-    inc_dirs += [join('c-blosc', 'blosc')]
+    inc_dirs += [os.path.join('c-blosc', 'blosc')]
     inc_dirs += glob('c-blosc/internal-complibs/*')
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 else:
-    inc_dirs.append(join(BLOSC_DIR, 'include'))
-    lib_dirs.append(join(BLOSC_DIR, 'lib'))
+    inc_dirs.append(os.path.join(BLOSC_DIR, 'include'))
+    lib_dirs.append(os.path.join(BLOSC_DIR, 'lib'))
     libs.append('blosc')
 
 # Add -msse2 flag for optimizing shuffle in included c-blosc
@@ -157,7 +147,6 @@ for binary data.
             extra_compile_args=CFLAGS
         )
     ],
-    cmdclass={'build_ext': BuildExtNumpyInc},
     install_requires=['numpy>=1.7'],
     setup_requires=[
         'cython>=0.22',

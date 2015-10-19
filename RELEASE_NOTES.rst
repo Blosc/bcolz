@@ -5,7 +5,7 @@ Release notes for bcolz
 Changes from 0.11.4 to 0.12.0
 =============================
 
-#XXX version-specific blurb XXX#
+- Fixes an installation glitch for Windows. (#268 @cgohlke).
 
 
 Changes from 0.11.3 to 0.11.4
