@@ -9,6 +9,8 @@ Changes from 0.11.4 to 0.12.0
 
 - The tutorial is now a Jupyter notebook. (#261 @FrancescElies).
 
+- Replaces numpy float string specifier in test with numpy.longdouble 
+  (#271 @msarahan).
 
 Changes from 0.11.3 to 0.11.4
 =============================

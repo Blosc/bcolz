@@ -1517,7 +1517,7 @@ class iterblocksTest(MayBeDiskTest):
         for block in bcolz.iterblocks(t, blen, blen - 1):
             l += len(block)
             # f8 is to small to hold the sum on 32 bit
-            s += block['f1'].sum(dtype='f16')
+            s += block['f1'].sum(dtype=np.longdouble)
         self.assertEqual(l, (N - (blen - 1)))
         self.assertEqual(s, (np.arange(blen - 1, N, dtype='f8') * 2).sum())
 
