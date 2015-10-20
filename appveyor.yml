@@ -12,6 +12,8 @@ environment:
       PYTHON_ARCH: "32"
       CONDA_PY: "26"
       CONDA_NPY: "19"
+# TODO: CONDA_NPY environmental variable seems to have no effect numpy 1.10.0 is installed instead
+# e.g. https://ci.appveyor.com/project/FrancescAlted/bcolz/build/1.0.45/job/9r66b1e3t7htaiqd
 
     - PYTHON: "C:\\Python26_64"
       PYTHON_VERSION: "2.6"
@@ -63,7 +65,7 @@ test_script:
   # is set dynamically. This unfortunately mean that conda build --output
   # doesn't really work.
   #
-    - "%CMD_IN_ENV% conda install --yes --quiet cython pandas mock"
+    - "%CMD_IN_ENV% conda install --yes --quiet numpy=1.9.2 cython pandas mock"
 
   # Build the compiled extension and run the project tests
     - "%CMD_IN_ENV% python setup.py build_ext --inplace"
