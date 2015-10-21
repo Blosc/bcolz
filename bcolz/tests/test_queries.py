@@ -217,7 +217,7 @@ class stringTest(TestCase):
                           ("c", np.int32),
                           ("d", np.float32)])
         t = bcolz.ctable(np.empty(0, dtype=dtype))
-        strval = "abcdf"
+        strval = b"abcdf"
         t.append(("abcde", 22, 34566, 1.2354))
         t.append((strval, 23, 34567, 1.2355))
         t.append(("abcde", 22, 34566, 1.2354))
@@ -225,6 +225,16 @@ class stringTest(TestCase):
         self.assertTrue(res == [False, True, False],
                         "querying strings not working correctly")
 
+    def test_strings2(self):
+        """Testing that we can use strings in a variable (II)"""
+        dtype = np.dtype([("STATE", "|S32"),
+                          ("b", np.int32)])
+        recarr = np.array([('California', 1), ('Dakota', 9)], dtype=dtype)
+        t = bcolz.ctable(recarr)
+        res = [tuple(row) for row in t.where(
+            "STATE == b'California'", outcols=["nrow__", "b"])]
+        self.assertTrue(res == [(0, 1)],
+                        "querying strings not working correctly")
 
 
 if __name__ == '__main__':

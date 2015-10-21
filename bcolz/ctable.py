@@ -385,7 +385,10 @@ class ctable(object):
             if sclist and not hasattr(column, '__len__'):
                 clen2 = 1
             else:
-                clen2 = 1 if isinstance(column, _strtypes) else len(column)
+                if isinstance(column, _strtypes + (bytes,)):
+                    clen2 = 1
+                else:
+                    clen2 = len(column)
             if clen >= 0 and clen != clen2:
                 raise ValueError(
                     "all cols in `cols` must have the same length")
@@ -842,7 +845,7 @@ class ctable(object):
         """
 
         # Check input
-        if type(expression) is str:
+        if isinstance(expression, (bytes, str)):
             # That must be an expression
             boolarr = self.eval(expression)
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
@@ -855,7 +858,7 @@ class ctable(object):
         if outcols is None:
             outcols = self.names
         else:
-            if type(outcols) not in (list, tuple, str):
+            if type(outcols) not in (list, tuple, bytes, str):
                 raise ValueError("only list/str is supported for outcols")
             # Check name validity
             nt = namedtuple('_nt', outcols, verbose=False)
