@@ -15,7 +15,7 @@ import tempfile
 import numpy as np
 from numpy.testing import assert_array_equal, assert_allclose
 from bcolz.tests.common import (
-        MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest ) 
+        MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
 import bcolz
 from bcolz.py2help import xrange, PY2
 from bcolz.py2help_tests import Mock
@@ -2261,9 +2261,8 @@ class ContextManagerTest(MayBeDiskTest, TestCase):
 
 class ImportTest(TestCase):
 
-     @SkipTest 
+     @SkipTest
      def test_fork(self):
-            
         if os.name == 'posix':
             pid = os.fork()
             # terminate nose on child process

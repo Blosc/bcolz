@@ -21,6 +21,16 @@ if bcolz.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
 
 
+def is_sequence_like(var):
+    "Check whether `var` looks like a sequence (strings are not included)."
+    if hasattr(var, "__len__"):
+        if isinstance(var, (bytes, str)):
+            return False
+        else:
+            return True
+    return False
+
+
 def _getvars(expression, user_dict, depth, vm):
     """Get the variables in `expression`.
 
@@ -62,7 +72,7 @@ def _getvars(expression, user_dict, depth, vm):
             val = None
         # Check the value.
         if (vm == "numexpr" and
-            hasattr(val, 'dtype') and hasattr(val, "__len__") and
+            hasattr(val, 'dtype') and is_sequence_like(val) and
                 val.dtype.str[1:] == 'u8'):
             raise NotImplementedError(
                 "variable ``%s`` refers to "
@@ -127,7 +137,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     typesize, vlen = 0, 1
     for name in vars:
         var = vars[name]
-        if hasattr(var, "__len__") and not hasattr(var, "dtype"):
+        if is_sequence_like(var) and not hasattr(var, "dtype"):
             raise ValueError("only numpy/carray sequences supported")
         if hasattr(var, "dtype") and not hasattr(var, "__len__"):
             continue
@@ -138,7 +148,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
                 typesize += var.dtype.itemsize
             else:
                 raise ValueError("only numpy/carray objects supported")
-        if hasattr(var, "__len__"):
+        if is_sequence_like(var):
             if vlen > 1 and vlen != len(var):
                 raise ValueError("arrays must have the same length")
             vlen = len(var)
@@ -183,7 +193,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
     maxndims = 0
     for name in vars:
         var = vars[name]
-        if hasattr(var, "__len__"):
+        if is_sequence_like(var):
             ndims = len(var.shape) + len(var.dtype.shape)
             if ndims > maxndims:
                 maxndims = ndims
@@ -194,7 +204,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
         # Get buffers for vars
         for name in vars:
             var = vars[name]
-            if hasattr(var, "__len__") and len(var) > bsize:
+            if is_sequence_like(var) and len(var) > bsize:
                 if hasattr(var, "_getrange"):
                     if i+bsize < vlen:
                         var._getrange(i, bsize, vars_[name])

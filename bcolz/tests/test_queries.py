@@ -208,6 +208,25 @@ class big_whereblocksDiskTest(whereblocksTest, TestCase):
     disk = True
 
 
+class stringTest(TestCase):
+
+    def test_strings(self):
+        """Testing that we can use strings in a variable"""
+        dtype = np.dtype([("a", "|S5"),
+                          ("b", np.uint8),
+                          ("c", np.int32),
+                          ("d", np.float32)])
+        t = bcolz.ctable(np.empty(0, dtype=dtype))
+        strval = "abcdf"
+        t.append(("abcde", 22, 34566, 1.2354))
+        t.append((strval, 23, 34567, 1.2355))
+        t.append(("abcde", 22, 34566, 1.2354))
+        res = list(t.eval('a == strval'))
+        self.assertTrue(res == [False, True, False],
+                        "querying strings not working correctly")
+
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
 

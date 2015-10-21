@@ -9,8 +9,12 @@ Changes from 0.11.4 to 0.12.0
 
 - The tutorial is now a Jupyter notebook. (#261 @FrancescElies).
 
-- Replaces numpy float string specifier in test with numpy.longdouble 
+- Replaces numpy float string specifier in test with numpy.longdouble
   (#271 @msarahan).
+
+- Fix for allowing the use of variables of type string in `eval()` and
+  other queries. (#273, @FrancescAlted).
+
 
 Changes from 0.11.3 to 0.11.4
 =============================
