@@ -19,6 +19,10 @@ Changes from 0.11.4 to 0.12.0
   via the `expectedlen` (bcolz) and `expectedrows` (PyTables)
   parameters (@FrancescAlted).
 
+- Update only the valid part of the last chunk during boolean
+  assignments.  Fixes a VisibleDeprecationWarning with NumPy 1.10
+  (@FrancescAlted).
+
 
 Changes from 0.11.3 to 0.11.4
 =============================

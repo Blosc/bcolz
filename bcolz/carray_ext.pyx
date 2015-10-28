@@ -2242,7 +2242,9 @@ cdef class carray:
                 continue
             # Modify the data in chunk
             if nchunk == nchunks - 1 and self.leftover:
-                self.lastchunkarr[boolb] = value[nwrow:nwrow + blen]
+                # Update the valid part of the lastchunkarr
+                lastchunkarr = self.lastchunkarr[:blen]
+                lastchunkarr[boolb] = value[nwrow:nwrow + blen]
             else:
                 # Get the data chunk
                 chunk_ = self.chunks[nchunk]
