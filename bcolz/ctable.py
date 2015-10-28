@@ -706,10 +706,11 @@ class ctable(object):
             raise
 
         # Use the names in kwargs, or if not there, the names in Table
-        if 'names' in kwargs:
-            names = kwargs.pop('names')
-        else:
-            names = t.colnames
+        names = kwargs.pop('names') if 'names' in kwargs else t.colnames
+        # Add the `expectedlen` param if necessary
+        if 'expectedlen' not in kwargs:
+            kwargs['expectedlen'] = len(t)
+
         # Collect metadata
         dtypes = [t.dtype.fields[name][0] for name in names]
         cols = [np.zeros(0, dtype=dt) for dt in dtypes]
@@ -798,7 +799,8 @@ class ctable(object):
         filters = tb.Filters(complevel=cparams['clevel'],
                              shuffle=cparams['clevel'],
                              complib=cname)
-        t = f.create_table(f.root, nodepath[1:], self.dtype, filters=filters)
+        t = f.create_table(f.root, nodepath[1:], self.dtype, filters=filters,
+                           expectedrows=len(self))
         # Set the attributes
         for key, val in self.attrs:
             t.attrs[key] = val

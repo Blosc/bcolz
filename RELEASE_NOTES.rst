@@ -15,6 +15,10 @@ Changes from 0.11.4 to 0.12.0
 - Fix for allowing the use of variables of type string in `eval()` and
   other queries. (#273, @FrancescAlted).
 
+- The size of the tables during import/export to HDF5 are honored now
+  via the `expectedlen` (bcolz) and `expectedrows` (PyTables)
+  parameters (@FrancescAlted).
+
 
 Changes from 0.11.3 to 0.11.4
 =============================
