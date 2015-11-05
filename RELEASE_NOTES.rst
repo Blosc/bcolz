@@ -23,6 +23,9 @@ Changes from 0.11.4 to 0.12.0
   assignments.  Fixes a VisibleDeprecationWarning with NumPy 1.10
   (@FrancescAlted).
 
+- More consistent string-type checking to allow use of unicode strings
+  in Python 2 for queries, column selection, etc. (#274 @BrenBarn)
+
 
 Changes from 0.11.3 to 0.11.4
 =============================

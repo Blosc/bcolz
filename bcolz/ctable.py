@@ -385,7 +385,7 @@ class ctable(object):
             if sclist and not hasattr(column, '__len__'):
                 clen2 = 1
             else:
-                if isinstance(column, _strtypes + (bytes,)):
+                if isinstance(column, _strtypes):
                     clen2 = 1
                 else:
                     clen2 = len(column)
@@ -472,7 +472,7 @@ class ctable(object):
         if name is None:
             name = "f%d" % pos
         else:
-            if type(name) != str:
+            if not isinstance(name, _strtypes):
                 raise ValueError("`name` must be a string")
         if name in self.names:
             raise ValueError("'%s' column already exists" % name)
@@ -539,7 +539,7 @@ class ctable(object):
         if name is not None and pos is not None:
             raise ValueError("you cannot specify both a `name` and a `pos`")
         if name:
-            if type(name) != str:
+            if not isinstance(name, _strtypes):
                 raise ValueError("`name` must be a string")
             if name not in self.names:
                 raise ValueError("`name` not found in columns")
@@ -847,7 +847,7 @@ class ctable(object):
         """
 
         # Check input
-        if isinstance(expression, (bytes, str)):
+        if isinstance(expression, _strtypes):
             # That must be an expression
             boolarr = self.eval(expression)
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
@@ -860,7 +860,7 @@ class ctable(object):
         if outcols is None:
             outcols = self.names
         else:
-            if type(outcols) not in (list, tuple, bytes, str):
+            if type(outcols) not in (list, tuple) + _strtypes:
                 raise ValueError("only list/str is supported for outcols")
             # Check name validity
             nt = namedtuple('_nt', outcols, verbose=False)
@@ -985,7 +985,7 @@ class ctable(object):
         if outcols is None:
             outcols = self.names
         else:
-            if type(outcols) not in (list, tuple, str):
+            if type(outcols) not in (list, tuple) + _strtypes:
                 raise ValueError("only list/str is supported for outcols")
             # Check name validity
             nt = namedtuple('_nt', outcols, verbose=False)
@@ -1080,7 +1080,7 @@ class ctable(object):
         elif type(key) is list:
             if len(key) == 0:
                 return np.empty(0, self.dtype)
-            strlist = all(isinstance(v, str) for v in key)
+            strlist = all(isinstance(v, _strtypes) for v in key)
             # Range of column names
             if strlist:
                 cols = [self.cols[name] for name in key]

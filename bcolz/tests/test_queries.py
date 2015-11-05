@@ -235,6 +235,12 @@ class stringTest(TestCase):
             "STATE == b'California'", outcols=["nrow__", "b"])]
         self.assertTrue(res == [(0, 1)],
                         "querying strings not working correctly")
+        # test with unicode
+        res = [tuple(row) for row in t.where(
+            u"STATE == b'California'", outcols=["nrow__", "b"])]
+        self.assertTrue(res == [(0, 1)],
+                        "querying strings not working correctly with unicode querystring")
+
 
 
 if __name__ == '__main__':
