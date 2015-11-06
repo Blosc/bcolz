@@ -608,6 +608,33 @@ class getitemTest(MayBeDiskTest):
         assert_array_equal(t[:], ra[:],
                            "ctable values are not correct")
 
+    def test_unicode_colname(self):
+        """Testing __getitem__ with a unicode column name"""
+        N = 10
+        ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        colname = u"f1"
+        # print "t->", `t[colname]`
+        # print "ra->", ra[colname]
+        assert_array_equal(t[colname][:], ra[colname],
+                           "ctable values are not correct")                          
+
+    def test_multi_unicode_colnames(self):
+        """Testing __getitem__ with a list of unicode column names"""
+        N = 10
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        colnames = [u"f0", u"f2"]
+        # For some version of NumPy (> 1.7) I cannot make use of
+        # ra[colnames]   :-/
+        ra2 = np.fromiter(((i, i * 3) for i in xrange(N)), dtype='i4,i8')
+        ra2.dtype.names = ('f0', 'f2')
+        # print "t->", `t[colnames]`
+        # print "ra2->", ra2
+        assert_array_equal(t[colnames][:], ra2,
+                           "ctable values are not correct")
+
 
 class getitemMemoryTest(getitemTest, TestCase):
     disk = False

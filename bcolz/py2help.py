@@ -58,7 +58,7 @@ else:
     xrange = range
     izip = zip
     _inttypes = (int,)
-    _strtypes = (str,)
+    _strtypes = (bytes, str)
     unicode = str
     imap = map
     basestring = str
