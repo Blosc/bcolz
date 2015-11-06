@@ -12,6 +12,7 @@ import glob
 import textwrap
 from distutils.core import Extension
 from distutils.dep_util import newer
+from distutils.version import LooseVersion
 
 from paver.easy import *
 from paver.setuputils import setup
@@ -44,7 +45,7 @@ def check_import(pkgname, pkgver):
             "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
             % {'pkgname': pkgname, 'pkgver': pkgver})
     else:
-        if mod.__version__ < pkgver:
+        if LooseVersion(mod.__version__) < LooseVersion(pkgver):
             exit_with_error(
                 "You need %(pkgname)s %(pkgver)s or greater to run bcolz!"
                 % {'pkgname': pkgname, 'pkgver': pkgver})
@@ -232,4 +233,3 @@ compressor that is optimized for binary data.
     include_package_data=True,
 
 )
-
