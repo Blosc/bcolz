@@ -25,10 +25,6 @@ from setuptools import setup, Extension, find_packages
 
 import numpy
 
-# Prevent numpy from thinking it is still in its setup process:
-__builtins__.__NUMPY_SETUP__ = False
-
-
 # Global variables
 CFLAGS = os.environ.get('CFLAGS', '').split()
 LFLAGS = os.environ.get('LFLAGS', '').split()
