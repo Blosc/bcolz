@@ -1,7 +1,6 @@
 include MANIFEST.in
 include *.txt *.rst
 exclude RELEASING.rst
-include pavement.py
 include setup.py
 
 recursive-include bcolz *.py *.pyx *.pxd *.c *.h

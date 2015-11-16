@@ -24,7 +24,13 @@ Changes from 0.11.4 to 0.12.0
   (@FrancescAlted).
 
 - More consistent string-type checking to allow use of unicode strings
-  in Python 2 for queries, column selection, etc. (#274 @BrenBarn)
+  in Python 2 for queries, column selection, etc. (#274 @BrenBarn).
+
+- Installation no longer fails when listed as dependency of project
+  installed via setup.py develop or setup.py install. (#280 @mindw,
+  fixes #277).
+
+- Paver setup has been deprecated (see #275).
 
 
 Changes from 0.11.3 to 0.11.4
