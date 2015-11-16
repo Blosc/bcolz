@@ -4,21 +4,21 @@ Tutorials
 
 This section has been moved to ipython notebook `tutorials`_.
 
-.. _tutorials: https://github.com/Blosc/bcolz/blob/fe/doc/ipython_notebook_tutorial/doc/tutorials.ipynb
+.. _tutorials: https://github.com/Blosc/bcolz/blob/master/doc/tutorials.ipynb
 
 Tutorial on carray objects
 ==========================
 
 This section has been moved to ipython notebook `tutorial_carray`_.
 
-.. _tutorial_carray: https://github.com/Blosc/bcolz/blob/fe/doc/ipython_notebook_tutorial/doc/tutorial_carray.ipynb
+.. _tutorial_carray: https://github.com/Blosc/bcolz/blob/master/doc/tutorial_carray.ipynb
 
 Tutorial on ctable objects
 ==========================
 
 This section has been moved to ipython notebook `tutorial_ctable`_.
 
-.. _tutorial_ctable: https://github.com/Blosc/bcolz/blob/fe/doc/ipython_notebook_tutorial/doc/tutorial_ctable.ipynb
+.. _tutorial_ctable: https://github.com/Blosc/bcolz/blob/master/doc/tutorial_ctable.ipynb
 
 Writing bcolz extensions
 ========================

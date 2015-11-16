@@ -5,7 +5,12 @@ Announcing bcolz 0.12.0
 What's new
 ==========
 
-#XXX version-specific blurb XXX#
+This release copes with some compatibility issues with NumPy 1.10.
+Also, several improvements have happened in the installation procedure,
+allowing for a smoother process.  Last but not least, the tutorials
+haven been migrated to the IPython notebook format (a huge thank you to
+Francesc Elies for this!).  This will hopefully will allow users to
+better exercise the different features of bcolz.
 
 For a more detailed change log, see:
 
