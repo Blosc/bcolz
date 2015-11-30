@@ -1,14 +1,11 @@
 =======================
-Announcing bcolz 0.12.1
+Announcing bcolz 0.12.2
 =======================
 
 What's new
 ==========
 
-``setup.py`` now defers operations requiring ``numpy`` and ``Cython``
-until after those modules have been installed by ``setuptools``.  This
-means that users no longer need to pre-install ``numpy`` and ``Cython``
-to install ``bcolz``.
+#XXX version-specific blurb XXX#
 
 For a more detailed change log, see:
 
