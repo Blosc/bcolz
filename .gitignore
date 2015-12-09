@@ -12,3 +12,6 @@ bench_asv/env
 bench_asv/bcolz/
 bench_asv/results
 bench_asv/project
+
+# pycharm
+.idea
