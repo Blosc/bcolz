@@ -6,6 +6,7 @@ bcolz/version.py
 
 *.pyd
 bcolz.egg-info/
+.eggs
 
 # airspeed velocity
 bench_asv/env
