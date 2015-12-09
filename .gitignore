@@ -1,6 +1,6 @@
 build
 bcolz/carray_ext.c
-bcolz/carray_ext.so
+bcolz/*.so
 bcolz/version.py
 **/*.pyc
 
