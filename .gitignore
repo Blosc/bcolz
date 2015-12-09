@@ -16,3 +16,9 @@ bench_asv/project
 
 # pycharm
 .idea
+
+# bench
+*.h5
+*.bcolz
+myarray
+large_carray-bench

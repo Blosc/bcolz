@@ -1,10 +1,18 @@
 # Benchmark for evaluate best ways to convert from a pandas dataframe
 # (version with a mix of columns of ints and strings)
 
+import sys
 import bcolz
 import pandas as pd
-import numpy as np
 from time import time
+
+
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    xrange = range
+    def range(*args):
+        return list(xrange(*args))
+
 
 NR = int(1e6)
 NC = 100
