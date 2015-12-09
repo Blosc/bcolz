@@ -12,6 +12,7 @@ bcolz.egg-info/
 *.h5
 *.bcolz
 myarray
+large_carray-bench
 
 # airspeed velocity
 bench_asv/env

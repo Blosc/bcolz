@@ -1,6 +1,15 @@
 from __future__ import print_function
+import sys
 import contextlib, time
 import bcolz, numpy
+
+
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    xrange = range
+    def range(*args):
+        return list(xrange(*args))
+
 
 @contextlib.contextmanager
 def ctime(label=""):
