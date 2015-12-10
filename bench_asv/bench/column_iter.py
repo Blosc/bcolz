@@ -1,6 +1,15 @@
+import sys
 import bcolz
 import numpy
 from .bench_helper import ctime
+
+
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    xrange = range
+    def range(*args):
+        return list(xrange(*args))
+
 
 N = 1000 * 1000
 
