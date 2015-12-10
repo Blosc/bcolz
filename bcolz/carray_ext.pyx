@@ -1,5 +1,6 @@
 #!python
 #cython: embedsignature=True
+#cython: profile=True
 #########################################################################
 #
 #       License: BSD
