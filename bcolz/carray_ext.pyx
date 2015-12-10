@@ -178,11 +178,11 @@ def _blosc_set_nthreads(nthreads):
     """
     return blosc_set_nthreads(nthreads)
 
-_blosc_contextual = False
+_blosc_use_context = False
 
-def blosc_set_contextual(contextual=True):
+def blosc_use_context(use_context=True):
     """
-    blosc_set_contextual(contextual)
+    blosc_use_context(use_context)
 
     Switches the way that blosc is used internally, to enable use of bcolz
     in a multi-threaded environment.
@@ -199,9 +199,9 @@ def blosc_set_contextual(contextual=True):
     out : bool
         The previous setting.
     """
-
-    previous = _blosc_contextual
-    _blosc_contextual = contextual
+    global _blosc_use_context
+    previous = _blosc_use_context
+    _blosc_use_context = use_context
     return previous
 
 def _blosc_init():
@@ -489,7 +489,7 @@ cdef class chunk:
         result_str = PyBytes_FromStringAndSize(NULL, self.nbytes)
         dest = PyBytes_AS_STRING(result_str);
 
-        if _blosc_contextual:
+        if _blosc_use_context:
             with nogil:
                 ret = blosc_decompress_ctx(self.data, dest, self.nbytes, 1)
         else:
@@ -518,7 +518,7 @@ cdef class chunk:
 
         # Fill dest with uncompressed data
         if bsize == self.nbytes:
-            if _blosc_contextual:
+            if _blosc_use_context:
                 with nogil:
                     ret = blosc_decompress_ctx(self.data, dest, bsize, 1)
             else:
@@ -749,7 +749,7 @@ cdef class chunks(object):
                 # Fill lastchunk with data on disk
                 scomp = self.read_chunk(self.nchunks)
                 compressed = PyBytes_AsString(scomp)
-                if _blosc_contextual:
+                if _blosc_use_context:
                     with nogil:
                         ret = blosc_decompress_ctx(compressed, lastchunk,
                                                    chunksize, 1)
