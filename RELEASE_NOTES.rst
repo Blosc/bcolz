@@ -7,6 +7,10 @@ Changes from 0.12.1 to 0.12.2
 
 #XXX version-specific blurb XXX#
 
+- Some optimisations have been made within ``carray.__getitem__`` to
+  improve performance when extracting a slice of data from a carray. This
+  is particularly relevant when running some computation chunk-by-chunk over
+  a large carray. (#283 @alimanfoo).
 
 Changes from 0.12.0 to 0.12.1
 =============================
