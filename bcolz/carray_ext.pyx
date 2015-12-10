@@ -1876,11 +1876,12 @@ cdef class carray:
 
         cdef int chunklen
         cdef npy_intp startb, stopb
-        cdef npy_intp nchunk, keychunk, nchunks
+        cdef npy_intp nchunk, keychunk, nchunks, first_chunk, last_chunk
         cdef npy_intp nwrow, blen
-        cdef ndarray arr1
+        cdef ndarray arr1, dest
         cdef object start, stop, step
         cdef object arr
+        cdef chunk _chunk
 
         chunklen = self._chunklen
 
@@ -1987,7 +1988,10 @@ cdef class carray:
         nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         if self.leftover > 0:
             nchunks += 1
-        for nchunk from 0 <= nchunk < nchunks:
+        first_chunk = <npy_intp> cython.cdiv(start, self.chunklen)
+        last_chunk = <npy_intp> cython.cdiv(stop, self.chunklen) + 1
+        last_chunk = min(last_chunk, nchunks)
+        for nchunk from first_chunk <= nchunk < last_chunk:
             # Compute start & stop for each block
             startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop,
                                              step)
@@ -1997,8 +2001,14 @@ cdef class carray:
             if nchunk == nchunks - 1 and self.leftover:
                 arr[nwrow:nwrow + blen] = self.lastchunkarr[startb:stopb:step]
             else:
-                arr[nwrow:nwrow + blen] = self.chunks[nchunk][
-                                          startb:stopb:step]
+                if step > 1:
+                    arr[nwrow:nwrow + blen] = self.chunks[nchunk][
+                                              startb:stopb:step]
+                else:
+                    # no step, can store directly
+                    dest = arr[nwrow:nwrow + blen]
+                    _chunk = self.chunks[nchunk]
+                    _chunk._getitem(startb, stopb, dest.data)
             nwrow += blen
 
         return arr
