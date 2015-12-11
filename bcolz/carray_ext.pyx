@@ -2081,7 +2081,7 @@ cdef class carray:
         """
         cdef int chunklen
         cdef npy_intp startb, stopb
-        cdef npy_intp nchunk, keychunk, nchunks
+        cdef npy_intp nchunk, keychunk, nchunks, first_chunk, last_chunk
         cdef npy_intp nwrow, blen, vlen
         cdef chunk chunk_
         cdef object start, stop, step
