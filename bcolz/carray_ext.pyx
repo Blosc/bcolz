@@ -1,5 +1,6 @@
 #!python
 #cython: embedsignature=True
+#cython: profile=True
 #########################################################################
 #
 #       License: BSD
@@ -110,7 +111,13 @@ cdef extern from "blosc.h":
     int blosc_compress(int clevel, int doshuffle, size_t typesize,
                        size_t nbytes, void *src, void *dest,
                        size_t destsize) nogil
+    int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
+                           size_t nbytes, void* src, void* dest,
+                           size_t destsize, char* compressor,
+                           size_t blocksize, int numinternalthreads) nogil
     int blosc_decompress(void *src, void *dest, size_t destsize) nogil
+    int blosc_decompress_ctx(void *src, void *dest, size_t destsize,
+                             int numinternalthreads) nogil
     int blosc_getitem(void *src, int start, int nitems, void *dest) nogil
     void blosc_free_resources()
     void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
@@ -171,6 +178,32 @@ def _blosc_set_nthreads(nthreads):
         The previous setting for the number of threads.
     """
     return blosc_set_nthreads(nthreads)
+
+_blosc_use_context = False
+
+def blosc_use_context(use_context=True):
+    """
+    blosc_use_context(use_context)
+
+    Switches the way that blosc is used internally, to enable use of bcolz
+    in a multi-threaded environment.
+
+    Parameters
+    ----------
+    contextual : bool
+        If True, calls to blosc will use the single-threaded contextual
+        versions of the compression and decompression functions, which are
+        more suited when the calling process is running multiple threads.
+
+    Returns
+    -------
+    out : bool
+        The previous setting.
+    """
+    global _blosc_use_context
+    previous = _blosc_use_context
+    _blosc_use_context = use_context
+    return previous
 
 def _blosc_init():
     """
@@ -457,7 +490,11 @@ cdef class chunk:
         result_str = PyBytes_FromStringAndSize(NULL, self.nbytes)
         dest = PyBytes_AS_STRING(result_str);
 
-        ret = blosc_decompress(self.data, dest, self.nbytes)
+        if _blosc_use_context:
+            with nogil:
+                ret = blosc_decompress_ctx(self.data, dest, self.nbytes, 1)
+        else:
+            ret = blosc_decompress(self.data, dest, self.nbytes)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
@@ -482,7 +519,11 @@ cdef class chunk:
 
         # Fill dest with uncompressed data
         if bsize == self.nbytes:
-            ret = blosc_decompress(self.data, dest, bsize)
+            if _blosc_use_context:
+                with nogil:
+                    ret = blosc_decompress_ctx(self.data, dest, bsize, 1)
+            else:
+                ret = blosc_decompress(self.data, dest, bsize)
         else:
             ret = blosc_getitem(self.data, nstart, nitems, dest)
         if ret < 0:
@@ -709,7 +750,12 @@ cdef class chunks(object):
                 # Fill lastchunk with data on disk
                 scomp = self.read_chunk(self.nchunks)
                 compressed = PyBytes_AsString(scomp)
-                ret = blosc_decompress(compressed, lastchunk, chunksize)
+                if _blosc_use_context:
+                    with nogil:
+                        ret = blosc_decompress_ctx(compressed, lastchunk,
+                                                   chunksize, 1)
+                else:
+                    ret = blosc_decompress(compressed, lastchunk, chunksize)
                 if ret < 0:
                     raise RuntimeError(
                         "error decompressing the last chunk (error code: "

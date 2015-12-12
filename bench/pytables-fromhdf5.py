@@ -1,9 +1,18 @@
 # Benchmark for evaluate best ways to read from a PyTables Table
 
+import sys
 import bcolz
 import tables as tb
 import numpy as np
 from time import time
+
+
+PY2 = sys.version_info[0] == 2
+if not PY2:
+    xrange = range
+    def range(*args):
+        return list(xrange(*args))
+
 
 filepath = 'fromhdf5.h5'
 nodepath = '/ctable'

@@ -100,10 +100,17 @@ for arg in args:
         CFLAGS = arg.split('=')[1].split()
         sys.argv.remove(arg)
 
-if not BLOSC_DIR:
+if BLOSC_DIR != '':
+    # Using the Blosc library
+    lib_dirs += [os.path.join(BLOSC_DIR, 'lib')]
+    inc_dirs += [os.path.join(BLOSC_DIR, 'include')]
+    libs += ['blosc']
+else:
     # Compiling everything from sources
     # Blosc + BloscLZ sources
-    sources += glob('c-blosc/blosc/*.c')
+    # We still have to figure out how to detect AVX2 in Python,
+    # so no AVX2 support for the time being
+    sources += [f for f in glob('c-blosc/blosc/*.c') if 'avx2' not in f]
     # LZ4 sources
     sources += glob('c-blosc/internal-complibs/lz4*/*.c')
     # Snappy sources
@@ -115,15 +122,15 @@ if not BLOSC_DIR:
     inc_dirs += glob('c-blosc/internal-complibs/*')
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
-else:
-    inc_dirs.append(os.path.join(BLOSC_DIR, 'include'))
-    lib_dirs.append(os.path.join(BLOSC_DIR, 'lib'))
-    libs.append('blosc')
 
-# Add -msse2 flag for optimizing shuffle in included c-blosc
-# (only necessary for 32-bit Intel architectures)
-if os.name == 'posix' and re.match("i.86", platform.machine()):
-    CFLAGS.append("-msse2")
+if os.name == 'posix':
+    if re.match("i.86|x86", platform.machine()) is not None:
+        # Always enable SSE2 for AMD/Intel machines
+        CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
+    if re.match("i.86", platform.machine()) is not None:
+        # Add -msse2 flag for optimizing shuffle in Blosc
+        # (only necessary for 32-bit Intel architectures)
+        CFLAGS.append("-msse2")
 
 tests_require = []
 
