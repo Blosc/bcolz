@@ -2035,7 +2035,7 @@ cdef class carray:
         """
         cdef int chunklen
         cdef npy_intp startb, stopb
-        cdef npy_intp nchunk, keychunk, nchunks
+        cdef npy_intp nchunk, keychunk, nchunks, first_chunk, last_chunk
         cdef npy_intp nwrow, blen, vlen
         cdef chunk chunk_
         cdef object start, stop, step
@@ -2147,7 +2147,10 @@ cdef class carray:
         nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         if self.leftover > 0:
             nchunks += 1
-        for nchunk from 0 <= nchunk < nchunks:
+        first_chunk = <npy_intp> cython.cdiv(start, self.chunklen)
+        last_chunk = <npy_intp> cython.cdiv(stop, self.chunklen) + 1
+        last_chunk = min(last_chunk, nchunks)
+        for nchunk from first_chunk <= nchunk < last_chunk:
             # Compute start & stop for each block
             startb, stopb, blen = clip_chunk(nchunk, chunklen, start, stop,
                                              step)
@@ -2158,13 +2161,18 @@ cdef class carray:
                 self.lastchunkarr[startb:stopb:step] = value[
                                                        nwrow:nwrow + blen]
             else:
-                # Get the data chunk
-                chunk_ = self.chunks[nchunk]
-                self._cbytes -= chunk_.cbytes
-                # Get all the values there
-                cdata = chunk_[:]
-                # Overwrite it with data from value
-                cdata[startb:stopb:step] = value[nwrow:nwrow + blen]
+                if stopb - startb < chunklen or step > 1:
+                    # Get the data chunk
+                    chunk_ = self.chunks[nchunk]
+                    self._cbytes -= chunk_.cbytes
+                    # Get all the values there
+                    cdata = chunk_[:]
+                    # Overwrite it with data from value
+                    cdata[startb:stopb:step] = value[nwrow:nwrow + blen]
+                else:
+                    # Replacing a complete chunk, no need to access existing
+                    # data
+                    cdata = value[nwrow:nwrow + blen]
                 # Replace the chunk
                 chunk_ = chunk(cdata, self._dtype, self._cparams,
                                _memory=self._rootdir is None)
