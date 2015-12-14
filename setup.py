@@ -133,7 +133,8 @@ if os.name == 'posix':
         CFLAGS.append("-msse2")
 elif os.name == 'nt':
     # TODO remove this spike to check value of platform.machine() under windows
-    CFLAGS.append("/spike_platform:" + platform.machine())
+    CFLAGS.append("/spike_platform_machine:" + platform.machine())
+    CFLAGS.append("/spike_sys_platform:" + sys.platform)
     if re.match("i.86|x86", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
         CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
