@@ -34,7 +34,6 @@ import bcolz
 from bcolz import utils, attrs, array2string
 
 from .utils import build_carray
-from .lock import RWLock
 
 if sys.version_info >= (3, 0):
     _MAXINT = 2 ** 31 - 1
@@ -172,29 +171,6 @@ def _blosc_set_nthreads(nthreads):
         The previous setting for the number of threads.
     """
     return blosc_set_nthreads(nthreads)
-
-_threadsafe_default = False
-
-def _set_threadsafe_default(safe=True):
-    """
-    _set_threadsafe_default(safe)
-
-    Set the default thread safety mode for carray creation.
-
-    Parameters
-    ----------
-    safe : bool
-        If True, new carrays will be thread-safe by default.
-
-    Returns
-    -------
-    out : bool
-        Previous setting
-    """
-    global _threadsafe_default
-    previous = _threadsafe_default
-    _threadsafe_default = safe
-    return previous
 
 def _blosc_init():
     """
@@ -1034,24 +1010,13 @@ cdef class carray:
     def __cinit__(self, object array=None, object cparams=None,
                   object dtype=None, object dflt=None,
                   object expectedlen=None, object chunklen=None,
-                  object rootdir=None, object safe=True, object mode="a",
-                  object threadsafe=None):
+                  object rootdir=None, object safe=True, object mode="a"):
 
         self._rootdir = rootdir
         if mode not in ('r', 'w', 'a'):
             raise ValueError("mode should be 'r', 'w' or 'a'")
         self._mode = mode
         self._safe = safe
-
-        # set thread safety mode
-        if threadsafe is None:
-            # use default setting
-            threadsafe = _threadsafe_default
-        self._threadsafe = threadsafe
-        if threadsafe:
-            self._lock = RWLock()
-        else:
-            self._lock = None
 
         if array is not None:
             self._create_carray(array, cparams, dtype, dflt,
@@ -1404,13 +1369,6 @@ cdef class carray:
             the carray.
 
         """
-        if self._threadsafe:
-            with self._lock.writer():
-                self._append(array)
-        else:
-            self._append(array)
-
-    def _append(self, object array):
         cdef int atomsize, itemsize, chunksize, leftover
         cdef int nbytesfirst, chunklen, start, stop
         cdef npy_intp nbytes, cbytes, bsize, i, nchunks, j
@@ -1507,6 +1465,7 @@ cdef class carray:
         self.leftover = leftover
         self._cbytes += cbytes
         self._nbytes += bsize
+        return
 
     def trim(self, object nitems):
         """Remove the trailing `nitems` from this instance.
@@ -1519,13 +1478,6 @@ cdef class carray:
             is enlarged instead.
 
         """
-        if self._threadsafe:
-            with self._lock.writer():
-                self._trim(nitems)
-        else:
-            self._trim(nitems)
-
-    def _trim(self, object nitems):
         cdef int atomsize, leftover, leftover2
         cdef npy_intp cbytes, bsize, nchunk2
         cdef chunk chunk_
@@ -1538,7 +1490,7 @@ cdef class carray:
             raise ValueError("`nitems` must be less than total length")
         # A negative number of items means that we want to grow the object
         if nitems <= 0:
-            self._resize(self.len - nitems)
+            self.resize(self.len - nitems)
             return
 
         atomsize = self.atomsize
@@ -1595,13 +1547,6 @@ cdef class carray:
             values.
 
         """
-        if self._threadsafe:
-            with self._lock.writer():
-                self._resize(nitems)
-        else:
-            self._resize(nitems)
-
-    def _resize(self, object nitems):
         cdef object chunk
 
         if not isinstance(nitems, _inttypes + (float,)):
@@ -1616,11 +1561,11 @@ cdef class carray:
             # Create a 0-strided array and append it to self
             chunk = np.ndarray(nitems - self.len, dtype=self._dtype,
                                buffer=self._dflt, strides=(0,))
-            self._append(chunk)
+            self.append(chunk)
             self.flush()
         else:
             # Just trim the excess of items
-            self._trim(self.len - nitems)
+            self.trim(self.len - nitems)
 
     def reshape(self, newshape):
         """Returns a new carray containing the same data with a new shape.
@@ -1639,13 +1584,6 @@ cdef class carray:
             A copy of the original carray.
 
         """
-        if self._threadsafe:
-            with self._lock.writer():
-                return self._reshape(newshape)
-        else:
-            return self._reshape(newshape)
-
-    def _reshape(self, newshape):
         cdef npy_intp newlen, ilen, isize, osize, newsize, rsize, i
         cdef object ishape, oshape, pos, newdtype, out
 
@@ -1682,7 +1620,7 @@ cdef class carray:
         # If shapes are both n-dimensional, convert first to 1-dim shape
         # and then convert again to the final newshape.
         if len(ishape) > 1 and len(newshape) > 1:
-            out = self._reshape(-1)
+            out = self.reshape(-1)
             return out.reshape(newshape)
 
         if self._rootdir:
@@ -1700,11 +1638,10 @@ cdef class carray:
             rsize = isize / newlen
             for i from 0 <= i < newlen:
                 out.append(
-                    self._getitem(slice(i * rsize, (i + 1) * rsize))
-                        .reshape(newdtype.shape))
+                    self[i * rsize:(i + 1) * rsize].reshape(newdtype.shape))
         else:
             for i from 0 <= i < ilen:
-                out.append(self._getitem(i).reshape(-1))
+                out.append(self[i].reshape(-1))
         out.flush()
 
         # Finally, rename the temporary data directory to self._rootdir
@@ -1731,13 +1668,6 @@ cdef class carray:
             The copy of this object.
 
         """
-        if self._threadsafe:
-            with self._lock.reader():
-                return self._copy(**kwargs)
-        else:
-            return self._copy(**kwargs)
-
-    def _copy(self, **kwargs):
         cdef object chunklen
 
         # Get defaults for some parameters
@@ -1751,7 +1681,7 @@ cdef class carray:
         # Now copy the carray chunk by chunk
         chunklen = self._chunklen
         for i from 0 <= i < self.len by chunklen:
-            ccopy.append(self._getitem(slice(i, i + chunklen)))
+            ccopy.append(self[i:i + chunklen])
         ccopy.flush()
 
         return ccopy
@@ -1769,12 +1699,6 @@ cdef class carray:
         copy
 
         """
-        if self._threadsafe:
-            raise NotImplementedError('not implemented for thread-safe carray')
-        else:
-            return self._view()
-
-    def _view(self):
         # Create a light weight data container
         cview = carray(np.empty(0, dtype=self._dtype))
         # And populate it with metainfo (including chunks)
@@ -1801,13 +1725,6 @@ cdef class carray:
         out : NumPy scalar with `dtype`
 
         """
-        if self._threadsafe:
-            with self._lock.reader():
-                return self._sum(dtype=dtype)
-        else:
-            return self._sum(dtype=dtype)
-
-    def _sum(self, dtype=None):
         cdef chunk chunk_
         cdef npy_intp nchunk, nchunks
         cdef object result
@@ -1915,9 +1832,6 @@ cdef class carray:
 
     def free_cachemem(self):
         """Release in-memory cached chunk"""
-        # TODO figure out thread-safe behaviour
-        if self._threadsafe:
-            raise NotImplementedError('not implemented for thread-safe carray')
         if type(self.chunks) is not list:
             self.chunks.free_cachemem()
         self.idxcache = -1
@@ -1959,13 +1873,7 @@ cdef class carray:
         eval
 
         """
-        if self._threadsafe:
-            with self._lock.reader():
-                return self._getitem(key)
-        else:
-            return self._getitem(key)
 
-    def _getitem(self, object key):
         cdef int chunklen
         cdef npy_intp startb, stopb
         cdef npy_intp nchunk, keychunk, nchunks, first_chunk, last_chunk
@@ -1993,7 +1901,7 @@ cdef class carray:
                 else:
                     return arr1[0].copy()
             # Fallback action: use the slice code
-            return np.squeeze(self._getitem(slice(key, key + 1, 1)))
+            return np.squeeze(self[slice(key, key + 1, 1)])
         # Slices
         elif isinstance(key, slice):
             (start, stop, step) = key.start, key.stop, key.step
@@ -2004,10 +1912,10 @@ cdef class carray:
             if len(key) == 0:
                 raise ValueError("empty tuple not supported")
             elif len(key) == 1:
-                return self._getitem(key[0])
+                return self[key[0]]
             # An n-dimensional slice
             # First, retrieve elements in the leading dimension
-            arr = self._getitem(key[0])
+            arr = self[key[0]]
             # Then, keep only the required elements in other dimensions
             if type(key[0]) == slice:
                 arr = arr[(slice(None),) + key[1:]]
@@ -2025,7 +1933,7 @@ cdef class carray:
             except:
                 raise IndexError(
                     "key cannot be converted to an array of indices")
-            return self._getitem(key)
+            return self[key]
         # A boolean or integer array (case of fancy indexing)
         elif hasattr(key, "dtype"):
             if key.dtype.type == np.bool_:
@@ -2041,8 +1949,7 @@ cdef class carray:
                                    count=count)
             elif np.issubsctype(key, np.int_):
                 # An integer array
-                return np.array([self._getitem(i) for i in key],
-                                dtype=self._dtype.base)
+                return np.array([self[i] for i in key], dtype=self._dtype.base)
             else:
                 raise IndexError(
                     "arrays used as indices must be integer (or boolean)")
@@ -2056,7 +1963,7 @@ cdef class carray:
                 raise IndexError(
                     "boolean expression outcome must match len(self)")
             # Call __getitem__ again
-            return self._getitem(result)
+            return self[result]
         # All the rest not implemented
         else:
             raise NotImplementedError("key not supported: %s" % repr(key))
@@ -2126,13 +2033,6 @@ cdef class carray:
         eval
 
         """
-        if self._threadsafe:
-            with self._lock.writer():
-                self._setitem(key, value)
-        else:
-            self._setitem(key, value)
-
-    def _setitem(self, object key, object value):
         cdef int chunklen
         cdef npy_intp startb, stopb
         cdef npy_intp nchunk, keychunk, nchunks, first_chunk, last_chunk
@@ -2170,18 +2070,18 @@ cdef class carray:
             if len(key) == 0:
                 raise ValueError("empty tuple not supported")
             elif len(key) == 1:
-                self._setitem(key[0], value)
+                self[key[0]] = value
                 return
             # An n-dimensional slice
             # First, retrieve elements in the leading dimension
-            arr = self._getitem(key[0])
-            # Then, passing only the requested elements in other dimensions
+            arr = self[key[0]]
+            # Then, assing only the requested elements in other dimensions
             if type(key[0]) == slice:
                 arr[(slice(None),) + key[1:]] = value
             else:
                 arr[key[1:]] = value
             # Finally, update this superset of values in self
-            self._setitem(key[0], arr)
+            self[key[0]] = arr
             return
         # List of integers (case of fancy indexing)
         elif isinstance(key, list):
@@ -2191,7 +2091,7 @@ cdef class carray:
             except:
                 raise IndexError(
                     "key cannot be converted to an array of indices")
-            self._setitem(key, value)
+            self[key] = value
             return
         # A boolean or integer array (case of fancy indexing)
         elif hasattr(key, "dtype"):
@@ -2208,7 +2108,7 @@ cdef class carray:
                         safe=self._safe)
                 # XXX This could be optimised, but it works like this
                 for i, item in enumerate(key):
-                    self._setitem(item, value[i])
+                    self[item] = value[i]
                 return
             else:
                 raise IndexError(
@@ -2224,7 +2124,7 @@ cdef class carray:
                 raise IndexError(
                     "boolean expression outcome must match len(self)")
             # Call __setitem__ again
-            self._setitem(result, value)
+            self[result] = value
             return
         # All the rest not implemented
         else:
@@ -2284,17 +2184,7 @@ cdef class carray:
         # Safety check
         assert (nwrow == vlen)
 
-    def __array__(self):
-        return self[:]
-
-    def getrange(self, npy_intp start, npy_intp blen, ndarray out):
-        """TODO docstring"""
-        if self._threadsafe:
-            with self._lock.reader():
-                self._getrange(start, blen, out)
-        else:
-            self._getrange(start, blen, out)
-
+    # This is a private function that is specific for `eval`
     def _getrange(self, npy_intp start, npy_intp blen, ndarray out):
         cdef int chunklen
         cdef npy_intp startb, stopb
@@ -2407,9 +2297,6 @@ cdef class carray:
         self.iter_exhausted = False
 
     def __iter__(self):
-        # TODO figure out thread-safe behaviour
-        if self._threadsafe:
-            raise NotImplementedError('not implemented for thread-safe carray')
 
         if self.iter_exhausted:
             # Iterator is exhausted, so return immediately
@@ -2460,10 +2347,6 @@ cdef class carray:
         where, wheretrue
 
         """
-        # TODO figure out thread-safe behaviour
-        if self._threadsafe:
-            raise NotImplementedError('not implemented for thread-safe carray')
-
         # Check limits
         if step <= 0:
             raise NotImplementedError("step param can only be positive")
@@ -2505,10 +2388,6 @@ cdef class carray:
         iter, where
 
         """
-        # TODO figure out thread-safe behaviour
-        if self._threadsafe:
-            raise NotImplementedError('not available for thread-safe carray')
-
         # Check self
         if self._dtype.base.type != np.bool_:
             raise ValueError("`self` is not an array of booleans")
@@ -2549,10 +2428,6 @@ cdef class carray:
         iter, wheretrue
 
         """
-        # TODO figure out thread-safe behaviour
-        if self._threadsafe:
-            raise NotImplementedError('not implemented for thread-safe carray')
-
         # Check input
         if self.ndim > 1:
             raise NotImplementedError("`self` is not unidimensional")

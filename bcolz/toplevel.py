@@ -498,7 +498,7 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
             buf = np.empty(blen, dtype=cobj.dtype)
             # Populate the column buffers and assign to the final buffer
             for name in cobj.names:
-                cobj[name].getrange(i, blen, cbufs[name])
+                cobj[name]._getrange(i, blen, cbufs[name])
                 buf[name][:] = cbufs[name]
             if i + blen > stop:
                 buf = buf[:stop - i]
@@ -509,7 +509,7 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
             blen = cobj.chunklen
         for i in xrange(start, stop, blen):
             buf = np.empty(blen, dtype=cobj.dtype)
-            cobj.getrange(i, blen, buf)
+            cobj._getrange(i, blen, buf)
             if i + blen > stop:
                 buf = buf[:stop - i]
             yield buf

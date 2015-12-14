@@ -42,8 +42,6 @@ cdef class carray:
     cdef object _cparams, _dflt
     cdef object _dtype
     cdef object _safe
-    cdef object _threadsafe
-    cdef object _lock
     cdef public object chunks
     cdef object _rootdir, datadir, metadir, _mode
     cdef object _attrs, iter_exhausted
@@ -58,3 +56,4 @@ cdef class carray:
     cdef reset_iter_sentinels(self)
     cdef int check_zeros(self, object barr)
     cdef _adapt_dtype(self, dtype_, shape)
+
