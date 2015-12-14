@@ -207,7 +207,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             if is_sequence_like(var) and len(var) > bsize:
                 if hasattr(var, "_getrange"):
                     if i+bsize < vlen:
-                        var._getrange(i, bsize, vars_[name])
+                        var.getrange(i, bsize, vars_[name])
                     else:
                         vars_[name] = var[i:]
                 else:

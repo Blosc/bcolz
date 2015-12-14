@@ -55,6 +55,7 @@ from bcolz.arrayprint import (
 from bcolz.carray_ext import (
     carray, blosc_version, blosc_compressor_list,
     _blosc_set_nthreads as blosc_set_nthreads,
+    _set_threadsafe_default as set_threadsafe_default,
     _blosc_init, _blosc_destroy)
 from bcolz.ctable import ctable
 from bcolz.toplevel import (
