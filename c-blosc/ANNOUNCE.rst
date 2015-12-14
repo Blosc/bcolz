@@ -1,14 +1,30 @@
 ===============================================================
- Announcing c-blosc 1.4.1
- A blocking, shuffling and lossless compression library
+ Announcing c-blosc 1.7.0
+ A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release, where a bug in blosc_getitem() introduced
-in 1.4.0 has been tracked down and squashed.  If you use this function,
-please update your c-blosc copy.
+This is a quite big release introducing some exciting new features:
+
+* A new 'bitshuffle' filter is here.  This is similar that the
+  existing 'shuffle' filter, but the shuffle takes place at bit level,
+  and not at byte level.  With it you can expect higher compression
+  ratios but still having pretty good speed.  For more info, see:
+  http://blosc.org/blog/new-bitshuffle-filter.html
+
+* Implemented a new acceleration mode for LZ4 (updated to 1.7.0) and
+  BloscLZ codecs that enters in operation with all compression levels
+  except for the highest (9).  This allows for an important boost in
+  speed with minimal compression ratio loss.
+
+* Jack Pappas made great contributions allowing SSE2 operation in more
+  scenarios (like types larger than 16 bytes or buffers not being a
+  multiple of typesize * vectorsize).  Another contribution is a much
+  more comprehensive test suite for SSE2 and AVX2 operation.
+
+* Zbyszek Szmek fixed compilation on non-Intel archs (tested on ARM).
 
 For more info, please see the release notes in:
 
@@ -18,20 +34,15 @@ https://github.com/Blosc/c-blosc/wiki/Release-notes
 What is it?
 ===========
 
-Blosc (http://www.blosc.org) is a high performance compressor
+Blosc (http://www.blosc.org) is a high performance meta-compressor
 optimized for binary data.  It has been designed to transmit data to
 the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
 
-Blosc is the first compressor (that I'm aware of) that is meant not
-only to reduce the size of large datasets on-disk or in-memory, but
-also to accelerate object manipulations that are memory-bound.
-
-Blosc has a Python wrapper called python-blosc
-(https://github.com/Blosc/python-blosc) with a high-performance
-interface to NumPy too.  There is also a handy command line for Blosc
-called Bloscpack (https://github.com/Blosc/bloscpack) that allows you to
-compress large binary datafiles on-disk.
+Blosc has internal support for different compressors like its internal
+BloscLZ, but also LZ4, LZ4HC, Snappy and Zlib.  This way these can
+automatically leverage the multithreading and pre-filtering
+(shuffling) capabilities that comes with Blosc.
 
 
 Download sources
@@ -60,9 +71,3 @@ http://groups.google.es/group/blosc
 
 Enjoy Data!
 
-
-.. Local Variables:
-.. mode: rst
-.. coding: utf-8
-.. fill-column: 70
-.. End:
