@@ -100,6 +100,22 @@ class SWMRWrapper(object):
         self.arr = arr
         self.lock = SWMRLock()
 
+    @property
+    def dtype(self):
+        return self.arr.dtype
+
+    @property
+    def ndim(self):
+        return self.arr.ndim
+
+    @property
+    def shape(self):
+        return self.arr.shape
+
+    @property
+    def chunklen(self):
+        return self.arr.chunklen
+
     def __getitem__(self, item):
         with self.lock.reader():
             return self.arr.__getitem__(item)
