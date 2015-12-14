@@ -131,6 +131,14 @@ if os.name == 'posix':
         # Add -msse2 flag for optimizing shuffle in Blosc
         # (only necessary for 32-bit Intel architectures)
         CFLAGS.append("-msse2")
+elif os.name == 'nt':
+    if re.match("i.86|x86", platform.machine()) is not None:
+        # Always enable SSE2 for AMD/Intel machines
+        CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
+    if re.match("i.86", platform.machine()) is not None:
+        # Add flag for optimizing shuffle in Blosc
+        # (only necessary for 32-bit Intel architectures)
+        CFLAGS.append("/arch:sse2")
 
 tests_require = []
 
