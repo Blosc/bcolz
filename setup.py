@@ -141,7 +141,7 @@ elif os.name == 'nt':
     if is_32bit:
         # Add flag for optimizing shuffle in Blosc
         # (only necessary for 32-bit Intel architectures)
-        CFLAGS.insert(0, "/arch:sse2")
+        CFLAGS.append("/arch:sse2")
 
 tests_require = []
 
