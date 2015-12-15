@@ -1847,6 +1847,10 @@ class dtypesTest(TestCase):
         ac = bcolz.carray(a, dtype=dtype)
         self.assertTrue(ac.dtype == dtype)
         self.assertTrue(a.dtype == ac.dtype)
+        mismatch = a != ac[:]
+        print('mismatch-->', np.count_nonzero(mismatch), np.nonzero(mismatch))
+        print('a[mismatch]-->', a[mismatch])
+        print('ac[mismatch]-->', ac[:][mismatch])
         # print "ac-->", `ac`
         assert_array_equal(a, ac[:], "Arrays are not equal")
 

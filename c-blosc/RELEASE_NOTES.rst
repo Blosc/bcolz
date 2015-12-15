@@ -1,10 +1,22 @@
 =================================
- Release notes for c-blosc 1.7.0
+ Release notes for c-blosc 1.7.1
 =================================
 
 :Author: Francesc Alted
 :Contact: francesc@blosc.org
 :URL: http://www.blosc.org
+
+
+Changes from 1.7.0 to 1.7.1
+===========================
+
+* New parametrization of the blocksize to be independent of the
+  typesize.  This allows a speed that is smoother throughout all
+  typesizes.  This is possible now due to the recent improvement of
+  being able to shuffle even if the blocksize is not an exact multiple
+  of typesize.
+
+* Allow bitshuffle to run on 1-byte typesizes.
 
 
 Changes from 1.6.1 to 1.7.0
