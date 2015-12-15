@@ -123,7 +123,8 @@ else:
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 
-is_32bit = platform.architecture()[0] == '32bit'
+import ctypes
+is_32bit = ctypes.sizeof(ctypes.c_voidp) == 4
 
 if os.name == 'posix':
     if re.match("i.86|x86", platform.machine()) is not None:
