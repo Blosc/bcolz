@@ -123,23 +123,21 @@ else:
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 
+is_32bit = platform.architecture()[0] == '32bit'
+
 if os.name == 'posix':
     if re.match("i.86|x86", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
         CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
-    if re.match("i.86", platform.machine()) is not None:
+    if is_32bit:
         # Add -msse2 flag for optimizing shuffle in Blosc
         # (only necessary for 32-bit Intel architectures)
         CFLAGS.append("-msse2")
 elif os.name == 'nt':
-    # TODO remove this spike to check value of platform.machine() under windows
-    CFLAGS.append("/spike_platform_machine:" + platform.machine())
-    CFLAGS.append("/spike_sys_platform:" + sys.platform)
-    CFLAGS.append("/spike_platform_architecture:%s,%s" % platform.architecture())
     if re.match("i.86|x86", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
         CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
-    if re.match("i.86", platform.machine()) is not None:
+    if is_32bit:
         # Add flag for optimizing shuffle in Blosc
         # (only necessary for 32-bit Intel architectures)
         CFLAGS.append("/arch:sse2")
