@@ -14,7 +14,7 @@ if not PY2:
         return list(xrange(*args))
 
 
-NR = int(1e6)
+NR = int(1e4)
 NC = 100
 
 #bcolz.cparams.setdefaults(clevel=0)
