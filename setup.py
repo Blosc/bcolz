@@ -127,7 +127,7 @@ import ctypes
 is_32bit = ctypes.sizeof(ctypes.c_voidp) == 4
 
 if os.name == 'posix':
-    if re.match("i.86|x86", platform.machine()) is not None:
+    if re.match("i.86|x86|AMD", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
         CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
     if is_32bit:
@@ -135,13 +135,13 @@ if os.name == 'posix':
         # (only necessary for 32-bit Intel architectures)
         CFLAGS.append("-msse2")
 elif os.name == 'nt':
-    if re.match("i.86|x86", platform.machine()) is not None:
+    if re.match("i.86|x86|AMD", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
         CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
     if is_32bit:
         # Add flag for optimizing shuffle in Blosc
         # (only necessary for 32-bit Intel architectures)
-        CFLAGS.append("/arch:sse2")
+        CFLAGS.insert(0, "/arch:sse2")
 
 tests_require = []
 
