@@ -60,6 +60,8 @@ class cols(object):
         return self._cols[name]
 
     def __setitem__(self, name, carray):
+        if name in self.names:
+            raise KeyError("column name '%s' already used" % name)
         self.names.append(name)
         self._cols[name] = carray
         self.update_meta()

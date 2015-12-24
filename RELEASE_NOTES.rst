@@ -5,12 +5,16 @@ Release notes for bcolz
 Changes from 0.12.1 to 0.12.2
 =============================
 
-#XXX version-specific blurb XXX#
+- Check that column exists before inserting a new one in a ctable via
+  `__setitem__`.  If it exists, a KeyError is raised now.  Fixes #291.
+
+- New version of Blosc (bumped to 0.7.0).  Thanks to Alastair Miles.
 
 - Some optimisations have been made within ``carray.__getitem__`` to
-  improve performance when extracting a slice of data from a carray. This
-  is particularly relevant when running some computation chunk-by-chunk over
-  a large carray. (#283 @alimanfoo).
+  improve performance when extracting a slice of data from a
+  carray. This is particularly relevant when running some computation
+  chunk-by-chunk over a large carray. (#283 @alimanfoo).
+
 
 Changes from 0.12.0 to 0.12.1
 =============================
