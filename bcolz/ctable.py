@@ -61,9 +61,14 @@ class cols(object):
 
     def __setitem__(self, name, carray):
         if name in self.names:
-            raise KeyError("column name '%s' already used" % name)
-        self.names.append(name)
-        self._cols[name] = carray
+            # Column already exists.  Overwrite it.
+            if len(carray) != len(self._cols[name]):
+                raise ValueError(
+                    "new column length is inconsistent with ctable")
+            self._cols[name] = carray
+        else:
+            self.names.append(name)
+            self._cols[name] = carray
         self.update_meta()
 
     def __iter__(self):
@@ -1137,26 +1142,37 @@ class ctable(object):
         """Sets values based on `key`.
 
         All the functionality of ``ndarray.__setitem__()`` is supported
-        (including fancy indexing), plus a special support for expressions:
+        (including fancy indexing), plus a special support for expressions.
 
         Parameters
         ----------
-        key : string
-            The corresponding ctable column name will be set to `value`.  If
-            not a column name, it will be interpret as a boolean expression
-            (computed via `ctable.eval`) and the rows where these values are
-            true will be set to `value`.
+        key : string, int, tuple, slice
+            If string and it matches a column name, this will be set to
+            `value`.  If string, but not a column name, it will be
+            interpreted as a boolean expression (computed via `ctable.eval`)
+            and the rows where these values are true will be set to `value`.
+            If int or slice, then the corresponding rows will be set to
+            `value`.
+
+        value : object
+            The values to be set.
 
         See Also
         --------
         ctable.eval
 
         """
+        if isinstance(key, (bytes, str)):
+            # First, check if the key is a column name
+            if key in self.names:
+                # Yes, so overwrite it
+                self.cols[key] = value
+                return
 
-        # First, convert value into a structured array
+        # Else, convert value into a structured array
         value = utils.to_ndarray(value, self.dtype)
         # Check if key is a condition actually
-        if type(key) is bytes:
+        if isinstance(key, (bytes, str)):
             # Convert key into a boolean array
             # key = self.eval(key)
             # The method below is faster (specially for large ctables)
@@ -1171,7 +1187,8 @@ class ctable(object):
                         self.cols[name][nrow] = value[name][rowval]
                     rowval += 1
             return
-        # Then, modify the rows
+
+        # key should int or slice, so modify the rows
         for name in self.names:
             self.cols[name][key] = value[name]
         return

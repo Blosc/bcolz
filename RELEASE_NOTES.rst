@@ -6,7 +6,8 @@ Changes from 0.12.1 to 0.12.2
 =============================
 
 - Check that column exists before inserting a new one in a ctable via
-  `__setitem__`.  If it exists, a KeyError is raised now.  Fixes #291.
+  `__setitem__`.  If it exists, the existing column is overwritten.
+  Fixes #291.
 
 - New version of Blosc (bumped to 0.7.0).  Thanks to Alastair Miles.
 

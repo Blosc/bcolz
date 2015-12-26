@@ -452,6 +452,28 @@ class add_del_colTest(MayBeDiskTest):
         # print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
+    def test09a(self):
+        """Testing overwriting an existing column (using __setitem__)"""
+        N = 10
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,i8,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        t['f1'] = np.arange(N, dtype='i8')
+        ra = np.fromiter(((i, i, i * 2.) for i in xrange(N)),
+                          dtype='i4,i8,f8')
+        ra.dtype.names = ('f0', 'f1', 'f2')
+        # print "t->", `t`
+        # print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test09b(self):
+        """Testing overwriting an existing column (different length)"""
+        N = 10
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,i8,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        self.assertRaises(ValueError, t.__setitem__,
+                          'f1', np.arange(N + 1, dtype='i8'))
 
 class add_del_colMemoryTest(add_del_colTest, TestCase):
     disk = False
