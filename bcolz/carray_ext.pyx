@@ -554,10 +554,9 @@ cdef class chunk:
 
     def __dealloc__(self):
         """Release C resources before destruction."""
-        if self.dobject:
-            self.dobject = None  # DECREF pointer to data object
-        else:
+        if not self.dobject:
             free(self.data)  # explictly free the data area
+
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
     """ Create the bloscpack header string.
