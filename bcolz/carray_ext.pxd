@@ -1,12 +1,12 @@
 from numpy cimport ndarray, dtype, npy_intp
 
 cdef class chunk:
-    cdef char typekind, isconstant
     cdef public int atomsize, itemsize, blocksize
-    cdef public int nbytes, cbytes, cdbytes
+    cdef public int nbytes, cbytes
+    cdef object dobject
+    cdef char typekind, isconstant
     cdef int true_count
-    cdef char *data
-    cdef object atom, constant, dobject
+    cdef object atom, constant
 
     cdef void _getitem(self, int start, int stop, char *dest)
     cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,

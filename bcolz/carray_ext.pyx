@@ -77,7 +77,6 @@ from definitions cimport (malloc,
                           memset,
                           strdup,
                           strcmp,
-                          PyBytes_AsString,
                           PyBytes_GET_SIZE,
                           PyBytes_FromStringAndSize,
                           PyBytes_AS_STRING,
@@ -333,19 +332,17 @@ cdef class chunk:
                 "typesize is %d and bcolz does not currently support data "
                 "types larger than %d bytes" % (itemsize, BLOSC_MAX_TYPESIZE))
         self.itemsize = itemsize
-        self.dobject = None
         footprint = 0
 
         if _compr:
             # Data comes in an already compressed state inside a Python String
-            self.data = PyBytes_AsString(dobject)
-            # Increment the reference so that data don't go away
             self.dobject = dobject
             # Set size info for the instance
-            blosc_cbuffer_sizes(self.data, &nbytes, &cbytes, &blocksize)
+            data = PyBytes_AS_STRING(dobject);
+            blosc_cbuffer_sizes(data, &nbytes, &cbytes, &blocksize)
         elif dtype_ == 'O':
             # The objects should arrive here already pickled
-            data = PyBytes_AsString(dobject)
+            data = PyBytes_AS_STRING(dobject)
             nbytes = PyBytes_GET_SIZE(dobject)
             cbytes, blocksize = self.compress_data(data, 1, nbytes, cparams)
         else:
@@ -357,12 +354,11 @@ cdef class chunk:
         # Fill instance data
         self.nbytes = nbytes
         self.cbytes = cbytes + footprint
-        self.cdbytes = cbytes
         self.blocksize = blocksize
 
     cdef compress_arrdata(self, ndarray array, int itemsize,
                           object cparams, object _memory):
-        """Compress data in `array` and put it in ``self.data``"""
+        """Compress data in `array`"""
         cdef size_t nbytes, cbytes, blocksize, footprint
 
         # Compute the total number of bytes in this array
@@ -430,34 +426,35 @@ cdef class chunk:
         if ret <= 0:
             raise RuntimeError(
                 "fatal error during Blosc compression: %d" % ret)
-        # Free the unused data
+        # Copy the compressed buffer into a Bytes buffer
         cbytes = ret;
-        self.data = <char *> realloc(dest, cbytes)
-        # Set size info for the instance
-        blosc_cbuffer_sizes(self.data, &nbytes_, &cbytes, &blocksize)
+        self.dobject = PyBytes_FromStringAndSize(dest, cbytes)
+        # Get blocksize info for the instance
+        blosc_cbuffer_sizes(dest, &nbytes_, &cbytes, &blocksize)
         assert nbytes_ == nbytes
+        free(dest)
 
         return (cbytes, blocksize)
 
     def getdata(self):
-        """Get a compressed string object out of this chunk (for persistence)."""
+        """Get a compressed string object for this chunk (for persistence)."""
         cdef object string
 
         assert (not self.isconstant,
                 "This function can only be used for persistency")
-        string = PyBytes_FromStringAndSize(self.data,
-                                            <Py_ssize_t> self.cdbytes)
-        return string
+        return self.dobject
 
     def getudata(self):
         """Get an uncompressed string out of this chunk (for 'O'bject types)."""
         cdef int ret
+        cdef char *src
         cdef char *dest
 
         result_str = PyBytes_FromStringAndSize(NULL, self.nbytes)
-        dest = PyBytes_AS_STRING(result_str);
+        src = PyBytes_AS_STRING(self.dobject)
+        dest = PyBytes_AS_STRING(result_str)
 
-        ret = blosc_decompress(self.data, dest, self.nbytes)
+        ret = blosc_decompress(src, dest, self.nbytes)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
@@ -467,6 +464,7 @@ cdef class chunk:
         """Read data from `start` to `stop` and return it as a numpy array."""
         cdef int ret, bsize, blen, nitems, nstart
         cdef ndarray constants
+        cdef char *data
 
         blen = stop - start
         bsize = blen * self.atomsize
@@ -481,10 +479,11 @@ cdef class chunk:
             return
 
         # Fill dest with uncompressed data
+        data = PyBytes_AS_STRING(self.dobject)
         if bsize == self.nbytes:
-            ret = blosc_decompress(self.data, dest, bsize)
+            ret = blosc_decompress(data, dest, bsize)
         else:
-            ret = blosc_getitem(self.data, nstart, nitems, dest)
+            ret = blosc_getitem(data, nstart, nitems, dest)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
@@ -529,14 +528,6 @@ cdef class chunk:
             return array[::step]
         return array
 
-    @property
-    def pointer(self):
-        return <Py_uintptr_t> self.data + BLOSCPACK_HEADER_LENGTH
-
-    @property
-    def viewof(self):
-        return PyBuffer_FromMemory(<void*>self.data, <Py_ssize_t>self.cdbytes)
-
     def __setitem__(self, object key, object value):
         """__setitem__(self, key, value) -> None."""
         raise NotImplementedError()
@@ -551,11 +542,6 @@ cdef class chunk:
         fullrepr = "chunk(%s)  nbytes: %d; cbytes: %d; ratio: %.2f\n%r" % \
                    (self.dtype, self.nbytes, self.cbytes, cratio, str(self))
         return fullrepr
-
-    def __dealloc__(self):
-        """Release C resources before destruction."""
-        if not self.dobject:
-            free(self.data)  # explictly free the data area
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
@@ -707,7 +693,7 @@ cdef class chunks(object):
             if leftover:
                 # Fill lastchunk with data on disk
                 scomp = self.read_chunk(self.nchunks)
-                compressed = PyBytes_AsString(scomp)
+                compressed = PyBytes_AS_STRING(scomp)
                 ret = blosc_decompress(compressed, lastchunk, chunksize)
                 if ret < 0:
                     raise RuntimeError(
@@ -791,8 +777,7 @@ cdef class chunks(object):
         bloscpack_header = create_bloscpack_header(1)
         with open(schunkfile, 'wb') as schunk:
             schunk.write(bloscpack_header)
-            data = chunk_.getdata()
-            schunk.write(data)
+            schunk.write(chunk_.getdata())
         # Mark the cache as dirty if needed
         if nchunk == self.nchunk_cached:
             self.nchunk_cached = -1
