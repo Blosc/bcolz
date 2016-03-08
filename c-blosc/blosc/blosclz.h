@@ -1,7 +1,7 @@
 /*********************************************************************
-  Blosc - Blocked Shuffling and Compression Library
+  Blosc - Blocked Suffling and Compression Library
 
-  Author: Francesc Alted <francesc@blosc.org>
+  Author: Francesc Alted <francesc@blosc.io>
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
@@ -32,16 +32,11 @@ extern "C" {
   bytes, the return value will be 0 and you will have to discard the
   output buffer.
 
-  The acceleration parameter is related with the frequency for
-  updating the internal hash.  An acceleration of 1 means that the
-  internal hash is updated at full rate.  A value < 1 is not allowed
-  and will be silently set to 1.
-
   The input buffer and the output buffer can not overlap.
 */
 
-int blosclz_compress(const int opt_level, const void* input, int length,
-                     void* output, int maxout, int accel);
+int blosclz_compress(int opt_level, const void* input, int length,
+                     void* output, int maxout);
 
 /**
   Decompress a block of compressed data and returns the size of the

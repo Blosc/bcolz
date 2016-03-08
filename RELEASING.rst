@@ -3,7 +3,7 @@ Releasing bcolz
 ===============
 
 :Author: Francesc Alted
-:Contact: faltet@blosc.org
+:Contact: francesc@blosc.org
 :Date: 2014-07-20
 
 
