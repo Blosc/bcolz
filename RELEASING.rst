@@ -24,6 +24,8 @@ Tagging
 
     $ git tag -a X.Y.Z -m "Tagging version X.Y.Z"
 
+  Note: For release candidates, just add a rcN suffix to tag ("X.Y.ZrcN").
+
 * Or, alternatively, make a signed tag (requires gpg correctly configured)::
 
     $ git tag -s X.Y.Z -m "Tagging version X.Y.Z"

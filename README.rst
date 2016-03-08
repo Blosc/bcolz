@@ -5,7 +5,6 @@ bcolz: columnar and compressed data containers
 :Travis CI: |travis|
 :Appveyor: |appveyor|
 :Coveralls: |coveralls|
-:Airspeed Velocity: |asv|
 :And...: |powered|
 
 .. |version| image:: https://img.shields.io/pypi/v/bcolz.png
@@ -22,9 +21,6 @@ bcolz: columnar and compressed data containers
 
 .. |coveralls| image:: https://coveralls.io/repos/Blosc/bcolz/badge.png
         :target: https://coveralls.io/r/Blosc/bcolz
-
-.. |asv| image:: http://img.shields.io/badge/benchmarked%20by-asv-green.svg?style=flat
-        :target: http://your-url-here
 
 
 .. image:: doc/bcolz.png
