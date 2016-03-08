@@ -5,23 +5,27 @@ Announcing bcolz 1.0.0 RC1
 What's new
 ==========
 
-Yes, 1.0.0 is finally here.  We are not introducing any exciting new
+Yeah, 1.0.0 is finally here.  We are not introducing any exciting new
 feature or anything else, but bcolz is already 6 years old and it
-implements most of the capabilities that it was designed for.  So I
+implements most of the capabilities that it was designed for, so I
 decided to release a 1.0.0 meaning that the format is declared stable
 and that people can be assured that future bcolz releases will be able
-to read post bcolz 1.0 data files for a long while.
+to read bcolz 1.0 data files (and probably much earlier ones too) for a
+long while.  Such a format is fully described at:
+
+https://github.com/Blosc/bcolz/blob/master/DISK_FORMAT_v1.rst
 
 Also, a 1.0.0 release means that bcolz 1.x series will be based on
-c-blosc 1.x series.  After C-Blosc 2.x
-(https://github.com/Blosc/c-blosc2) would be out, it is expected a new
-bcolz 2.x taking advantage of shiny new features of C-Blosc2 (more
+C-Blosc 1.x series (https://github.com/Blosc/c-blosc).  After C-Blosc
+2.x (https://github.com/Blosc/c-blosc2) would be out, a new bcolz 2.x is
+expected taking advantage of shiny new features of C-Blosc2 (more
 compressors, more filters, native variable length support and the
-concept of super-chunks), which should be very beneficial for bcolz.
+concept of super-chunks), which should be very beneficial for next bcolz
+generation.
 
-This is a Release Candidate, so please test it as much as you can.  If
-no issues would appear in a week or so, I will proceed to tag and
-release 1.0.0 final.  Enjoy!
+Important: this is a Release Candidate, so please test it as much as you
+can.  If no issues would appear in a week or so, I will proceed to tag
+and release 1.0.0 final.  Enjoy!
 
 For a more detailed change log, see:
 

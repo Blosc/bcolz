@@ -545,7 +545,7 @@ cdef class chunk:
 
 
 cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
-    """ Create the bloscpack header string.
+    """Create the bloscpack header string.
 
     Parameters
     ----------
@@ -570,11 +570,14 @@ cdef create_bloscpack_header(nchunks=None, format_version=FORMAT_VERSION):
 
     The first four are the magic string 'blpk'. The next one is an 8 bit
     unsigned little-endian integer that encodes the format version. The next
-    three are reserved, and the last eight are a signed  64 bit little endian
-    integer that encodes the number of chunks
+    three are reserved, and in the last eight there is a signed 64 bit little
+    endian integer that encodes the number of chunks.
+
+    Currently (bcolz 1.x), version is 1 and nchunks always have a value of 1
+    (this might change in bcolz 2.0).
 
     The value of '-1' for 'nchunks' designates an unknown size and can be
-    inserted by setting 'nchunks' to None.
+    set by setting 'nchunks' to None.
 
     Raises
     ------
