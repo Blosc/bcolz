@@ -1,11 +1,27 @@
-=======================
-Announcing bcolz 0.12.2
-=======================
+==========================
+Announcing bcolz 1.0.0 RC1
+==========================
 
 What's new
 ==========
 
-#XXX version-specific blurb XXX#
+Yes, 1.0.0 is finally here.  We are not introducing any exciting new
+feature or anything else, but bcolz is already 6 years old and it
+implements most of the capabilities that it was designed for.  So I
+decided to release a 1.0.0 meaning that the format is declared stable
+and that people can be assured that future bcolz releases will be able
+to read post bcolz 1.0 data files for a long while.
+
+Also, a 1.0.0 release means that bcolz 1.x series will be based on
+c-blosc 1.x series.  After C-Blosc 2.x
+(https://github.com/Blosc/c-blosc2) would be out, it is expected a new
+bcolz 2.x taking advantage of shiny new features of C-Blosc2 (more
+compressors, more filters, native variable length support and the
+concept of super-chunks), which should be very beneficial for bcolz.
+
+This is a Release Candidate, so please test it as much as you can.  If
+no issues would appear in a week or so, I will proceed to tag and
+release 1.0.0 final.  Enjoy!
 
 For a more detailed change log, see:
 
@@ -54,7 +70,7 @@ pointing your browser at the links below.
 
 * Blaze:
 
-  * Notebooks showing Blaze + Pandas + BColz interaction: 
+  * Notebooks showing Blaze + Pandas + BColz interaction:
   * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-csv.ipynb
   * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-bcolz.ipynb
 

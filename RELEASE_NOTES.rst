@@ -2,8 +2,8 @@
 Release notes for bcolz
 =======================
 
-Changes from 0.12.1 to 0.12.2
-=============================
+Changes from 0.12.1 to 1.0.0
+============================
 
 - Check that column exists before inserting a new one in a ctable via
   `__setitem__`.  If it exists, the existing column is overwritten.

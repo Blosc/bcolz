@@ -15,8 +15,7 @@ Preliminaries
 
 * Tag the version.
 
-* Once a year: check that the copyright in ``LICENSES/BCOLZ.txt`` and
-  ``doc/conf.py``.
+* Once a year: check that the copyright in ``LICENSES/BCOLZ.txt``.
 
 Tagging
 -------
