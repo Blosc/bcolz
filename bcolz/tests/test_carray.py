@@ -1603,6 +1603,11 @@ class evalTest(MayBeDiskTest):
         self.assertTrue(type(cr) == np.ndarray)
         assert_array_equal(cr, nr, "eval does not work correctly")
 
+    def test13(self):
+        """Testing eval() with columnar [shape = (n, 1)] arrays"""
+        c, d = bcolz.ones((self.N, 1)), bcolz.zeros((self.N, 1))
+        cr = bcolz.eval("c + d")
+        self.assertEqual(cr.sum(), self.N)
 
 class evalSmall(evalTest):
     N = 10
