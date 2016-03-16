@@ -123,6 +123,9 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         vm = bcolz.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raise ValueError("`vm` must be either 'numexpr' or 'python'")
+    if vm == 'numexpr' and not bcolz.numexpr_here:
+        raise ImportError("eval(..., vm='numexpr') requires numexpr, "
+                          "which is not installed.")
 
     if out_flavor is None:
         out_flavor = bcolz.defaults.eval_out_flavor
