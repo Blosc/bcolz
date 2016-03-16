@@ -1441,7 +1441,7 @@ class fromiterTest(TestCase):
         assert_array_equal(b[:], a, "iterator with a hint fails")
 
 
-class evalTest(MayBeDiskTest, TestCase):
+class evalTest(MayBeDiskTest):
 
     vm = "python"
 
@@ -1610,48 +1610,48 @@ class evalTest(MayBeDiskTest, TestCase):
         b = bcolz.eval('a + b', vm='numexpr')
         self.assertEqual(b.sum(), self.N)
 
-class evalSmall(evalTest):
+class evalSmall(evalTest, TestCase):
     N = 10
 
 
-class evalDiskSmall(evalTest):
+class evalDiskSmall(evalTest, TestCase):
     N = 10
     disk = True
 
 
-class evalBig(evalTest):
+class evalBig(evalTest, TestCase):
     N = 1e4
 
 
-class evalDiskBig(evalTest):
+class evalDiskBig(evalTest, TestCase):
     N = 1e4
     disk = True
 
 
-class evalSmallNE(evalTest):
+class evalSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
 
 
-class evalDiskSmallNE(evalTest):
+class evalDiskSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
     disk = True
 
 
-class evalBigNE(evalTest):
+class evalBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
 
 
-class evalDiskBigNE(evalTest):
+class evalDiskBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
     disk = True
 
 
 @skipUnless(common.heavy, "not --heavy")
-class evalColossalNE(evalTest):
+class evalColossalNE(evalTest, TestCase):
     N = int(1e8)
     vm = "numexpr"
 
