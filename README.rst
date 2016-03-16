@@ -1,6 +1,10 @@
 bcolz: columnar and compressed data containers
 ==============================================
 
+.. image:: https://badges.gitter.im/Blosc/bcolz.svg
+   :alt: Join the chat at https://gitter.im/Blosc/bcolz
+   :target: https://gitter.im/Blosc/bcolz?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 :Version: |version|
 :Travis CI: |travis|
 :Appveyor: |appveyor|
