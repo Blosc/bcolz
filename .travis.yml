@@ -15,7 +15,8 @@ install:
   - conda update conda
 
   # Install dependencies
-  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION numpy pandas cython nose coverage
+  - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION \
+          numpy pandas cython nose coverage numexpr
   - source activate bcolz_env
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
