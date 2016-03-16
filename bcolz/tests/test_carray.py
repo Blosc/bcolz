@@ -1607,7 +1607,7 @@ class evalTest(MayBeDiskTest):
         """Testing eval() with columnar [shape = (n, 1)] arrays"""
         a = bcolz.ones((self.N, 1))
         b = bcolz.zeros(a.shape)
-        b = bcolz.eval('a + b', vm='numexpr')
+        b = bcolz.eval('a + b')
         self.assertEqual(b.sum(), self.N)
 
 class evalSmall(evalTest, TestCase):
