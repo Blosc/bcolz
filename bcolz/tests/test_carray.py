@@ -1441,7 +1441,7 @@ class fromiterTest(TestCase):
         assert_array_equal(b[:], a, "iterator with a hint fails")
 
 
-class evalTest(MayBeDiskTest):
+class evalTest(MayBeDiskTest, TestCase):
 
     vm = "python"
 
@@ -1605,9 +1605,10 @@ class evalTest(MayBeDiskTest):
 
     def test13(self):
         """Testing eval() with columnar [shape = (n, 1)] arrays"""
-        c, d = bcolz.ones((self.N, 1)), bcolz.zeros((self.N, 1))
-        cr = bcolz.eval("c + d")
-        self.assertEqual(cr.sum(), self.N)
+        a = bcolz.ones((self.N, 1))
+        b = bcolz.zeros(a.shape)
+        b = bcolz.eval('a + b', vm='numexpr')
+        self.assertEqual(b.sum(), self.N)
 
 class evalSmall(evalTest):
     N = 10
@@ -1647,6 +1648,12 @@ class evalDiskBigNE(evalTest):
     N = 1e4
     vm = "numexpr"
     disk = True
+
+
+@skipUnless(common.heavy, "not --heavy")
+class evalColossalNE(evalTest):
+    N = int(1e8)
+    vm = "numexpr"
 
 
 class computeMethodsTest(TestCase):
