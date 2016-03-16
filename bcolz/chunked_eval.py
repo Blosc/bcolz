@@ -198,7 +198,8 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             if ndims > maxndims:
                 maxndims = ndims
             if len(var) > bsize and hasattr(var, "_getrange"):
-                vars_[name] = np.empty(bsize, dtype=var.dtype)
+                vars_[name] = np.empty((bsize, *var.shape[1:]),
+                                       dtype=var.dtype)
 
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars
