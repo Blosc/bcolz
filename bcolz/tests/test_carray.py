@@ -1628,28 +1628,33 @@ class evalDiskBig(evalTest, TestCase):
     disk = True
 
 
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
 class evalSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
 
 
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
 class evalDiskSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
     disk = True
 
 
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
 class evalBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
 
 
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
 class evalDiskBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
     disk = True
 
 
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
 @skipUnless(common.heavy, "not --heavy")
 class evalColossalNE(evalTest, TestCase):
     N = int(1e8)
