@@ -19,6 +19,9 @@ Changes from 0.12.1 to 1.0.0
   carray. This is particularly relevant when running some computation
   chunk-by-chunk over a large carray. (#283 @alimanfoo).
 
+- Improved support for operations with carrays of shape (N, 1). PR #296.
+  Fixes #165 and #295.  Thanks to Kevin Murray.
+
 
 Changes from 0.12.0 to 0.12.1
 =============================
