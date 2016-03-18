@@ -6,12 +6,13 @@ What's new
 ==========
 
 Yeah, 1.0.0 is finally here.  We are not introducing any exciting new
-feature or anything else, but bcolz is already 6 years old and it
-implements most of the capabilities that it was designed for, so I
-decided to release a 1.0.0 meaning that the format is declared stable
-and that people can be assured that future bcolz releases will be able
-to read bcolz 1.0 data files (and probably much earlier ones too) for a
-long while.  Such a format is fully described at:
+feature (just some optimizations and bug fixes), but bcolz is already 6
+years old and it implements most of the capabilities that it was
+designed for, so I decided to release a 1.0.0 meaning that the format is
+declared stable and that people can be assured that future bcolz
+releases will be able to read bcolz 1.0 data files (and probably much
+earlier ones too) for a long while.  Such a format is fully described
+at:
 
 https://github.com/Blosc/bcolz/blob/master/DISK_FORMAT_v1.rst
 
