@@ -9,7 +9,7 @@ Changes from 0.12.1 to 1.0.0
   `__setitem__`.  If it exists, the existing column is overwritten.
   Fixes #291.
 
-- New version of Blosc (bumped to 1.4.4).  We basically cannot upgrade
+- New version of Blosc (bumped to 1.4.5).  We basically cannot upgrade
   to more recent release (1.7.1 or higher) because the new codebase is
   not compatible with VS2008, which is necessary for Python 2.6/2.7.
   For details see: https://groups.google.com/forum/#!topic/bcolz/58qHe6gv0iU
