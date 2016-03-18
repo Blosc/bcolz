@@ -123,6 +123,9 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         vm = bcolz.defaults.eval_vm
     if vm not in ("numexpr", "python"):
         raise ValueError("`vm` must be either 'numexpr' or 'python'")
+    if vm == 'numexpr' and not bcolz.numexpr_here:
+        raise ImportError("eval(..., vm='numexpr') requires numexpr, "
+                          "which is not installed.")
 
     if out_flavor is None:
         out_flavor = bcolz.defaults.eval_out_flavor
@@ -198,7 +201,8 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             if ndims > maxndims:
                 maxndims = ndims
             if len(var) > bsize and hasattr(var, "_getrange"):
-                vars_[name] = np.empty(bsize, dtype=var.dtype)
+                shape = (bsize, ) + var.shape[1:]
+                vars_[name] = np.empty(shape, dtype=var.dtype)
 
     for i in xrange(0, vlen, bsize):
         # Get buffers for vars

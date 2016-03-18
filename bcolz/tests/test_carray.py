@@ -1603,45 +1603,61 @@ class evalTest(MayBeDiskTest):
         self.assertTrue(type(cr) == np.ndarray)
         assert_array_equal(cr, nr, "eval does not work correctly")
 
+    def test13(self):
+        """Testing eval() with columnar [shape = (n, 1)] arrays"""
+        a = bcolz.ones((self.N, 1))
+        b = bcolz.zeros(a.shape)
+        b = bcolz.eval('a + b')
+        self.assertEqual(b.sum(), self.N)
 
-class evalSmall(evalTest):
+class evalSmall(evalTest, TestCase):
     N = 10
 
 
-class evalDiskSmall(evalTest):
+class evalDiskSmall(evalTest, TestCase):
     N = 10
     disk = True
 
 
-class evalBig(evalTest):
+class evalBig(evalTest, TestCase):
     N = 1e4
 
 
-class evalDiskBig(evalTest):
+class evalDiskBig(evalTest, TestCase):
     N = 1e4
     disk = True
 
 
-class evalSmallNE(evalTest):
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
+class evalSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
 
 
-class evalDiskSmallNE(evalTest):
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
+class evalDiskSmallNE(evalTest, TestCase):
     N = 10
     vm = "numexpr"
     disk = True
 
 
-class evalBigNE(evalTest):
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
+class evalBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
 
 
-class evalDiskBigNE(evalTest):
+@skipUnless(bcolz.numexpr_here, 'Needs numexpr')
+class evalDiskBigNE(evalTest, TestCase):
     N = 1e4
     vm = "numexpr"
     disk = True
+
+
+@skipUnless(bcolz.numexpr_here and common.heavy, "Needs numexpr and --heavy")
+class evalColossalNE(evalTest, TestCase):
+    N = int(1e8)
+    vm = "numexpr"
 
 
 class computeMethodsTest(TestCase):
