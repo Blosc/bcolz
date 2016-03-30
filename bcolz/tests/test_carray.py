@@ -2160,6 +2160,7 @@ class reprTest(TestCase):
         result = repr(ct)
         self.assertTrue("['2010-01-01' '2010-01-02']" in result)
 
+    @unittest.skipIf(os.name == "nt", "Windows problems with TZ here")
     def test_datetime_carray_nanos(self):
         x = ['2014-12-29T17:57:59.000000123',
              '2014-12-29T17:57:59.000000456']
