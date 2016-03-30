@@ -1196,7 +1196,7 @@ class fancy_indexing_getitemTest(TestCase):
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         rt = t[[2.3, 5.6]]
-        rar = ra[[2.3, 5.6]]
+        rar = ra[[2, 5]]
         # print "rt->", rt
         # print "rar->", rar
         assert_array_equal(rt, rar, "ctable values are not correct")

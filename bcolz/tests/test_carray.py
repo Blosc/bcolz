@@ -1294,7 +1294,7 @@ class fancy_indexing_getitemTest(TestCase):
         a = np.arange(1, 101)
         b = bcolz.carray(a)
         c = b[[1.1, 3.3]]
-        r = a[[1.1, 3.3]]
+        r = a[[1, 3]]
         assert_array_equal(c, r, "fancy indexing does not work correctly")
 
     def test04(self):
