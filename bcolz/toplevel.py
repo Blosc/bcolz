@@ -264,6 +264,8 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
         assert isinstance(obj, bcolz.carray)
         assert dtype is not None
         assert length is not None
+        if type(length) is float:
+            length = int(length)
 
         # Then fill it
         # We need an array for the default so as to keep the atom info
