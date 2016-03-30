@@ -861,12 +861,6 @@ cdef class carray:
           removed).
 
     """
-    cdef char* lastchunk
-    cdef char* datacache
-    cdef npy_intp _row
-    cdef int atomsize
-    cdef ndarray iobuf
-    cdef ndarray where_buf
 
     property leftover_ptr:
         """Pointer referring to the leftover_array"""
