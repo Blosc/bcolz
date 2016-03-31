@@ -1590,7 +1590,7 @@ class evalTest(MayBeDiskTest):
         nr = np.sin(a) + 2 * np.log(b) - 3
         # print "bcolz.eval ->", cr
         # print "numpy   ->", nr
-        assert_array_equal(cr[:], nr, "eval does not work correctly")
+        assert_allclose(cr[:], nr, err_msg="eval does not work correctly")
 
     def test12(self):
         """Testing eval() with `out_flavor` == 'numpy'"""
