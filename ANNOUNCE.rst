@@ -1,5 +1,5 @@
 ==========================
-Announcing bcolz 1.0.0 RC1
+Announcing bcolz 1.0.0 RC2
 ==========================
 
 What's new

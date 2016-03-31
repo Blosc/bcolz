@@ -5,23 +5,23 @@ Release notes for bcolz
 Changes from 0.12.1 to 1.0.0
 ============================
 
-- Check that column exists before inserting a new one in a ctable via
-  `__setitem__`.  If it exists, the existing column is overwritten.
-  Fixes #291.
-
 - New version of embedded C-Blosc (bumped to 1.8.0).  This allows for
   using recent C-Blosc features like the BITSHUFFLE filter that
   generally allows for better compression ratios at the expense of some
   slowdown.  Look into the carray tutorial on how to use the new
   BITSHUFFLE filter.
 
+- Improved support for operations with carrays of shape (N, 1). PR #296.
+  Fixes #165 and #295.  Thanks to Kevin Murray.
+
+- Check that column exists before inserting a new one in a ctable via
+  `__setitem__`.  If it exists, the existing column is overwritten.
+  Fixes #291.
+
 - Some optimisations have been made within ``carray.__getitem__`` to
   improve performance when extracting a slice of data from a
   carray. This is particularly relevant when running some computation
   chunk-by-chunk over a large carray. (#283 @alimanfoo).
-
-- Improved support for operations with carrays of shape (N, 1). PR #296.
-  Fixes #165 and #295.  Thanks to Kevin Murray.
 
 
 Changes from 0.12.0 to 0.12.1
