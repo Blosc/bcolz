@@ -10,9 +10,10 @@ Changes from 0.12.1 to 1.0.0
   Fixes #291.
 
 - New version of embedded C-Blosc (bumped to 1.8.0).  This allows for
-  using recent C-Blosc features like the bitshuffle filter that
+  using recent C-Blosc features like the BITSHUFFLE filter that
   generally allows for better compression ratios at the expense of some
-  slowdown.
+  slowdown.  Look into the carray tutorial on how to use the new
+  BITSHUFFLE filter.
 
 - Some optimisations have been made within ``carray.__getitem__`` to
   improve performance when extracting a slice of data from a
