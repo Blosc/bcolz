@@ -13,17 +13,17 @@ your compression levels::
   >>> a = np.arange(1e7)
   >>> bcolz.carray(a)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 2.57 MB; ratio: 29.72
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=1)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> bcolz.carray(a).chunklen
   16384   # 128 KB = 16384 * 8 is the default chunk size for this carray
   >>> bcolz.carray(a, chunklen=512)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 10.20 MB; ratio: 7.48
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=1)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
   >>> bcolz.carray(a, chunklen=8*1024)
   carray((10000000,), float64)  nbytes: 76.29 MB; cbytes: 1.50 MB; ratio: 50.88
-    cparams := cparams(clevel=5, shuffle=True)
+    cparams := cparams(clevel=5, shuffle=1)
   [0.0, 1.0, 2.0, ..., 9999997.0, 9999998.0, 9999999.0]
 
 You see, the length of the chunk affects very much compression levels

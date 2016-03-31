@@ -29,7 +29,7 @@ top of bcolz containers.
 
 Before you start writing your own extension, let's see some
 examples of real projects made on top of bcolz:
-  
+
   - `Bquery`: a query and aggregation framework, among other things it
       provides group-by functionality for bcolz containers. See
       https://github.com/visualfabriq/bquery
@@ -90,7 +90,7 @@ dependent on.
 
 See ``my_package/setup.py``:
 
-.. literalinclude:: my_package/setup.py 
+.. literalinclude:: my_package/setup.py
     :language: python
 
 The ``.pyx`` files is going to be the place where Cython code
