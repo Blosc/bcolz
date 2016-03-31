@@ -132,7 +132,7 @@ class createTest(MayBeDiskTest):
         N = 0
         dtype = "i4,i8,f8"
         ra = np.zeros(N, dtype=dtype)
-        cparams = bcolz.cparams(clevel=9, shuffle=False)
+        cparams = bcolz.cparams(clevel=9, shuffle=bcolz.NOSHUFFLE)
         ct = bcolz.zeros(N, dtype=dtype, cparams=cparams, rootdir=self.rootdir)
         assert_array_equal(ct[:], ra, "ctable values are not correct")
         self.assertEqual(cparams, ct.cparams)
@@ -169,7 +169,7 @@ class createTest(MayBeDiskTest):
         N = 10000
         dtype = "i4,i8,f8"
         ra = np.zeros(N, dtype=dtype)
-        cparams = bcolz.cparams(clevel=9, shuffle=False)
+        cparams = bcolz.cparams(clevel=9, shuffle=bcolz.NOSHUFFLE)
         ct = bcolz.zeros(N, dtype=dtype, cparams=cparams, rootdir=self.rootdir)
         assert_array_equal(ct[:], ra, "ctable values are not correct")
         self.assertEqual(cparams, ct.cparams)
@@ -959,7 +959,8 @@ class copyTest(MayBeDiskTest):
         ra = np.fromiter(((i, i ** 2.2) for i in xrange(N)), dtype='i4,f8')
         t = bcolz.ctable(ra)
         # print "t:", repr(t), t.rootdir
-        t2 = t.copy(cparams=bcolz.cparams(shuffle=False), rootdir=self.rootdir)
+        t2 = t.copy(cparams=bcolz.cparams(shuffle=bcolz.NOSHUFFLE),
+                    rootdir=self.rootdir)
         # print "cbytes in f1, f2:", t['f1'].cbytes, t2['f1'].cbytes
         self.assertTrue(t['f1'].cbytes < t2['f1'].cbytes, "clevel not changed")
 

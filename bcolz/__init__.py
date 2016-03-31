@@ -19,6 +19,16 @@ a high-performance compressor that is optimized for binary data.
 
 """
 
+# Filters
+NOSHUFFLE = 0
+SHUFFLE = 1
+BITSHUFFLE = 2
+
+# Translation of filters to strings
+filters = {NOSHUFFLE: "noshuffle",
+           SHUFFLE: "shuffle",
+           BITSHUFFLE: "bitshuffle"}
+
 min_numexpr_version = '1.4.1'  # the minimum version of Numexpr needed
 numexpr_here = False
 try:
@@ -46,7 +56,6 @@ except ImportError:
     pass
 else:
     tables_here = True
-
 
 # Print array functions (imported from NumPy)
 from bcolz.arrayprint import (

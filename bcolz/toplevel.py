@@ -566,8 +566,7 @@ def walk(dir, classname=None, mode='a'):
 
 
 class cparams(object):
-    """
-    cparams(clevel=None, shuffle=None, cname=None)
+    """cparams(clevel=None, shuffle=None, cname=None)
 
     Class to host parameters for compression and other filters.
 
@@ -575,8 +574,10 @@ class cparams(object):
     ----------
     clevel : int (0 <= clevel < 10)
         The compression level.
-    shuffle : bool
-        Whether the shuffle filter is active or not.
+    shuffle : int
+        The shuffle filter to be activated.  Allowed values are
+        bcolz.NOSHUFFLE (0), bcolz.SHUFFLE (1) and bcolz.BITSHUFFLE (2).  The
+        default is bcolz.SHUFFLE.
     cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
         Select the compressor to use inside Blosc.
 
@@ -596,7 +597,7 @@ class cparams(object):
 
     @property
     def shuffle(self):
-        """Shuffle filter is active?"""
+        """Shuffle filter."""
         return self._shuffle
 
     @property
@@ -610,11 +611,12 @@ class cparams(object):
             if not isinstance(clevel, int):
                 raise ValueError("`clevel` must be an int.")
             if clevel < 0:
-                raise ValueError("clevel must be a positive integer")
+                raise ValueError("`clevel` must be a positive integer.")
         if shuffle is not None:
             if not isinstance(shuffle, (bool, int)):
-                raise ValueError("`shuffle` must be a boolean.")
-            shuffle = bool(shuffle)
+                raise ValueError("`shuffle` must be an int.")
+            if shuffle not in [bcolz.NOSHUFFLE, bcolz.SHUFFLE, bcolz.BITSHUFFLE]:
+                raise ValueError("`shuffle` value not allowed.")
         # Store the cname as bytes object internally
         if cname is not None:
             list_cnames = bcolz.blosc_compressor_list()
@@ -631,13 +633,15 @@ class cparams(object):
         ----------
         clevel : int (0 <= clevel < 10)
             The compression level.
-        shuffle : bool
-            Whether the shuffle filter is active or not.
+        shuffle : int
+            The shuffle filter to be activated.  Allowed values are
+            bcolz.NOSHUFFLE (0), bcolz.SHUFFLE (1) and bcolz.BITSHUFFLE (2).
+            The default is bcolz.SHUFFLE.
         cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
             Select the compressor to use inside Blosc.
 
         If this method is not called, the defaults will be set as in
-        defaults.py (``{clevel=5, shuffle=True, cname='blosclz'}``).
+        defaults.py (``{clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz'}``).
 
         """
         clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)

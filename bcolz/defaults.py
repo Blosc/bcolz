@@ -97,7 +97,7 @@ be 'numexpr' or 'python'.  Default is 'numexpr', if it is installed.
 If not, then the default is 'python'.
 """
 
-defaults.cparams = {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}
+defaults.cparams = {'clevel': 5, 'shuffle': bcolz.SHUFFLE, 'cname': 'blosclz'}
 """
 The defaults for parameters used in compression.  You can change
 them more comfortably by using the `cparams.setdefaults()` method.
