@@ -20,6 +20,7 @@ import numpy as np
 import bcolz
 from bcolz.ctable import ROOTDIRS
 from .py2help import xrange, _inttypes
+from distutils.version import LooseVersion
 
 
 def print_versions():
@@ -617,6 +618,10 @@ class cparams(object):
                 raise ValueError("`shuffle` must be an int.")
             if shuffle not in [bcolz.NOSHUFFLE, bcolz.SHUFFLE, bcolz.BITSHUFFLE]:
                 raise ValueError("`shuffle` value not allowed.")
+            if (shuffle == bcolz.BITSHUFFLE and
+                LooseVersion(bcolz.blosc_version()[0]) < LooseVersion("1.8.0")):
+                raise ValueError("You need C-Blosc 1.8.0 or higher for using"
+                                 " BITSHUFFLE.")
         # Store the cname as bytes object internally
         if cname is not None:
             list_cnames = bcolz.blosc_compressor_list()
