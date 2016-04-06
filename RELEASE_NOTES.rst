@@ -5,11 +5,16 @@ Release notes for bcolz
 Changes from 0.12.1 to 1.0.0
 ============================
 
-- New version of embedded C-Blosc (bumped to 1.8.0).  This allows for
+- New version of embedded C-Blosc (bumped to 1.8.1).  This allows for
   using recent C-Blosc features like the BITSHUFFLE filter that
   generally allows for better compression ratios at the expense of some
   slowdown.  Look into the carray tutorial on how to use the new
   BITSHUFFLE filter.
+
+- Use the -O1 flag for compiling the included C-Blosc sources on Linux.
+  This represents slower performance, but fixes nasty segfaults as can
+  be seen in issue #110 of python-blosc.  Also, it prints a warning for
+  using an external C-Blosc library.
 
 - Improved support for operations with carrays of shape (N, 1). PR #296.
   Fixes #165 and #295.  Thanks to Kevin Murray.
