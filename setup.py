@@ -107,9 +107,16 @@ if BLOSC_DIR != '':
     libs += ['blosc']
 else:
     # Compiling everything from sources
-    # Blosc + BloscLZ sources
+
+    # Warn about the convenience to use the shared library
+    print("*******************************************************\n"
+          "**Warning:** Compiling with included C-Blosc sources.  \n"
+          "For performance reasons, consider to use the --blosc   \n"
+          "flag for passing an external C-Blosc library location. \n"
+          "*******************************************************\n")
+
     # We still have to figure out how to detect AVX2 in Python,
-    # so no AVX2 support for the time being
+    # so use the external library is AVX2 is desired.
     sources += [f for f in glob('c-blosc/blosc/*.c') if 'avx2' not in f]
     # LZ4 sources
     sources += glob('c-blosc/internal-complibs/lz4*/*.c')
@@ -123,25 +130,25 @@ else:
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 
-import ctypes
-is_32bit = ctypes.sizeof(ctypes.c_voidp) == 4
+    if platform.system() == "Linux":
+        # Compiling with more than -O2 can cause segfaults; see:
+        # https://github.com/Blosc/python-blosc/issues/110
+        CFLAGS.append('-O1')
 
-if os.name == 'posix':
-    if re.match("i.86|x86|AMD", platform.machine()) is not None:
+    if os.name == 'posix':
+        if re.match("i.86", platform.machine()) is not None:
+            # Add -msse2 flag for optimizing shuffle in Blosc
+            # (only necessary for 32-bit Intel architectures)
+            CFLAGS.append("-msse2")
+    elif os.name == 'nt':
+        # Windows always should have support for SSE2
+        # (present in all x86/amd64 architectures since 2003)
+        def_macros += [('__SSE2__', 1)]
+
+    if re.match("i.86|x86", platform.machine()) is not None:
         # Always enable SSE2 for AMD/Intel machines
-        CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
-    if is_32bit:
-        # Add -msse2 flag for optimizing shuffle in Blosc
-        # (only necessary for 32-bit Intel architectures)
-        CFLAGS.append("-msse2")
-elif os.name == 'nt':
-    if re.match("i.86|x86|AMD", platform.machine()) is not None:
-        # Always enable SSE2 for AMD/Intel machines
-        CFLAGS.append('-DSHUFFLE_SSE2_ENABLED')
-    if is_32bit:
-        # Add flag for optimizing shuffle in Blosc
-        # (only necessary for 32-bit Intel architectures)
-        CFLAGS.append("-D__SSE2__")
+        def_macros += [('SHUFFLE_SSE2_ENABLED', 1)]
+
 
 tests_require = []
 
