@@ -94,14 +94,14 @@ Requisites
 ----------
 
 - Python >= 2.6
-- NumPy >= 1.7
-- Cython >= 0.20 (just for compiling the beast)
-- Blosc >= 1.3.0 (optional, as the internal Blosc will be used by default)
+- NumPy >= 1.8
+- Cython >= 0.22 (just for compiling the beast)
+- C-Blosc >= 1.8.0 (optional, as the internal Blosc will be used by default)
 - unittest2 (optional, only in the case you are running Python 2.6)
 
 Optional:
 
-- numexpr>=1.4.1
+- numexpr>=2.5.1
 - pandas
 - tables
 
