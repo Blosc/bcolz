@@ -13,9 +13,12 @@ Preliminaries
 * Make sure that ``RELEASE_NOTES.rst`` and ``ANNOUNCE.rst`` are up to
   date with the latest news in the release.
 
-* Tag the version.
+* Commit your changes::
+
+    $ git commit -a -m"Getting ready for X.Y.Z final"
 
 * Once a year: check that the copyright in ``LICENSES/BCOLZ.txt``.
+
 
 Tagging
 -------

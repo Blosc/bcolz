@@ -1,6 +1,6 @@
-==========================
-Announcing bcolz 1.0.0 RC2
-==========================
+=============================
+Announcing bcolz 1.0.0 final
+=============================
 
 What's new
 ==========
@@ -24,13 +24,26 @@ compressors, more filters, native variable length support and the
 concept of super-chunks), which should be very beneficial for next bcolz
 generation.
 
-Important: this is a Release Candidate, so please test it as much as you
-can.  If no issues would appear in a week or so, I will proceed to tag
-and release 1.0.0 final.  Enjoy!
+Important: this is a final release and there are no important known bugs
+there, so this is recommended to be used in production.  Enjoy!
 
 For a more detailed change log, see:
 
 https://github.com/Blosc/bcolz/blob/master/RELEASE_NOTES.rst
+
+For some comparison between bcolz and other compressed data containers,
+see:
+
+https://github.com/FrancescAlted/DataContainersTutorials
+
+specially chapters 3 (in-memory containers) and 4 (on-disk containers).
+
+Also, if it happens that you are in Madrid during this weekend, you can
+drop by my tutorial and talk:
+
+http://pydata.org/madrid2016/schedule/
+
+See you!
 
 
 What it is
@@ -73,12 +86,6 @@ pointing your browser at the links below.
   * *bquery*, A query and aggregation framework for Bcolz:
   * https://github.com/visualfabriq/bquery
 
-* Blaze:
-
-  * Notebooks showing Blaze + Pandas + BColz interaction:
-  * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-csv.ipynb
-  * http://nbviewer.ipython.org/url/blaze.pydata.org/notebooks/timings-bcolz.ipynb
-
 * Quantopian:
 
   * Using compressed data containers for faster backtesting at scale:
@@ -88,13 +95,6 @@ pointing your browser at the links below.
 
   * Provides an alternative backend to work with compressed arrays
   * https://scikit-allel.readthedocs.org/en/latest/model/bcolz.html
-
-Installing
-==========
-
-bcolz is in the PyPI repository, so installing it is easy::
-
-    $ pip install -U bcolz
 
 
 Resources
