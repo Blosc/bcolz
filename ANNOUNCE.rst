@@ -55,9 +55,8 @@ promise of accelerating memory I/O, at least for some real scenarios:
 
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
 
-Other users of bcolz are Visualfabriq (http://www.visualfabriq.com/) the
-Blaze project (http://blaze.pydata.org/), Quantopian
-(https://www.quantopian.com/) and Scikit-Allel
+Other users of bcolz are Visualfabriq (http://www.visualfabriq.com/),
+Quantopian (https://www.quantopian.com/) and Scikit-Allel
 (https://github.com/cggh/scikit-allel) which you can read more about by
 pointing your browser at the links below.
 
