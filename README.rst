@@ -101,33 +101,61 @@ Requisites
 
 Optional:
 
-- numexpr>=2.5.1
+- numexpr>=2.5.2
 - pandas
 - tables
 
 Building
 --------
 
-Assuming that you have the requisites and a C compiler installed, do::
+There are different ways to compile bcolz, depending if you want to
+link with an already installed Blosc library or not.
 
-  $ pip install -U bcolz
+Compiling with an installed Blosc library (recommended)
+.......................................................
 
-or, if you have unpacked the tarball locally::
+Python and Blosc-powered extensions have a difficult relationship when
+compiled using GCC, so this is why using an external C-Blosc library is
+recommended for maximum performance (for details, see
+https://github.com/Blosc/python-blosc/issues/110).
 
-  $ python setup.py build_ext --inplace
+Go to https://github.com/Blosc/c-blosc/releases and download and
+install the C-Blosc library.  Then, you can tell bcolz where is the
+C-Blosc library in a couple of ways:
 
-In case you have Blosc installed as an external library you can link
-with it (disregarding the included Blosc sources) in a couple of ways:
+Using an environment variable:
 
-Using an environment variable::
+.. code-block:: console
 
-  $ BLOSC_DIR=/usr/local     (or "set BLOSC_DIR=\blosc" on Win)
-  $ export BLOSC_DIR         (not needed on Win)
-  $ python setup.py build_ext --inplace --force
+    $ BLOSC_DIR=/usr/local     (or "set BLOSC_DIR=\blosc" on Win)
+    $ export BLOSC_DIR         (not needed on Win)
+    $ python setup.py build_ext --inplace
 
-Using a flag::
+Using a flag:
 
-  $ python setup.py build_ext --inplace --blosc=/usr/local
+.. code-block:: console
+
+    $ python setup.py build_ext --inplace --blosc=/usr/local
+
+Compiling without an installed Blosc library
+............................................
+
+*Warning:* This way of compiling is discouraged for performance reasons.
+See the previous section.
+
+bcolz also comes with the Blosc sources with it so, assuming that you
+have a C++ compiler installed, do:
+
+.. code-block:: console
+
+    $ python setup.py build_ext --inplace
+
+That's all.  You can proceed with testing section now.
+
+Note: The requirement for the C++ compiler is just for the Snappy
+dependency.  The rest of the other components of Blosc are pure C
+(including the LZ4 and Zlib libraries).
+
 
 Testing
 -------
