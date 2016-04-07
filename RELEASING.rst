@@ -17,7 +17,8 @@ Preliminaries
 
     $ git commit -a -m"Getting ready for X.Y.Z final"
 
-* Once a year: check that the copyright in ``LICENSES/BCOLZ.txt``.
+* Once a year: check that the copyright year in ``LICENSES/BCOLZ.txt``
+  and in ``doc/conf.py`` is up to date.
 
 
 Tagging
@@ -33,9 +34,9 @@ Tagging
 
     $ git tag -s X.Y.Z -m "Tagging version X.Y.Z"
 
-* Push the tag to the Github repo (assuming ``origin`` is correct)::
+* Push the tag to the Github repo::
 
-    $ git push origin X.Y.Z
+    $ git push --tags
 
 
 Testing
