@@ -1655,8 +1655,8 @@ class evalDiskBigNE(evalTest, TestCase):
 
 
 @skipUnless(bcolz.numexpr_here and common.heavy, "Needs numexpr and --heavy")
-class evalColossalNE(evalTest, TestCase):
-    N = int(1e8)
+class evalVeryBigNE(evalTest, TestCase):
+    N = int(1e7)
     vm = "numexpr"
 
 
