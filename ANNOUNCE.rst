@@ -1,31 +1,11 @@
-=============================
-Announcing bcolz 1.0.0 final
-=============================
+======================
+Announcing bcolz 1.0.1
+======================
 
 What's new
 ==========
 
-Yeah, 1.0.0 is finally here.  We are not introducing any exciting new
-feature (just some optimizations and bug fixes), but bcolz is already 6
-years old and it implements most of the capabilities that it was
-designed for, so I decided to release a 1.0.0 meaning that the format is
-declared stable and that people can be assured that future bcolz
-releases will be able to read bcolz 1.0 data files (and probably much
-earlier ones too) for a long while.  Such a format is fully described
-at:
-
-https://github.com/Blosc/bcolz/blob/master/DISK_FORMAT_v1.rst
-
-Also, a 1.0.0 release means that bcolz 1.x series will be based on
-C-Blosc 1.x series (https://github.com/Blosc/c-blosc).  After C-Blosc
-2.x (https://github.com/Blosc/c-blosc2) would be out, a new bcolz 2.x is
-expected taking advantage of shiny new features of C-Blosc2 (more
-compressors, more filters, native variable length support and the
-concept of super-chunks), which should be very beneficial for next bcolz
-generation.
-
-Important: this is a final release and there are no important known bugs
-there, so this is recommended to be used in production.  Enjoy!
+ #XXX version-specific blurb XXX#
 
 For a more detailed change log, see:
 
