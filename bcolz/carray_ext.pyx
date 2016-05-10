@@ -1104,12 +1104,9 @@ cdef class carray:
         self.itemsize = itemsize = dtype.base.itemsize
 
         # Check defaults for dflt
-        _dflt = np.zeros((), dtype=dtype)
+        _dflt = np.zeros((), dtype=dtype.base)
         if dflt is not None:
-            if dtype.shape == ():
-                _dflt[()] = dflt
-            else:
-                _dflt[:] = dflt
+            _dflt[()] = dflt
         self._dflt = _dflt
 
         # Compute the chunklen/chunksize
@@ -1546,9 +1543,8 @@ cdef class carray:
             raise ValueError("`nitems` cannot be negative")
 
         if nitems > self.len:
-            # Create a 0-strided array and append it to self
-            chunk = np.ndarray(nitems - self.len, dtype=self._dtype,
-                               buffer=self._dflt, strides=(0,))
+            chunk = np.empty(nitems - self.len, dtype=self._dtype)
+            chunk[:] = self._dflt
             self.append(chunk)
             self.flush()
         else:

@@ -270,10 +270,10 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
         # Then fill it
         # We need an array for the default so as to keep the atom info
-        dflt = np.array(obj.dflt, dtype=dtype)
-        # Making strides=(0,) below is a trick to create the array fast and
-        # without memory consumption
-        chunk = np.ndarray(length, dtype=dtype, buffer=dflt, strides=(0,))
+        dflt = np.array(obj.dflt, dtype=dtype.base)
+        # Fill chunk with defaults
+        chunk = np.empty(length, dtype=dtype)
+        chunk[:] = dflt
         obj.append(chunk)
         obj.flush()
 
@@ -338,7 +338,8 @@ def zeros(shape, dtype=np.float, **kwargs):
 
     """
     dtype = np.dtype(dtype)
-    return fill(shape=shape, dflt=np.zeros((), dtype), dtype=dtype, **kwargs)
+    return fill(shape=shape, dflt=np.zeros((), dtype.base), dtype=dtype,
+                **kwargs)
 
 
 def ones(shape, dtype=np.float, **kwargs):
@@ -368,7 +369,8 @@ def ones(shape, dtype=np.float, **kwargs):
 
     """
     dtype = np.dtype(dtype)
-    return fill(shape=shape, dflt=np.ones((), dtype), dtype=dtype, **kwargs)
+    return fill(shape=shape, dflt=np.ones((), dtype.base), dtype=dtype,
+                **kwargs)
 
 
 def arange(start=None, stop=None, step=None, dtype=None, **kwargs):

@@ -87,7 +87,7 @@ class constructorTest(MayBeDiskTest):
         """Testing `fill` constructor (array default)"""
         a = np.ones((2, 2), dtype='(4,)i4') * 3
         b = bcolz.fill(
-            (2, 2), [3, 3, 3, 3], dtype='(4,)i4', rootdir=self.rootdir)
+            (2, 2), 3, dtype='(4,)i4', rootdir=self.rootdir)
         if self.open:
             b = bcolz.open(rootdir=self.rootdir)
         # print "b->", `b`
@@ -97,7 +97,7 @@ class constructorTest(MayBeDiskTest):
         """Testing `fill` constructor with open and resize (array default)"""
         a = np.ones((3, 200), dtype='(4,)i4') * 3
         b = bcolz.fill(
-            (2, 200), [3, 3, 3, 3], dtype='(4,)i4', rootdir=self.rootdir)
+            (2, 200), 3, dtype='(4,)i4', rootdir=self.rootdir)
         if self.open:
             b = bcolz.open(rootdir=self.rootdir)
         c = np.ones((1, 200), dtype='(4,)i4') * 3
@@ -109,7 +109,7 @@ class constructorTest(MayBeDiskTest):
         """Testing `fill` constructor with open and resize (nchunks>1)"""
         a = np.ones((3, 2000), dtype='(4,)i4') * 3
         b = bcolz.fill(
-            (2, 2000), [3, 3, 3, 3], dtype='(4,)i4', rootdir=self.rootdir)
+            (2, 2000), 3, dtype='(4,)i4', rootdir=self.rootdir)
         if self.open:
             b = bcolz.open(rootdir=self.rootdir)
         c = np.ones((1, 2000), dtype='(4,)i4') * 3

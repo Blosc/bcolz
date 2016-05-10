@@ -5,7 +5,9 @@ Release notes for bcolz
 Changes from 1.0.0 to 1.0.1
 ===========================
 
- #XXX version-specific blurb XXX#
+* Defaults when creating carray/ctable objects are always scalars now.
+  The new approach follows what was documented and besides it prevents
+  storing too much JSON data in meta/ directory.
 
 
 Changes from 0.12.1 to 1.0.0
