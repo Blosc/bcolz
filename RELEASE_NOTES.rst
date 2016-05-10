@@ -9,6 +9,9 @@ Changes from 1.0.0 to 1.0.1
   The new approach follows what was documented and besides it prevents
   storing too much JSON data in meta/ directory.
 
+* Fixed an issue with bcolz.iterblocks() not working on multidimensional
+  carrays.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

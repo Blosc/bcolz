@@ -457,7 +457,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
 
 
 def iterblocks(cobj, blen=None, start=0, stop=None):
-    """iterblocks(blen=None, start=0, stop=None)
+    """iterblocks(cobj, blen=None, start=0, stop=None)
 
     Iterate over a `cobj` (carray/ctable) in blocks of size `blen`.
 
@@ -513,7 +513,7 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
         if blen is None:
             blen = cobj.chunklen
         for i in xrange(start, stop, blen):
-            buf = np.empty(blen, dtype=cobj.dtype)
+            buf = np.empty((blen,) + cobj.shape[1:], dtype=cobj.dtype)
             cobj._getrange(i, blen, buf)
             if i + blen > stop:
                 buf = buf[:stop - i]

@@ -599,6 +599,40 @@ class iterTest(TestCase):
             assert_array_equal(a, r, "Arrays are not equal")
 
 
+class iterblocksTest(TestCase):
+
+    def test00(self):
+        """Testing `iterblocks()` (no start, stop, step)"""
+        N = 1000
+        a = np.ones((2,3), dtype="i4")
+        b = bcolz.ones((N, 3), dtype="i4")
+        # print "b->", `b`
+        l, s = 0, 0
+        for block in bcolz.iterblocks(b, blen=2):
+            assert_array_equal(a, block, "Arrays are not equal")
+            l += len(block)
+            s += block.sum()
+        self.assertEqual(l, N)
+        # as per Gauss summation formula
+        self.assertEqual(s, N*3)
+
+
+    def test01(self):
+        """Testing `iterblocks()` (w/ start, stop)"""
+        a = np.ones((2,3), dtype="i4")
+        b = bcolz.ones((1000, 3), dtype="i4")
+        # print "b->", `b`
+        l, s = 0, 0
+        for block in bcolz.iterblocks(b, blen=2, start=10, stop=100):
+            assert_array_equal(a, block, "Arrays are not equal")
+            l += len(block)
+            s += block.sum()
+        self.assertEqual(l, 90)
+        # as per Gauss summation formula
+        self.assertEqual(s, 90*3)
+
+
+
 class reshapeTest(TestCase):
 
     def test00a(self):
