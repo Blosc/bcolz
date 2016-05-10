@@ -517,6 +517,9 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
             cobj._getrange(i, blen, buf)
             if i + blen > stop:
                 buf = buf[:stop - i]
+            if blen == 1:
+                # Remove leading dimension if it is 1
+                buf = buf[0]
             yield buf
 
 
