@@ -14,6 +14,7 @@ from bcolz import utils, attrs, array2string
 from collections import namedtuple
 import itertools
 import json
+from keyword import iskeyword
 import os
 import re
 import shutil
@@ -29,7 +30,7 @@ re_str_split = re.compile(",? *")
 
 
 def validate_names(columns):
-    return all([is_identifier(x) for x in columns])
+    return all([is_identifier(x) and not iskeyword(x) for x in columns])
 
 
 def is_identifier(x):
@@ -39,8 +40,9 @@ def is_identifier(x):
 
 def split_string(x):
     # replicates the namedtuple behavior for string splitting on spaces
-    # and commas
-    return re_str_split.split(x)
+    # and commas and calling str on names
+    # does not check for identifiers as keywords. that's done in validate_names
+    return re_str_split.split(str(x))
 
 
 class cols(object):
