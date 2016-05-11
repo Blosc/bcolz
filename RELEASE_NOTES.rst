@@ -5,12 +5,15 @@ Release notes for bcolz
 Changes from 1.0.0 to 1.0.1
 ===========================
 
-* Defaults when creating carray/ctable objects are always scalars now.
+- Defaults when creating carray/ctable objects are always scalars now.
   The new approach follows what was documented and besides it prevents
   storing too much JSON data in meta/ directory.
 
-* Fixed an issue with bcolz.iterblocks() not working on multidimensional
+- Fixed an issue with bcolz.iterblocks() not working on multidimensional
   carrays.
+
+- It is possible now to create ctables with more than 255 columns.  Thanks
+  to Skipper Seabold.  Fixes #131 (via PR #303).
 
 
 Changes from 0.12.1 to 1.0.0
