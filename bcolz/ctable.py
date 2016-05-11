@@ -29,8 +29,10 @@ re_ident = re.compile(r"^[^\d\W]\w*$", re.UNICODE)
 re_str_split = re.compile(",? *")
 
 
-def validate_names(columns):
-    return all([is_identifier(x) and not iskeyword(x) for x in columns])
+def validate_names(columns, keyword='names'):
+    if not all([is_identifier(x) and not iskeyword(x) for x in columns]):
+        raise ValueError("{0} are not valid idenifiers".format(keyword))
+    return list(map(str, columns))
 
 
 def is_identifier(x):
@@ -283,9 +285,8 @@ class ctable(object):
             if len(names) != len(columns):
                 raise ValueError(
                     "`columns` and `names` must have the same length")
-        # Check names validity
-        if not validate_names(names):
-            raise ValueError("names are not valid idenifiers")
+        # Check names validity. Cast to string.
+        names = validate_names(names)
 
         # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
@@ -893,8 +894,7 @@ class ctable(object):
             if isinstance(outcols, _strtypes):
                 outcols = split_string(outcols)
             # Check name validity
-            if not validate_names(outcols):
-                raise ValueError("not all outcols are real column names")
+            outcols = validate_names(outcols, 'outcols')
             if (set(outcols) - set(self.names+['nrow__'])):
                 raise ValueError("outcols doesn't match names")
 
@@ -1020,8 +1020,7 @@ class ctable(object):
             if isinstance(outcols, _strtypes):
                 outcols = split_string(outcols)
             # Check name validity
-            if not validate_names(outcols):
-                raise ValueError("not all outcols are real column names")
+            outcols = validate_names(outcols, 'outcols')
             if (set(outcols) - set(self.names+['nrow__'])):
                 raise ValueError("outcols doesn't match names")
 
