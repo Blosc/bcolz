@@ -11,10 +11,12 @@ from __future__ import absolute_import
 import numpy as np
 import bcolz
 from bcolz import utils, attrs, array2string
-import itertools
 from collections import namedtuple
+import itertools
 import json
+from keyword import iskeyword
 import os
+import re
 import shutil
 from .py2help import _inttypes, _strtypes, imap, xrange
 
@@ -22,6 +24,27 @@ _inttypes += (np.integer,)
 islice = itertools.islice
 
 ROOTDIRS = '__rootdirs__'
+
+re_ident = re.compile(r"^[^\d\W]\w*$", re.UNICODE)
+re_str_split = re.compile(",? *")
+
+
+def validate_names(columns, keyword='names'):
+    if not all([is_identifier(x) and not iskeyword(x) for x in columns]):
+        raise ValueError("{0} are not valid idenifiers".format(keyword))
+    return list(map(str, columns))
+
+
+def is_identifier(x):
+    # python 3 has str.isidentifier
+    return re_ident.match(x)
+
+
+def split_string(x):
+    # replicates the namedtuple behavior for string splitting on spaces
+    # and commas and calling str on names
+    # does not check for identifiers as keywords. that's done in validate_names
+    return re_str_split.split(str(x))
 
 
 class cols(object):
@@ -262,9 +285,8 @@ class ctable(object):
             if len(names) != len(columns):
                 raise ValueError(
                     "`columns` and `names` must have the same length")
-        # Check names validity
-        nt = namedtuple('_nt', list(names), verbose=False)
-        names = list(nt._fields)
+        # Check names validity. Cast to string.
+        names = validate_names(names)
 
         # Guess the kind of columns input
         calist, nalist, ratype = False, False, False
@@ -869,11 +891,12 @@ class ctable(object):
         else:
             if type(outcols) not in (list, tuple) + _strtypes:
                 raise ValueError("only list/str is supported for outcols")
+            if isinstance(outcols, _strtypes):
+                outcols = split_string(outcols)
             # Check name validity
-            nt = namedtuple('_nt', outcols, verbose=False)
-            outcols = list(nt._fields)
-            if set(outcols) - set(self.names+['nrow__']) != set():
-                raise ValueError("not all outcols are real column names")
+            outcols = validate_names(outcols, 'outcols')
+            if (set(outcols) - set(self.names+['nrow__'])):
+                raise ValueError("outcols doesn't match names")
 
         # Get iterators for selected columns
         icols, dtypes = [], []
@@ -994,11 +1017,12 @@ class ctable(object):
         else:
             if type(outcols) not in (list, tuple) + _strtypes:
                 raise ValueError("only list/str is supported for outcols")
+            if isinstance(outcols, _strtypes):
+                outcols = split_string(outcols)
             # Check name validity
-            nt = namedtuple('_nt', outcols, verbose=False)
-            outcols = list(nt._fields)
-            if set(outcols) - set(self.names+['nrow__']) != set():
-                raise ValueError("not all outcols are real column names")
+            outcols = validate_names(outcols, 'outcols')
+            if (set(outcols) - set(self.names+['nrow__'])):
+                raise ValueError("outcols doesn't match names")
 
         # Check limits
         if step <= 0:
