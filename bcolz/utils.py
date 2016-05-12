@@ -177,7 +177,6 @@ def quantize(data, significant_digits):
     import math
 
     if data.dtype.kind != 'f':
-        print("significant_digits:", significant_digits)
         raise TypeError("quantize is meant only for floating point data")
 
     if not significant_digits:
