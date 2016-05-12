@@ -39,11 +39,13 @@ environment:
       CONDA_PY: "34"
       CONDA_NPY: "19"
 
-    - PYTHON: "C:\\Python34_64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
+    # Commented this out because the build interacts badly with previous one
+    # Not certain how to fix this.
+    #- PYTHON: "C:\\Python34_64"
+    #  PYTHON_VERSION: "3.4"
+    #  PYTHON_ARCH: "64"
+    #  CONDA_PY: "34"
+    #  CONDA_NPY: "19"
 
 install:
   # this installs the appropriate Miniconda (Py2/Py3, 32/64 bit),
