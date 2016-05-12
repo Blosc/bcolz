@@ -291,6 +291,17 @@ class getitemTest(MayBeDiskTest):
         # print "b[sl]->", `b[sl]`
         self.assertRaises(NotImplementedError, b.__getitem__, sl)
 
+    def test06(self):
+        """Testing `__getitem()__` with chunks not multiple of blocksize."""
+        a = np.arange(1e5)
+        b = bcolz.carray(a, chunklen=10000, rootdir=self.rootdir)
+        sl = -2   # second last element
+        print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+        sl = -1   # last element
+        print "b[sl]->", `b[sl]`
+        assert_array_equal(a[sl], b[sl], "Arrays are not equal")
+
 
 class getitemMemoryTest(getitemTest, TestCase):
     disk = False

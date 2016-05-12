@@ -66,6 +66,10 @@ Changes from 1.0.0 to 1.0.1
   to how bcolz stores the trainling data that do not fit in a whole
   chunk.  But in general you should expect a loss in precision.
 
+- Fixed a bug in carray.__getitem__() when the chunksize was not an
+  exact multiple of the blocksize.  Added test:
+  test_carray.py::getitemMemoryTest::test06.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

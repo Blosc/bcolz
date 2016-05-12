@@ -1772,7 +1772,7 @@ cdef class carray:
         IMPORTANT: Any update operation (e.g. __setitem__) *must* disable this
         cache by setting self.idxcache = -2.
         """
-        cdef int ret, atomsize, blocksize, offset
+        cdef int ret, atomsize, blocksize, offset, extent
         cdef int idxcache, posinbytes, blocklen
         cdef npy_intp nchunk, nchunks, chunklen
         cdef chunk chunk_
@@ -1781,6 +1781,7 @@ cdef class carray:
         nchunks = <npy_intp> cython.cdiv(self._nbytes, self._chunksize)
         chunklen = self._chunklen
         nchunk = <npy_intp> cython.cdiv(pos, chunklen)
+        pos -= nchunk * chunklen
 
         # Check whether pos is in the last chunk
         if nchunk == nchunks and self.leftover:
@@ -1807,7 +1808,8 @@ cdef class carray:
             #   self._cbytes += chunksize
 
         # Check if block is cached
-        idxcache = <npy_intp> cython.cdiv(pos, blocklen) * blocklen
+        offset = <npy_intp> cython.cdiv(pos, blocklen) * blocklen
+        idxcache = nchunk * chunklen + offset
         if idxcache == self.idxcache:
             # Hit!
             posinbytes = (pos % blocklen) * atomsize
@@ -1815,10 +1817,12 @@ cdef class carray:
             return 1
 
         # No luck. Read a complete block.
-        offset = idxcache % chunklen
-        chunk_._getitem(offset, offset + blocklen, self.datacache)
+        extent = blocklen
+        if offset + blocklen > chunklen:
+            extent = chunklen % blocklen
+        chunk_._getitem(offset, offset + extent, self.datacache)
         # Copy the interesting bits to dest
-        posinbytes = (pos % blocklen) * atomsize
+        posinbytes = (pos % extent) * atomsize
         memcpy(dest, self.datacache + posinbytes, atomsize)
         # Update the cache index
         self.idxcache = idxcache
@@ -2637,7 +2641,6 @@ cdef class carray:
             return (build_carray, (None,self.rootdir,))
         else:
             return (build_carray,(self[:],None,))
-
 
     def __enter__(self):
         return self
