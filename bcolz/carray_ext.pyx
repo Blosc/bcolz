@@ -372,7 +372,6 @@ cdef class chunk:
         self.constant = None
         if _memory and (array.strides[0] == 0
                         or check_zeros(array.data, nbytes)):
-
             self.isconstant = 1
             # Get the NumPy constant.  Avoid this NumPy quirk:
             # np.array(['1'], dtype='S3').dtype != s[0].dtype
@@ -399,10 +398,12 @@ cdef class chunk:
                 # The chunk is made of constants.  Regenerate the actual data.
                 array = array.copy()
 
+            # Quantize data if necessary before compression
+            if cparams.quantize:
+                array = utils.quantize(array, cparams.quantize)
             # Compress data
             cbytes, blocksize = self.compress_data(
                 array.data, itemsize, nbytes, cparams)
-
         return (nbytes, cbytes, blocksize, footprint)
 
     cdef compress_data(self, char *data, size_t itemsize, size_t nbytes,
@@ -603,6 +604,7 @@ else:
 def decode_uint32(fourbyte):
     return struct.unpack('<I', fourbyte)[0]
 
+
 cdef decode_blosc_header(buffer_):
     """ Read and decode header from compressed Blosc buffer.
 
@@ -642,6 +644,7 @@ cdef decode_blosc_header(buffer_):
             'nbytes': decode_uint32(buffer_[4:8]),
             'blocksize': decode_uint32(buffer_[8:12]),
             'ctbytes': decode_uint32(buffer_[12:16])}
+
 
 cdef class chunks(object):
     """Store the different carray chunks in a directory on-disk."""
@@ -1295,6 +1298,8 @@ cdef class carray:
                 "cparams": {
                     "clevel": self.cparams.clevel,
                     "shuffle": self.cparams.shuffle,
+                    "cname": self.cparams.cname,
+                    "quantize": self.cparams.quantize,
                 },
                 "chunklen": self._chunklen,
                 "expectedlen": self.expectedlen,
@@ -1322,9 +1327,14 @@ cdef class carray:
             data = json.loads(storagefh.read().decode('ascii'))
         dtype_ = np.dtype(data["dtype"])
         chunklen = data["chunklen"]
+        cparams = data["cparams"]
+        cname = cparams['cname'] if 'cname' in cparams else 'blosclz'
+        quantize = cparams['quantize'] if 'quantize' in cparams else None
         cparams = bcolz.cparams(
             clevel=data["cparams"]["clevel"],
-            shuffle=data["cparams"]["shuffle"])
+            shuffle=data["cparams"]["shuffle"],
+            cname=cname,
+            quantize=quantize)
         expectedlen = data["expectedlen"]
         dflt = data["dflt"]
         return (shape, cparams, dtype_, dflt, expectedlen, cbytes, chunklen)

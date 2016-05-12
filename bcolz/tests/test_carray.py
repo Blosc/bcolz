@@ -17,7 +17,8 @@ import textwrap
 from bcolz.utils import to_ndarray
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_allclose
+from numpy.testing import (
+    assert_array_equal, assert_array_almost_equal, assert_allclose)
 from bcolz.tests import common
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest, skipUnless, SkipTest)
@@ -2083,7 +2084,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
 
     def tearDown(self):
         # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz')
+        bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE,
+                                  cname='blosclz', quantize=0)
         MayBeDiskTest.tearDown(self)
 
     def test00(self):
@@ -2131,7 +2133,8 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
         # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for cname in cnames:
             bcolz.defaults.cparams = {
-                'clevel': 9, 'shuffle': bcolz.SHUFFLE, 'cname': cname}
+                'clevel': 9, 'shuffle': bcolz.SHUFFLE, 'cname': cname,
+                'quantize': 0}
             b = bcolz.carray(a, rootdir=self.rootdir)
             # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
@@ -2140,10 +2143,44 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)
-        # Restore defaults
-        bcolz.defaults.cparams = {
-            'clevel': 5, 'shuffle': bcolz.SHUFFLE, 'cname': 'blosclz'}
 
+    def test02a(self):
+        """Testing quantize filter on big arrays (float64)"""
+        np.random.seed(10)
+        a = np.cumsum(np.random.random_sample(100*1000)-0.5)    # random walk
+        if common.verbose:
+            print("Checking quantize filter")
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        cparams = bcolz.cparams(quantize=0)
+        b = bcolz.carray(a, cparams=cparams, rootdir=self.rootdir)
+        b_cbytes = b.cbytes
+        assert_array_equal(a, b[:], "Arrays are not equal")
+        # print "size b compressed  -->", b_cbytes
+        # Remove the array on disk before trying with the next one
+        if self.disk:
+            common.remove_tree(self.rootdir)
+        cparams = bcolz.cparams(quantize=3)
+        c = bcolz.carray(a, cparams=cparams, rootdir=self.rootdir)
+        # print "size c compressed  -->", c.cbytes
+        self.assertTrue(c.cbytes < 0.7 * b_cbytes,
+                        "quantize does not seem to improve compression "
+                        "significantly")
+        assert_array_almost_equal(a, c[:], 3, "Arrays are not equal")
+        # Remove the array on disk before trying with the next one
+        if self.disk:
+            common.remove_tree(self.rootdir)
+
+    def test02b(self):
+        """Testing quantize filter on int arrays"""
+        a = np.arange(100*1000)
+        if common.verbose:
+            print("Checking quantize filter on ints")
+        cparams = bcolz.cparams(quantize=3)
+        self.assertRaises(TypeError, bcolz.carray, a, cparams=cparams,
+                          rootdir=self.rootdir)
+        # Remove the array on disk before trying with the next one
+        if self.disk:
+            common.remove_tree(self.rootdir)
 
 class compressorsMemoryTest(bloscCompressorsTest, TestCase):
     disk = False
@@ -2206,7 +2243,8 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for filter_ in filters:
             bcolz.defaults.cparams = {
-                'clevel': 9, 'shuffle': filter_, 'cname': "blosclz"}
+                'clevel': 9, 'shuffle': filter_, 'cname': "blosclz",
+                'quantize': 0}
             b = bcolz.carray(a, rootdir=self.rootdir)
             # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
@@ -2217,7 +2255,8 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
                 common.remove_tree(self.rootdir)
         # Restore defaults
         bcolz.defaults.cparams = {
-            'clevel': 5, 'shuffle': bcolz.SHUFFLE, 'cname': 'blosclz'}
+            'clevel': 5, 'shuffle': bcolz.SHUFFLE, 'cname': 'blosclz',
+            'quantize': 0}
 
 
 class filtersMemoryTest(bloscFiltersTest, TestCase):
@@ -2273,7 +2312,7 @@ class reprDiskTest(MayBeDiskTest,TestCase):
         expected = textwrap.dedent("""
                    carray((0,), float64)
                      nbytes: 0; cbytes: 16.00 KB; ratio: 0.00
-                     cparams := cparams(clevel=5, shuffle=1, cname='blosclz')
+                     cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=0)
                      rootdir := '%s'
                      mode    := '%s'
                    []

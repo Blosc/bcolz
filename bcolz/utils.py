@@ -152,7 +152,8 @@ def human_readable_size(size):
     else:
         return "%.2f TB" % (size / float(2**40))
 
-def build_carray(array,rootdir):
+
+def build_carray(array, rootdir):
     """ Used in ctable.__reduce__
 
     Pickling functions can't be in pyx files.  Putting this tiny helper
@@ -163,6 +164,35 @@ def build_carray(array,rootdir):
         return carray(rootdir=rootdir)
     else:
         return carray(array)
+
+
+def quantize(data, significant_digits):
+    """Quantize data to improve compression.
+
+    Data is quantized using around(scale*data)/scale, where scale is
+    2**bits, and bits is determined from the significant_digits.  For
+    example, if significant_digits=1, bits will be 4.
+
+    """
+    import math
+
+    if data.dtype.kind != 'f':
+        print("significant_digits:", significant_digits)
+        raise TypeError("quantize is meant only for floating point data")
+
+    if not significant_digits:
+        return data
+
+    precision = 10. ** -significant_digits
+    exp = math.log(precision, 10)
+    if exp < 0:
+        exp = int(math.floor(exp))
+    else:
+        exp = int(math.ceil(exp))
+    bits = math.ceil(math.log(10. ** -exp, 2))
+    scale = 2. ** bits
+    return np.around(scale * data) / scale
+
 
 
 # Main part

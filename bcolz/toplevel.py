@@ -572,7 +572,7 @@ def walk(dir, classname=None, mode='a'):
 
 
 class cparams(object):
-    """cparams(clevel=None, shuffle=None, cname=None)
+    """cparams(clevel=None, shuffle=None, cname=None, quantize=None)
 
     Class to host parameters for compression and other filters.
 
@@ -586,6 +586,11 @@ class cparams(object):
         default is bcolz.SHUFFLE.
     cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
         Select the compressor to use inside Blosc.
+    quantize : int
+        Quantize data to improve (lossy) compression.  Data is quantized using
+        np.around(scale*data)/scale, where scale is 2**bits, and bits is
+        determined from the quantize value.  For example, if quantize=1, bits
+        will be 4.  0 means that the quantization is disabled.
 
     In case some of the parameters are not passed, they will be
     set to a default (see `setdefaults()` method).
@@ -611,13 +616,18 @@ class cparams(object):
         """The compressor name."""
         return self._cname
 
+    @property
+    def quantize(self):
+        """Quantize filter."""
+        return self._quantize
+
     @staticmethod
-    def _checkparams(clevel, shuffle, cname):
+    def _checkparams(clevel, shuffle, cname, quantize):
         if clevel is not None:
             if not isinstance(clevel, int):
                 raise ValueError("`clevel` must be an int.")
             if clevel < 0:
-                raise ValueError("`clevel` must be a positive integer.")
+                raise ValueError("`clevel` must be 0 or a positive integer.")
         if shuffle is not None:
             if not isinstance(shuffle, (bool, int)):
                 raise ValueError("`shuffle` must be an int.")
@@ -625,19 +635,24 @@ class cparams(object):
                 raise ValueError("`shuffle` value not allowed.")
             if (shuffle == bcolz.BITSHUFFLE and
                 LooseVersion(bcolz.blosc_version()[0]) < LooseVersion("1.8.0")):
-                raise ValueError("You need C-Blosc 1.8.0 or higher for using"
-                                 " BITSHUFFLE.")
+                raise ValueError("You need C-Blosc 1.8.0 or higher for using "
+                                 "BITSHUFFLE.")
         # Store the cname as bytes object internally
         if cname is not None:
             list_cnames = bcolz.blosc_compressor_list()
             if cname not in list_cnames:
                 raise ValueError(
                     "Compressor '%s' is not available in this build" % cname)
-        return clevel, shuffle, cname
+        if quantize is not None:
+            if not isinstance(quantize, int):
+                raise ValueError("`quantize` must be an int.")
+            if quantize < 0:
+                raise ValueError("`quantize` must be 0 or a positive integer.")
+        return clevel, shuffle, cname, quantize
 
     @staticmethod
-    def setdefaults(clevel=None, shuffle=None, cname=None):
-        """Change the defaults for `clevel`, `shuffle` and `cname` params.
+    def setdefaults(clevel=None, shuffle=None, cname=None, quantize=None):
+        """Change the defaults for compression params.
 
         Parameters
         ----------
@@ -649,12 +664,20 @@ class cparams(object):
             The default is bcolz.SHUFFLE.
         cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
             Select the compressor to use inside Blosc.
+        quantize : int
+            Quantize data to improve (lossy) compression.  Data is quantized
+            using np.around(scale*data)/scale, where scale is 2**bits, and
+            bits is determined from the quantize value.  For example, if
+            quantize=1, bits will be 4.  0 means that the quantization is
+            disabled.
 
         If this method is not called, the defaults will be set as in
-        defaults.py (``{clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz'}``).
+        defaults.py:
+        (``{clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz', quantize=None}``).
 
         """
-        clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
+        clevel, shuffle, cname, quantize = cparams._checkparams(
+            clevel, shuffle, cname, quantize)
         dflts = bcolz.defaults.cparams
         if clevel is not None:
             dflts['clevel'] = clevel
@@ -662,18 +685,23 @@ class cparams(object):
             dflts['shuffle'] = shuffle
         if cname is not None:
             dflts['cname'] = cname
+        if quantize is not None:
+            dflts['quantize'] = quantize
 
-    def __init__(self, clevel=None, shuffle=None, cname=None):
-        clevel, shuffle, cname = cparams._checkparams(clevel, shuffle, cname)
+    def __init__(self, clevel=None, shuffle=None, cname=None, quantize=None):
+        clevel, shuffle, cname, quantize = cparams._checkparams(
+            clevel, shuffle, cname, quantize)
         dflts = bcolz.defaults.cparams
         self._clevel = dflts['clevel'] if clevel is None else clevel
         self._shuffle = dflts['shuffle'] if shuffle is None else shuffle
         self._cname = dflts['cname'] if cname is None else cname
+        self._quantize = dflts['quantize'] if quantize is None else quantize
 
     def __repr__(self):
         args = ["clevel=%d" % self._clevel,
                 "shuffle=%s" % self._shuffle,
                 "cname='%s'" % self._cname,
+                "quantize=%s" % self._quantize,
                 ]
         return '%s(%s)' % (self.__class__.__name__, ', '.join(args))
 

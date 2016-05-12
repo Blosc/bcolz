@@ -41,7 +41,7 @@ List of default values
    :noindex:
 
     The defaults for parameters used in compression (dict).  The
-    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz'}.
+    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz', quantize: 0}.
 
     See Also:
         :py:func:`cparams.setdefaults`
