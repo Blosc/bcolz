@@ -586,7 +586,7 @@ class cparams(object):
         default is bcolz.SHUFFLE.
     cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
         Select the compressor to use inside Blosc.
-    quantize : int
+    quantize : int (number of significant digits)
         Quantize data to improve (lossy) compression.  Data is quantized using
         np.around(scale*data)/scale, where scale is 2**bits, and bits is
         determined from the quantize value.  For example, if quantize=1, bits
@@ -664,7 +664,7 @@ class cparams(object):
             The default is bcolz.SHUFFLE.
         cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
             Select the compressor to use inside Blosc.
-        quantize : int
+        quantize : int (number of significant digits)
             Quantize data to improve (lossy) compression.  Data is quantized
             using np.around(scale*data)/scale, where scale is 2**bits, and
             bits is determined from the quantize value.  For example, if
