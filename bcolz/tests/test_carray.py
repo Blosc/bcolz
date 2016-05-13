@@ -296,10 +296,10 @@ class getitemTest(MayBeDiskTest):
         a = np.arange(1e5)
         b = bcolz.carray(a, chunklen=10000, rootdir=self.rootdir)
         sl = -2   # second last element
-        print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
         sl = -1   # last element
-        print "b[sl]->", `b[sl]`
+        # print "b[sl]->", `b[sl]`
         assert_array_equal(a[sl], b[sl], "Arrays are not equal")
 
 
