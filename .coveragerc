@@ -1,4 +1,5 @@
 [run]
+plugins = Cython.Coverage
 source = bcolz
 
 [report]
