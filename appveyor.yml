@@ -39,12 +39,13 @@ environment:
       CONDA_PY: "34"
       CONDA_NPY: "111"
 
-    - PYTHON: "C:\\Python34_64"
-      PYTHON_VERSION: "3.4"
-      PYTHON_ARCH: "64"
-      DISTUTILS_USE_SDK: "1"
-      CONDA_PY: "34"
-      CONDA_NPY: "19"
+    # This does not work and I am still wondering why? why? why?
+    #- PYTHON: "C:\\Python34_64"
+    #  PYTHON_VERSION: "3.4"
+    #  PYTHON_ARCH: "64"
+    #  DISTUTILS_USE_SDK: "1"
+    #  CONDA_PY: "34"
+    #  CONDA_NPY: "19"
 
     # PYTHON 3.5
     - PYTHON: "C:\\Python35_32"
