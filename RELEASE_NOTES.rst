@@ -78,6 +78,10 @@ Changes from 1.0.0 to 1.1.0
   multi-threaded environments, a single-threaded, contextual version of
   Blosc is used instead (this is useful for frameworks like Dask).
 
+- Removed from the ``cbytes`` count the storage overhead due to the
+  internal container.  This overhead was media-dependent, and it was
+  just a guess anyway.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

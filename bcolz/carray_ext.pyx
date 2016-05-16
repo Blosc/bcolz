@@ -387,7 +387,7 @@ cdef class chunk:
 
         # Fill instance data
         self.nbytes = nbytes
-        self.cbytes = cbytes + footprint
+        self.cbytes = cbytes
         self.blocksize = blocksize
 
     cdef compress_arrdata(self, ndarray array, int itemsize,
