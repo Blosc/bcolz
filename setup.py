@@ -130,11 +130,6 @@ else:
     # ...and the macros for all the compressors supported
     def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
 
-    if platform.system() == "Linux":
-        # Compiling with more than -O2 can cause segfaults; see:
-        # https://github.com/Blosc/python-blosc/issues/110
-        CFLAGS.append('-O1')
-
     if os.name == 'posix':
         if re.match("i.86", platform.machine()) is not None:
             # Add -msse2 flag for optimizing shuffle in Blosc

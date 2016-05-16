@@ -82,6 +82,10 @@ Changes from 1.0.0 to 1.1.0
   internal container.  This overhead was media-dependent, and it was
   just a guess anyway.
 
+- The -O1 compilation flag has been removed and bcolz is compiled now at
+  full optimization.  I have tested that for several weeks, without any
+  segfault, so this should be pretty safe.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
