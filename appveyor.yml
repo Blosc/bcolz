@@ -39,13 +39,12 @@ environment:
       CONDA_PY: "34"
       CONDA_NPY: "111"
 
-    # Commented this out because the build interacts badly with previous one
-    # Not certain how to fix this.
-    #- PYTHON: "C:\\Python34_64"
-    #  PYTHON_VERSION: "3.4"
-    #  PYTHON_ARCH: "64"
-    #  CONDA_PY: "34"
-    #  CONDA_NPY: "19"
+    - PYTHON: "C:\\Python34_64"
+      PYTHON_VERSION: "3.4"
+      PYTHON_ARCH: "64"
+      DISTUTILS_USE_SDK: "1"
+      CONDA_PY: "34"
+      CONDA_NPY: "19"
 
     # PYTHON 3.5
     - PYTHON: "C:\\Python35_32"
@@ -70,7 +69,7 @@ install:
 build: false
 
 test_script:
-  # Build and test the package. This appears(?) to sporadically fail due to a 
+  # Build and test the package. This appears(?) to sporadically fail due to a
   # bug in conda-build on 32 bit python.
   # https://github.com/conda/conda-build/issues/152
   #
