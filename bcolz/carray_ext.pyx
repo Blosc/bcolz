@@ -18,6 +18,7 @@ import shutil
 import tempfile
 import json
 import datetime
+import threading
 
 import numpy as np
 cimport numpy as np
@@ -109,7 +110,13 @@ cdef extern from "blosc.h":
     int blosc_compress(int clevel, int doshuffle, size_t typesize,
                        size_t nbytes, void *src, void *dest,
                        size_t destsize) nogil
+    int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
+                           size_t nbytes, const void* src, void* dest,
+                           size_t destsize, const char* compressor,
+                           size_t blocksize, int numinternalthreads) nogil
     int blosc_decompress(void *src, void *dest, size_t destsize) nogil
+    int blosc_decompress_ctx(const void *src, void *dest, size_t destsize,
+                             int numinternalthreads) nogil
     int blosc_getitem(void *src, int start, int nitems, void *dest) nogil
     void blosc_free_resources()
     void blosc_cbuffer_sizes(void *cbuffer, size_t *nbytes,
@@ -118,6 +125,7 @@ cdef extern from "blosc.h":
     void blosc_cbuffer_versions(void *cbuffer, int *version, int *versionlz)
     void blosc_set_blocksize(size_t blocksize)
     char*blosc_list_compressors()
+
 
 
 #----------------------------------------------------------------------------
@@ -291,6 +299,32 @@ cdef int true_count(char *data, int nbytes):
 
 #-------------------------------------------------------------
 
+# set the value of this variable to True or False to override the
+# default adaptive behaviour
+use_threads = None
+
+
+def _get_use_threads():
+    global use_threads
+
+    if use_threads in [True, False]:
+        # user has manually overridden the default behaviour
+        _use_threads = use_threads
+
+    else:
+        # adaptive behaviour: allow blosc to use threads if it is being
+        # called from the main Python thread, inferring that it is being run
+        # from within a single-threaded program; otherwise do not allow
+        # blosc to use threads, inferring it is being run from within a
+        # multi-threaded program
+        if hasattr(threading, 'main_thread'):
+            _use_threads = (threading.main_thread() ==
+                            threading.current_thread())
+        else:
+            _use_threads = threading.current_thread().name == 'MainThread'
+
+    return _use_threads
+
 
 cdef class chunk:
     """
@@ -412,6 +446,7 @@ cdef class chunk:
         cdef size_t nbytes_, cbytes, blocksize
         cdef int clevel, shuffle, ret
         cdef char *dest
+        cdef char *cname_str
 
         clevel = cparams.clevel
         shuffle = cparams.shuffle
@@ -422,13 +457,22 @@ cdef class chunk:
             raise ValueError(
                 "Compressor '%s' is not available in this build" % cname)
         dest = <char *> malloc(nbytes + BLOSC_MAX_OVERHEAD)
-        ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
-                             data, dest, nbytes + BLOSC_MAX_OVERHEAD)
+        if _get_use_threads():
+            with nogil:
+                ret = blosc_compress(clevel, shuffle, itemsize, nbytes,
+                                     data, dest, nbytes + BLOSC_MAX_OVERHEAD)
+        else:
+            cname_str = cname
+            with nogil:
+                ret = blosc_compress_ctx(clevel, shuffle, itemsize, nbytes,
+                                         data, dest,
+                                         nbytes + BLOSC_MAX_OVERHEAD,
+                                         cname_str, 0, 1)
         if ret <= 0:
             raise RuntimeError(
                 "fatal error during Blosc compression: %d" % ret)
         # Copy the compressed buffer into a Bytes buffer
-        cbytes = ret;
+        cbytes = ret
         self.dobject = PyBytes_FromStringAndSize(dest, cbytes)
         # Get blocksize info for the instance
         blosc_cbuffer_sizes(dest, &nbytes_, &cbytes, &blocksize)
@@ -455,7 +499,12 @@ cdef class chunk:
         src = PyBytes_AS_STRING(self.dobject)
         dest = PyBytes_AS_STRING(result_str)
 
-        ret = blosc_decompress(src, dest, self.nbytes)
+        if _get_use_threads():
+            with nogil:
+                ret = blosc_decompress(src, dest, self.nbytes)
+        else:
+            with nogil:
+                ret = blosc_decompress_ctx(src, dest, self.nbytes, 1)
         if ret < 0:
             raise RuntimeError(
                 "fatal error during Blosc decompression: %d" % ret)
