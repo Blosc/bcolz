@@ -2,7 +2,7 @@
 Release notes for bcolz
 =======================
 
-Changes from 1.0.0 to 1.0.1
+Changes from 1.0.0 to 1.1.0
 ===========================
 
 - Defaults when creating carray/ctable objects are always scalars now.
@@ -73,6 +73,10 @@ Changes from 1.0.0 to 1.0.1
 - bcolz now follows the convention introduced in NumPy 1.11 for
   representing datetime types with TZ="naive" (i.e. with no TZ info in
   the representation).  See https://github.com/numpy/numpy/blob/master/doc/release/1.11.0-notes.rst#datetime64-changes.
+
+- bcolz now releases the GIL during Blosc compression/decompression.  In
+  multi-threaded environments, a single-threaded, contextual version of
+  Blosc is used instead (this is useful for frameworks like Dask).
 
 
 Changes from 0.12.1 to 1.0.0
