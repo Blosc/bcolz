@@ -1802,15 +1802,11 @@ cdef class carray:
         if self.idxcache < 0:
             self.blockcache = np.empty(shape=(blocklen,), dtype=self._dtype)
             self.datacache = self.blockcache.data
-            # We don't want this to contribute to cbytes counter!
-            # if self.idxcache == -1:
-            #   # Absolute first time.  Add the cache size to cbytes counter.
-            #   self._cbytes += chunksize
 
         # Check if block is cached
         offset = <npy_intp> cython.cdiv(pos, blocklen) * blocklen
-        idxcache = nchunk * chunklen + offset
         posinbytes = (pos % blocklen) * atomsize
+        idxcache = nchunk * chunklen + offset
         if idxcache == self.idxcache:
             # Hit!
             memcpy(dest, self.datacache + posinbytes, atomsize)
