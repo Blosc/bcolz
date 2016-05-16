@@ -70,6 +70,10 @@ Changes from 1.0.0 to 1.0.1
   exact multiple of the blocksize.  Added test:
   test_carray.py::getitemMemoryTest::test06.
 
+- bcolz now follows the convention introduced in NumPy 1.11 for
+  representing datetime types with TZ="naive" (i.e. with no TZ info in
+  the representation).  See https://github.com/numpy/numpy/blob/master/doc/release/1.11.0-notes.rst#datetime64-changes.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
