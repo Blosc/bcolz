@@ -1810,9 +1810,9 @@ cdef class carray:
         # Check if block is cached
         offset = <npy_intp> cython.cdiv(pos, blocklen) * blocklen
         idxcache = nchunk * chunklen + offset
+        posinbytes = (pos % blocklen) * atomsize
         if idxcache == self.idxcache:
             # Hit!
-            posinbytes = (pos % blocklen) * atomsize
             memcpy(dest, self.datacache + posinbytes, atomsize)
             return 1
 
@@ -1822,7 +1822,6 @@ cdef class carray:
             extent = chunklen % blocklen
         chunk_._getitem(offset, offset + extent, self.datacache)
         # Copy the interesting bits to dest
-        posinbytes = (pos % extent) * atomsize
         memcpy(dest, self.datacache + posinbytes, atomsize)
         # Update the cache index
         self.idxcache = idxcache
