@@ -14,7 +14,9 @@ import sys
 import struct
 import shutil
 import textwrap
-from bcolz.utils import to_ndarray
+import pickle
+import ctypes
+from distutils.version import LooseVersion
 
 import numpy as np
 from numpy.testing import (
@@ -26,9 +28,7 @@ import bcolz
 from bcolz.py2help import xrange, PY2, _inttypes
 from bcolz.carray_ext import chunk
 from bcolz import carray
-import pickle
-
-import ctypes
+from bcolz.utils import to_ndarray
 
 is_64bit = (struct.calcsize("P") == 8)
 
@@ -2285,7 +2285,8 @@ class reprTest(TestCase):
         result = repr(ct)
         self.assertTrue("['2010-01-01' '2010-01-02']" in result)
 
-    @unittest.skipIf(os.name == "nt", "Windows problems with TZ here")
+    @unittest.skipIf(np.__version__ < LooseVersion("1.11"),
+                     "bcolz adapted to NumPy 1.11 (naive) TZ repr")
     def test_datetime_carray_nanos(self):
         x = ['2014-12-29T17:57:59.000000123',
              '2014-12-29T17:57:59.000000456']
