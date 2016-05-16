@@ -86,6 +86,10 @@ Changes from 1.0.0 to 1.1.0
   full optimization.  I have tested that for several weeks, without any
   segfault, so this should be pretty safe.
 
+- Added information about the chunklen, chunksize and blocksize (the
+  size of the internal blocks in a Blosc chunk) in the repr() of a
+  carray.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

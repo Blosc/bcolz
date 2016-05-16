@@ -124,7 +124,7 @@ cdef extern from "blosc.h":
     void blosc_cbuffer_metainfo(void *cbuffer, size_t *typesize, int *flags)
     void blosc_cbuffer_versions(void *cbuffer, int *version, int *versionlz)
     void blosc_set_blocksize(size_t blocksize)
-    char*blosc_list_compressors()
+    char* blosc_list_compressors()
 
 
 
@@ -2671,9 +2671,12 @@ cdef class carray:
         else:
             cratio = self._nbytes / float(self._cbytes)
         header = "carray(%s, %s)\n" % (self.shape, self.dtype)
-        header += "  nbytes: %s; cbytes: %s; ratio: %.2f\n" % (
+        header += "  nbytes := %s; cbytes := %s; ratio: %.2f\n" % (
             snbytes, scbytes, cratio)
         header += "  cparams := %r\n" % self.cparams
+        blocksize = self.chunks[0].blocksize if len(self.chunks) > 0 else 0
+        header += "  chunklen := %s; chunksize: %s; blocksize: %s\n" % (
+            self.chunklen, self._chunksize, blocksize)
         if self._rootdir:
             header += "  rootdir := '%s'\n" % self._rootdir
             header += "  mode    := '%s'\n" % self.mode

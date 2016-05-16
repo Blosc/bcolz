@@ -2323,8 +2323,9 @@ class reprDiskTest(MayBeDiskTest,TestCase):
     def _create_expected(self, mode):
         expected = textwrap.dedent("""
                    carray((0,), float64)
-                     nbytes: 0; cbytes: 16.00 KB; ratio: 0.00
+                     nbytes := 0; cbytes := 16.00 KB; ratio: 0.00
                      cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=0)
+                     chunklen := 2048; chunksize: 16384; blocksize: 0
                      rootdir := '%s'
                      mode    := '%s'
                    []
@@ -2347,6 +2348,7 @@ class reprDiskTest(MayBeDiskTest,TestCase):
         y = carray(rootdir=self.rootdir)
         expected = self._create_expected('a')
         self.assertEqual(expected, repr(y))
+
 
 class chunksIterTest(MayBeDiskTest):
     def test00(self):
