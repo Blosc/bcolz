@@ -16,12 +16,15 @@ __docformat__ = 'restructuredtext'
 # adapted by Francesc Alted 2012-8-18 for bcolz
 
 import sys
+from distutils.version import LooseVersion
 
+import numpy
 from numpy.core import numerictypes as _nt
 from numpy import maximum, minimum, absolute, not_equal, isnan, isinf
 from numpy.core.multiarray import format_longfloat
 from numpy.core.fromnumeric import ravel
 from .py2help import xrange
+
 
 try:
     from numpy.core.multiarray import datetime_as_string, datetime_data
@@ -758,9 +761,12 @@ class DatetimeFormat(object):
             else:
                 unit = 's'
 
-        # If timezone is default, make it 'local' or 'UTC' based on the unit
-        if timezone is None:
+        # If timezone is default, make it 'naive' or 'UTC' depending on
+        # the numpy version
+        if timezone is None and numpy.__version__ >= LooseVersion("1.11"):
             timezone = "naive"
+        else:
+            timezone = "UTC"
         self.timezone = timezone
         self.unit = unit
         self.casting = casting
