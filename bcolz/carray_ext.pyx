@@ -1,5 +1,6 @@
 #!python
 #cython: embedsignature=True
+#cython: linetrace=True
 #########################################################################
 #
 #       License: BSD

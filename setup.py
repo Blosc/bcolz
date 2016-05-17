@@ -108,13 +108,6 @@ if BLOSC_DIR != '':
 else:
     # Compiling everything from sources
 
-    # Warn about the convenience to use the shared library
-    print("*******************************************************\n"
-          "**Warning:** Compiling with included C-Blosc sources.  \n"
-          "For performance reasons, consider to use the --blosc   \n"
-          "flag for passing an external C-Blosc library location. \n"
-          "*******************************************************\n")
-
     # We still have to figure out how to detect AVX2 in Python,
     # so use the external library is AVX2 is desired.
     sources += [f for f in glob('c-blosc/blosc/*.c') if 'avx2' not in f]
