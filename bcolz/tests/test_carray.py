@@ -349,7 +349,7 @@ class setitemTest(MayBeDiskTest):
         # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
 
-    def test03(self):
+    def test03a(self):
         """Testing `__setitem()__` method with the complete range"""
         a = np.arange(1e2)
         b = bcolz.carray(a, chunklen=10, rootdir=self.rootdir)
@@ -357,6 +357,16 @@ class setitemTest(MayBeDiskTest):
         a[:] = np.arange(10., 1e2 + 10.)
         # print "b->", `b`
         assert_array_equal(a, b[:], "__setitem__ not working correctly")
+
+    def test03b(self):
+        """Testing `__setitem()__` method with the complete range (large)"""
+        a = np.arange(1e6)
+        b = bcolz.carray(a, chunklen=1000-1)
+        c = bcolz.carray(a, chunklen=1000-2, rootdir=self.rootdir)
+        c[:] = b[:]
+        # print "b->", `b`
+        # print "c->", `c`
+        assert_array_equal(b[:], c[:], "__setitem__ not working correctly")
 
     def test04a(self):
         """Testing `__setitem()__` method with start:stop:step"""

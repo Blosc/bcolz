@@ -1061,7 +1061,7 @@ cdef class carray:
 
         if array is not None:
             self._create_carray(array, cparams, dtype, dflt,
-                               expectedlen, chunklen, rootdir, mode)
+                                expectedlen, chunklen, rootdir, mode)
             _new = True
         elif rootdir is not None:
             meta_info = self._read_meta()
@@ -2176,13 +2176,20 @@ cdef class carray:
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.len)
 
+        # Special case for a complete replacement with a compatible dtype in
+        # value
+        if (hasattr(value, "dtype") and self._dtype == value.dtype and
+            start == 0 and stop == len(self) == len(value) and step == 1):
+            self._set_entire_carray(value)
+            return
+
         # Build a numpy object out of value
         vlen = get_len_of_range(start, stop, step)
         if vlen == 0:
             # If range is empty, return immediately
             return
         value = utils.to_ndarray(value, self._dtype, arrlen=vlen,
-                safe=self._safe)
+                                 safe=self._safe)
 
         # Fill it from data in chunks
         nwrow = 0
@@ -2204,11 +2211,11 @@ cdef class carray:
                 self.lastchunkarr[startb:stopb:step] = value[
                                                        nwrow:nwrow + blen]
             else:
+                # Get the data chunk
+                chunk_ = self.chunks[nchunk]
+                self._cbytes -= chunk_.cbytes
                 if stopb - startb < chunklen or step > 1:
-                    # Get the data chunk
-                    chunk_ = self.chunks[nchunk]
-                    self._cbytes -= chunk_.cbytes
-                    # Get all the values there
+                    # Get all the values in chunk
                     cdata = chunk_[:]
                     # Overwrite it with data from value
                     cdata[startb:stopb:step] = value[nwrow:nwrow + blen]
@@ -2226,6 +2233,29 @@ cdef class carray:
 
         # Safety check
         assert (nwrow == vlen)
+
+    def _set_entire_carray(self, value):
+        """Copy the value in self chunk by chunk"""
+
+        # The number of bytes in incoming value
+        nbytes = self.itemsize * value.size
+        self._nbytes = nbytes
+
+        chunklen = self._chunklen
+        nchunks = self.nchunks
+        self._cbytes = self._chunksize  # count the last chunk
+        for nchunk in range(nchunks):
+            cdata = value[nchunk * chunklen:(nchunk + 1) * chunklen]
+            # Build and replace the chunk
+            chunk_ = chunk(cdata, self._dtype, self._cparams,
+                           _memory=self._rootdir is None)
+            self.chunks[nchunk] = chunk_
+            # Update cbytes counter
+            self._cbytes += chunk_.cbytes
+        if self.leftover:
+            self.lastchunkarr[:len(self) - nchunks * chunklen] = value[
+                nchunks * chunklen:]
+        return
 
     # This is a private function that is specific for `eval`
     def _getrange(self, npy_intp start, npy_intp blen, ndarray out):

@@ -90,6 +90,9 @@ Changes from 1.0.0 to 1.1.0
   size of the internal blocks in a Blosc chunk) in the repr() of a
   carray.
 
+- New accelerated codepath for `carray[:] = array` assignation.  This
+  operation should be close in performance to `carray.copy()` now.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
