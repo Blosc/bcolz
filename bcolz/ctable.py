@@ -172,6 +172,9 @@ class ctable(object):
     @property
     def dtype(self):
         "The data type of this object (numpy dtype)."
+        if getattr(self, '_dtype', None):
+            return self._dtype
+
         names, cols = self.names, self.cols
         l = []
         for name in names:
@@ -180,7 +183,8 @@ class ctable(object):
             t = (name, col.dtype) if col.ndim == 1 else \
                 (name, (col.dtype, col.shape[1:]))
             l.append(t)
-        return np.dtype(l)
+        self._dtype = np.dtype(l)
+        return self._dtype
 
     @property
     def names(self):
@@ -533,6 +537,8 @@ class ctable(object):
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
+        # Trigger update of dtype cache
+        self._dtype = None
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
@@ -586,6 +592,8 @@ class ctable(object):
         if not keep:
             col.purge()
 
+        # Trigger update of dtype cache
+        self._dtype = None
         # Update _arr1
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
