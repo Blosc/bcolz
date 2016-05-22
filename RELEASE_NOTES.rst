@@ -114,6 +114,16 @@ Changes from 1.0.0 to 1.1.0
     >>> %timeit np.array(bcolz.eval("ca*(cb+1)"))
     1 loop, best of 3: 133 ms per loop
 
+  And it also allows to use bcolz carrays transparently in more scenarios::
+    >>> import numexpr
+    >>> %timeit numexpr.evaluate("ca*(cb+1)")
+    10 loops, best of 3: 76.2 ms per loop
+    >>> %timeit numexpr.evaluate("a*(b+1)")
+    10 loops, best of 3: 25.5 ms per loop  # ndarrays are still faster
+    >>> %timeit a*(b+1)
+    10 loops, best of 3: 37.4 ms per loop  # pure numpy, for reference
+
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
