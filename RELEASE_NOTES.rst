@@ -93,6 +93,27 @@ Changes from 1.0.0 to 1.1.0
 - New accelerated codepath for `carray[:] = array` assignation.  This
   operation should be close in performance to `carray.copy()` now.
 
+- carray object does implement the __array__() special method
+  (http://docs.scipy.org/doc/numpy-1.10.1/reference/arrays.classes.html#numpy.class.__array__)
+  now. With this, interoperability with numpy arrays is easier and
+  faster:
+
+  Before __array__()::
+    >>> a = np.arange(1e7)
+    >>> b = np.arange(1e7)
+    >>> ca = bcolz.carray(a)
+    >>> cb = bcolz.carray(b)
+    >>> %timeit ca + a
+    1 loop, best of 3: 1.06 s per loop
+    >>> %timeit np.array(bcolz.eval("ca*(cb+1)"))
+    1 loop, best of 3: 1.18 s per loop
+
+  After __array__()::
+    >>> %timeit ca + a
+    10 loops, best of 3: 45.2 ms per loop
+    >>> %timeit np.array(bcolz.eval("ca*(cb+1)"))
+    1 loop, best of 3: 133 ms per loop
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

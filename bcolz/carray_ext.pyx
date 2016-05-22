@@ -2727,6 +2727,12 @@ cdef class carray:
         if self.mode != 'r':
             self.flush()
 
+    def __array__(self, dtype=None, **kwargs):
+        x = self[:]
+        if dtype and x.dtype != dtype:
+            x = x.astype(dtype)
+        return x
+
 
 ## Local Variables:
 ## mode: python
