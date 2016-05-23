@@ -123,6 +123,7 @@ Changes from 1.0.0 to 1.1.0
     >>> %timeit a*(b+1)
     10 loops, best of 3: 37.4 ms per loop  # pure numpy, for reference
 
+- Internal C-Blosc sources bumped to 1.9.1.
 
 
 Changes from 0.12.1 to 1.0.0
