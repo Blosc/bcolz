@@ -32,16 +32,19 @@ List of default values
 
 .. py:attribute:: eval_vm
 
-    The virtual machine to be used in computations (via :py:func:`eval`).
-    It can be 'python' or 'numexpr'.  Default is 'numexpr',
-    if installed.  If not, then the default is 'python'.
+    The virtual machine to be used in computations (via
+    :py:func:`eval`).  It can be 'python', 'numexpr' or 'dask'.
+    Default is 'numexpr', if installed.  If not, 'dask' is used, if
+    installed.  And if neither of these are installed, then the
+    'python' interpreter is used (via NumPy).
 
 
 .. py:attribute:: cparams
    :noindex:
 
     The defaults for parameters used in compression (dict).  The
-    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz', quantize: 0}.
+    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz',
+    quantize: 0}.
 
     See Also:
         :py:func:`cparams.setdefaults`

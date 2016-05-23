@@ -1607,6 +1607,8 @@ class evalTest(MayBeDiskTest):
         c, d = bcolz.carray(a, rootdir=self.rootdir), bcolz.carray(b)
         if self.vm == "python":
             cr = bcolz.eval("np.sin(c) + 2 * np.log(d) - 3")
+        elif self.vm == "dask":
+            cr = bcolz.eval("da.sin(c) + 2 * da.log(d) - 3")
         else:
             cr = bcolz.eval("sin(c) + 2 * log(d) - 3")
         nr = np.sin(a) + 2 * np.log(b) - 3
@@ -1680,6 +1682,37 @@ class evalDiskBigNE(evalTest, TestCase):
 class evalVeryBigNE(evalTest, TestCase):
     N = int(1e7)
     vm = "numexpr"
+
+@skipUnless(bcolz.dask_here, 'Needs dask')
+class evalSmallDSK(evalTest, TestCase):
+    N = 10
+    vm = "dask"
+
+
+@skipUnless(bcolz.dask_here, 'Needs dask')
+class evalDiskSmallDSK(evalTest, TestCase):
+    N = 10
+    vm = "dask"
+    disk = True
+
+
+@skipUnless(bcolz.dask_here, 'Needs dask')
+class evalBigDSK(evalTest, TestCase):
+    N = 1e4
+    vm = "dask"
+
+
+@skipUnless(bcolz.dask_here, 'Needs dask')
+class evalDiskBigDSK(evalTest, TestCase):
+    N = 1e4
+    vm = "dask"
+    disk = True
+
+
+@skipUnless(bcolz.dask_here and common.heavy, "Needs dask and --heavy")
+class evalVeryBigDSK(evalTest, TestCase):
+    N = int(1e7)
+    vm = "dask"
 
 
 class computeMethodsTest(TestCase):

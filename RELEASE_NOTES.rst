@@ -125,6 +125,10 @@ Changes from 1.0.0 to 1.1.0
 
 - Internal C-Blosc sources bumped to 1.9.1.
 
+- Dask (dask.pydata.org) is supported as another virtual machine backed
+  for bcolz.eval().  Now, either Numexpr (the default) or Dask or even
+  the Python interpreter can be used to evaluate complex expressions.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

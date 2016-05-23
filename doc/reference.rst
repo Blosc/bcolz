@@ -11,6 +11,14 @@ First level variables
 
     The version of the bcolz package.
 
+.. py:attribute:: dask_here
+
+    Whether the minimum version of dask has been detected.
+
+.. py:attribute:: min_dask_version
+
+    The minimum version of dask needed (dask is optional).
+
 .. py:attribute:: min_numexpr_version
 
     The minimum version of numexpr needed (numexpr is optional).
@@ -21,7 +29,7 @@ First level variables
 
 .. py:attribute:: numexpr_here
 
-    Whether minimum version of numexpr has been detected.
+    Whether the minimum version of numexpr has been detected.
 
 
 Top level classes

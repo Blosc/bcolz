@@ -798,8 +798,10 @@ class evalTest():
 
     def setUp(self):
         self.prev_vm = bcolz.defaults.eval_vm
-        if bcolz.numexpr_here:
-            bcolz.defaults.eval_vm = self.vm
+        if self.vm == "numexpr" and bcolz.numexpr_here:
+            bcolz.defaults.eval_vm = "numexpr"
+        elif self.vm == "dask" and bcolz.dask_here:
+            bcolz.defaults.eval_vm = "dask"
         else:
             bcolz.defaults.eval_vm = "python"
 
@@ -837,6 +839,9 @@ class evalTest():
         if bcolz.defaults.eval_vm == "python":
             assert_array_equal(sum(a), bcolz.eval("sum(b)"),
                                "Arrays are not equal")
+        elif bcolz.defaults.eval_vm == "dask":
+            assert_array_equal(a.sum(), bcolz.eval("da.sum(b)"),
+                               "Arrays are not equal")
         else:
             self.assertEqual(a.sum(), bcolz.eval("sum(b)"))
 
@@ -847,6 +852,9 @@ class evalTest():
         if bcolz.defaults.eval_vm == "python":
             # The Python VM does not have support for `axis` param
             assert_array_equal(sum(a), bcolz.eval("sum(b)"),
+                               "Arrays are not equal")
+        elif bcolz.defaults.eval_vm == "dask":
+            assert_array_equal(a.sum(), bcolz.eval("da.sum(b)"),
                                "Arrays are not equal")
         else:
             assert_array_equal(a.sum(axis=1), bcolz.eval("sum(b, axis=1)"),
@@ -862,6 +870,11 @@ class d2eval_ne(evalTest, TestCase):
     vm = "numexpr"
 
 
+class d2eval_da(evalTest, TestCase):
+    shape = (3, 4)
+    vm = "dask"
+
+
 class d3eval_python(evalTest, TestCase):
     shape = (3, 4, 5)
 
@@ -871,6 +884,11 @@ class d3eval_ne(evalTest, TestCase):
     vm = "numexpr"
 
 
+class d3eval_da(evalTest, TestCase):
+    shape = (3, 4, 5)
+    vm = "dask"
+
+
 class d4eval_python(evalTest, TestCase):
     shape = (3, 40, 50, 2)
 
@@ -878,6 +896,11 @@ class d4eval_python(evalTest, TestCase):
 class d4eval_ne(evalTest, TestCase):
     shape = (3, 40, 50, 2)
     vm = "numexpr"
+
+
+class d4eval_dask(evalTest, TestCase):
+    shape = (3, 40, 50, 2)
+    vm = "dask"
 
 
 class computeMethodsTest(TestCase):

@@ -19,6 +19,8 @@ from bcolz.py2help import xrange
 
 if bcolz.numexpr_here:
     from numexpr.expressions import functions as numexpr_functions
+if bcolz.dask_here:
+    import dask.array as da
 
 
 def is_sequence_like(var):
@@ -39,13 +41,13 @@ def _getvars(expression, user_dict, depth, vm):
     """
 
     cexpr = compile(expression, '<string>', 'eval')
-    if vm == "python":
+    if vm in ("python", "dask"):
         exprvars = [var for var in cexpr.co_names
                     if var not in ['None', 'False', 'True']]
     else:
         # Check that var is not a numexpr function here.  This is useful for
         # detecting unbound variables in expressions.  This is not necessary
-        # for the 'python' engine.
+        # for the 'python' or 'dask' engines.
         exprvars = [var for var in cexpr.co_names
                     if var not in ['None', 'False', 'True']
                     and var not in numexpr_functions]
@@ -89,8 +91,7 @@ _eval = eval
 
 
 def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
-    """
-    eval(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
+    """eval(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -101,8 +102,9 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         'b' are variable names to be taken from the calling function's frame.
         These variables may be scalars, carrays or NumPy arrays.
     vm : string
-        The virtual machine to be used in computations.  It can be 'numexpr'
-        or 'python'.  The default is to use 'numexpr' if it is installed.
+        The virtual machine to be used in computations.  It can be 'numexpr',
+        'python' or 'dask'.  The default is to use 'numexpr' if it is
+        installed.
     out_flavor : string
         The flavor for the `out` object.  It can be 'carray' or 'numpy'.
     user_dict : dict
@@ -121,10 +123,13 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     """
     if vm is None:
         vm = bcolz.defaults.eval_vm
-    if vm not in ("numexpr", "python"):
-        raise ValueError("`vm` must be either 'numexpr' or 'python'")
+    if vm not in ("numexpr", "python", "dask"):
+        raise ValueError("`vm` must be either 'numexpr', 'python' or 'dask'")
     if vm == 'numexpr' and not bcolz.numexpr_here:
         raise ImportError("eval(..., vm='numexpr') requires numexpr, "
+                          "which is not installed.")
+    if vm == 'dask' and not bcolz.dask_here:
+        raise ImportError("eval(..., vm='dask') requires dask, "
                           "which is not installed.")
 
     if out_flavor is None:
@@ -158,7 +163,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
 
     if typesize == 0:
         # All scalars
-        if vm == "python":
+        if vm in ("python", "dask"):
             return _eval(expression, vars)
         else:
             return bcolz.numexpr.evaluate(expression, local_dict=vars)
@@ -176,7 +181,9 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
     # and the 'movielens-bench' repository
     if vm == "numexpr":
         bsize = 2**24
-    else:
+    elif vm == "dask":
+        bsize = 2**24
+    else:  # python
         bsize = 2**22
     bsize //= typesize
     # Evaluation seems more efficient if block size is a power of 2
@@ -191,8 +198,29 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
     if bsize == 0:
         bsize = 1
 
+    if vm == "dask":
+        if 'da' in vars:
+            raise NameError(
+                "'da' is reserved as a prefix for dask.array. "
+                "Please use another prefix")
+        for name in vars:
+            var = vars[name]
+            if is_sequence_like(var):
+                vars[name] = da.from_array(var, chunks=(bsize,) + var.shape[1:])
+        # Build the expression graph
+        vars['da'] = da
+        da_expr = _eval(expression, vars)
+        if out_flavor == "carray" and da_expr.shape:
+            result = bcolz.zeros(da_expr.shape, da_expr.dtype, **kwargs)
+            # Store while compute expression graph
+            da.store(da_expr, result)
+            return result
+        else:
+            # Store while compute
+            return np.array(da_expr)
+
     vars_ = {}
-    # Get temporaries for vars
+    # Get containers for vars
     maxndims = 0
     for name in vars:
         var = vars[name]
@@ -205,7 +233,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 vars_[name] = np.empty(shape, dtype=var.dtype)
 
     for i in xrange(0, vlen, bsize):
-        # Get buffers for vars
+        # Fill buffers for vars
         for name in vars:
             var = vars[name]
             if is_sequence_like(var) and len(var) > bsize:
