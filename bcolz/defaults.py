@@ -105,7 +105,7 @@ these are installed, then the 'python' interpreter is used.
 """
 
 defaults.cparams = {'clevel': 5, 'shuffle': bcolz.SHUFFLE,
-                    'cname': 'blosclz', 'quantize': 0}
+                    'cname': 'lz4', 'quantize': 0}
 """The defaults for parameters used in compression.  You can change
 them more comfortably by using the `cparams.setdefaults()` method.
 

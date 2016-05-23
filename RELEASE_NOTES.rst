@@ -129,6 +129,12 @@ Changes from 1.0.0 to 1.1.0
   for bcolz.eval().  Now, either Numexpr (the default) or Dask or even
   the Python interpreter can be used to evaluate complex expressions.
 
+- The default compressor has been changed from 'blosclz' to 'lz4'.
+  BloscLZ tends to be a bit faster when decompressing, but LZ4 is
+  quickly catching up as the compilers are making progress with memory
+  access optimizations.  Also, LZ4 is considerably faster during
+  compression and in general compresses better too.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
