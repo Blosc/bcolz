@@ -46,12 +46,13 @@ binary data (although it works with text data just fine too).
 
 bcolz can also use `numexpr <https://github.com/pydata/numexpr>`_
 internally (it does that by default if it detects numexpr installed)
-so as to accelerate many vector and query operations (although it can
-use pure NumPy for doing so too).  numexpr can optimize the memory
-usage and use multithreading for doing the computations, so it is
-blazing fast.  This, in combination with carray/ctable disk-based,
-compressed containers, can be used for performing out-of-core
-computations efficiently, but most importantly *transparently*.
+or `dask <https://github.com/dask/dask>`_ so as to accelerate many
+vector and query operations (although it can use pure NumPy for doing
+so too).  numexpr/dask can optimize the memory usage and use
+multithreading for doing the computations, so it is blazing fast.
+This, in combination with carray/ctable disk-based, compressed
+containers, can be used for performing out-of-core computations
+efficiently, but most importantly *transparently*.
 
 Just to whet your appetite, here it is an example with real data, where
 bcolz is already fulfilling the promise of accelerating memory I/O by
@@ -101,9 +102,10 @@ Requisites
 
 Optional:
 
-- numexpr>=2.5.2
+- numexpr >= 2.5.2
+- dask >= 0.9.0
 - pandas
-- tables
+- tables (pytables)
 
 Building
 --------
@@ -140,9 +142,6 @@ Using a flag:
 Compiling without an installed Blosc library
 ............................................
 
-*Warning:* This way of compiling is discouraged for performance reasons.
-See the previous section.
-
 bcolz also comes with the Blosc sources with it so, assuming that you
 have a C++ compiler installed, do:
 
@@ -155,7 +154,6 @@ That's all.  You can proceed with testing section now.
 Note: The requirement for the C++ compiler is just for the Snappy
 dependency.  The rest of the other components of Blosc are pure C
 (including the LZ4 and Zlib libraries).
-
 
 Testing
 -------

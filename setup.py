@@ -213,7 +213,8 @@ for binary data.
     tests_require=tests_require,
     extras_require=dict(
         optional=[
-            'numexpr>=1.4.1',
+            'numexpr>=2.5.2',
+            'dask>=0.9.0',
             'pandas',
             'tables'
         ],
