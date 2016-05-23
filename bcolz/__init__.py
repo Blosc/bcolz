@@ -18,6 +18,7 @@ The compression process is carried out internally by Blosc,
 a high-performance compressor that is optimized for binary data.
 
 """
+from distutils.version import LooseVersion
 
 # Filters
 NOSHUFFLE = 0
@@ -36,17 +37,19 @@ try:
 except ImportError:
     pass
 else:
-    if numexpr.__version__ >= min_numexpr_version:
+    if numexpr.__version__ >= LooseVersion(min_numexpr_version):
         numexpr_here = True
 
 # Check for dask (as another virtual machine for chunked eval)
+min_dask_version = '0.9.0'  # the minimum version of Numexpr needed
 dask_here = False
 try:
     import dask
 except ImportError:
     pass
 else:
-    dask_here = True
+    if numexpr.__version__ >= LooseVersion(min_dask_version):
+        dask_here = True
 
 # Check for pandas (for data container conversion purposes)
 pandas_here = False

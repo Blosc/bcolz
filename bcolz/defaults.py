@@ -59,7 +59,7 @@ class Defaults(object):
         elif value == "dask" and not bcolz.dask_here:
             raise (ValueError,
                    "cannot use `dask` virtual machine "
-                   "(dask package not found)")
+                   "(minimum required version is probably not installed)")
         self.__eval_vm = value
 
     @property
