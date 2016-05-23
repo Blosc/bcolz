@@ -56,6 +56,10 @@ class Defaults(object):
             raise (ValueError,
                    "cannot use `numexpr` virtual machine "
                    "(minimum required version is probably not installed)")
+        elif value == "dask" and not bcolz.dask_here:
+            raise (ValueError,
+                   "cannot use `dask` virtual machine "
+                   "(dask package not found)")
         self.__eval_vm = value
 
     @property
@@ -82,21 +86,27 @@ defaults = Defaults()
 # Default values start here...
 
 defaults.eval_out_flavor = "carray"
-"""
-The flavor for the output object in `eval()`.  It can be 'carray' or
-'numpy'.  Default is 'carray'.
+"""The flavor for the output object in `eval()`.  It can be 'carray'
+or 'numpy'.  Default is 'carray'.
+
 """
 
-defaults.eval_vm = "numexpr" if bcolz.numexpr_here else "python"
-"""
-The virtual machine to be used in computations (via `eval`).  It can
-be 'numexpr' or 'python'.  Default is 'numexpr', if it is installed.
-If not, then the default is 'python'.
+if bcolz.numexpr_here:
+    defaults.eval_vm = "numexpr"
+elif bcolz.dask_here:
+    defaults.eval_vm = "dask"
+else:
+    defaults.eval_vm = "python"
+"""The virtual machine to be used in computations (via `eval`).  It
+can be 'numexpr', 'dask' or 'python'.  Default is 'numexpr', if it is
+installed.  If not, 'dask' is used, if installed.  And if neither of
+these are installed, then the 'python' interpreter is used.
+
 """
 
 defaults.cparams = {'clevel': 5, 'shuffle': bcolz.SHUFFLE,
                     'cname': 'blosclz', 'quantize': 0}
-"""
-The defaults for parameters used in compression.  You can change
+"""The defaults for parameters used in compression.  You can change
 them more comfortably by using the `cparams.setdefaults()` method.
+
 """

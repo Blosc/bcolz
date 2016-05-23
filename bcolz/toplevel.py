@@ -39,6 +39,10 @@ def print_versions():
     else:
         print("Numexpr version:   not available "
               "(version >= %s not detected)" % bcolz.min_numexpr_version)
+    if bcolz.dask_here:
+        print("Dask version:      %s" % bcolz.dask.__version__)
+    else:
+        print("Dask version:   not available ")
     print("Python version:    %s" % sys.version)
     if os.name == "posix":
         (sysname, nodename, release, version, machine) = os.uname()

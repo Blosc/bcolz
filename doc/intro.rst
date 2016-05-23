@@ -25,14 +25,16 @@ The compression/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
 data.  That ensures maximum performance for I/O operation.
 
-bcolz can use numexpr internally (it does that by default if it
-detects numexpr installed) so as to accelerate many vector and query
+bcolz can use numexpr or dask internally (numexpr is used by default
+if installed, then dask and if these are not found, then the pure
+Python interpreter) so as to accelerate many vector and query
 operations (although it can use pure NumPy for doing so too).  numexpr
-can optimize the memory usage and use multithreading for doing the
+can optimize memory usage and use multithreading for doing the
 computations, so it is blazing fast.  This, in combination with
 carray/ctable disk-based, compressed containers, can be used for
 performing out-of-core computations efficiently, but most importantly
 *transparently*.
+
 
 carray and ctable objects
 -------------------------
@@ -85,14 +87,14 @@ bcolz objects bring several advantages over plain NumPy objects:
     for much better performance when working with big tables, as well
     as for improving the compression ratio.
 
-  * Numexpr-powered: you can operate with compressed data in a fast
-    and convenient way.  Blosc ensures that the additional overhead of
-    handling compressed data natively is very low.
+  * Can leverage Numexpr and Dask as virtual machines for fast
+    operation with bcolz objects.  Blosc ensures that the additional
+    overhead of handling compressed data natively is very low.
 
   * Advanced query capabilities.  The ability of a `ctable` object to
     iterate over the rows whose fields fulfill some conditions (and
-    evaluated via numexpr) allows to perform queries very efficiently.
-
+    evaluated via numexpr, dask or pure python virtual machine) allows
+    to perform queries very efficiently.
 
 
 bcolz limitations
@@ -100,7 +102,7 @@ bcolz limitations
 
 bcolz does not currently come with good support in the next areas:
 
-  * Reduced number of operations, at least when compared with NumPy.
+  * Limited number of operations, at least when compared with NumPy.
     The supported operations are basically vectorized ones (i.e. those
     that are made element-by-element).  But this will change in the
     future, when support for more powerful computational kernels would
@@ -117,4 +119,4 @@ bcolz does not currently come with good support in the next areas:
 
   * Multidimensional `ctable` objects are not supported.  However, as
     the columns of these objects can be fully multidimensional, this
-    is not regarded as a grave limitation.
+    is not regarded as a real-life limitation.

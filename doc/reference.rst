@@ -23,6 +23,10 @@ First level variables
 
     Whether minimum version of numexpr has been detected.
 
+.. py:attribute:: dask_here
+
+    Whether dask package has been detected.
+
 
 Top level classes
 =================
