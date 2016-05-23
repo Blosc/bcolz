@@ -22,7 +22,7 @@ class Defaults(object):
 
         # Choices setup
         self.choices['eval_out_flavor'] = ("carray", "numpy")
-        self.choices['eval_vm'] = ("numexpr", "python")
+        self.choices['eval_vm'] = ("numexpr", "python", "dask")
 
     def check_choices(self, name, value):
         if value not in self.choices[name]:

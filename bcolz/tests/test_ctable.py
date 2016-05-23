@@ -1013,8 +1013,10 @@ class evalTest(MayBeDiskTest):
 
     def setUp(self):
         self.prev_vm = bcolz.defaults.eval_vm
-        if bcolz.numexpr_here:
-            bcolz.defaults.eval_vm = self.vm
+        if self.vm == "numexpr" and bcolz.numexpr_here:
+            bcolz.defaults.eval_vm = "numexpr"
+        elif self.vm == "dask" and bcolz.dask_here:
+            bcolz.defaults.eval_vm = "dask"
         else:
             bcolz.defaults.eval_vm = "python"
         MayBeDiskTest.setUp(self)
@@ -1077,10 +1079,12 @@ class evalTest(MayBeDiskTest):
         ra = np.fromiter(((i, i * 2., i * 3)
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
-        if not bcolz.defaults.eval_vm == "numexpr":
-            # Populate the name space with functions from numpy
-            from numpy import sin  # noqa
-        ctr = t.eval("f0 * sin(f1)")
+        if bcolz.defaults.eval_vm == "python":
+            ctr = t.eval("f0 * np.sin(f1)")
+        elif bcolz.defaults.eval_vm == "dask":
+            ctr = t.eval("f0 * da.sin(f1)")
+        else:  # numexpr
+            ctr = t.eval("f0 * sin(f1)")
         rar = ra['f0'] * np.sin(ra['f1'])
         # print "ctable ->", ctr
         # print "numpy  ->", rar
@@ -1148,6 +1152,15 @@ class eval_ne(evalTest, TestCase):
 
 class eval_neDisk(evalTest, TestCase):
     vm = "numexpr"
+    disk = True
+
+
+class eval_dask(evalTest, TestCase):
+    vm = "dask"
+
+
+class eval_daskDisk(evalTest, TestCase):
+    vm = "dask"
     disk = True
 
 

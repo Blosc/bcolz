@@ -29,7 +29,7 @@ filters = {NOSHUFFLE: "noshuffle",
            SHUFFLE: "shuffle",
            BITSHUFFLE: "bitshuffle"}
 
-min_numexpr_version = '1.4.1'  # the minimum version of Numexpr needed
+min_numexpr_version = '2.5.2'  # the minimum version of Numexpr needed
 numexpr_here = False
 try:
     import numexpr
@@ -38,6 +38,15 @@ except ImportError:
 else:
     if numexpr.__version__ >= min_numexpr_version:
         numexpr_here = True
+
+# Check for dask (as another virtual machine for chunked eval)
+dask_here = False
+try:
+    import dask
+except ImportError:
+    pass
+else:
+    dask_here = True
 
 # Check for pandas (for data container conversion purposes)
 pandas_here = False
