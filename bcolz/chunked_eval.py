@@ -191,7 +191,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
             bsize = 2**25
         else:  # python
             bsize = 2**22
-        blen = bsize // typesize
+        blen = int(bsize / typesize)
         # Protection against too large atomsizes
         if blen == 0:
             blen = 1
