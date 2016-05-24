@@ -48,7 +48,7 @@ try:
 except ImportError:
     pass
 else:
-    if numexpr.__version__ >= LooseVersion(min_dask_version):
+    if dask.__version__ >= LooseVersion(min_dask_version):
         dask_here = True
 
 # Check for pandas (for data container conversion purposes)
