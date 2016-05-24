@@ -192,14 +192,6 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         else:  # python
             bsize = 2**22
         blen = bsize // typesize
-        # Evaluation seems more efficient if block size is a power of 2
-        blen = 2 ** (int(math.log(blen, 2)))
-        if vlen < 100*1000:
-            blen //= 8
-        elif vlen < 1000*1000:
-            blen //= 4
-        elif vlen < 10*1000*1000:
-            blen //= 2
         # Protection against too large atomsizes
         if blen == 0:
             blen = 1
