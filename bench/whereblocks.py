@@ -50,7 +50,7 @@ def where0():
 #@do_cprofile
 def where1():
     #return sum(r[0] for r in ct.where("(a > 5) & (b < 10)"))
-    return sum(r[0] for r in ct.where("(a > 5) & (b < 1e6)"))
+    return sum(r[0] for r in ct.where("(a > 5) & (b < 1e6)", out_flavor=tuple))
 
 @timefunc
 #@do_cprofile
