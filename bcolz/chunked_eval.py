@@ -90,8 +90,9 @@ def _getvars(expression, user_dict, depth, vm):
 _eval = eval
 
 
-def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
-    """eval(expression, vm=None, out_flavor=None, user_dict=None, **kwargs)
+def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
+         **kwargs):
+    """eval(expression, vm=None, out_flavor=None, user_dict=None, blen=None, **kwargs)
 
     Evaluate an `expression` and return the result.
 
@@ -110,6 +111,10 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
     user_dict : dict
         An user-provided dictionary where the variables in expression
         can be found by name.
+    blen : int
+        The length of the block to be evaluated in one go internally.
+        The default is a value that has been tested experimentally and
+        that offers a good enough peformance / memory usage balance.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -168,35 +173,36 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, **kwargs):
         else:
             return bcolz.numexpr.evaluate(expression, local_dict=vars)
 
-    return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
+    return _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                         **kwargs)
 
 
-def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
+def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                  **kwargs):
     """Perform the evaluation in blocks."""
 
-    # Compute the optimal block size (in elements)
-    # The next is based on experiments with bench/ctable-query.py
-    # and the 'movielens-bench' repository
-    if vm == "numexpr":
-        bsize = 2**24
-    elif vm == "dask":
-        bsize = 2**24
-    else:  # python
-        bsize = 2**22
-    bsize //= typesize
-    # Evaluation seems more efficient if block size is a power of 2
-    bsize = 2 ** (int(math.log(bsize, 2)))
-    if vlen < 100*1000:
-        bsize //= 8
-    elif vlen < 1000*1000:
-        bsize //= 4
-    elif vlen < 10*1000*1000:
-        bsize //= 2
-    # Protection against too large atomsizes
-    if bsize == 0:
-        bsize = 1
+    if not blen:
+        # Compute the optimal block size (in elements)
+        # The next is based on experiments with bench/ctable-query.py
+        # and the 'movielens-bench' repository
+        if vm == "numexpr":
+            bsize = 2**22
+        elif vm == "dask":
+            bsize = 2**25
+        else:  # python
+            bsize = 2**22
+        blen = bsize // typesize
+        # Evaluation seems more efficient if block size is a power of 2
+        blen = 2 ** (int(math.log(blen, 2)))
+        if vlen < 100*1000:
+            blen //= 8
+        elif vlen < 1000*1000:
+            blen //= 4
+        elif vlen < 10*1000*1000:
+            blen //= 2
+        # Protection against too large atomsizes
+        if blen == 0:
+            blen = 1
 
     if vm == "dask":
         if 'da' in vars:
@@ -206,7 +212,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
         for name in vars:
             var = vars[name]
             if is_sequence_like(var):
-                vars[name] = da.from_array(var, chunks=(bsize,) + var.shape[1:])
+                vars[name] = da.from_array(var, chunks=(blen,) + var.shape[1:])
         # Build the expression graph
         vars['da'] = da
         da_expr = _eval(expression, vars)
@@ -228,22 +234,22 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
             ndims = len(var.shape) + len(var.dtype.shape)
             if ndims > maxndims:
                 maxndims = ndims
-            if len(var) > bsize and hasattr(var, "_getrange"):
-                shape = (bsize, ) + var.shape[1:]
+            if len(var) > blen and hasattr(var, "_getrange"):
+                shape = (blen, ) + var.shape[1:]
                 vars_[name] = np.empty(shape, dtype=var.dtype)
 
-    for i in xrange(0, vlen, bsize):
+    for i in xrange(0, vlen, blen):
         # Fill buffers for vars
         for name in vars:
             var = vars[name]
-            if is_sequence_like(var) and len(var) > bsize:
+            if is_sequence_like(var) and len(var) > blen:
                 if hasattr(var, "_getrange"):
-                    if i+bsize < vlen:
-                        var._getrange(i, bsize, vars_[name])
+                    if i+blen < vlen:
+                        var._getrange(i, blen, vars_[name])
                     else:
                         vars_[name] = var[i:]
                 else:
-                    vars_[name] = var[i:i+bsize]
+                    vars_[name] = var[i:i+blen]
             else:
                 if hasattr(var, "__getitem__"):
                     vars_[name] = var[:]
@@ -261,7 +267,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 # numexpr cannot handle this. Fall back to a pure "python" VM.
                 return _eval_blocks(
                     expression, vars, vlen, typesize, "python",
-                    out_flavor, **kwargs)
+                    out_flavor, blen, **kwargs)
 
         if i == 0:
             # Detection of reduction operations
@@ -283,14 +289,14 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor,
                 out_shape = list(res_block.shape)
                 out_shape[0] = vlen
                 result = np.empty(out_shape, dtype=res_block.dtype)
-                result[:bsize] = res_block
+                result[:blen] = res_block
         else:
             if scalar or dim_reduction:
                 result += res_block
             elif out_flavor == "carray":
                 result.append(res_block)
             else:
-                result[i:i+bsize] = res_block
+                result[i:i+blen] = res_block
 
     if isinstance(result, bcolz.carray):
         result.flush()

@@ -137,6 +137,12 @@ Changes from 1.0.0 to 1.1.0
   are auto-detected so that the affected code will selectively be
   included from vendored C-Blosc sources.
 
+- Added a new `blen` parameter to bcolz.eval() so that the user can
+  select the length of the operand blocks to be operated with.
+
+- New fine-tuning of the automatically computed blen in bcolz.eval() for
+  better times and reduced memory consumption.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
