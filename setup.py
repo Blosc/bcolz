@@ -133,7 +133,7 @@ else:
 
     # AVX2
     if 'avx2' in cpu_info['flags']:
-        print('[zarr] AVX2 detected')
+        print('AVX2 detected')
         CFLAGS.append('-DSHUFFLE_AVX2_ENABLED')
         sources += [f for f in glob('c-blosc/blosc/*.c') if 'avx2' in f]
         if os.name == 'posix':
