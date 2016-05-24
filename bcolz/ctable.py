@@ -18,7 +18,7 @@ from keyword import iskeyword
 import os
 import re
 import shutil
-from .py2help import _inttypes, _strtypes, imap, xrange
+from .py2help import _inttypes, _strtypes, imap, izip, xrange
 
 _inttypes += (np.integer,)
 islice = itertools.islice
@@ -839,7 +839,8 @@ class ctable(object):
     def __sizeof__(self):
         return self.cbytes
 
-    def where(self, expression, outcols=None, limit=None, skip=0):
+    def where(self, expression, outcols=None, limit=None, skip=0,
+              out_flavor=namedtuple):
         """Iterate over rows where `expression` is true.
 
         Parameters
@@ -857,12 +858,13 @@ class ctable(object):
             everything.
         skip : int
             An initial number of elements to skip.  The default is 0.
+        out_flavor : namedtuple, tuple or ndarray
+            Whether the returned rows are namedtuples or tuples.  Default are
+            named tuples.
 
         Returns
         -------
         out : iterable
-            This iterable returns rows as NumPy structured types (i.e. they
-            support being mapped either by position or by name).
 
         See Also
         --------
@@ -904,7 +906,7 @@ class ctable(object):
                 icols.append(col.where(boolarr, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
-        return self._iter(icols, dtype)
+        return self._iter(icols, dtype, out_flavor)
 
     def whereblocks(self, expression, blen=None, outfields=None, limit=None,
                     skip=0):
@@ -932,9 +934,6 @@ class ctable(object):
         Returns
         -------
         out : iterable
-            This iterable returns buffers as NumPy arrays made of
-            structured types (or homogeneous ones in case `outfields` is a
-            single field.
 
         See Also
         --------
@@ -959,7 +958,8 @@ class ctable(object):
 
         buf = np.empty(blen, dtype=dtype)
         nrow = 0
-        for row in self.where(expression, outfields, limit, skip):
+        for row in self.where(expression, outfields, limit, skip,
+                              out_flavor=tuple):
             buf[nrow] = row
             nrow += 1
             if nrow == blen:
@@ -972,7 +972,7 @@ class ctable(object):
         return self.iter(0, self.len, 1)
 
     def iter(self, start=0, stop=None, step=1, outcols=None,
-             limit=None, skip=0):
+             limit=None, skip=0, out_flavor=namedtuple):
         """Iterator with `start`, `stop` and `step` bounds.
 
         Parameters
@@ -995,6 +995,9 @@ class ctable(object):
             everything.
         skip : int
             An initial number of elements to skip.  The default is 0.
+        out_flavor : namedtuple, tuple or ndarray
+            Whether the returned rows are namedtuples or tuples.  Default are
+            named tuples.
 
         Returns
         -------
@@ -1039,14 +1042,24 @@ class ctable(object):
                     col.iter(start, stop, step, limit=limit, skip=skip))
                 dtypes.append((name, col.dtype))
         dtype = np.dtype(dtypes)
-        return self._iter(icols, dtype)
+        return self._iter(icols, dtype, out_flavor)
 
-    def _iter(self, icols, dtype):
+    def _iter(self, icols, dtype, out_flavor):
         """Return a list of `icols` iterators with `dtype` names."""
 
         icols = tuple(icols)
-        namedt = namedtuple('row', dtype.names)
-        iterable = imap(namedt, *icols)
+        if out_flavor is namedtuple or out_flavor == "namedtuple":
+            namedt = namedtuple('row', dtype.names)
+            iterable = imap(namedt, *icols)
+        elif out_flavor is np.ndarray or out_flavor == "ndarray":
+            def setarr1(*val):
+                ret = self._arr1.copy()
+                ret.__setitem__(0, val)
+                return ret
+            iterable = imap(setarr1, *icols)
+        else:
+            # A regular tuple (fastest)
+            iterable = izip(*icols)
         return iterable
 
     def _where(self, boolarr, colnames=None):

@@ -143,6 +143,13 @@ Changes from 1.0.0 to 1.1.0
 - New fine-tuning of the automatically computed blen in bcolz.eval() for
   better times and reduced memory consumption.
 
+- Added a new `out_flavor` parameter to the ctable.iter() and
+  ctable.where() for specifying the type of result rows.  Now one can
+  select namedtuple (default), tuple or ndarray.
+
+- The performance of carray.whereblocks() has been accelerated 2x due to
+  the internal use of tuples instead of named tuples.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
