@@ -533,8 +533,6 @@ class ctable(object):
 
         # Insert the column
         self.cols.insert(name, pos, newcol)
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
         if self.auto_flush:
             self.flush()
@@ -585,9 +583,6 @@ class ctable(object):
 
         if not keep:
             col.purge()
-
-        # Update _arr1
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
         if self.auto_flush:
             self.flush()
