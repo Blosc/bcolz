@@ -58,7 +58,8 @@ copyright = u'2010-2016 Francesc Alted and the bcolz contributors'
 # built documents.
 #
 # The full version, including alpha/beta/rc tags.
-from bcolz import version as release
+import bcolz
+release = bcolz.__version__
 
 # The short X.Y version.
 version = ".".join(release.split(".")[:2])
