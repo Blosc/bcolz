@@ -21,8 +21,8 @@ class Defaults(object):
         self.choices = {}
 
         # Choices setup
-        self.choices['eval_out_flavor'] = ("bcolz", "carray", "numpy")
-        self.choices['eval_vm'] = ("numexpr", "python", "dask")
+        self.choices['out_flavor'] = ("bcolz", "carray", "numpy")
+        self.choices['vm'] = ("numexpr", "python", "dask")
 
     def check_choices(self, name, value):
         if value not in self.choices[name]:
@@ -46,12 +46,12 @@ class Defaults(object):
     #
 
     @property
-    def eval_vm(self):
-        return self.__eval_vm
+    def vm(self):
+        return self.__vm
 
-    @eval_vm.setter
-    def eval_vm(self, value):
-        self.check_choices('eval_vm', value)
+    @vm.setter
+    def vm(self, value):
+        self.check_choices('vm', value)
         if value == "numexpr" and not bcolz.numexpr_here:
             raise (ValueError,
                    "cannot use `numexpr` virtual machine "
@@ -60,16 +60,22 @@ class Defaults(object):
             raise (ValueError,
                    "cannot use `dask` virtual machine "
                    "(minimum required version is probably not installed)")
-        self.__eval_vm = value
+        self.__vm = value
+
+    # Keep eval_vm for backward compatibility
+    eval_vm = vm
 
     @property
-    def eval_out_flavor(self):
-        return self.__eval_out_flavor
+    def out_flavor(self):
+        return self.__out_flavor
 
-    @eval_out_flavor.setter
-    def eval_out_flavor(self, value):
-        self.check_choices('eval_out_flavor', value)
-        self.__eval_out_flavor = value
+    @out_flavor.setter
+    def out_flavor(self, value):
+        self.check_choices('out_flavor', value)
+        self.__out_flavor = value
+
+    # Keep eval_out_flavor for backward compatibility
+    eval_out_flavor = out_flavor
 
     @property
     def cparams(self):
@@ -85,18 +91,18 @@ defaults = Defaults()
 
 # Default values start here...
 
-defaults.eval_out_flavor = "bcolz"
+defaults.out_flavor = "bcolz"
 """The flavor for the output object in `eval()`.  It can be 'bcolz'
 or 'numpy'.  Default is 'bcolz'.
 
 """
 
 if bcolz.numexpr_here:
-    defaults.eval_vm = "numexpr"
+    defaults.vm = "numexpr"
 elif bcolz.dask_here:
-    defaults.eval_vm = "dask"
+    defaults.vm = "dask"
 else:
-    defaults.eval_vm = "python"
+    defaults.vm = "python"
 """The virtual machine to be used in computations (via `eval`).  It
 can be 'numexpr', 'dask' or 'python'.  Default is 'numexpr', if it is
 installed.  If not, 'dask' is used, if installed.  And if neither of

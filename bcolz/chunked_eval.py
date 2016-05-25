@@ -129,7 +129,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
 
     """
     if vm is None:
-        vm = bcolz.defaults.eval_vm
+        vm = bcolz.defaults.vm
     if vm not in ("numexpr", "python", "dask"):
         raise ValueError("`vm` must be either 'numexpr', 'python' or 'dask'")
     if vm == 'numexpr' and not bcolz.numexpr_here:
@@ -140,7 +140,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
                           "which is not installed.")
 
     if out_flavor is None:
-        out_flavor = bcolz.defaults.eval_out_flavor
+        out_flavor = bcolz.defaults.out_flavor
 
     # Get variables and column names participating in expression
     depth = kwargs.pop('depth', 2)

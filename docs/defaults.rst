@@ -10,40 +10,43 @@ here.  You can change these values in two ways:
 
 * In your program: the changes will be temporary.  For example::
 
-    bcolz.defaults.eval_out_flavor = "numpy"
+    bcolz.defaults.out_flavor = "numpy"
 
 * Manually modify the ``defaults.py`` module of the bcolz package: the
   changes will be persistent.  For example, replace::
 
-    defaults.eval_out_flavor = "carray"
+    defaults.out_flavor = "bcolz"
 
   by::
 
-    defaults.eval_out_flavor = "numpy"
+    defaults.out_flavor = "numpy"
+
+Generally, only the former is needed.
 
 
 List of default values
 ======================
 
-.. py:attribute:: eval_out_flavor
+.. py:attribute:: out_flavor
 
-    The flavor for the output object in :py:func:`eval`.  It can be 'carray'
-    or 'numpy'.  Default is 'carray'.
+    The flavor for the output object in :py:func:`eval` and others
+    that call this indirectly.  It can be 'bcolz' or 'numpy'.  Default
+    is 'bcolz'.
 
-.. py:attribute:: eval_vm
+.. py:attribute:: vm
 
     The virtual machine to be used in computations (via
     :py:func:`eval`).  It can be 'python', 'numexpr' or 'dask'.
     Default is 'numexpr', if installed.  If not, 'dask' is used, if
     installed.  And if neither of these are installed, then the
-    'python' interpreter is used (via NumPy).
+    'python' interpreter is used (via numpy).
 
 
 .. py:attribute:: cparams
    :noindex:
 
     The defaults for parameters used in compression (dict).  The
-    default is {'clevel': 5, 'shuffle': True, 'cname': 'blosclz',
+    default is {'clevel': 5, 'shuffle': True, 'cname': 'lz4',
     quantize: 0}.
 
     See Also:

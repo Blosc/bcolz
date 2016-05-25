@@ -166,6 +166,13 @@ Changes from 1.0.0 to 1.1.0
   'numpy'] instead of previous ['carray', 'numpy'].  For backward
   compatibility the 'carray' value is still allowed.
 
+- The `bcolz.defaults.eval_out_flavor` and `bcolz.defaults.eval_vm` have
+  been renamed to `bcolz.defaults.out_flavor` and `bcolz.defaults.vm`
+  because they can be used in other places than just bcolz.eval().  The
+  old `eval_out_flavor` and `eval_vm` properties of the `defaults`
+  object are still kept for backward compatibility, but they are not
+  documented anymore and its use is discouraged.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

@@ -959,7 +959,7 @@ class ctable(object):
 
         """
         if out_flavor is None:
-            out_flavor = bcolz.defaults.eval_out_flavor
+            out_flavor = bcolz.defaults.out_flavor
 
         if out_flavor == "numpy":
             it = self.whereblocks(expression, len(self), outcols, limit, skip)

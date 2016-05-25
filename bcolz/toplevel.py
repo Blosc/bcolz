@@ -654,7 +654,7 @@ class cparams(object):
 
         If this method is not called, the defaults will be set as in
         defaults.py:
-        (``{clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz', quantize=None}``).
+        (``{clevel=5, shuffle=bcolz.SHUFFLE, cname='lz4', quantize=None}``).
 
         """
         clevel, shuffle, cname, quantize = cparams._checkparams(
