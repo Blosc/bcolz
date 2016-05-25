@@ -31,7 +31,7 @@ if PY2:
     def dict_iteritems(d):
         return d.iteritems()
     xrange = __builtin__.xrange
-    from itertools import izip
+    from itertools import izip, imap, islice
     unicode = __builtin__.unicode
     basestring = __builtin__.basestring
     reduce = __builtin__.reduce
@@ -39,7 +39,6 @@ if PY2:
     _strtypes = (str, unicode)
 
     _inttypes = (int, long)
-    imap = itertools.imap
     import urlparse
     def exec_(_code_, _globs_=None, _locs_=None):
         """Execute code in a namespace."""
@@ -57,10 +56,10 @@ else:
         return d.items().__iter__()
     xrange = range
     izip = zip
+    imap = map
     _inttypes = (int,)
     _strtypes = (bytes, str)
     unicode = str
-    imap = map
     basestring = str
     import urllib.parse as urlparse
     from functools import reduce

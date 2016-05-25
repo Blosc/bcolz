@@ -18,10 +18,9 @@ from keyword import iskeyword
 import os
 import re
 import shutil
-from .py2help import _inttypes, _strtypes, imap, izip, xrange
+from .py2help import _inttypes, _strtypes, imap, izip, islice, xrange
 
 _inttypes += (np.integer,)
-islice = itertools.islice
 
 ROOTDIRS = '__rootdirs__'
 
@@ -937,7 +936,7 @@ class ctable(object):
 
         See Also
         --------
-        iterblocks
+        :func:`~toplevel.iterblocks`
 
         """
 
@@ -954,19 +953,17 @@ class ctable(object):
                 dtype = [(name, self[name].dtype) for name in outfields]
             except IndexError:
                 raise ValueError(
-                    "Some names in `outfields` are not real fields")
+                    "Some names in `outfields` are not actual fields")
 
-        buf = np.empty(blen, dtype=dtype)
-        nrow = 0
-        for row in self.where(expression, outfields, limit, skip,
-                              out_flavor=tuple):
-            buf[nrow] = row
-            nrow += 1
-            if nrow == blen:
-                yield buf
-                buf = np.empty(blen, dtype=dtype)
-                nrow = 0
-        yield buf[:nrow]
+        it = self.where(expression, outfields, limit, skip, out_flavor=tuple)
+        return self._iterwb(it, blen, dtype)
+
+    def _iterwb(self, it, blen, dtype):
+        while True:
+            ra = np.fromiter(islice(it, blen), dtype)
+            if len(ra) == 0:
+                break
+            yield ra
 
     def __iter__(self):
         return self.iter(0, self.len, 1)
