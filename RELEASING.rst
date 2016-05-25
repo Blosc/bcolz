@@ -18,7 +18,7 @@ Preliminaries
     $ git commit -a -m"Getting ready for X.Y.Z final"
 
 * Once a year: check that the copyright year in ``LICENSES/BCOLZ.txt``
-  and in ``doc/conf.py`` is up to date.
+  and in ``docs/conf.py`` is up to date.
 
 
 Tagging

@@ -7,7 +7,7 @@ recursive-include bcolz *.py *.pyx *.pxd *.c *.h
 recursive-include bcolz/tests *.py
 recursive-include c-blosc *.c *.h
 recursive-include bench *.py *.txt
-recursive-include doc *.rst *.txt *.py *.pdf *.html *.css *.png
-recursive-exclude doc/_build *
+recursive-include docs *.rst *.txt *.py *.pdf *.html *.css *.png
+recursive-exclude docs/_build *
 recursive-include LICENSES *
 recursive-include c-blosc/LICENSES *

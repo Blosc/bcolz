@@ -1,6 +1,6 @@
 # This is the maintainers undocumented Makefile.
 # Nothin to see here, please move along.
-.PHONY: build test clean doc
+.PHONY: build test clean docs
 
 build:
 	python setup.py build_ext -i
@@ -11,5 +11,5 @@ test:
 clean:
 	git clean -dfX; git clean -dfx
 
-doc:
-	cd doc && make html
+docs:
+	cd docs && make html
