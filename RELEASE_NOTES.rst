@@ -162,6 +162,11 @@ Changes from 1.0.0 to 1.1.0
   that it uses less memory and can go faster too (20% ~ 50%, depending
   on the use).
 
+- The values for defaults.eval_out_flavor has been changed to ['bcolz',
+  'numpy'] instead of previous ['carray', 'numpy'].  For backward
+  compatibility the 'carray' value is still allowed.
+
+
 Changes from 0.12.1 to 1.0.0
 ============================
 

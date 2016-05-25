@@ -255,6 +255,18 @@ class fetchwhereTest(MayBeDiskTest):
         self.assertEqual(l, N - M - 2)
         self.assertEqual(s, np.arange(M + 1, N - 1).sum())
 
+    def test04(self):
+        """Testing `fetchwhere` method with an `out_flavor` parameter"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere('f1 < f2', out_flavor="numpy")
+        self.assertEqual(type(ct), np.ndarray)
+        l, s = len(ct), ct['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
 
 class small_fetchwhereTest(fetchwhereTest, TestCase):
     N = 120

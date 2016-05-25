@@ -107,7 +107,8 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
         'python' or 'dask'.  The default is to use 'numexpr' if it is
         installed.
     out_flavor : string
-        The flavor for the `out` object.  It can be 'carray' or 'numpy'.
+        The flavor for the `out` object.  It can be 'bcolz' or 'numpy'.
+        If None, the value is get from `bcolz.defaults.out_flavor`.
     user_dict : dict
         An user-provided dictionary where the variables in expression
         can be found by name.
@@ -120,10 +121,10 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
 
     Returns
     -------
-    out : carray or numpy object
-        The outcome of the expression.  In case out_flavor='carray',
-        you can adjust the properties of this carray by passing
-        additional arguments supported by carray constructor in
+    out : bcolz or numpy object
+        The outcome of the expression.  In case out_flavor='bcolz',
+        you can adjust the properties of this object by passing any
+        additional arguments supported by the carray constructor in
         `kwargs`.
 
     """
@@ -140,8 +141,6 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
 
     if out_flavor is None:
         out_flavor = bcolz.defaults.eval_out_flavor
-    if out_flavor not in ("carray", "numpy"):
-        raise ValueError("`out_flavor` must be either 'carray' or 'numpy'")
 
     # Get variables and column names participating in expression
     depth = kwargs.pop('depth', 2)
@@ -209,7 +208,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         # Build the expression graph
         vars['da'] = da
         da_expr = _eval(expression, vars)
-        if out_flavor == "carray" and da_expr.shape:
+        if out_flavor in ("bcolz", "carray") and da_expr.shape:
             result = bcolz.zeros(da_expr.shape, da_expr.dtype, **kwargs)
             # Store while compute expression graph
             da.store(da_expr, result)
@@ -275,7 +274,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                 result = res_block
                 continue
             # Get a decent default for expectedlen
-            if out_flavor == "carray":
+            if out_flavor in ("bcolz", "carray"):
                 nrows = kwargs.pop('expectedlen', vlen)
                 result = bcolz.carray(res_block, expectedlen=nrows, **kwargs)
             else:
@@ -286,7 +285,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         else:
             if scalar or dim_reduction:
                 result += res_block
-            elif out_flavor == "carray":
+            elif out_flavor in ("bcolz", "carray"):
                 result.append(res_block)
             else:
                 result[i:i+blen] = res_block

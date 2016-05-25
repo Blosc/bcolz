@@ -922,7 +922,7 @@ class ctable(object):
         return self._iter(icols, dtype, out_flavor)
 
     def fetchwhere(self, expression, outcols=None, limit=None, skip=0,
-                   out_flavor="bcolz", **kwargs):
+                   out_flavor=None, **kwargs):
         """Fetch the rows fulfilling the `expression` condition.
 
         Parameters
@@ -941,7 +941,8 @@ class ctable(object):
         skip : int
             An initial number of elements to skip.  The default is 0.
         out_flavor : string
-            The flavor for the `out` object.  It can be 'carray' or 'numpy'.
+            The flavor for the `out` object.  It can be 'bcolz' or 'numpy'.
+            If None, the value is get from `bcolz.defaults.out_flavor`.
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -949,7 +950,7 @@ class ctable(object):
         -------
         out : bcolz or numpy object
             The outcome of the expression.  In case out_flavor='bcolz', you
-            can adjust the properties of this object by passing additional
+            can adjust the properties of this object by passing any additional
             arguments supported by the carray constructor in `kwargs`.
 
         See Also
@@ -957,10 +958,13 @@ class ctable(object):
         whereblocks
 
         """
+        if out_flavor is None:
+            out_flavor = bcolz.defaults.eval_out_flavor
+
         if out_flavor == "numpy":
             it = self.whereblocks(expression, len(self), outcols, limit, skip)
             return it.next()
-        elif out_flavor == "bcolz":
+        elif out_flavor in ("bcolz", "carray"):
             dtype = self._dtype_fromoutcols(outcols)
             it = self.where(expression, outcols, limit, skip,
                             out_flavor=tuple)

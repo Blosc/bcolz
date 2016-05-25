@@ -21,7 +21,7 @@ class Defaults(object):
         self.choices = {}
 
         # Choices setup
-        self.choices['eval_out_flavor'] = ("carray", "numpy")
+        self.choices['eval_out_flavor'] = ("bcolz", "carray", "numpy")
         self.choices['eval_vm'] = ("numexpr", "python", "dask")
 
     def check_choices(self, name, value):
@@ -85,9 +85,9 @@ defaults = Defaults()
 
 # Default values start here...
 
-defaults.eval_out_flavor = "carray"
-"""The flavor for the output object in `eval()`.  It can be 'carray'
-or 'numpy'.  Default is 'carray'.
+defaults.eval_out_flavor = "bcolz"
+"""The flavor for the output object in `eval()`.  It can be 'bcolz'
+or 'numpy'.  Default is 'bcolz'.
 
 """
 
