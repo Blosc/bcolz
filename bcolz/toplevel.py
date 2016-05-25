@@ -82,7 +82,7 @@ def set_nthreads(nthreads):
     """
     set_nthreads(nthreads)
 
-    Sets the number of threads to be used during carray operation.
+    Sets the number of threads to be used during bcolz operation.
 
     This affects to both Blosc and Numexpr (if available).  If you want to
     change this number only for Blosc, use `blosc_set_nthreads` instead.
@@ -90,7 +90,7 @@ def set_nthreads(nthreads):
     Parameters
     ----------
     nthreads : int
-        The number of threads to be used during carray operation.
+        The number of threads to be used during bcolz operation.
 
     Returns
     -------
@@ -232,8 +232,8 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
 
     Returns
     -------
-    out : carray
-        Array filled with `dflt` values with the given shape and dtype.
+    out : carray or ctable
+        Bcolz object filled with `dflt` values with the given shape and dtype.
 
     See Also
     --------
@@ -310,8 +310,8 @@ def zeros(shape, dtype=np.float, **kwargs):
 
     Returns
     -------
-    out : carray
-        Array of zeros with the given shape and dtype.
+    out : carray or ctable
+        Bcolz object of zeros with the given shape and dtype.
 
     See Also
     --------
@@ -341,8 +341,8 @@ def ones(shape, dtype=np.float, **kwargs):
 
     Returns
     -------
-    out : carray
-        Array of ones with the given shape and dtype.
+    out : carray or ctable
+        Bcolz object of ones with the given shape and dtype.
 
     See Also
     --------
@@ -386,7 +386,7 @@ def arange(start=None, stop=None, step=None, dtype=None, **kwargs):
     Returns
     -------
     out : carray
-        Array of evenly spaced values.
+        Bcolz object made of evenly spaced values.
 
         For floating point arguments, the length of the result is
         ``ceil((stop - start)/step)``.  Because of floating point overflow,
@@ -458,9 +458,9 @@ def iterblocks(cobj, blen=None, start=0, stop=None):
     Returns
     -------
     out : iterable
-        This iterable returns buffers as NumPy arrays of homogeneous or
-        structured types, depending on whether `cobj` is a carray or a
-        ctable object.
+        This iterable returns data blocks as NumPy arrays of homogeneous or
+        structured types, depending on whether `cobj` is a carray or a ctable
+        object.
 
     See Also
     --------
