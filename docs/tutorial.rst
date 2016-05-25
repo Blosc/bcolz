@@ -4,21 +4,21 @@ Tutorials
 
 This section has been moved to ipython notebook `tutorials`_.
 
-.. _tutorials: https://github.com/Blosc/bcolz/blob/master/doc/tutorials.ipynb
+.. _tutorials: https://github.com/Blosc/bcolz/blob/master/docs/tutorials.ipynb
 
 Tutorial on carray objects
 ==========================
 
 This section has been moved to ipython notebook `tutorial_carray`_.
 
-.. _tutorial_carray: https://github.com/Blosc/bcolz/blob/master/doc/tutorial_carray.ipynb
+.. _tutorial_carray: https://github.com/Blosc/bcolz/blob/master/docs/tutorial_carray.ipynb
 
 Tutorial on ctable objects
 ==========================
 
 This section has been moved to ipython notebook `tutorial_ctable`_.
 
-.. _tutorial_ctable: https://github.com/Blosc/bcolz/blob/master/doc/tutorial_ctable.ipynb
+.. _tutorial_ctable: https://github.com/Blosc/bcolz/blob/master/docs/tutorial_ctable.ipynb
 
 Writing bcolz extensions
 ========================
@@ -42,7 +42,7 @@ examples of real projects made on top of bcolz:
 Though not a extensions itself, it is worth pointing out `Dask`. Dask
 plays nicely with bcolz and provides multi-core execution on
 larger-than-memory datasets using blocked algorithms and task
-scheduling. See https://github.com/ContinuumIO/dask.
+scheduling. See https://github.com/dask/dask.
 
 In addition, bcolz also interacts well with `itertools`, `Pytoolz` or
 `Cytoolz` too and they might offer you already the amount of
@@ -54,7 +54,7 @@ your own extension on top of bcolz.
 How to use bcolz as part of the infrastructure
 ----------------------------------------------
 
-Go to the root directory of bcolz, inside ``doc/my_package/`` you will
+Go to the root directory of bcolz, inside ``docs/my_package/`` you will
 find a small extension example.
 
 Before you can run this example you will need to install the following
@@ -67,8 +67,8 @@ and you should be ready to go.  See ``requirements.txt``:
     :language: python
 
 Once you have those packages installed, change your working directory
-to ``doc/my_package/``, please see `pkg. example
-<https://github.com/Blosc/bcolz/tree/master/doc/my_package>`_ and run
+to ``docs/my_package/``, please see `pkg. example
+<https://github.com/Blosc/bcolz/tree/master/docs/my_package>`_ and run
 ``python setup.py build_ext --inplace`` from the terminal, if
 everything ran smoothly you should be able to see a binary file
 ``my_extension/example_ext.so`` next to the ``.pyx`` file.
