@@ -1002,7 +1002,7 @@ class ctable(object):
 
         See Also
         --------
-        :py:func:`bcolz.toplevel.iterblocks`
+        See :py:func:`~bcolz.iterblocks` in toplevel utilities.
 
         """
 
