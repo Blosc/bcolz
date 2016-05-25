@@ -150,6 +150,9 @@ Changes from 1.0.0 to 1.1.0
 - The performance of carray.whereblocks() has been accelerated 2x due to
   the internal use of tuples instead of named tuples.
 
+- New ctable.fetchwhere() method for getting the rows fulfilling some
+  condition in one go.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

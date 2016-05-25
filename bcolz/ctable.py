@@ -183,7 +183,7 @@ class ctable(object):
 
     @property
     def names(self):
-        "The names of the object (list)."
+        "The column names of the object (list)."
         return self.cols.names
 
     @property
@@ -838,6 +838,20 @@ class ctable(object):
     def __sizeof__(self):
         return self.cbytes
 
+    def _dtype_fromoutcols(self, outcols):
+        if outcols is None:
+            dtype = self.dtype
+        else:
+            if not isinstance(outcols, (list, tuple)):
+                raise ValueError("only a sequence is supported for outcols")
+            # Get the dtype for the outcols set
+            try:
+                dtype = [(name, self[name].dtype) for name in outcols]
+            except IndexError:
+                raise ValueError(
+                    "Some names in `outcols` are not actual column names")
+        return dtype
+
     def where(self, expression, outcols=None, limit=None, skip=0,
               out_flavor=namedtuple):
         """Iterate over rows where `expression` is true.
@@ -907,8 +921,57 @@ class ctable(object):
         dtype = np.dtype(dtypes)
         return self._iter(icols, dtype, out_flavor)
 
+    def fetchwhere(self, expression, outcols=None, limit=None, skip=0,
+                   out_flavor="bcolz", **kwargs):
+        """Fetch the rows fulfilling the `expression` condition.
+
+        Parameters
+        ----------
+        expression : string or carray
+            A boolean Numexpr expression or a boolean carray.
+        outcols : list of strings or string
+            The list of column names that you want to get back in results.
+            Alternatively, it can be specified as a string such as 'f0 f1' or
+            'f0, f1'.  If None, all the columns are returned.  If the special
+            name 'nrow__' is present, the number of row will be included in
+            output.
+        limit : int
+            A maximum number of elements to return.  The default is return
+            everything.
+        skip : int
+            An initial number of elements to skip.  The default is 0.
+        out_flavor : string
+            The flavor for the `out` object.  It can be 'carray' or 'numpy'.
+        kwargs : list of parameters or dictionary
+            Any parameter supported by the carray constructor.
+
+        Returns
+        -------
+        out : bcolz or numpy object
+            The outcome of the expression.  In case out_flavor='bcolz', you
+            can adjust the properties of this object by passing additional
+            arguments supported by the carray constructor in `kwargs`.
+
+        See Also
+        --------
+        whereblocks
+
+        """
+        if out_flavor == "numpy":
+            it = self.whereblocks(expression, len(self), outcols, limit, skip)
+            return it.next()
+        elif out_flavor == "bcolz":
+            dtype = self._dtype_fromoutcols(outcols)
+            it = self.where(expression, outcols, limit, skip,
+                            out_flavor=tuple)
+            return bcolz.fromiter(it, dtype, count=-1, **kwargs)
+        else:
+            raise ValueError(
+                "`out_flavor` can only take 'bcolz' or 'numpy values")
+
+
     def whereblocks(self, expression, blen=None, outfields=None, limit=None,
-                    skip=0):
+                    skip=0, **kwargs):
         """Iterate over the rows that fullfill the `expression` condition on
         this ctable, in blocks of size `blen`.
 
@@ -923,7 +986,9 @@ class ctable(object):
         outfields : list of strings or string
             The list of column names that you want to get back in results.
             Alternatively, it can be specified as a string such as 'f0 f1' or
-            'f0, f1'.
+            'f0, f1'.  If None, all the columns are returned.  If the special
+            name 'nrow__' is present, the number of row will be included in
+            output.
         limit : int
             A maximum number of elements to return.  The default is return
             everything.
@@ -933,28 +998,19 @@ class ctable(object):
         Returns
         -------
         out : iterable
+            The iterable returns numpy objects of blen length.
 
         See Also
         --------
-        :func:`~toplevel.iterblocks`
+        :func:`~bcolz.toplevel.iterblocks`
 
         """
 
         if blen is None:
             # Get the minimum chunklen for every field
             blen = min(self[col].chunklen for col in self.cols)
-        if outfields is None:
-            dtype = self.dtype
-        else:
-            if not isinstance(outfields, (list, tuple)):
-                raise ValueError("only a sequence is supported for outfields")
-            # Get the dtype for the outfields set
-            try:
-                dtype = [(name, self[name].dtype) for name in outfields]
-            except IndexError:
-                raise ValueError(
-                    "Some names in `outfields` are not actual fields")
 
+        dtype = self._dtype_fromoutcols(outfields)
         it = self.where(expression, outfields, limit, skip, out_flavor=tuple)
         return self._iterwb(it, blen, dtype)
 
@@ -1237,10 +1293,10 @@ class ctable(object):
 
         Returns
         -------
-        out : carray object
+        out : bcolz object
             The outcome of the expression.  You can tailor the
-            properties of this carray by passing additional arguments
-            supported by carray constructor in `kwargs`.
+            properties of this object by passing additional arguments
+            supported by the carray constructor in `kwargs`.
 
         See Also
         --------

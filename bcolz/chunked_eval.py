@@ -120,10 +120,11 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
 
     Returns
     -------
-    out : carray object
-        The outcome of the expression.  You can tailor the
-        properties of this carray by passing additional arguments
-        supported by carray constructor in `kwargs`.
+    out : carray or numpy object
+        The outcome of the expression.  In case out_flavor='carray',
+        you can adjust the properties of this carray by passing
+        additional arguments supported by carray constructor in
+        `kwargs`.
 
     """
     if vm is None:

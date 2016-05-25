@@ -208,6 +208,61 @@ class big_whereblocksDiskTest(whereblocksTest, TestCase):
     disk = True
 
 
+class fetchwhereTest(MayBeDiskTest):
+
+    def test00(self):
+        """Testing `fetchwhere` method with only an expression"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere('f1 < f2')
+        l, s = len(ct), ct['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
+    def test01(self):
+        """Testing `fetchwhere` method with a `outfields` with 2 fields"""
+        N = self.N
+        ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere('f1 < f2', outcols=('f1', 'f2'))
+        self.assertEqual(ct.names, ['f1', 'f2'])
+        l, s = len(ct), ct['f1'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
+    def test02(self):
+        """Testing `fetchwhere` method with a `outfields` with 1 field"""
+        N = self.N
+        ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere('f1 < f2', outcols=('f1',))
+        self.assertEqual(ct.names, ['f1'])
+        l, s = len(ct), ct['f1'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
+    def test03(self):
+        """Testing `fetchwhere` method with a `limit`, `skip` parameter"""
+        N, M = self.N, 101
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        ct = t.fetchwhere('f1 < f2', limit=N - M - 2, skip=M)
+        l, s = len(ct), ct['f0'].sum()
+        self.assertEqual(l, N - M - 2)
+        self.assertEqual(s, np.arange(M + 1, N - 1).sum())
+
+
+class small_fetchwhereTest(fetchwhereTest, TestCase):
+    N = 120
+
+class big_fetchwhereTest(fetchwhereTest, TestCase):
+    N = 10000
+
+
 class stringTest(TestCase):
 
     def test_strings(self):

@@ -62,12 +62,26 @@ def whereblocks():
         sum += r['a'].sum()
     return sum
 
+@timefunc
+#@do_cprofile
+def fetchwhere_bcolz():
+    return ct.fetchwhere("(a > 5) & (b < 1e6)", out_flavor='bcolz')['a'].sum()
+
+@timefunc
+#@do_cprofile
+def fetchwhere_numpy():
+    return ct.fetchwhere("(a > 5) & (b < 1e6)", out_flavor='numpy')['a'].sum()
+
 
 print repr(ct)
 
 a0 = where0()
 # print "a0:", a0
-a1 = where1()
+# a1 = where1()
+# assert a0 == a1
+# a1 = whereblocks()
+# assert a0 == a1
+a1 = fetchwhere_bcolz()
 assert a0 == a1
-a1 = whereblocks()
+a1 = fetchwhere_numpy()
 assert a0 == a1
