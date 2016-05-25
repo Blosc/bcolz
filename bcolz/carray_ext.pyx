@@ -901,16 +901,16 @@ cdef class carray:
     safe : bool (defaults to True)
         Coerces inputs to array types.  Set to false if you always give
         correctly typed, strided, and shaped arrays and if you never use Object
-        dtype
+        dtype.
     mode : str, optional
         The mode that a *persistent* carray should be created/opened.  The
         values can be:
 
-          * 'r' for read-only
-          * 'w' for read/write.  During carray creation, the `rootdir` will be
-            removed if it exists.  During carray opening, the carray will be
-            resized to 0.
-          * 'a' for append (possible data inside `rootdir` will not be
+        * 'r' for read-only
+        * 'w' for read/write.  During carray creation, the `rootdir` will be
+          removed if it exists.  During carray opening, the carray will be
+          resized to 0.
+        * 'a' for append (possible data inside `rootdir` will not be
           removed).
 
     """
