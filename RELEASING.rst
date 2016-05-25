@@ -52,33 +52,8 @@ Testing
   Windows) and make sure that all tests passes.
 
 
-Updating the online documentation site
---------------------------------------
-
-* Build the html::
-
-  $ python setup.py build_sphinx
-
-* Make a backup and upload the files in the doc site (xodo)::
-
-  $ export UPSTREAM="/home/blosc/srv/www/bcolz.blosc.org"
-  $ ssh blosc@xodo.blosc.org "mv $UPSTREAM/docs/html $UPSTREAM/docs/html.bck"
-  $ scp -r build/sphinx/html blosc@xodo.blosc.org:$UPSTREAM/docs
-
-* Check that the new manual is accessible in http://bcolz.blosc.org
-
-* If everything is fine, remove the backup of the previous manual::
-
-  $ ssh blosc@xodo.blosc.org "rm -r $UPSTREAM/docs/html.bck"
-
-
 Packaging
 ---------
-
-.. note::
-
-    This instructions are currently out-of-date and are to be considered under
-    construction.
 
 * Make sure that you are in a clean directory.  The best way is to
   re-clone and re-build::
@@ -119,8 +94,7 @@ Post-release actions
 --------------------
 
 * Create new headers for adding new features in ``RELEASE_NOTES.rst``
-  and empty the release-specific information in ``ANNOUNCE.rst`` and
-  add this place-holder instead:
+  and add this place-holder instead:
 
   #XXX version-specific blurb XXX#
 
