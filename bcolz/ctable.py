@@ -970,7 +970,7 @@ class ctable(object):
                 "`out_flavor` can only take 'bcolz' or 'numpy values")
 
 
-    def whereblocks(self, expression, blen=None, outfields=None, limit=None,
+    def whereblocks(self, expression, blen=None, outcols=None, limit=None,
                     skip=0, **kwargs):
         """Iterate over the rows that fullfill the `expression` condition on
         this ctable, in blocks of size `blen`.
@@ -983,7 +983,7 @@ class ctable(object):
             The length of the block that is returned.  The default is the
             chunklen, or for a ctable, the minimum of the different column
             chunklens.
-        outfields : list of strings or string
+        outcols : list of strings or string
             The list of column names that you want to get back in results.
             Alternatively, it can be specified as a string such as 'f0 f1' or
             'f0, f1'.  If None, all the columns are returned.  If the special
@@ -1010,8 +1010,8 @@ class ctable(object):
             # Get the minimum chunklen for every field
             blen = min(self[col].chunklen for col in self.cols)
 
-        dtype = self._dtype_fromoutcols(outfields)
-        it = self.where(expression, outfields, limit, skip, out_flavor=tuple)
+        dtype = self._dtype_fromoutcols(outcols)
+        it = self.where(expression, outcols, limit, skip, out_flavor=tuple)
         return self._iterwb(it, blen, dtype)
 
     def _iterwb(self, it, blen, dtype):

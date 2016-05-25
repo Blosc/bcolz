@@ -153,6 +153,10 @@ Changes from 1.0.0 to 1.1.0
 - New ctable.fetchwhere() method for getting the rows fulfilling some
   condition in one go.
 
+- Parameter `outfields` in ctable.whereblocks has been renamed to
+  `outcols` for consistency with the other methods.  The previous
+  'outfields' name is considered a bug and hence is not supported
+  anymore.
 
 Changes from 0.12.1 to 1.0.0
 ============================

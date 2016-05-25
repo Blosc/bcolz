@@ -112,12 +112,12 @@ class whereblocksTest(MayBeDiskTest):
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test02(self):
-        """Testing `whereblocks` method with a `outfields` with 2 fields"""
+        """Testing `whereblocks` method with a `outcols` with 2 fields"""
         N = self.N
         ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in t.whereblocks('f1 < f2', outfields=('f1', 'f2')):
+        for block in t.whereblocks('f1 < f2', outcols=('f1', 'f2')):
             self.assertEqual(block.dtype.names, ('f1', 'f2'))
             l += len(block)
             s += block['f1'].sum()
@@ -125,12 +125,12 @@ class whereblocksTest(MayBeDiskTest):
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test03(self):
-        """Testing `whereblocks` method with a `outfields` with 1 field"""
+        """Testing `whereblocks` method with a `outcols` with 1 field"""
         N = self.N
         ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         l, s = 0, 0
-        for block in t.whereblocks('f1 < f2', outfields=('f1',)):
+        for block in t.whereblocks('f1 < f2', outcols=('f1',)):
             self.assertEqual(block.dtype.names, ('f1',))
             l += len(block)
             s += block['f1'].sum()
@@ -222,7 +222,7 @@ class fetchwhereTest(MayBeDiskTest):
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test01(self):
-        """Testing `fetchwhere` method with a `outfields` with 2 fields"""
+        """Testing `fetchwhere` method with a `outcols` with 2 fields"""
         N = self.N
         ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
@@ -233,7 +233,7 @@ class fetchwhereTest(MayBeDiskTest):
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
     def test02(self):
-        """Testing `fetchwhere` method with a `outfields` with 1 field"""
+        """Testing `fetchwhere` method with a `outcols` with 1 field"""
         N = self.N
         ra = np.fromiter(((i, i, i * 3) for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
