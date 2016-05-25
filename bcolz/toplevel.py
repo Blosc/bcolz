@@ -19,7 +19,7 @@ import itertools as it
 import numpy as np
 import bcolz
 from bcolz.ctable import ROOTDIRS
-from .py2help import xrange, _inttypes
+from .py2help import xrange, _inttypes, islice
 from distutils.version import LooseVersion
 
 
@@ -170,8 +170,6 @@ def fromiter(iterable, dtype, count, **kwargs):
     iterables).
 
     """
-    _MAXINT_SIGNAL = 2**64
-
     # Check for a true iterable
     if not hasattr(iterable, "next"):
         iterable = iter(iterable)
@@ -183,14 +181,6 @@ def fromiter(iterable, dtype, count, **kwargs):
         if hasattr(iterable, "__length_hint__"):
             count = iterable.__length_hint__()
             expected = count
-        else:
-            # No guess
-            count = _MAXINT_SIGNAL
-            # If we do not have a hint on the iterable length then
-            # create a couple of iterables and use the second when the
-            # first one is exhausted (ValueError will be raised).
-            iterable, iterable2 = it.tee(iterable)
-            expected = 1000*1000   # 1 million elements
 
     # First, create the container
     expectedlen = kwargs.pop("expectedlen", expected)
@@ -210,36 +200,21 @@ def fromiter(iterable, dtype, count, **kwargs):
         chunklen = obj.chunklen
 
     # Then fill it
-    nread, blen = 0, 0
-    while nread < count:
-        if nread + chunklen > count:
-            blen = count - nread
-        else:
-            blen = chunklen
-        if count != _MAXINT_SIGNAL:
-            chunk = np.fromiter(iterable, dtype=dtype, count=blen)
-        else:
-            try:
-                chunk = np.fromiter(iterable, dtype=dtype, count=blen)
-            except ValueError:
-                # Positionate in second iterable
-                iter2 = it.islice(iterable2, nread, None, 1)
-                # We are reaching the end, use second iterable now
-                chunk = np.fromiter(iter2, dtype=dtype, count=-1)
-        obj.append(chunk)
-        nread += len(chunk)
-        # Check the end of the iterable
-        if len(chunk) < chunklen:
+    while True:
+        chunk = np.fromiter(islice(iterable, chunklen), dtype=dtype)
+        if len(chunk) == 0:
+            # Iterable has been exhausted
             break
+        obj.append(chunk)
     obj.flush()
     return obj
 
 
 def fill(shape, dflt=None, dtype=np.float, **kwargs):
-    """
-    fill(shape, dtype=float, dflt=None, **kwargs)
+    """fill(shape, dtype=float, dflt=None, **kwargs)
 
-    Return a new carray or ctable object of given shape and type, filled with `dflt`.
+    Return a new carray or ctable object of given shape and type, filled with
+    `dflt`.
 
     Parameters
     ----------

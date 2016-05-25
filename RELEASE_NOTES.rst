@@ -158,6 +158,10 @@ Changes from 1.0.0 to 1.1.0
   'outfields' name is considered a bug and hence is not supported
   anymore.
 
+- bcolz.fromiter() has been streamlined and optimized.  The result is
+  that it uses less memory and can go faster too (20% ~ 50%, depending
+  on the use).
+
 Changes from 0.12.1 to 1.0.0
 ============================
 

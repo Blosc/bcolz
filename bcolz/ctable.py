@@ -964,7 +964,9 @@ class ctable(object):
             dtype = self._dtype_fromoutcols(outcols)
             it = self.where(expression, outcols, limit, skip,
                             out_flavor=tuple)
-            return bcolz.fromiter(it, dtype, count=-1, **kwargs)
+            ct = bcolz.fromiter(it, dtype, count=-1, **kwargs)
+            ct.flush()
+            return ct
         else:
             raise ValueError(
                 "`out_flavor` can only take 'bcolz' or 'numpy values")

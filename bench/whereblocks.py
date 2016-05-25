@@ -76,11 +76,11 @@ def fetchwhere_numpy():
 print repr(ct)
 
 a0 = where0()
-# print "a0:", a0
-# a1 = where1()
-# assert a0 == a1
-# a1 = whereblocks()
-# assert a0 == a1
+print "a0:", a0
+a1 = where1()
+assert a0 == a1
+a1 = whereblocks()
+assert a0 == a1
 a1 = fetchwhere_bcolz()
 assert a0 == a1
 a1 = fetchwhere_numpy()
