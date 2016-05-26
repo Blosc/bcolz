@@ -12,13 +12,13 @@ import numpy as np
 import bcolz
 from bcolz import utils, attrs, array2string
 from collections import namedtuple
-import itertools
+from itertools import islice
 import json
 from keyword import iskeyword
 import os
 import re
 import shutil
-from .py2help import _inttypes, _strtypes, imap, izip, islice, xrange
+from .py2help import _inttypes, _strtypes, imap, izip, xrange
 
 _inttypes += (np.integer,)
 
@@ -969,7 +969,7 @@ class ctable(object):
 
         if out_flavor == "numpy":
             it = self.whereblocks(expression, len(self), outcols, limit, skip)
-            return it.next()
+            return next(it)
         elif out_flavor in ("bcolz", "carray"):
             dtype = self._dtype_fromoutcols(outcols)
             it = self.where(expression, outcols, limit, skip,

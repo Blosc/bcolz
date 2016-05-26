@@ -31,7 +31,7 @@ if PY2:
     def dict_iteritems(d):
         return d.iteritems()
     xrange = __builtin__.xrange
-    from itertools import izip, imap, islice
+    from itertools import izip, imap
     unicode = __builtin__.unicode
     basestring = __builtin__.basestring
     reduce = __builtin__.reduce

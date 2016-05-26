@@ -19,7 +19,7 @@ import itertools as it
 import numpy as np
 import bcolz
 from bcolz.ctable import ROOTDIRS
-from .py2help import xrange, _inttypes, islice
+from .py2help import xrange, _inttypes
 from distutils.version import LooseVersion
 
 
@@ -201,7 +201,7 @@ def fromiter(iterable, dtype, count, **kwargs):
 
     # Then fill it
     while True:
-        chunk = np.fromiter(islice(iterable, chunklen), dtype=dtype)
+        chunk = np.fromiter(it.islice(iterable, chunklen), dtype=dtype)
         if len(chunk) == 0:
             # Iterable has been exhausted
             break
