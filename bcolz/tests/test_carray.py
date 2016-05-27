@@ -17,6 +17,7 @@ import textwrap
 import pickle
 import ctypes
 from distutils.version import LooseVersion
+import inspect
 
 import numpy as np
 from numpy.testing import (
@@ -1573,9 +1574,7 @@ class evalTest(MayBeDiskTest):
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
-        depth = 3
-        if sys.version_info >= (3, 0):
-            depth += 1  # curiously enough, Python 3 needs one level more
+        depth = len(inspect.stack()) + 1
         self.assertRaises(ValueError, bcolz.eval, "a*3", depth=depth,
                           rootdir=self.rootdir)
         self.assertRaises(ValueError, bcolz.eval, "b*3", depth=depth,

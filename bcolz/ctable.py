@@ -8,9 +8,6 @@
 
 from __future__ import absolute_import
 
-import numpy as np
-import bcolz
-from bcolz import utils, attrs, array2string
 from collections import namedtuple
 from itertools import islice
 import json
@@ -18,6 +15,11 @@ from keyword import iskeyword
 import os
 import re
 import shutil
+import inspect
+
+import numpy as np
+import bcolz
+from bcolz import utils, attrs, array2string
 from .py2help import _inttypes, _strtypes, imap, izip, xrange
 
 _inttypes += (np.integer,)
@@ -859,7 +861,7 @@ class ctable(object):
         return dtype
 
     def where(self, expression, outcols=None, limit=None, skip=0,
-              out_flavor=namedtuple):
+              out_flavor=namedtuple, depth=None):
         """Iterate over rows where `expression` is true.
 
         Parameters
@@ -880,6 +882,11 @@ class ctable(object):
         out_flavor : namedtuple, tuple or ndarray
             Whether the returned rows are namedtuples or tuples.  Default are
             named tuples.
+        depth : int
+            The frame depth from which this function is called.  The
+            default is to look up for variables in the outer caller.
+            Make sure that you pass this parameter as
+            ``len(inspect.stack())`` from your own functions.
 
         Returns
         -------
@@ -894,7 +901,8 @@ class ctable(object):
         # Check input
         if isinstance(expression, _strtypes):
             # That must be an expression
-            boolarr = self.eval(expression)
+            depth = len(inspect.stack()) if not depth else depth
+            boolarr = self.eval(expression, depth=depth)
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
             boolarr = expression
         else:
@@ -928,7 +936,7 @@ class ctable(object):
         return self._iter(icols, dtype, out_flavor)
 
     def fetchwhere(self, expression, outcols=None, limit=None, skip=0,
-                   out_flavor=None, **kwargs):
+                   out_flavor=None, depth=None, **kwargs):
         """Fetch the rows fulfilling the `expression` condition.
 
         Parameters
@@ -949,6 +957,11 @@ class ctable(object):
         out_flavor : string
             The flavor for the `out` object.  It can be 'bcolz' or 'numpy'.
             If None, the value is get from `bcolz.defaults.out_flavor`.
+        depth : int
+            The frame depth from which this function is called.  The
+            default is to look up for variables in the outer caller.
+            Make sure that you pass this parameter as
+            ``len(inspect.stack())`` from your own functions.
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -967,13 +980,15 @@ class ctable(object):
         if out_flavor is None:
             out_flavor = bcolz.defaults.out_flavor
 
+        depth = len(inspect.stack()) if not depth else depth
         if out_flavor == "numpy":
-            it = self.whereblocks(expression, len(self), outcols, limit, skip)
+            it = self.whereblocks(expression, len(self), outcols, limit, skip,
+                                  depth=depth)
             return next(it)
         elif out_flavor in ("bcolz", "carray"):
             dtype = self._dtype_fromoutcols(outcols)
             it = self.where(expression, outcols, limit, skip,
-                            out_flavor=tuple)
+                            out_flavor=tuple, depth=depth)
             ct = bcolz.fromiter(it, dtype, count=-1, **kwargs)
             ct.flush()
             return ct
@@ -983,7 +998,7 @@ class ctable(object):
 
 
     def whereblocks(self, expression, blen=None, outcols=None, limit=None,
-                    skip=0, **kwargs):
+                    skip=0, depth=None):
         """Iterate over the rows that fullfill the `expression` condition on
         this ctable, in blocks of size `blen`.
 
@@ -1006,6 +1021,11 @@ class ctable(object):
             everything.
         skip : int
             An initial number of elements to skip.  The default is 0.
+        depth : int
+            The frame depth from which this function is called.  The
+            default is to look up for variables in the outer caller.
+            Make sure that you pass this parameter as
+            ``len(inspect.stack())`` from your own functions.
 
         Returns
         -------
@@ -1023,7 +1043,9 @@ class ctable(object):
             blen = min(self[col].chunklen for col in self.cols)
 
         dtype = self._dtype_fromoutcols(outcols)
-        it = self.where(expression, outcols, limit, skip, out_flavor=tuple)
+        depth = len(inspect.stack()) if not depth else depth
+        it = self.where(expression, outcols, limit, skip, out_flavor=tuple,
+                        depth=depth)
         return self._iterwb(it, blen, dtype)
 
     def _iterwb(self, it, blen, dtype):
@@ -1211,7 +1233,7 @@ class ctable(object):
         elif isinstance(key, _strtypes):
             if key not in self.names:
                 # key is not a column name, try to evaluate
-                arr = self.eval(key, depth=4)
+                arr = self.eval(key, depth=len(inspect.stack()))
                 if arr.dtype.type != np.bool_:
                     raise IndexError(
                         "`key` %s does not represent a boolean "
@@ -1301,7 +1323,7 @@ class ctable(object):
             calling function's frame.  These variables may be column
             names in this table, scalars, carrays or NumPy arrays.
         kwargs : list of parameters or dictionary
-            Any parameter supported by the `eval()` first level function.
+            Any parameter supported by the `eval()` top level function.
 
         Returns
         -------
@@ -1312,14 +1334,12 @@ class ctable(object):
 
         See Also
         --------
-        eval (first level function)
+        eval (top level function)
 
         """
-
-        # Get the desired frame depth
-        depth = kwargs.pop('depth', 3)
+        depth = kwargs.pop('depth', len(inspect.stack()))
         # Call top-level eval with cols as user_dict
-        return bcolz.eval(expression, user_dict=self.cols, depth=depth,
+        return bcolz.eval(expression, user_dict=self.cols._cols, depth=depth,
                           **kwargs)
 
     def flush(self):

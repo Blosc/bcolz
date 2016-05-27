@@ -173,6 +173,10 @@ Changes from 1.0.0 to 1.1.0
   object are still kept for backward compatibility, but they are not
   documented anymore and its use is discouraged.
 
+- Added a new `depth` parameter in functions/methods that evaluate
+  expressions so that they can find local and global variables is a more
+  trusted way.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

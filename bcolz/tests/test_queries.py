@@ -15,6 +15,8 @@ from bcolz.py2help import xrange
 from bcolz.tests.common import (
     MayBeDiskTest, TestCase, unittest)
 
+# Global variable for frame depth testing
+GVAR = 1000
 
 class listTest(MayBeDiskTest):
 
@@ -189,6 +191,19 @@ class whereblocksTest(MayBeDiskTest):
         self.assertEqual(l, N - M - 2)
         self.assertEqual(s, np.arange(M + 1, N - 1).sum())
 
+    def test08(self):
+        """Testing `whereblocks` method with global and local variables"""
+        N = self.N
+        lvar = GVAR
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in t.whereblocks('(f1 + lvar) < (f2 + GVAR)'):
+            l += len(block)
+            s += block['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
 class small_whereblocksTest(whereblocksTest, TestCase):
     N = 120
@@ -262,6 +277,19 @@ class fetchwhereTest(MayBeDiskTest):
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra)
         ct = t.fetchwhere('f1 < f2', out_flavor="numpy")
+        self.assertEqual(type(ct), np.ndarray)
+        l, s = len(ct), ct['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
+    def test05(self):
+        """Testing `fetchwhere` method with global and local variables"""
+        N = self.N
+        lvar = GVAR
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere('(f1 + lvar) < (f2 + GVAR)', out_flavor="numpy")
         self.assertEqual(type(ct), np.ndarray)
         l, s = len(ct), ct['f0'].sum()
         self.assertEqual(l, N - 1)

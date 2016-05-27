@@ -13,6 +13,8 @@ from __future__ import absolute_import
 
 import sys
 import math
+import inspect
+
 import numpy as np
 import bcolz
 from bcolz.py2help import xrange
@@ -54,7 +56,8 @@ def _getvars(expression, user_dict, depth, vm):
 
     # Get the local and global variable mappings of the user frame
     user_locals, user_globals = {}, {}
-    user_frame = sys._getframe(depth)
+    rel_depth = len(inspect.stack()) - depth + 1
+    user_frame = sys._getframe(rel_depth)
     user_locals = user_frame.f_locals
     user_globals = user_frame.f_globals
 
@@ -116,6 +119,11 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
         The length of the block to be evaluated in one go internally.
         The default is a value that has been tested experimentally and
         that offers a good enough peformance / memory usage balance.
+    depth : int
+        The frame depth from which this function is called.  The
+        default is to look up for variables in the outer caller.
+        Make sure that you pass this parameter as
+        ``len(inspect.stack())`` from your own functions.
     kwargs : list of parameters or dictionary
         Any parameter supported by the carray constructor.
 
@@ -143,7 +151,7 @@ def eval(expression, vm=None, out_flavor=None, user_dict={}, blen=None,
         out_flavor = bcolz.defaults.out_flavor
 
     # Get variables and column names participating in expression
-    depth = kwargs.pop('depth', 2)
+    depth = kwargs.pop('depth', len(inspect.stack()))
     vars = _getvars(expression, user_dict, depth, vm=vm)
 
     # Gather info about sizes and lengths

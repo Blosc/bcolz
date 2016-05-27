@@ -22,6 +22,10 @@ from bcolz.py2help_tests import Mock
 import pickle
 
 
+# Global variable for frame depth testing
+GVAR = 1000
+
+
 class createTest(MayBeDiskTest):
 
     def test00a(self):
@@ -1992,6 +1996,19 @@ class whereTest(MayBeDiskTest):
         self.assertEqual([i for i in ai], [i.b for i in bi])
         self.assertEqual([i for i in ai], [i.b for i in bi])
 
+    def test11(self):
+        """Testing where() with local and global variables"""
+        N = self.N
+        lvar = GVAR
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        barr = t.eval('(f1 + lvar) > (f2 + GVAR)')
+        rt = [r.f0 for r in t.where(barr)]
+        rl = [i for i in xrange(N) if i > i * 2]
+        # print "rt->", rt
+        # print "rl->", rl
+        self.assertTrue(rt == rl, "where not working correctly")
 
 class where_smallTest(whereTest, TestCase):
     N = 10
