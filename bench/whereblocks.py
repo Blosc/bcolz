@@ -15,9 +15,9 @@ bcolz.defaults.cparams['clevel'] = 5
 
 N = 1e8
 LMAX = 1e3
-a1 = np.arange(N)
-b1 = np.arange(N)
-ct = bcolz.ctable([a1,b1], names=["a", "b"])
+npa = np.arange(N)
+npb = np.arange(N)
+ct = bcolz.ctable([npa, npb], names=["a", "b"])
 
 
 def do_cprofile(func):
@@ -46,17 +46,17 @@ def timefunc(f):
 
 @timefunc
 def where0():
-    return sum(a1[i] for i in np.where((a1 > 5) & (b1 < LMAX))[0])
+    return sum(npa[i] for i in np.where((npa > 5) & (npb < LMAX))[0])
 
 @timefunc
 #@do_cprofile
 def where1():
-    return sum(r[0] for r in ct.where("(a > 5) & (b < LMAX)",
+    return sum(r[0] for r in ct.where("(npa > 5) & (npb < LMAX)",
                                       out_flavor=tuple))
 @timefunc
 #@do_cprofile
 def where2():
-    return sum(r[0] for r in ct.where("(a1 > 5) & (b1 < LMAX)",
+    return sum(r[0] for r in ct.where("(a > 5) & (b < LMAX)",
                                       out_flavor=tuple))
 
 @timefunc
@@ -86,9 +86,8 @@ a0 = where0()
 print "a0:", a0
 a1 = where1()
 assert a0 == a1
-# a1 = where2()
-# print "a1:", a1
-# assert a0 == a1
+a1 = where2()
+assert a0 == a1
 a1 = whereblocks()
 assert a0 == a1
 a1 = fetchwhere_bcolz()

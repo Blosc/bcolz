@@ -1574,10 +1574,9 @@ class evalTest(MayBeDiskTest):
     def test08(self):
         """Testing eval() via expression with lists (raise ValueError)"""
         a, b = range(int(self.N)), range(int(self.N))
-        depth = len(inspect.stack()) + 1
-        self.assertRaises(ValueError, bcolz.eval, "a*3", depth=depth,
+        self.assertRaises(ValueError, bcolz.eval, "a*3", user_dict={'a':a,'b':b},
                           rootdir=self.rootdir)
-        self.assertRaises(ValueError, bcolz.eval, "b*3", depth=depth,
+        self.assertRaises(ValueError, bcolz.eval, "b*3", user_dict={'a':a,'b':b},
                           rootdir=self.rootdir)
 
     def test09(self):
