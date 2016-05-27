@@ -1469,15 +1469,15 @@ class evalTest(MayBeDiskTest):
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = bcolz.defaults.eval_vm
+        self.prev_vm = bcolz.defaults.vm
         if bcolz.numexpr_here:
-            bcolz.defaults.eval_vm = self.vm
+            bcolz.defaults.vm = self.vm
         else:
-            bcolz.defaults.eval_vm = "python"
+            bcolz.defaults.vm = "python"
         MayBeDiskTest.setUp(self)
 
     def tearDown(self):
-        bcolz.defaults.eval_vm = self.prev_vm
+        bcolz.defaults.vm = self.prev_vm
         MayBeDiskTest.tearDown(self)
 
     def test00(self):

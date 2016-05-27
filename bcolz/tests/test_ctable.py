@@ -1016,17 +1016,17 @@ class evalTest(MayBeDiskTest):
     vm = "python"
 
     def setUp(self):
-        self.prev_vm = bcolz.defaults.eval_vm
+        self.prev_vm = bcolz.defaults.vm
         if self.vm == "numexpr" and bcolz.numexpr_here:
-            bcolz.defaults.eval_vm = "numexpr"
+            bcolz.defaults.vm = "numexpr"
         elif self.vm == "dask" and bcolz.dask_here:
-            bcolz.defaults.eval_vm = "dask"
+            bcolz.defaults.vm = "dask"
         else:
-            bcolz.defaults.eval_vm = "python"
+            bcolz.defaults.vm = "python"
         MayBeDiskTest.setUp(self)
 
     def tearDown(self):
-        bcolz.defaults.eval_vm = self.prev_vm
+        bcolz.defaults.vm = self.prev_vm
         MayBeDiskTest.tearDown(self)
 
     def test00a(self):
@@ -1083,9 +1083,9 @@ class evalTest(MayBeDiskTest):
         ra = np.fromiter(((i, i * 2., i * 3)
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
-        if bcolz.defaults.eval_vm == "python":
+        if bcolz.defaults.vm == "python":
             ctr = t.eval("f0 * np.sin(f1)")
-        elif bcolz.defaults.eval_vm == "dask":
+        elif bcolz.defaults.vm == "dask":
             ctr = t.eval("f0 * da.sin(f1)")
         else:  # numexpr
             ctr = t.eval("f0 * sin(f1)")
