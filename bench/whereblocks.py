@@ -12,6 +12,9 @@ bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
 bcolz.defaults.cparams['cname'] = 'blosclz'
 #bcolz.defaults.cparams['cname'] = 'lz4'
 bcolz.defaults.cparams['clevel'] = 5
+#bcolz.defaults.vm = "dask"
+#bcolz.defaults.vm = "python"
+bcolz.defaults.vm = "numexpr"
 
 N = 1e8
 LMAX = 1e3
@@ -73,8 +76,6 @@ def bcolz_where_numexpr():
 def whereblocks():
     sum = 0.
     for r in ct.whereblocks("(a > 5) & (b < LMAX)", blen=None):
-    #for r in ct.whereblocks("(a > 5) & (b < LMAX)", blen=ct['a'].chunklen*10):
-    #for r in ct.whereblocks("(a > 5) & (b < LMAX)", blen=1000):
         sum += r['a'].sum()
     return sum
 
