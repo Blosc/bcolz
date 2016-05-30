@@ -186,7 +186,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         elif vm == "dask":
             bsize = 2**25
         else:  # python
-            bsize = 2**22
+            bsize = 2**21
         blen = int(bsize / typesize)
         # Protection against too large atomsizes
         if blen == 0:
