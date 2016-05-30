@@ -182,7 +182,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         # The next is based on experiments with bench/ctable-query.py
         # and the 'movielens-bench' repository
         if vm == "numexpr":
-            bsize = 2**22
+            bsize = 2**23
         elif vm == "dask":
             bsize = 2**25
         else:  # python
