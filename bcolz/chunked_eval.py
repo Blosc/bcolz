@@ -213,6 +213,9 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
             # Store while compute
             return np.array(da_expr)
 
+    # Check whether we have a re_evaluate() function in numexpr
+    re_evaluate = hasattr(bcolz.numexpr, "re_evaluate")
+
     vars_ = {}
     # Get containers for vars
     maxndims = 0
@@ -223,8 +226,8 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
             if ndims > maxndims:
                 maxndims = ndims
             if len(var) > blen and hasattr(var, "_getrange"):
-                shape = (blen, ) + var.shape[1:]
-                vars_[name] = np.empty(shape, dtype=var.dtype)
+                    shape = (blen, ) + var.shape[1:]
+                    vars_[name] = np.empty(shape, dtype=var.dtype)
 
     for i in xrange(0, vlen, blen):
         # Fill buffers for vars
@@ -248,14 +251,17 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         if vm == "python":
             res_block = _eval(expression, vars_)
         else:
-            try:
-                res_block = bcolz.numexpr.evaluate(expression,
-                                                   local_dict=vars_)
-            except ValueError:
-                # numexpr cannot handle this. Fall back to a pure "python" VM.
-                return _eval_blocks(
-                    expression, vars, vlen, typesize, "python",
-                    out_flavor, blen, **kwargs)
+            if i == 0 or not re_evaluate:
+                try:
+                    res_block = bcolz.numexpr.evaluate(expression,
+                                                       local_dict=vars_)
+                except ValueError:
+                    # numexpr cannot handle this, so fall back to "python" vm
+                    return _eval_blocks(
+                        expression, vars, vlen, typesize, "python",
+                        out_flavor, blen, **kwargs)
+            else:
+                res_block = bcolz.numexpr.re_evaluate(local_dict=vars_)
 
         if i == 0:
             # Detection of reduction operations

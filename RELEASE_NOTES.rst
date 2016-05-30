@@ -177,6 +177,10 @@ Changes from 1.0.0 to 1.1.0
   expressions.  For convenience, this dictionary is updated internally
   with ctable columns, locals and globals from the caller.
 
+- Small optimization for using the recently added re_evaluate() function
+  in numexpr for faster operation of numexpr inside loops using the same
+  expression (quite common scenario).
+
 
 Changes from 0.12.1 to 1.0.0
 ============================

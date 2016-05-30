@@ -6,7 +6,7 @@ import time
 import cProfile
 import inspect
 
-
+print("numexpr version:", ne.__version__)
 bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
 #bcolz.defaults.cparams['shuffle'] = bcolz.BITSHUFFLE
 bcolz.defaults.cparams['cname'] = 'blosclz'
