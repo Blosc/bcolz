@@ -214,7 +214,7 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
             return np.array(da_expr)
 
     # Check whether we have a re_evaluate() function in numexpr
-    re_evaluate = hasattr(bcolz.numexpr, "re_evaluate")
+    re_evaluate = bcolz.numexpr_here and hasattr(bcolz.numexpr, "re_evaluate")
 
     vars_ = {}
     # Get containers for vars
