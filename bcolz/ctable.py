@@ -249,9 +249,9 @@ class ctable(object):
         # Create a new ctable or open it from disk
         _new = False
         if self.mode in ('r', 'a'):
-            self.open_ctable()
+            self._open_ctable()
         elif columns is not None:
-            self.create_ctable(columns, names, **kwargs)
+            self._create_ctable(columns, names, **kwargs)
             _new = True
         else:
             raise ValueError(
@@ -264,12 +264,12 @@ class ctable(object):
         # Cache a structured array of len 1 for ctable[int] acceleration
         self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
-    def create_ctable(self, columns, names, **kwargs):
+    def _create_ctable(self, columns, names, **kwargs):
         """Create a ctable anew."""
 
         # Create the rootdir if necessary
         if self.rootdir:
-            self.mkdir_rootdir(self.rootdir, self.mode)
+            self._mkdir_rootdir(self.rootdir, self.mode)
 
         # Get the names of the columns
         if names is None:
@@ -336,7 +336,7 @@ class ctable(object):
         if self.auto_flush:
             self.flush()
 
-    def open_ctable(self):
+    def _open_ctable(self):
         """Open an existing ctable on-disk."""
         if self.mode == 'r' and not os.path.exists(self.rootdir):
             raise KeyError(
@@ -352,7 +352,7 @@ class ctable(object):
         # Get the length out of the first column
         self.len = len(self.cols[self.names[0]])
 
-    def mkdir_rootdir(self, rootdir, mode):
+    def _mkdir_rootdir(self, rootdir, mode):
         """Create the `self.rootdir` directory safely."""
         if os.path.exists(rootdir):
             if mode != "w":
