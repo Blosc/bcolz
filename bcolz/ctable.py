@@ -864,6 +864,21 @@ class ctable(object):
         d.update(f.f_locals)
         return d
 
+    def _check_outcols(self, outcols):
+        """Check outcols."""
+        if outcols is None:
+            outcols = self.names
+        else:
+            if type(outcols) not in (list, tuple) + _strtypes:
+                raise ValueError("only list/str is supported for outcols")
+            if isinstance(outcols, _strtypes):
+                outcols = split_string(outcols)
+            # Check name validity
+            outcols = validate_names(outcols, 'outcols')
+            if (set(outcols) - set(self.names+['nrow__'])):
+                raise ValueError("outcols doesn't match names")
+        return outcols
+
     def where(self, expression, outcols=None, limit=None, skip=0,
               out_flavor=namedtuple, user_dict={}):
         """Iterate over rows where `expression` is true.
@@ -911,17 +926,7 @@ class ctable(object):
                 "only boolean expressions or arrays are supported")
 
         # Check outcols
-        if outcols is None:
-            outcols = self.names
-        else:
-            if type(outcols) not in (list, tuple) + _strtypes:
-                raise ValueError("only list/str is supported for outcols")
-            if isinstance(outcols, _strtypes):
-                outcols = split_string(outcols)
-            # Check name validity
-            outcols = validate_names(outcols, 'outcols')
-            if (set(outcols) - set(self.names+['nrow__'])):
-                raise ValueError("outcols doesn't match names")
+        outcols = self._check_outcols(outcols)
 
         # Get iterators for selected columns
         icols, dtypes = [], []
@@ -1038,6 +1043,7 @@ class ctable(object):
             # Get the minimum chunklen for every field
             blen = min(self[col].chunklen for col in self.cols)
 
+        outcols = self._check_outcols(outcols)
         dtype = self._dtype_fromoutcols(outcols)
         it = self.where(expression, outcols, limit, skip, out_flavor=tuple,
                         user_dict=self._ud(user_dict))
@@ -1091,18 +1097,7 @@ class ctable(object):
 
         """
 
-        # Check outcols
-        if outcols is None:
-            outcols = self.names
-        else:
-            if type(outcols) not in (list, tuple) + _strtypes:
-                raise ValueError("only list/str is supported for outcols")
-            if isinstance(outcols, _strtypes):
-                outcols = split_string(outcols)
-            # Check name validity
-            outcols = validate_names(outcols, 'outcols')
-            if (set(outcols) - set(self.names+['nrow__'])):
-                raise ValueError("outcols doesn't match names")
+        outcols = self._check_outcols(outcols)
 
         # Check limits
         if step <= 0:
