@@ -2107,7 +2107,7 @@ class walkTest(MayBeDiskTest, TestCase):
         self.assertTrue(others == 0)
 
 
-class conversionTest(TestCase):
+class pandasConversionTest(TestCase):
 
     @skipUnless(bcolz.pandas_here, "pandas not here")
     def test00(self):
@@ -2121,8 +2121,35 @@ class conversionTest(TestCase):
         for key in ct.names:
             assert_allclose(ct2[key][:], ct[key][:])
 
-    @skipUnless(bcolz.tables_here, "PyTables not here")
+    @skipUnless(bcolz.pandas_here, "pandas not here")
     def test01(self):
+        """Testing roundtrips to a pandas dataframe (strings)"""
+        N = 1000
+        ra = np.fromiter(((i, i * 2., "%.10s" % (i * 3))
+                          for i in xrange(N)), dtype='i4,f8,S10')
+        ct = bcolz.ctable(ra)
+        df = ct.todataframe()
+        ct2 = bcolz.ctable.fromdataframe(df)
+        for i in range(N):
+            assert ct2['f2'][i] == ct['f2'][i]
+
+    @skipUnless(bcolz.pandas_here, "pandas not here")
+    def test02(self):
+        """Testing roundtrips to a pandas dataframe (unicode)"""
+        N = 1000
+        ra = np.fromiter(((i, i * 2., u"%.10s" % (i * 3))
+                          for i in xrange(N)), dtype='i4,f8,U10')
+        ct = bcolz.ctable(ra)
+        df = ct.todataframe()
+        ct2 = bcolz.ctable.fromdataframe(df)
+        for i in range(N):
+            assert ct2['f2'][i] == ct['f2'][i]
+
+
+class pytablesConversionTest(TestCase):
+
+    @skipUnless(bcolz.tables_here, "PyTables not here")
+    def test00(self):
         """Testing roundtrips to a HDF5 file"""
         N = 1000
         ra = np.fromiter(((i, i * 2., i * 3)

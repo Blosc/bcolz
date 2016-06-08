@@ -181,6 +181,11 @@ Changes from 1.0.0 to 1.1.0
   in numexpr for faster operation of numexpr inside loops using the same
   expression (quite common scenario).
 
+- Unicode strings are recognized now when imported from a pandas
+  dataframe, making the storage much more efficient.  Before unicode was
+  converted into 'O'bject type, but the change to 'U'nicode should be
+  backward compatible.
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
