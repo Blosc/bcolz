@@ -129,16 +129,17 @@ class cols(object):
 
 
 class ctable(object):
-    """ This class represents a compressed, column-wise, in-memory table.
+    """This class represents a compressed, column-wise table.
 
     Create a new ctable from `cols` with optional `names`.
 
     Parameters
     ----------
     cols : tuple or list of column objects
-        The list of column data to build the ctable object.  This can also be
-        a pure NumPy structured array.  A list of lists or tuples is valid
-        too, as long as they can be converted into carray objects.
+        The list of column data to build the ctable object.  These are
+        typically carrays, but can also be a list of NumPy arrays or a pure
+        NumPy structured array.  A list of lists or tuples is valid too, as
+        long as they can be converted into carray objects.
     names : list of strings or string
         The list of names for the columns.  The names in this list must be
         valid Python identifiers, must not start with an underscore, and has

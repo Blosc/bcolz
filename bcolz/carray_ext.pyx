@@ -866,7 +866,7 @@ cdef class carray:
     carray(array, cparams=None, dtype=None, dflt=None, expectedlen=None,
     chunklen=None, rootdir=None, mode='a')
 
-    A compressed and enlargeable in-memory data container.
+    A compressed and enlargeable data container either in-memory or on-disk.
 
     `carray` exposes a series of methods for dealing with the compressed
     container in a NumPy-like way.
