@@ -681,8 +681,10 @@ class ctable(object):
                                        dtype='U%d' % maxitemsize, **ckwargs)
                 elif inferred_type == 'string':
                     maxitemsize = pd.lib.max_len_string_array(vals)
-                    col = bcolz.carray(vals, dtype='S%d' %
-                                       maxitemsize, **ckwargs)
+                    # In Python 3 strings should be represented as Unicode
+                    dtype = "U" if sys.version_info.major > 2 else "S"
+                    col = bcolz.carray(vals, dtype='%s%d' %
+                                       (dtype, maxitemsize), **ckwargs)
                 else:
                     col = vals
                 cols.append(col)
