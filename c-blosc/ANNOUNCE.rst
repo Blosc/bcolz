@@ -1,15 +1,16 @@
 ===============================================================
- Announcing c-blosc 1.9.1
+ Announcing c-blosc 1.9.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Here, the memcpy() call is used when
-clevel=0 instead of an internal multi-threaded copy.  This should
-provide a 10% ~ 20% of performance improvement in this scenario.
-Also, ``make -jN`` works correctly now for parallel compilation.
+This is a maintenance release.  On it, a check on whether Blosc is
+actually initialized before blosc_init(), blosc_destroy() and
+blosc_free_resources() is done, so that the library is more resistant
+to different initialization cycles
+(e.g. https://github.com/stevengj/Blosc.jl/issues/19).
 
 For more info, please see the release notes in:
 

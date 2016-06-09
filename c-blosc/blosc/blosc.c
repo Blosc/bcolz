@@ -1951,6 +1951,9 @@ void blosc_set_blocksize(size_t size)
 
 void blosc_init(void)
 {
+  /* Return if we are already initialized */
+  if (g_initlib) return;
+
   pthread_mutex_init(&global_comp_mutex, NULL);
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
@@ -1959,6 +1962,9 @@ void blosc_init(void)
 
 void blosc_destroy(void)
 {
+  /* Return if Blosc is not initialized */
+  if (!g_initlib) return;
+
   g_initlib = 0;
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
@@ -2015,5 +2021,8 @@ int blosc_release_threadpool(struct blosc_context* context)
 
 int blosc_free_resources(void)
 {
+  /* Return if Blosc is not initialized */
+  if (!g_initlib) return -1;
+
   return blosc_release_threadpool(g_global_context);
 }

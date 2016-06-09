@@ -121,7 +121,7 @@ Changes from 1.0.0 to 1.1.0
     >>> %timeit numexpr.evaluate("a*(b+1)")
     10 loops, best of 3: 25.5 ms per loop  # ndarrays are still faster
 
-- Internal C-Blosc sources bumped to 1.9.1.
+- Internal C-Blosc sources bumped to 1.9.2.
 
 - Dask (dask.pydata.org) is supported as another virtual machine backed
   for bcolz.eval().  Now, either Numexpr (the default) or Dask or even
