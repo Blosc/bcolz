@@ -37,7 +37,7 @@ class Defaults(object):
         entries = ['clevel', 'shuffle', 'cname', 'quantize']
         if not all(k in value for k in entries):
             raise ValueError(
-                "The dictionary must have the next entries:", entries)
+                "The dictionary must have the next entries: %s" % entries)
         # Return a dictionary with the proper defaults
         return dict(zip(entries, bcolz.cparams._checkparams(**value)))
 
@@ -53,13 +53,13 @@ class Defaults(object):
     def vm(self, value):
         self.check_choices('vm', value)
         if value == "numexpr" and not bcolz.numexpr_here:
-            raise (ValueError,
-                   "cannot use `numexpr` virtual machine "
-                   "(minimum required version is probably not installed)")
+            raise ValueError(
+                "cannot use `numexpr` virtual machine "
+                "(minimum required version is probably not installed)")
         elif value == "dask" and not bcolz.dask_here:
-            raise (ValueError,
-                   "cannot use `dask` virtual machine "
-                   "(minimum required version is probably not installed)")
+            raise ValueError(
+                "cannot use `dask` virtual machine "
+                "(minimum required version is probably not installed)")
         self.__vm = value
 
     # Keep eval_vm for backward compatibility
