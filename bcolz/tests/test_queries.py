@@ -205,6 +205,20 @@ class whereblocksTest(MayBeDiskTest):
         self.assertEqual(l, N - 1)
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
+    def test09(self):
+        """Testing `whereblocks` method with vm different than default"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in t.whereblocks('f1 < f2', vm="python"):
+            l += len(block)
+            s += block['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
+
 class small_whereblocksTest(whereblocksTest, TestCase):
     N = 120
 

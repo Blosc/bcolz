@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import itertools
 import numpy as np
 import numexpr as ne
@@ -42,7 +44,7 @@ def timefunc(f):
         start = time.time()
         result = f(*args, **kwargs)
         end = time.time()
-        print f.__name__, 'took', round(end - start, 3), 'sec'
+        print(f.__name__, 'took', round(end - start, 3), 'sec')
         return result
     return f_timer
 
@@ -89,11 +91,17 @@ def fetchwhere_bcolz():
 def fetchwhere_numpy():
     return ct.fetchwhere("(a > 5) & (b < LMAX)", out_flavor='numpy')['a'].sum()
 
+@timefunc
+#@do_cprofile
+def fetchwhere_dask():
+    result = ct.fetchwhere("(a > 5) & (b < LMAX)", vm="dask")['a'].sum()
+    return result
 
-print repr(ct)
+
+print(repr(ct))
 
 a0 = where_numpy()
-print "a0:", a0
+print("a0:", a0)
 a1 = where_numexpr()
 assert a0 == a1
 a1 = bcolz_where()
@@ -107,4 +115,6 @@ assert a0 == a1
 a1 = fetchwhere_bcolz()
 assert a0 == a1
 a1 = fetchwhere_numpy()
+assert a0 == a1
+a1 = fetchwhere_dask()
 assert a0 == a1

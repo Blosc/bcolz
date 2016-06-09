@@ -881,7 +881,7 @@ class ctable(object):
         return outcols
 
     def where(self, expression, outcols=None, limit=None, skip=0,
-              out_flavor=namedtuple, user_dict={}):
+              out_flavor=namedtuple, user_dict={}, vm=None):
         """Iterate over rows where `expression` is true.
 
         Parameters
@@ -905,6 +905,10 @@ class ctable(object):
         user_dict : dict
             An user-provided dictionary where the variables in expression
             can be found by name.
+        vm : string
+            The virtual machine to be used in computations.  It can be
+            'numexpr', 'python' or 'dask'.  The default is to use 'numexpr' if
+            it is installed.
 
         Returns
         -------
@@ -919,7 +923,8 @@ class ctable(object):
         # Check input
         if isinstance(expression, _strtypes):
             # That must be an expression
-            boolarr = self.eval(expression, user_dict=self._ud(user_dict))
+            boolarr = self.eval(expression, user_dict=self._ud(user_dict),
+                                vm=vm)
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
             boolarr = expression
         else:
@@ -943,7 +948,7 @@ class ctable(object):
         return self._iter(icols, dtype, out_flavor)
 
     def fetchwhere(self, expression, outcols=None, limit=None, skip=0,
-                   out_flavor=None, user_dict={}, **kwargs):
+                   out_flavor=None, user_dict={}, vm=None, **kwargs):
         """Fetch the rows fulfilling the `expression` condition.
 
         Parameters
@@ -967,6 +972,10 @@ class ctable(object):
         user_dict : dict
             An user-provided dictionary where the variables in expression
             can be found by name.
+        vm : string
+            The virtual machine to be used in computations.  It can be
+            'numexpr', 'python' or 'dask'.  The default is to use 'numexpr' if
+            it is installed.
         kwargs : list of parameters or dictionary
             Any parameter supported by the carray constructor.
 
@@ -987,12 +996,13 @@ class ctable(object):
 
         if out_flavor == "numpy":
             it = self.whereblocks(expression, len(self), outcols, limit, skip,
-                                  user_dict=self._ud(user_dict))
+                                  user_dict=self._ud(user_dict), vm=vm)
             return next(it)
         elif out_flavor in ("bcolz", "carray"):
             dtype = self._dtype_fromoutcols(outcols)
             it = self.where(expression, outcols, limit, skip,
-                            out_flavor=tuple, user_dict=self._ud(user_dict))
+                            out_flavor=tuple, user_dict=self._ud(user_dict),
+                            vm=vm)
             ct = bcolz.fromiter(it, dtype, count=-1, **kwargs)
             ct.flush()
             return ct
@@ -1002,7 +1012,7 @@ class ctable(object):
 
 
     def whereblocks(self, expression, blen=None, outcols=None, limit=None,
-                    skip=0, user_dict={}):
+                    skip=0, user_dict={}, vm=None):
         """Iterate over the rows that fullfill the `expression` condition on
         this ctable, in blocks of size `blen`.
 
@@ -1028,6 +1038,10 @@ class ctable(object):
         user_dict : dict
             An user-provided dictionary where the variables in expression
             can be found by name.
+        vm : string
+            The virtual machine to be used in computations.  It can be
+            'numexpr', 'python' or 'dask'.  The default is to use 'numexpr' if
+            it is installed.
 
         Returns
         -------
@@ -1047,7 +1061,7 @@ class ctable(object):
         outcols = self._check_outcols(outcols)
         dtype = self._dtype_fromoutcols(outcols)
         it = self.where(expression, outcols, limit, skip, out_flavor=tuple,
-                        user_dict=self._ud(user_dict))
+                        user_dict=self._ud(user_dict), vm=vm)
         return self._iterwb(it, blen, dtype)
 
     def _iterwb(self, it, blen, dtype):

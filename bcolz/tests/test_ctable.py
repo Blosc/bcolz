@@ -1823,6 +1823,19 @@ class whereTest(MayBeDiskTest):
         # print "rl->", rl
         self.assertTrue(rt == rl, "where not working correctly")
 
+    def test00d(self):
+        """Testing where() with a boolean array (vm different than default)"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        barr = t.eval('4+f1 > f2')
+        rt = [r.f0 for r in t.where(barr, vm="python")]
+        rl = [i for i in xrange(N) if 4 + i > i * 2]
+        # print "rt->", rt
+        # print "rl->", rl
+        self.assertTrue(rt == rl, "where not working correctly")
+
     def test01a(self):
         """Testing where() with an expression (all false values)"""
         N = self.N
@@ -1854,6 +1867,18 @@ class whereTest(MayBeDiskTest):
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, rootdir=self.rootdir)
         rt = [r.f0 for r in t.where('4+f1 > f2')]
+        rl = [i for i in xrange(N) if 4 + i > i * 2]
+        # print "rt->", rt
+        # print "rl->", rl
+        self.assertTrue(rt == rl, "where not working correctly")
+
+    def test01d(self):
+        """Testing where() with an expression (vm different than default)"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        rt = [r.f0 for r in t.where('4+f1 > f2', vm="python")]
         rl = [i for i in xrange(N) if 4 + i > i * 2]
         # print "rt->", rt
         # print "rl->", rl

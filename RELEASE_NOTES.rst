@@ -186,6 +186,10 @@ Changes from 1.0.0 to 1.1.0
   converted into 'O'bject type, but the change to 'U'nicode should be
   backward compatible.
 
+- Added `vm` parameter to specify the virtual machine for doing internal
+  operations in ctable.where(), ctable.fetchwhere() and
+  ctable.whereblocks().
+
 
 Changes from 0.12.1 to 1.0.0
 ============================
