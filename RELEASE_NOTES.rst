@@ -2,6 +2,12 @@
 Release notes for bcolz
 =======================
 
+Changes from 1.1.0 to 1.1.1
+===========================
+
+  #XXX version-specific blurb XXX#
+
+
 Changes from 1.0.0 to 1.1.0
 ===========================
 
@@ -21,41 +27,41 @@ Changes from 1.0.0 to 1.1.0
   determined from the quantize value.  For example, if quantize=1, bits
   will be 4.  0 means that the quantization is disabled.
 
-  Here it is an example of what you can get from the new quantize:
+  Here it is an example of what you can get from the new quantize::
 
-  In [9]: a = np.cumsum(np.random.random_sample(1000*1000)-0.5)
+    In [9]: a = np.cumsum(np.random.random_sample(1000*1000)-0.5)
 
-  In [10]: bcolz.carray(a, cparams=bcolz.cparams(quantize=0))  # no quantize
-  Out[10]:
-  carray((1000000,), float64)
-    nbytes: 7.63 MB; cbytes: 6.05 MB; ratio: 1.26
-    cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=0)
-  [ -2.80946077e-01  -7.63925274e-01  -5.65575047e-01 ...,   3.59036158e+02
-     3.58546624e+02   3.58258860e+02]
+    In [10]: bcolz.carray(a, cparams=bcolz.cparams(quantize=0))  # no quantize
+    Out[10]:
+    carray((1000000,), float64)
+      nbytes: 7.63 MB; cbytes: 6.05 MB; ratio: 1.26
+      cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=0)
+    [ -2.80946077e-01  -7.63925274e-01  -5.65575047e-01 ...,   3.59036158e+02
+       3.58546624e+02   3.58258860e+02]
 
-  In [11]: bcolz.carray(a, cparams=bcolz.cparams(quantize=1))
-  Out[11]:
-  carray((1000000,), float64)
-    nbytes: 7.63 MB; cbytes: 1.41 MB; ratio: 5.40
-    cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=1)
-  [ -2.50000000e-01  -7.50000000e-01  -5.62500000e-01 ...,   3.59036158e+02
-     3.58546624e+02   3.58258860e+02]
+    In [11]: bcolz.carray(a, cparams=bcolz.cparams(quantize=1))
+    Out[11]:
+    carray((1000000,), float64)
+      nbytes: 7.63 MB; cbytes: 1.41 MB; ratio: 5.40
+      cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=1)
+    [ -2.50000000e-01  -7.50000000e-01  -5.62500000e-01 ...,   3.59036158e+02
+       3.58546624e+02   3.58258860e+02]
 
-  In [12]: bcolz.carray(a, cparams=bcolz.cparams(quantize=2))
-  Out[12]:
-  carray((1000000,), float64)
-    nbytes: 7.63 MB; cbytes: 2.20 MB; ratio: 3.47
-    cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=2)
-  [ -2.81250000e-01  -7.65625000e-01  -5.62500000e-01 ...,   3.59036158e+02
-     3.58546624e+02   3.58258860e+02]
+    In [12]: bcolz.carray(a, cparams=bcolz.cparams(quantize=2))
+    Out[12]:
+    carray((1000000,), float64)
+      nbytes: 7.63 MB; cbytes: 2.20 MB; ratio: 3.47
+      cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=2)
+    [ -2.81250000e-01  -7.65625000e-01  -5.62500000e-01 ...,   3.59036158e+02
+       3.58546624e+02   3.58258860e+02]
 
-  In [13]: bcolz.carray(a, cparams=bcolz.cparams(quantize=3))
-  Out[13]:
-  carray((1000000,), float64)
-    nbytes: 7.63 MB; cbytes: 2.30 MB; ratio: 3.31
-    cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=3)
-  [ -2.81250000e-01  -7.63671875e-01  -5.65429688e-01 ...,   3.59036158e+02
-     3.58546624e+02   3.58258860e+02]
+    In [13]: bcolz.carray(a, cparams=bcolz.cparams(quantize=3))
+    Out[13]:
+    carray((1000000,), float64)
+      nbytes: 7.63 MB; cbytes: 2.30 MB; ratio: 3.31
+      cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=3)
+    [ -2.81250000e-01  -7.63671875e-01  -5.65429688e-01 ...,   3.59036158e+02
+       3.58546624e+02   3.58258860e+02]
 
   As you can see, the compression ratio can improve pretty significantly
   when using the quantize filter.  It is important to note that by using

@@ -36,6 +36,7 @@ Tagging
 
 * Push the tag to the Github repo::
 
+    $ git push
     $ git push --tags
 
 
@@ -83,9 +84,9 @@ Uploading
 Announcing
 ----------
 
-* Send an announcement to the bcolz, blosc, numpy, pandas and
-  python-announce lists.  Use the ``ANNOUNCE.rst`` file as skeleton
-  (or possibly as the definitive version).
+* Send an announcement to the bcolz, blosc, pydata and python-announce
+  lists.  Use the ``ANNOUNCE.rst`` file as skeleton (or possibly as
+  the definitive version).
 
 * Tweet about the new release and rejoice!
 
