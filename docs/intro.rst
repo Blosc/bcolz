@@ -26,8 +26,8 @@ Blosc, a high-performance compressor that is optimized for binary
 data.  The fact that Blosc splits chunks internally in so-called
 blocks means that only the interesting part of the chunk will
 decompressed (typically in L1 or L2 caches). That ensures maximum
-performance for I/O operation (`either on-disk or in
-memory<https://github.com/FrancescAlted/DataContainersTutorials>`_).
+performance for I/O operation (`either on-disk or in memory
+<https://github.com/FrancescAlted/DataContainersTutorials>`_).
 
 bcolz can use numexpr or dask internally (numexpr is used by default
 if installed, then dask and if these are not found, then the pure
@@ -110,8 +110,8 @@ bcolz does not currently come with good support in the next areas:
   * Limited number of operations, at least when compared with NumPy.
     The supported operations are basically vectorized ones (i.e. those
     that are made element-by-element).  But with is changing with the
-    adoption of additional kernels like
-    `Dask<https://github.com/dask/dask>`_ (and more to come).
+    adoption of additional kernels like `Dask
+    <https://github.com/dask/dask>`_ (and more to come).
 
   * Limited broadcast support.  For example, NumPy lets you operate
     seamlessly with arrays of different shape (as long as they are
