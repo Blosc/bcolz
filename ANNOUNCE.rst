@@ -1,11 +1,40 @@
 ======================
-Announcing bcolz 1.0.1
+Announcing bcolz 1.1.0
 ======================
 
 What's new
 ==========
 
- #XXX version-specific blurb XXX#
+This release brings quite a lot of changes.  After format stabilization
+in 1.0, the focus is now in fine-tune many operations (specially queries
+in ctables), as well as widening the available computational engines.
+
+Highlights:
+
+* Much improved performance of ctable.where() and ctable.whereblocks().
+  Now bcolz is getting closer than ever to fundamental memory limits
+  during queries (see the updated benchmarks in the data containers
+  tutorial below).
+
+* Better support for Dask; i.e. GIL is released during Blosc operation
+  when bcolz is called from a multithreaded app (like Dask).  Also, Dask
+  can be used as another virtual machine for evaluating expressions (so
+  now it is possible to use it during queries too).
+
+* New ctable.fetchwhere() method for getting the rows fulfilling some
+  condition in one go.
+
+* New quantize filter for allowing lossy compression of floating point
+  data.
+
+* It is possible to create ctables with more than 255 columns now.
+  Thanks to Skipper Seabold.
+
+* The defaults during carray creation are scalars now.  That allows to
+  create highly dimensional data containers more efficiently.
+
+* carray object does implement the __array__() special method now. With
+  this, interoperability with numpy arrays is easier and faster.
 
 For a more detailed change log, see:
 
@@ -17,13 +46,6 @@ see:
 https://github.com/FrancescAlted/DataContainersTutorials
 
 specially chapters 3 (in-memory containers) and 4 (on-disk containers).
-
-Also, if it happens that you are in Madrid during this weekend, you can
-drop by my tutorial and talk:
-
-http://pydata.org/madrid2016/schedule/
-
-See you!
 
 
 What it is
@@ -55,10 +77,8 @@ promise of accelerating memory I/O, at least for some real scenarios:
 
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
 
-Other users of bcolz are Visualfabriq (http://www.visualfabriq.com/),
-Quantopian (https://www.quantopian.com/) and Scikit-Allel
-(https://github.com/cggh/scikit-allel) which you can read more about by
-pointing your browser at the links below.
+Example users of bcolz are Visualfabriq (http://www.visualfabriq.com/),
+and Quantopian (https://www.quantopian.com/):
 
 * Visualfabriq:
 
@@ -70,10 +90,6 @@ pointing your browser at the links below.
   * Using compressed data containers for faster backtesting at scale:
   * https://quantopian.github.io/talks/NeedForSpeed/slides.html
 
-* Scikit-Allel
-
-  * Provides an alternative backend to work with compressed arrays
-  * https://scikit-allel.readthedocs.org/en/latest/model/bcolz.html
 
 
 Resources
