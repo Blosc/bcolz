@@ -30,16 +30,16 @@ top of bcolz containers.
 Before you start writing your own extension, let's see some
 examples of real projects made on top of bcolz:
 
-  - `Bquery`: a query and aggregation framework, among other things it
-      provides group-by functionality for bcolz containers. See
-      https://github.com/visualfabriq/bquery
+- `Bquery`: a query and aggregation framework, among other things it
+   provides group-by functionality for bcolz containers. See
+   https://github.com/visualfabriq/bquery
 
-  - `Bdot`: provides big dot products (by making your RAM bigger on
-      the inside).  Supports ``matrix . vector`` and ``matrix
-      . matrix`` for most common numpy numeric data types. See
-      https://github.com/tailwind/bdot
+- `Bdot`: provides big dot products (by making your RAM bigger on the
+   inside).  Supports ``matrix . vector`` and ``matrix . matrix`` for
+   most common numpy numeric data types. See
+   https://github.com/tailwind/bdot
 
-Though not a extensions itself, it is worth pointing out `Dask`. Dask
+Though not a extension itself, it is worth mentioning `Dask`. Dask
 plays nicely with bcolz and provides multi-core execution on
 larger-than-memory datasets using blocked algorithms and task
 scheduling. See https://github.com/dask/dask.
@@ -74,7 +74,7 @@ everything ran smoothly you should be able to see a binary file
 ``my_extension/example_ext.so`` next to the ``.pyx`` file.
 
 If you have any problems compiling these extensions, please make sure
-your bcolz version is at least ``0.8.0``, previous versions don't
+you have a recent version of bcolz as old versions (pre 0.8) don't
 contain the necessary ``.pxd`` file which provides a Cython interface
 to the carray Cython module.
 

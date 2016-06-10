@@ -15,22 +15,26 @@ it also comes with support for import/export facilities to/from
 dataframes <http://pandas.pydata.org>`_.
 
 The building blocks of bcolz objects are the so-called ``chunks`` that
-are bits of data compressed as a whole, but that can be decompressed
-partially in order to improve the fetching of small parts of the
+are bits of data compressed as a whole, but that can be (partially)
+decompressed in order to improve the fetching of small parts of the
 array.  This ``chunked`` nature of the bcolz objects, together with a
 buffered I/O, makes appends very cheap and fetches reasonably fast
 (although the modification of values can be an expensive operation).
 
 The compression/decompression process is carried out internally by
 Blosc, a high-performance compressor that is optimized for binary
-data.  That ensures maximum performance for I/O operation.
+data.  The fact that Blosc splits chunks internally in so-called
+blocks means that only the interesting part of the chunk will
+decompressed (typically in L1 or L2 caches). That ensures maximum
+performance for I/O operation (`either on-disk or in
+memory<https://github.com/FrancescAlted/DataContainersTutorials>`_).
 
 bcolz can use numexpr or dask internally (numexpr is used by default
 if installed, then dask and if these are not found, then the pure
-Python interpreter) so as to accelerate many vector and query
+Python interpreter) so as to accelerate many internal vector and query
 operations (although it can use pure NumPy for doing so too).  numexpr
-can optimize memory usage and use multithreading for doing the
-computations, so it is blazing fast.  This, in combination with
+can optimize memory (cache) usage and uses multithreading for doing
+the computations, so it is blazing fast.  This, in combination with
 carray/ctable disk-based, compressed containers, can be used for
 performing out-of-core computations efficiently, but most importantly
 *transparently*.
@@ -45,14 +49,15 @@ The main data container objects in the bcolz package are:
   * `ctable`: container for heterogeneous (column-wise) data
 
 `carray` is very similar to a NumPy `ndarray` in that it supports the
-same types and data access interface.  The main difference between
-them is that a `carray` can keep data compressed (both in-memory and
-on-disk), allowing to deal with larger datasets with the same amount
-of RAM/disk.  And another important difference is the chunked nature
-of the `carray` that allows data to be appended much more efficiently.
+same types and basic data access interface.  The main difference
+between them is that a `carray` can keep data compressed (both
+in-memory and on-disk), allowing to deal with larger datasets with the
+same amount of memory/disk.  And another important difference is the
+chunked nature of the `carray` that allows data to be appended much
+more efficiently.
 
 On his hand, a `ctable` is also similar to a NumPy ``structured
-array``, that shares the same properties with its `carray` brother,
+array`` that shares the same properties with its `carray` brother,
 namely, compression and chunking.  Another difference is that data is
 stored in a column-wise order (and not on a row-wise, like the
 ``structured array``), allowing for very cheap column handling.  This
@@ -104,9 +109,9 @@ bcolz does not currently come with good support in the next areas:
 
   * Limited number of operations, at least when compared with NumPy.
     The supported operations are basically vectorized ones (i.e. those
-    that are made element-by-element).  But this will change in the
-    future, when support for more powerful computational kernels would
-    be implemented.
+    that are made element-by-element).  But with is changing with the
+    adoption of additional kernels like
+    `Dask<https://github.com/dask/dask>`_ (and more to come).
 
   * Limited broadcast support.  For example, NumPy lets you operate
     seamlessly with arrays of different shape (as long as they are
@@ -119,4 +124,4 @@ bcolz does not currently come with good support in the next areas:
 
   * Multidimensional `ctable` objects are not supported.  However, as
     the columns of these objects can be fully multidimensional, this
-    is not regarded as a real-life limitation.
+    is not regarded as an important limitation.

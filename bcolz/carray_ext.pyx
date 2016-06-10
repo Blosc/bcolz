@@ -1154,7 +1154,9 @@ cdef class carray:
             raise TypeError("atomic size cannot be zero")
 
         self.atomsize = atomsize = dtype.itemsize
+        """The size in bytes of the atom (carray[0,:])."""
         self.itemsize = itemsize = dtype.base.itemsize
+        """The size in bytes of the elments of the carray."""
 
         # Check defaults for dflt
         _dflt = np.zeros((), dtype=dtype.base)
@@ -1201,6 +1203,7 @@ cdef class carray:
         # Create layout for data and metadata
         self._cparams = cparams
         self.chunks = []
+        """The chunks container"""
         if rootdir is not None:
             self._mkdirs(rootdir, mode)
             metainfo = (
