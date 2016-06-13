@@ -13,11 +13,11 @@ environment:
       CONDA_PY: "26"
       CONDA_NPY: "111"
 
-    - PYTHON: "C:\\Python26_64"
-      PYTHON_VERSION: "2.6"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "26"
-      CONDA_NPY: "111"
+    # - PYTHON: "C:\\Python26_64"
+    #   PYTHON_VERSION: "2.6"
+    #   PYTHON_ARCH: "64"
+    #   CONDA_PY: "26"
+    #   CONDA_NPY: "111"
 
     # PYTHON 2.7
     - PYTHON: "C:\\Python27_32"
@@ -26,11 +26,11 @@ environment:
       CONDA_PY: "27"
       CONDA_NPY: "111"
 
-    - PYTHON: "C:\\Python27_64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "27"
-      CONDA_NPY: "111"
+    # - PYTHON: "C:\\Python27_64"
+    #   PYTHON_VERSION: "2.7"
+    #   PYTHON_ARCH: "64"
+    #   CONDA_PY: "27"
+    #   CONDA_NPY: "111"
 
     # PYTHON 3.4
     - PYTHON: "C:\\Python34_32"
