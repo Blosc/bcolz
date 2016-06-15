@@ -479,6 +479,52 @@ class add_del_colTest(MayBeDiskTest):
         self.assertRaises(ValueError, t.__setitem__,
                           'f1', np.arange(N + 1, dtype='i8'))
 
+    def test10(self):
+        """Testing removing two existing columns sequentially"""
+        N = 10
+        ra = np.fromiter(((i, i * 2, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,i8,f4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        t.delcol('f2')
+        t.delcol('f3')
+        ra = np.fromiter(((i, i * 2) for i in xrange(N)), dtype='i4,i8')
+        ra.dtype.names = ('f0', 'f1')
+        # print "t->", `t`
+        # print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test11a(self):
+        """Testing removing all columns"""
+        N = 10
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,f4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        t.delcol('f0')
+        t.delcol('f1')
+        t.delcol('f2')
+        # print "t->", `t`
+        # print "ra[:]", ra[:]
+        assert t.dtype == np.dtype([])
+
+    def test11b(self):
+        """Testing removing all columns and re-adding more"""
+        N = 10
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,f4,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        t.delcol('f0')
+        t.delcol('f1')
+        t.delcol('f2')
+        b = np.arange(N, dtype='i4')
+        t.addcol(bcolz.carray(b), 'f0')
+        c = np.arange(N, dtype='f4') * 2
+        t.addcol(bcolz.carray(c), 'f1')
+        ra = np.fromiter(((i, i * 2) for i in xrange(N)), dtype='i4,f4')
+        # print "t->", `t`
+        # print "ra[:]", ra[:]
+        assert_array_equal(t[:], ra, "ctable values are not correct")
+
+
 class add_del_colMemoryTest(add_del_colTest, TestCase):
     disk = False
 

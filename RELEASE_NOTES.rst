@@ -5,7 +5,7 @@ Release notes for bcolz
 Changes from 1.1.0 to 1.1.1
 ===========================
 
-  #XXX version-specific blurb XXX#
+- Allow to delete all the columns in a ctable.  Fixes #306.
 
 
 Changes from 1.0.0 to 1.1.0

@@ -586,8 +586,9 @@ class ctable(object):
         # Remove the column
         col = self.cols.pop(name)
 
-        # Update _arr1 for the new dtype
-        self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
+        # Update _arr1 for the new dtype (only if it is non-empty)
+        if self.dtype != np.dtype([]):
+            self._arr1 = np.empty(shape=(1,), dtype=self.dtype)
 
         if not keep:
             col.purge()
