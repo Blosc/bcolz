@@ -89,6 +89,12 @@ class cols(object):
             if len(carray) != len(self._cols[name]):
                 raise ValueError(
                     "new column length is inconsistent with ctable")
+            if type(carray) not in (np.ndarray, bcolz.carray):
+                try:
+                    carray = utils.to_ndarray(carray, self._cols[name].dtype)
+                except:
+                    raise ValueError(
+                        "`%s` cannot be converted into a numpy object" % carray)
             self._cols[name] = carray
         else:
             self.names.append(name)
@@ -391,7 +397,7 @@ class ctable(object):
             ratype = hasattr(cols.dtype, "names")
             sclist = True
         elif isinstance(cols, bcolz.ctable):
-            # Convert int a list of carrays
+            # Convert into a list of carrays
             cols = [cols[name] for name in self.names]
             calist = True
         else:

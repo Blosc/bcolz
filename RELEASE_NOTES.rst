@@ -7,6 +7,9 @@ Changes from 1.1.0 to 1.1.1
 
 - Allow to delete all the columns in a ctable.  Fixes #306.
 
+- Double-check the value of a column that is being overwritten.  Fixes
+  #307.
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================

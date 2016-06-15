@@ -479,6 +479,15 @@ class add_del_colTest(MayBeDiskTest):
         self.assertRaises(ValueError, t.__setitem__,
                           'f1', np.arange(N + 1, dtype='i8'))
 
+    def test09c(self):
+        """Testing overwriting an existing column (wrong values)"""
+        N = 2
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,i8,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        self.assertRaises(ValueError, t.__setitem__,
+                          'f1', dict(a=1,b=2))
+
     def test10(self):
         """Testing removing two existing columns sequentially"""
         N = 10
