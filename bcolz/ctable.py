@@ -1174,7 +1174,7 @@ class ctable(object):
         """Returns values based on `key`.
 
         All the functionality of ``ndarray.__getitem__()`` is supported
-        (including fancy indexing), plus a special support for expressions:
+        (including fancy indexing), plus a special support for expressions.
 
         Parameters
         ----------
@@ -1190,6 +1190,10 @@ class ctable(object):
         ctable.eval
 
         """
+
+        # Check for an empty dtype
+        if self.dtype == np.dtype([]):
+            raise KeyError("cannot retrieve data from a ctable with no columns")
 
         # First, check for integer
         if isinstance(key, _inttypes):
@@ -1250,7 +1254,7 @@ class ctable(object):
         else:
             raise NotImplementedError("key not supported: %s" % repr(key))
 
-        # From now on, will only deal with [start:stop:step] slices
+        # From now on will only deal with [start:stop:step] slices
 
         # Get the corrected values for start, stop, step
         (start, stop, step) = slice(start, stop, step).indices(self.len)
@@ -1287,6 +1291,10 @@ class ctable(object):
         ctable.eval
 
         """
+        # Check for an empty dtype
+        if self.dtype == np.dtype([]):
+            raise KeyError("cannot assign to ctable with no columns")
+
         if isinstance(key, (bytes, str)):
             # First, check if the key is a column name
             if key in self.names:
@@ -1387,11 +1395,14 @@ class ctable(object):
             column = cols[name]
             nbytes += column.nbytes
             cbytes += column.cbytes
-        cratio = nbytes / float(cbytes)
+        cratio = nbytes / float(cbytes) if cbytes > 0 else np.nan
         return (nbytes, cbytes, cratio)
 
     def __str__(self):
-        return array2string(self)
+        if self.dtype == np.dtype([]):
+            return ""
+        else:
+            return array2string(self)
 
     def __repr__(self):
         nbytes, cbytes, cratio = self._get_stats()
