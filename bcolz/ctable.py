@@ -88,10 +88,12 @@ class cols(object):
             raise ValueError(
                 "new column length is inconsistent with ctable")
         dtype = None
+        cparams = bcolz.defaults.cparams
         if name in self.names:
             # Column already exists.  Overwrite it, but keep the same dtype
-            # than the previous column.
+            # and cparams than the previous column.
             dtype = self._cols[name].dtype
+            cparams = self._cols[name].cparams
         else:
             self.names.append(name)
         # All columns should be a carray
@@ -99,7 +101,7 @@ class cols(object):
             try:
                 rd = os.path.join(self.rootdir, name) if self.rootdir else None
                 carray = bcolz.carray(carray, rootdir=rd, mode=self.mode,
-                                      dtype=dtype)
+                                      dtype=dtype, cparams=cparams)
             except:
                 raise ValueError(
                     "`%s` cannot be converted into a carray object "

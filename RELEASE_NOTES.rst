@@ -13,6 +13,10 @@ Changes from 1.1.0 to 1.1.1
 - Now all the columns in a ctable are enforced to be a carray instance
   in order to simplify the internal logic for handling columns.
 
+- Now, the cparams are preserved during column replacement, e.g.:
+
+  `ct['f0'] = x + 1`
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================
