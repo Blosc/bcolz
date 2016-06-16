@@ -84,21 +84,27 @@ class cols(object):
         return self._cols[name]
 
     def __setitem__(self, name, carray):
+        if len(self.names) and len(carray) != len(self._cols[self.names[0]]):
+            raise ValueError(
+                "new column length is inconsistent with ctable")
+        dtype = None
         if name in self.names:
-            # Column already exists.  Overwrite it.
-            if len(carray) != len(self._cols[name]):
-                raise ValueError(
-                    "new column length is inconsistent with ctable")
-            if type(carray) not in (np.ndarray, bcolz.carray):
-                try:
-                    carray = utils.to_ndarray(carray, self._cols[name].dtype)
-                except:
-                    raise ValueError(
-                        "`%s` cannot be converted into a numpy object" % carray)
-            self._cols[name] = carray
+            # Column already exists.  Overwrite it, but keep the same dtype
+            # than the previous column.
+            dtype = self._cols[name].dtype
         else:
             self.names.append(name)
-            self._cols[name] = carray
+        # All columns should be a carray
+        if type(carray) != bcolz.carray:
+            try:
+                rd = os.path.join(self.rootdir, name) if self.rootdir else None
+                carray = bcolz.carray(carray, rootdir=rd, mode=self.mode,
+                                      dtype=dtype)
+            except:
+                raise ValueError(
+                    "`%s` cannot be converted into a carray object "
+                    "of the correct type" % carray)
+        self._cols[name] = carray
         self.update_meta()
 
     def __iter__(self):

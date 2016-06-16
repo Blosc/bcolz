@@ -10,6 +10,9 @@ Changes from 1.1.0 to 1.1.1
 - Double-check the value of a column that is being overwritten.  Fixes
   #307.
 
+- Now all the columns in a ctable are enforced to be a carray instance
+  in order to simplify the internal logic for handling columns.
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================

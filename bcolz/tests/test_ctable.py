@@ -322,9 +322,12 @@ class add_del_colTest(MayBeDiskTest):
                          dtype='i4,f8,S2')
         # print "t->", `t`
         # print "ra[:]", ra[:]
+        # All columns should be carrays
+        assert type(t['f2']) == bcolz.carray
+        # And have the right values
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
-    def test00(self):
+    def test00b(self):
         """Testing adding a new column (carray flavor)"""
         N = 10
         ra = np.fromiter(((i, i * 2.) for i in xrange(N)), dtype='i4,f8')
@@ -532,6 +535,15 @@ class add_del_colTest(MayBeDiskTest):
         # print "t->", `t`
         # print "ra[:]", ra[:]
         assert_array_equal(t[:], ra, "ctable values are not correct")
+
+    def test12(self):
+        """Testing adding a new column (different length than ctable)"""
+        N = 10
+        ra = np.fromiter(((i, i * 3, i * 2.)
+                          for i in xrange(N)), dtype='i4,i8,f8')
+        t = bcolz.ctable(ra, rootdir=self.rootdir)
+        self.assertRaises(ValueError, t.addcol,
+                          'f3', np.arange(N + 1, dtype='i8'))
 
 
 class add_del_colMemoryTest(add_del_colTest, TestCase):
