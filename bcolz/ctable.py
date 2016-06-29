@@ -795,10 +795,15 @@ class ctable(object):
         else:
             raise ValueError("you need pandas to use this functionality")
 
+        if orient == 'index':
+            keys = self.names
+        else:
+            keys = self.names if columns is None else columns
+            columns = None
         # Use a generator here to minimize the number of column copies
         # existing simultaneously in-memory
         df = pd.DataFrame.from_items(
-            ((key, self[key][:]) for key in self.names),
+            ((key, self[key][:]) for key in keys),
             columns=columns, orient=orient)
         return df
 

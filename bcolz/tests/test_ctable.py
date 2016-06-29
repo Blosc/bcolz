@@ -2212,6 +2212,11 @@ class pandasConversionTest(TestCase):
         ct2 = bcolz.ctable.fromdataframe(df)
         for key in ct.names:
             assert_allclose(ct2[key][:], ct[key][:])
+        x = ct.todataframe(columns=['f0', 'f1'])
+        assert_allclose(x, df[['f0', 'f1']])
+        labels = ['l%s' % i for i in xrange(N)]
+        x = ct.todataframe(columns=labels, orient='index')
+        assert_array_equal(x, df.T)
 
     @skipUnless(bcolz.pandas_here, "pandas not here")
     def test01(self):
@@ -2224,6 +2229,11 @@ class pandasConversionTest(TestCase):
         ct2 = bcolz.ctable.fromdataframe(df)
         for i in range(N):
             assert ct2['f2'][i] == ct['f2'][i]
+        x = ct.todataframe(columns=['f0', 'f1'])
+        assert_allclose(x, df[['f0', 'f1']])
+        labels = ['l%s' % i for i in xrange(N)]
+        x = ct.todataframe(columns=labels, orient='index')
+        assert_array_equal(x, df.T)
 
     @skipUnless(bcolz.pandas_here, "pandas not here")
     def test02(self):
@@ -2236,6 +2246,11 @@ class pandasConversionTest(TestCase):
         ct2 = bcolz.ctable.fromdataframe(df)
         for i in range(N):
             assert ct2['f2'][i] == ct['f2'][i]
+        x = ct.todataframe(columns=['f0', 'f1'])
+        assert_allclose(x, df[['f0', 'f1']])
+        labels = ['l%s' % i for i in xrange(N)]
+        x = ct.todataframe(columns=labels, orient='index')
+        assert_array_equal(x, df.T)
 
 
 class pytablesConversionTest(TestCase):
