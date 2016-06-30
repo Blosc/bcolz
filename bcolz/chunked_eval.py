@@ -13,6 +13,7 @@ from __future__ import absolute_import
 
 import sys
 import math
+import warnings
 
 import numpy as np
 import bcolz
@@ -257,6 +258,10 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                                                        local_dict=vars_)
                 except ValueError:
                     # numexpr cannot handle this, so fall back to "python" vm
+                    warnings.warn(
+                        "numexpr cannot handle this expression: falling back "
+                        "to the 'python' virtual machine.  You can choose "
+                        "another virtual machine by using the `vm` parameter.")
                     return _eval_blocks(
                         expression, vars, vlen, typesize, "python",
                         out_flavor, blen, **kwargs)
