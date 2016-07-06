@@ -17,6 +17,8 @@ Changes from 1.1.0 to 1.1.1
 
   `ct['f0'] = x + 1`
 
+- C-Blosc updated to 1.9.3.
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================
