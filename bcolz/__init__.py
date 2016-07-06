@@ -83,7 +83,7 @@ from bcolz.toplevel import (
     open, fromiter, arange, zeros, ones, fill,
     iterblocks, cparams, walk)
 from bcolz.chunked_eval import eval
-from bcolz.defaults import defaults
+from bcolz.defaults import defaults, defaults_ctx
 from bcolz.version import version as __version__
 
 try:
@@ -94,7 +94,7 @@ except ImportError:
               "If on Python2.6 please install unittest2")
 
 
-def _get_git_descrtiption(path_):
+def _get_git_description(path_):
     """ Get the output of git-describe when executed in a given path. """
 
     # imports in function because:
@@ -121,7 +121,7 @@ def _get_git_descrtiption(path_):
     except subprocess.CalledProcessError:  # not in git repo
         pass
 
-git_description = _get_git_descrtiption(__path__[0])
+git_description = _get_git_description(__path__[0])
 
 # Initialization code for the Blosc and numexpr libraries
 _blosc_init()

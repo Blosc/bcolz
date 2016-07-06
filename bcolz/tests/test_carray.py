@@ -662,7 +662,8 @@ class copyTest(MayBeDiskTest):
 
     def tearDown(self):
         # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE, cname='blosclz')
+        bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE,
+                                  cname='lz4')
         MayBeDiskTest.tearDown(self)
 
     def test00(self):
@@ -708,7 +709,7 @@ class copyTest(MayBeDiskTest):
         b = bcolz.carray(a, rootdir=self.rootdir)
         bcolz.cparams.setdefaults(shuffle=bcolz.NOSHUFFLE)
         c = b.copy()
-        # print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
+        #print "b.cbytes, c.cbytes:", b.cbytes, c.cbytes
         self.assertTrue(b.cbytes < c.cbytes, "shuffle not changed")
 
 
@@ -2137,7 +2138,7 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
     def tearDown(self):
         # Restore defaults
         bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE,
-                                  cname='blosclz', quantize=0)
+                                  cname='lz4')
         MayBeDiskTest.tearDown(self)
 
     def test00(self):
@@ -2196,6 +2197,25 @@ class bloscCompressorsTest(MayBeDiskTest, TestCase):
             if self.disk:
                 common.remove_tree(self.rootdir)
 
+    def test01c(self):
+        """Testing all available compressors in big arrays (context)"""
+        a = np.arange(1e5)
+        cnames = bcolz.blosc_compressor_list()
+        if common.verbose:
+            print("Checking compressors:", cnames)
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for cname in cnames:
+            with bcolz.defaults_ctx(bcolz.cparams(clevel=9, cname=cname)):
+                self.assertTrue(bcolz.defaults.cparams['cname'] == cname)
+                b = bcolz.carray(a, rootdir=self.rootdir)
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                            "carray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            if self.disk:
+                common.remove_tree(self.rootdir)
+
     def test02a(self):
         """Testing quantize filter on big arrays (float64)"""
         np.random.seed(10)
@@ -2246,8 +2266,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
 
     def tearDown(self):
         # Restore defaults
-        bcolz.cparams.setdefaults(clevel=5, shuffle=bcolz.SHUFFLE,
-                                  cname='blosclz')
+        bcolz.cparams.setdefaults(**bcolz.defaults.cparams)
         MayBeDiskTest.tearDown(self)
 
     def test00(self):
@@ -2278,7 +2297,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         for filter_ in filters:
             bcolz.cparams.setdefaults(clevel=9, shuffle=filter_)
             b = bcolz.carray(a, rootdir=self.rootdir)
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
                             "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
@@ -2298,7 +2317,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
                 'clevel': 9, 'shuffle': filter_, 'cname': "blosclz",
                 'quantize': 0}
             b = bcolz.carray(a, rootdir=self.rootdir)
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
             self.assertTrue(sys.getsizeof(b) < b.nbytes,
                             "carray does not seem to compress at all")
             assert_array_equal(a, b[:], "Arrays are not equal")
@@ -2309,6 +2328,26 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         bcolz.defaults.cparams = {
             'clevel': 5, 'shuffle': bcolz.SHUFFLE, 'cname': 'blosclz',
             'quantize': 0}
+
+    def test01c(self):
+        """Testing all available filters in big arrays (context)"""
+        a = np.arange(1e5)
+        filters = bcolz.filters.keys()
+        if common.verbose:
+            print("Checking compressors:", cnames)
+        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        for filter_ in filters:
+            with bcolz.defaults_ctx(bcolz.cparams(clevel=9, shuffle=filter_)):
+                self.assertTrue(bcolz.defaults.cparams['shuffle'] == filter_)
+                b = bcolz.carray(a, rootdir=self.rootdir)
+            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
+            self.assertTrue(bcolz.defaults.cparams['shuffle'] == bcolz.SHUFFLE)
+            self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                            "carray does not seem to compress at all")
+            assert_array_equal(a, b[:], "Arrays are not equal")
+            # Remove the array on disk before trying with the next one
+            if self.disk:
+                common.remove_tree(self.rootdir)
 
 
 class filtersMemoryTest(bloscFiltersTest, TestCase):

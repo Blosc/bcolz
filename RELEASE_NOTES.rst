@@ -19,6 +19,12 @@ Changes from 1.1.0 to 1.1.1
 
 - C-Blosc updated to 1.9.3.
 
+- Added a new `defaults_ctx` context so that users can select defaults
+  easily without changing global behaviour. For example::
+
+   with bcolz.defaults_ctx(vm="python", cparams=bcolz.cparams(clevel=0)):
+      cout = bcolz.eval("(x + 1) < 0")
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================

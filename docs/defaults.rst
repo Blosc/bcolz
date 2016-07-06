@@ -23,6 +23,16 @@ here.  You can change these values in two ways:
 
 Generally, only the former is needed.
 
+Defaults in contexts
+====================
+
+bcolz allows to set short-lived defaults in contexts.  For example::
+
+   with bcolz.defaults_ctx(vm="python", cparams=bcolz.cparams(clevel=0)):
+      cout = bcolz.eval("(x + 1) < 0")
+
+means that the `bcolz.eval` operation will be made using a "python"
+virtual machine and no compression for the `cout` output.
 
 List of default values
 ======================

@@ -11,6 +11,7 @@
 
 from __future__ import absolute_import
 
+from contextlib import contextmanager
 import bcolz
 
 
@@ -30,11 +31,13 @@ class Defaults(object):
                 "'%s' is incorrect value for '%s' default" % (value, name))
 
     def check_cparams(self, value):
+        entries = ['clevel', 'shuffle', 'cname', 'quantize']
+        if isinstance(value, bcolz.cparams):
+            value = dict((e, getattr(value, e)) for e in entries)
         if not isinstance(value, dict):
             raise ValueError(
-                "this needs to be a dictionary and you "
+                "this needs to be a cparams object or a dictionary and you "
                 "passed '%s' " % type(value))
-        entries = ['clevel', 'shuffle', 'cname', 'quantize']
         if not all(k in value for k in entries):
             raise ValueError(
                 "The dictionary must have the next entries: %s" % entries)
@@ -116,3 +119,27 @@ defaults.cparams = {'clevel': 5, 'shuffle': bcolz.SHUFFLE,
 them more comfortably by using the `cparams.setdefaults()` method.
 
 """
+
+
+@contextmanager
+def defaults_ctx(cparams=None, vm=None, out_flavor=None):
+    """Execute a context with some defaults"""
+    cparams_orig, vm_orig, out_flavor_orig = None, None, None
+    if cparams:
+        cparams_orig = defaults.cparams
+        defaults.cparams = cparams
+    if vm:
+        vm_orig = defaults.vm
+        defaults.vm = vm
+    if out_flavor:
+        out_flavor_orig = defaults.out_flavor
+        defaults.out_flavor = out_flavor
+
+    yield
+
+    if cparams_orig:
+        defaults.cparams = cparams_orig
+    if vm_orig:
+        defaults.vm = vm_orig
+    if out_flavor_orig:
+        defaults.out_flavor = out_flavor_orig

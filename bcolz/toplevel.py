@@ -16,11 +16,12 @@ import os
 import os.path
 import glob
 import itertools as it
+from distutils.version import LooseVersion
+
 import numpy as np
 import bcolz
 from bcolz.ctable import ROOTDIRS
 from .py2help import xrange, _inttypes
-from distutils.version import LooseVersion
 
 
 def print_versions():
