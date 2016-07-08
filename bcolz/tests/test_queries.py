@@ -218,6 +218,19 @@ class whereblocksTest(MayBeDiskTest):
         self.assertEqual(l, N - 1)
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
+    def test10(self):
+        """Testing `whereblocks` method with a lambda as a codelet"""
+        N = self.N
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        l, s = 0, 0
+        for block in t.whereblocks(lambda f1, f2: f1 < f2):
+            l += len(block)
+            s += block['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
 
 class small_whereblocksTest(whereblocksTest, TestCase):
     N = 120
@@ -309,6 +322,20 @@ class fetchwhereTest(MayBeDiskTest):
         self.assertEqual(l, N - 1)
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
+    def test06(self):
+        """Testing `fetchwhere` method with a lambda as a codelet"""
+        N = self.N
+        lvar = GVAR
+        ra = np.fromiter(((i, i * 2., i * 3)
+                          for i in xrange(N)), dtype='i4,f8,i8')
+        t = bcolz.ctable(ra)
+        ct = t.fetchwhere(lambda f1, f2: (f1 + lvar) < (f2 + GVAR),
+                          out_flavor="numpy")
+        self.assertEqual(type(ct), np.ndarray)
+        l, s = len(ct), ct['f0'].sum()
+        self.assertEqual(l, N - 1)
+        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
+
 
 class small_fetchwhereTest(fetchwhereTest, TestCase):
     N = 120
@@ -358,7 +385,6 @@ if __name__ == '__main__':
 
 # Local Variables:
 # mode: python
-# py-indent-offset: 4
 # tab-width: 4
 # fill-column: 72
 # End:

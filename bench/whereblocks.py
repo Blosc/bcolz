@@ -113,7 +113,8 @@ def condition_cython(a, b):
 @timefunc
 #@do_cprofile
 def fetchwhere_func():
-    result = ct.fetchwhere(condition)['a'].sum()
+    #result = ct.fetchwhere(condition)['a'].sum()
+    result = ct.fetchwhere(lambda a,b: (a > 5) & (b < LMAX))['a'].sum()
     return result
 
 @timefunc
