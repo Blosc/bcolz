@@ -9,6 +9,8 @@ import numpy as np
 import numexpr as ne
 import bcolz
 import numba
+import pyorcy
+from cython_condition import condition as condition_cython_
 
 print("numexpr version:", ne.__version__)
 bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
@@ -22,8 +24,8 @@ bcolz.defaults.vm = "numexpr"
 
 N = 1e8
 LMAX = 1e3
-npa = np.arange(N)
-npb = np.arange(N)
+npa = np.arange(N, dtype=np.float64)
+npb = np.arange(N, dtype=np.float64)
 ct = bcolz.ctable([npa, npb], names=["a", "b"])
 
 
@@ -102,14 +104,23 @@ def fetchwhere_dask():
 #@numba.jit
 def condition(a, b):
     return (a > 5) & (b < LMAX)
-    #return np.zeros(a.shape, dtype="bool")
 
-#@timefunc
-@do_cprofile
+def condition_cython(a, b):
+    pyorcy.USE_CYTHON = True
+    #pyorcy.VERBOSE = True
+    return condition_cython_(a, b)
+
+@timefunc
+#@do_cprofile
 def fetchwhere_func():
     result = ct.fetchwhere(condition)['a'].sum()
     return result
 
+@timefunc
+#@do_cprofile
+def fetchwhere_func_cython():
+    result = ct.fetchwhere(condition_cython)['a'].sum()
+    return result
 
 print(repr(ct))
 
@@ -132,4 +143,6 @@ assert a0 == a1
 a1 = fetchwhere_dask()
 assert a0 == a1
 a1 = fetchwhere_func()
+assert a0 == a1
+a1 = fetchwhere_func_cython()
 assert a0 == a1
