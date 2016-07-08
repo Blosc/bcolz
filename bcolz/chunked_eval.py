@@ -253,11 +253,10 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                     vars_[name] = var
 
         # Perform the evaluation for this block
-        if vm == "python":
-            if hasattr(expression, '__call__'):
-                res_block = expression(**vars_)
-            else:
-                res_block = _eval(expression, vars_)
+        if hasattr(expression, '__call__'):
+            res_block = expression(**vars_)
+        elif vm == "python":
+            res_block = _eval(expression, vars_)
         else:
             if i == 0 or not re_evaluate:
                 try:
