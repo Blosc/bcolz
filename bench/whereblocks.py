@@ -1,12 +1,14 @@
 from __future__ import print_function
 
 import itertools
-import numpy as np
-import numexpr as ne
-import bcolz
 import time
 import cProfile
 import inspect
+
+import numpy as np
+import numexpr as ne
+import bcolz
+import numba
 
 print("numexpr version:", ne.__version__)
 bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
@@ -97,24 +99,37 @@ def fetchwhere_dask():
     result = ct.fetchwhere("(a > 5) & (b < LMAX)", vm="dask")['a'].sum()
     return result
 
+#@numba.jit
+def condition(a, b):
+    return (a > 5) & (b < LMAX)
+    #return np.zeros(a.shape, dtype="bool")
+
+#@timefunc
+@do_cprofile
+def fetchwhere_func():
+    result = ct.fetchwhere(condition)['a'].sum()
+    return result
+
 
 print(repr(ct))
 
 a0 = where_numpy()
 print("a0:", a0)
-a1 = where_numexpr()
-assert a0 == a1
-a1 = bcolz_where()
-assert a0 == a1
-a1 = bcolz_where_numpy()
-assert a0 == a1
-a1 = bcolz_where_numexpr()
-assert a0 == a1
-a1 = whereblocks()
-assert a0 == a1
+# a1 = where_numexpr()
+# assert a0 == a1
+# a1 = bcolz_where()
+# assert a0 == a1
+# a1 = bcolz_where_numpy()
+# assert a0 == a1
+# a1 = bcolz_where_numexpr()
+# assert a0 == a1
+# a1 = whereblocks()
+# assert a0 == a1
 a1 = fetchwhere_bcolz()
 assert a0 == a1
-a1 = fetchwhere_numpy()
-assert a0 == a1
+# a1 = fetchwhere_numpy()
+# assert a0 == a1
 a1 = fetchwhere_dask()
+assert a0 == a1
+a1 = fetchwhere_func()
 assert a0 == a1

@@ -38,17 +38,21 @@ def is_sequence_like(var):
 def _getvars(expression, user_dict, vm):
     """Get the variables in `expression`."""
 
-    cexpr = compile(expression, '<string>', 'eval')
-    if vm in ("python", "dask"):
-        exprvars = [var for var in cexpr.co_names
-                    if var not in ['None', 'False', 'True']]
+    if hasattr(expression, "__call__"):
+        exprvars = expression.func_code.co_varnames
     else:
-        # Check that var is not a numexpr function here.  This is useful for
-        # detecting unbound variables in expressions.  This is not necessary
-        # for the 'python' or 'dask' engines.
-        exprvars = [var for var in cexpr.co_names
-                    if var not in ['None', 'False', 'True']
-                    and var not in numexpr_functions]
+        cexpr = compile(expression, '<string>', 'eval')
+        if vm in ("python", "dask"):
+            exprvars = [var for var in cexpr.co_names
+                        if var not in ['None', 'False', 'True']]
+        else:
+            # Check that var is not a numexpr function here.  This is
+            # useful for detecting unbound variables in expressions.
+            # This is not necessary for the 'python' or 'dask'
+            # engines.
+            exprvars = [var for var in cexpr.co_names
+                        if var not in ['None', 'False', 'True']
+                        and var not in numexpr_functions]
 
     # Get the local and global variable mappings of the user frame
     user_locals, user_globals = {}, {}
@@ -207,11 +211,11 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
         da_expr = _eval(expression, vars)
         if out_flavor in ("bcolz", "carray") and da_expr.shape:
             result = bcolz.zeros(da_expr.shape, da_expr.dtype, **kwargs)
-            # Store while compute expression graph
+            # Store while computing expression graph
             da.store(da_expr, result)
             return result
         else:
-            # Store while compute
+            # Store while computing
             return np.array(da_expr)
 
     # Check whether we have a re_evaluate() function in numexpr
@@ -250,7 +254,10 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
 
         # Perform the evaluation for this block
         if vm == "python":
-            res_block = _eval(expression, vars_)
+            if hasattr(expression, '__call__'):
+                res_block = expression(**vars_)
+            else:
+                res_block = _eval(expression, vars_)
         else:
             if i == 0 or not re_evaluate:
                 try:

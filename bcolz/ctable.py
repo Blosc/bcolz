@@ -941,8 +941,8 @@ class ctable(object):
         """
 
         # Check input
-        if isinstance(expression, _strtypes):
-            # That must be an expression
+        if isinstance(expression, _strtypes) or hasattr(expression, "__call__"):
+            # That must be an expression or a callable
             boolarr = self.eval(expression, user_dict=self._ud(user_dict),
                                 vm=vm)
         elif hasattr(expression, "dtype") and expression.dtype.kind == 'b':
