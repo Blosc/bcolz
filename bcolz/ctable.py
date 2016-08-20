@@ -32,7 +32,7 @@ re_str_split = re.compile(",? *")
 
 def validate_names(columns, keyword='names'):
     if not all([is_identifier(x) and not iskeyword(x) for x in columns]):
-        raise ValueError("{0} are not valid idenifiers".format(keyword))
+        raise ValueError("column {0} must be valid Python identifiers, and must not start with an underscore".format(keyword))
     return list(map(str, columns))
 
 
