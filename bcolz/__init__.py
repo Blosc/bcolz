@@ -37,7 +37,7 @@ try:
 except ImportError:
     pass
 else:
-    if numexpr.__version__ >= LooseVersion(min_numexpr_version):
+    if LooseVersion(numexpr.__version__) >= LooseVersion(min_numexpr_version):
         numexpr_here = True
 
 # Check for dask (as another virtual machine for chunked eval)
@@ -48,7 +48,7 @@ try:
 except ImportError:
     pass
 else:
-    if dask.__version__ >= LooseVersion(min_dask_version):
+    if LooseVersion(dask.__version__) >= LooseVersion(min_dask_version):
         dask_here = True
 
 # Check for pandas (for data container conversion purposes)
