@@ -25,6 +25,14 @@ Changes from 1.1.0 to 1.1.1
    with bcolz.defaults_ctx(vm="python", cparams=bcolz.cparams(clevel=0)):
       cout = bcolz.eval("(x + 1) < 0")
 
+- Fixed a crash occurring in `ctable.todataframe()` when both `columns`
+  and `orient='columns'` were specified.  PR #311.  Thanks to Peter
+  Quackenbush.
+
+- Replaced `distutils.version.LooseVersion()` by
+  `pkg_resources.parse_version()` becuase it is more resistant to
+  versioning schemas.
+
 
 Changes from 1.0.0 to 1.1.0
 ===========================

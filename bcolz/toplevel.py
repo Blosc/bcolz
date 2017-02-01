@@ -16,7 +16,7 @@ import os
 import os.path
 import glob
 import itertools as it
-from distutils.version import LooseVersion
+from pkg_resources import parse_version
 
 import numpy as np
 import bcolz
@@ -616,7 +616,7 @@ class cparams(object):
             if shuffle not in [bcolz.NOSHUFFLE, bcolz.SHUFFLE, bcolz.BITSHUFFLE]:
                 raise ValueError("`shuffle` value not allowed.")
             if (shuffle == bcolz.BITSHUFFLE and
-                LooseVersion(bcolz.blosc_version()[0]) < LooseVersion("1.8.0")):
+                parse_version(bcolz.blosc_version()[0]) < parse_version("1.8.0")):
                 raise ValueError("You need C-Blosc 1.8.0 or higher for using "
                                  "BITSHUFFLE.")
         # Store the cname as bytes object internally
