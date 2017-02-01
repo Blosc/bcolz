@@ -1,40 +1,27 @@
 ======================
-Announcing bcolz 1.1.0
+Announcing bcolz 1.1.1
 ======================
 
 What's new
 ==========
 
-This release brings quite a lot of changes.  After format stabilization
-in 1.0, the focus is now in fine-tune many operations (specially queries
-in ctables), as well as widening the available computational engines.
+This is a maintenance release that brings quite a lot of improvements.
+Here are the highlights:
 
-Highlights:
+- C-Blosc updated to 1.11.2.
 
-* Much improved performance of ctable.where() and ctable.whereblocks().
-  Now bcolz is getting closer than ever to fundamental memory limits
-  during queries (see the updated benchmarks in the data containers
-  tutorial below).
+- Added a new `defaults_ctx` context so that users can select defaults
+  easily without changing global behaviour. For example::
 
-* Better support for Dask; i.e. GIL is released during Blosc operation
-  when bcolz is called from a multithreaded app (like Dask).  Also, Dask
-  can be used as another virtual machine for evaluating expressions (so
-  now it is possible to use it during queries too).
+   with bcolz.defaults_ctx(vm="python", cparams=bcolz.cparams(clevel=0)):
+      cout = bcolz.eval("(x + 1) < 0")
 
-* New ctable.fetchwhere() method for getting the rows fulfilling some
-  condition in one go.
+- Fixed a crash occurring in `ctable.todataframe()` when both `columns`
+  and `orient='columns'` were specified.  PR #311.  Thanks to Peter
+  Quackenbush.
 
-* New quantize filter for allowing lossy compression of floating point
-  data.
-
-* It is possible to create ctables with more than 255 columns now.
-  Thanks to Skipper Seabold.
-
-* The defaults during carray creation are scalars now.  That allows to
-  create highly dimensional data containers more efficiently.
-
-* carray object does implement the __array__() special method now. With
-  this, interoperability with numpy arrays is easier and faster.
+- Use `pkg_resources.parse_version()` to test for version of packages.
+  Fixes #322 (PY27 bcolz with dask unicode error).
 
 For a more detailed change log, see:
 
@@ -51,34 +38,39 @@ specially chapters 3 (in-memory containers) and 4 (on-disk containers).
 What it is
 ==========
 
-*bcolz* provides columnar and compressed data containers that can live
-either on-disk or in-memory.  Column storage allows for efficiently
-querying tables with a large number of columns.  It also allows for
-cheap addition and removal of column.  In addition, bcolz objects are
-compressed by default for reducing memory/disk I/O needs. The
-compression process is carried out internally by Blosc, an
-extremely fast meta-compressor that is optimized for binary data. Lastly,
-high-performance iterators (like ``iter()``, ``where()``) for querying
-the objects are provided.
+*bcolz* provides **columnar and compressed** data containers that can
+live either on-disk or in-memory.  The compression is carried out
+transparently by Blosc, an ultra fast meta-compressor that is optimized
+for binary data.  Compression is active by default.
 
-bcolz can use numexpr internally so as to accelerate many vector and
-query operations (although it can use pure NumPy for doing so too).
-numexpr optimizes the memory usage and use several cores for doing the
-computations, so it is blazing fast.  Moreover, since the carray/ctable
-containers can be disk-based, and it is possible to use them for
-seamlessly performing out-of-memory computations.
+Column storage allows for efficiently querying tables with a large
+number of columns.  It also allows for cheap addition and removal of
+columns.  Lastly, high-performance iterators (like ``iter()``,
+``where()``) for querying the objects are provided.
 
-bcolz has minimal dependencies (NumPy), comes with an exhaustive test
-suite and fully supports both 32-bit and 64-bit platforms.  Also, it is
-typically tested on both UNIX and Windows operating systems.
+bcolz can use diffent backends internally (currently numexpr,
+Python/NumPy or dask) so as to accelerate many vector and query
+operations (although it can use pure NumPy for doing so too).  Moreover,
+since the carray/ctable containers can be disk-based, it is possible to
+use them for seamlessly performing out-of-memory computations.
 
-Together, bcolz and the Blosc compressor, are finally fulfilling the
-promise of accelerating memory I/O, at least for some real scenarios:
+While NumPy is used as the standard way to feed and retrieve data from
+bcolz internal containers, but it also comes with support for
+high-performance import/export facilities to/from `HDF5/PyTables tables
+<http://www.pytables.org>`_ and `pandas dataframes
+<http://pandas.pydata.org>`_.
+
+Have a look at how bcolz and the Blosc compressor, are making a better
+use of the memory without an important overhead, at least for some real
+scenarios:
 
 http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb#Plots
 
-Example users of bcolz are Visualfabriq (http://www.visualfabriq.com/),
-and Quantopian (https://www.quantopian.com/):
+bcolz has minimal dependencies (NumPy is the only strict requisite),
+comes with an exhaustive test suite, and it is meant to be used in
+production. Example users of bcolz are Visualfabriq
+(http://www.visualfabriq.com/), Quantopian (https://www.quantopian.com/)
+and scikit-allel:
 
 * Visualfabriq:
 
@@ -90,6 +82,10 @@ and Quantopian (https://www.quantopian.com/):
   * Using compressed data containers for faster backtesting at scale:
   * https://quantopian.github.io/talks/NeedForSpeed/slides.html
 
+* scikit-allel:
+
+  * Exploratory analysis of large scale genetic variation data.
+  * https://github.com/cggh/scikit-allel
 
 
 Resources

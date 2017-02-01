@@ -10,12 +10,17 @@ Changes from 1.1.0 to 1.1.1
 - Double-check the value of a column that is being overwritten.  Fixes
   #307.
 
+- Use `pkg_resources.parse_version()` to test for version of packages.
+  Fixes #322.
+
 - Now all the columns in a ctable are enforced to be a carray instance
   in order to simplify the internal logic for handling columns.
 
 - Now, the cparams are preserved during column replacement, e.g.:
 
   `ct['f0'] = x + 1`
+
+  will continue to use the same cparams than the original column.
 
 - C-Blosc updated to 1.11.2.
 
@@ -28,10 +33,6 @@ Changes from 1.1.0 to 1.1.1
 - Fixed a crash occurring in `ctable.todataframe()` when both `columns`
   and `orient='columns'` were specified.  PR #311.  Thanks to Peter
   Quackenbush.
-
-- Replaced `distutils.version.LooseVersion()` by
-  `pkg_resources.parse_version()` becuase it is more resistant to
-  versioning schemas.
 
 
 Changes from 1.0.0 to 1.1.0
