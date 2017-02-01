@@ -1,17 +1,17 @@
 ===============================================================
- Announcing c-blosc 1.9.3
+ Announcing C-Blosc 1.11.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release for reverting a mistake introduced in
-1.7.1. At that time, bit-shuffling was enabled for typesize == 1 (i.e.
-strings), but the change also included byte-shuffling accidentally. This
-only affected performance, but in a quite bad way (a copy was needed).
-This has been fixed and byte-shuffling is not active anymore when
-typesize == 1.
+Enabled use as a CMake subproject, exporting shared & static library targets
+for super-projects to use. See PRs #178, #179 and #180.  Thanks to Kevin
+Murray.
+
+Also, internal codecs have been updated.  LZ4 and LZ4HC codecs to 1.7.5 and
+Zstd to 1.1.2.
 
 For more info, please see the release notes in:
 
@@ -57,4 +57,3 @@ http://groups.google.es/group/blosc
 
 
 Enjoy Data!
-

@@ -5,6 +5,8 @@
 #
 #   BUILD_STATIC: default ON
 #       build the static version of the Blosc library
+#   BUILD_SHARED: default ON
+#       build the shared library version of the Blosc library
 #   BUILD_TESTS: default ON
 #       build test programs and generates the "test" target
 #   BUILD_BENCHMARKS: default ON
@@ -17,6 +19,8 @@
 #       do not include support for the Snappy library
 #   DEACTIVATE_ZLIB: default OFF
 #       do not include support for the Zlib library
+#   DEACTIVATE_ZSTD: default OFF
+#       do not include support for the Zstd library
 #   PREFER_EXTERNAL_LZ4: default OFF
 #       when found, use the installed LZ4 libs instead of included
 #       sources
@@ -25,6 +29,9 @@
 #       sources
 #   PREFER_EXTERNAL_ZLIB: default ON
 #       when found, use the installed zlib libs instead of included
+#       sources
+#   PREFER_EXTERNAL_ZSTD: default OFF
+#       when found, use the installed zstd libs instead of included
 #       sources
 #   TEST_INCLUDE_BENCH_SHUFFLE_1: default ON
 #       add a test that runs the benchmark program passing "shuffle" with 1
@@ -61,6 +68,9 @@
 
 
 cmake_minimum_required(VERSION 2.8.10)
+if (NOT CMAKE_VERSION VERSION_LESS 3.3)
+    cmake_policy(SET CMP0063 NEW)
+endif()
 project(blosc)
 
 # parse the full version numbers from blosc.h
@@ -79,6 +89,8 @@ message("Configuring for Blosc version: " ${BLOSC_VERSION_STRING})
 # options
 option(BUILD_STATIC
     "Build a static version of the blosc library." ON)
+option(BUILD_SHARED
+    "Build a shared library version of the blosc library." ON)
 option(BUILD_TESTS
     "Build test programs form the blosc compression library" ON)
 option(BUILD_BENCHMARKS
@@ -88,17 +100,21 @@ option(DEACTIVATE_AVX2
 option(DEACTIVATE_LZ4
     "Do not include support for the LZ4 library." OFF)
 option(DEACTIVATE_SNAPPY
-    "Do not include support for the SNAPPY library." OFF)
+    "Do not include support for the Snappy library." OFF)
 option(DEACTIVATE_ZLIB
-    "Do not include support for the ZLIB library." OFF)
+    "Do not include support for the Zlib library." OFF)
+option(DEACTIVATE_ZSTD
+    "Do not include support for the Zstd library." OFF)
 option(PREFER_EXTERNAL_LZ4
     "Find and use external LZ4 library instead of included sources." OFF)
 option(PREFER_EXTERNAL_SNAPPY
     "Find and use external Snappy library instead of included sources." ON)
 option(PREFER_EXTERNAL_ZLIB
-    "Find and use external zlib library instead of included sources." ON)
+    "Find and use external Zlib library instead of included sources." ON)
+option(PREFER_EXTERNAL_ZSTD
+    "Find and use external Zstd library instead of included sources." ON)
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
 
 if(NOT DEACTIVATE_LZ4)
@@ -139,6 +155,17 @@ if(NOT DEACTIVATE_ZLIB)
     set(HAVE_ZLIB TRUE)
 endif(NOT DEACTIVATE_ZLIB)
 
+if (NOT DEACTIVATE_ZSTD)
+    if (PREFER_EXTERNAL_ZSTD)
+        find_package(Zstd)
+    else ()
+        message(STATUS "Using ZSTD internal sources.")
+    endif (PREFER_EXTERNAL_ZSTD)
+    # HAVE_ZSTD will be set to true because even if the library is
+    # not found, we will use the included sources for it
+    set(HAVE_ZSTD TRUE)
+endif (NOT DEACTIVATE_ZSTD)
+
 # create the config.h file
 configure_file ("blosc/config.h.in"  "blosc/config.h" )
 
@@ -157,6 +184,11 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+if(APPLE)
+  # enable @rpath in the install name for any shared library being built.  See #175.
+  set(CMAKE_MACOSX_RPATH TRUE)
+endif()
+
 # Based on the target system's processor and the compiler being used,
 # set build variables indicating which hardware features can be targeted
 # by the compiler. Note we DO NOT check which hardware features are supported
@@ -169,6 +201,8 @@ if(CMAKE_SYSTEM_PROCESSOR STREQUAL i386 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL amd64 OR
    CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)
     if(CMAKE_C_COMPILER_ID STREQUAL GNU)
+        # We need C99 (GNU99 more exactly)
+        SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=gnu99")
         set(COMPILER_SUPPORT_SSE2 TRUE)
         if(CMAKE_C_COMPILER_VERSION VERSION_GREATER 4.7 OR CMAKE_C_COMPILER_VERSION VERSION_EQUAL 4.7)
             set(COMPILER_SUPPORT_AVX2 TRUE)
@@ -245,6 +279,23 @@ if(WIN32)
     include_directories("${CMAKE_CURRENT_SOURCE_DIR}/blosc")
 endif(WIN32)
 
+if (NOT DEFINED BLOSC_IS_SUBPROJECT)
+  if ("^${CMAKE_SOURCE_DIR}$" STREQUAL "^${PROJECT_SOURCE_DIR}$")
+    set (BLOSC_IS_SUBPROJECT FALSE)
+  else ()
+    set (BLOSC_IS_SUBPROJECT TRUE)
+    message(STATUS "Detected that BLOSC is used a subproject.")
+  endif ()
+endif ()
+
+if (NOT DEFINED BLOSC_INSTALL)
+    if (BLOSC_IS_SUBPROJECT)
+        set(BLOSC_INSTALL FALSE)
+    else()
+        set(BLOSC_INSTALL TRUE)
+    endif()
+endif()
+
 
 # subdirectories
 add_subdirectory(blosc)
@@ -260,30 +311,39 @@ endif(BUILD_BENCHMARKS)
 
 
 # uninstall target
-configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
-    "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
-    IMMEDIATE @ONLY)
+if (BLOSC_INSTALL)
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/blosc.pc.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/blosc.pc"
+        @ONLY)
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/blosc.pc"
+            DESTINATION lib/pkgconfig COMPONENT DEV)
 
-add_custom_target(uninstall
-    COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
+    configure_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
+        IMMEDIATE @ONLY)
+    add_custom_target(uninstall
+        COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
 
 # packaging
-include(InstallRequiredSystemLibraries)
+if (NOT BLOSC_IS_SUBPROJECT)
+    include(InstallRequiredSystemLibraries)
 
-set(CPACK_GENERATOR TGZ ZIP)
-set(CPACK_SOURCE_GENERATOR TGZ ZIP)
-set(CPACK_PACKAGE_VERSION_MAJOR ${BLOSC_VERSION_MAJOR})
-set(CPACK_PACKAGE_VERSION_MINOR ${BLOSC_VERSION_MINOR})
-set(CPACK_PACKAGE_VERSION_PATCH ${BLOSC_VERSION_PATCH})
-set(CPACK_PACKAGE_VERSION ${BLOSC_STRING_VERSION})
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
-    "A blocking, shuffling and lossless compression library")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/BLOSC.txt")
-set(CPACK_SOURCE_IGNORE_FILES "/build.*;.*~;\\\\.git.*;\\\\.DS_Store")
-set(CPACK_STRIP_FILES TRUE)
-set(CPACK_SOURCE_STRIP_FILES TRUE)
+    set(CPACK_GENERATOR TGZ ZIP)
+    set(CPACK_SOURCE_GENERATOR TGZ ZIP)
+    set(CPACK_PACKAGE_VERSION_MAJOR ${BLOSC_VERSION_MAJOR})
+    set(CPACK_PACKAGE_VERSION_MINOR ${BLOSC_VERSION_MINOR})
+    set(CPACK_PACKAGE_VERSION_PATCH ${BLOSC_VERSION_PATCH})
+    set(CPACK_PACKAGE_VERSION ${BLOSC_STRING_VERSION})
+    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.rst")
+    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY
+        "A blocking, shuffling and lossless compression library")
+    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSES/BLOSC.txt")
+    set(CPACK_SOURCE_IGNORE_FILES "/build.*;.*~;\\\\.git.*;\\\\.DS_Store")
+    set(CPACK_STRIP_FILES TRUE)
+    set(CPACK_SOURCE_STRIP_FILES TRUE)
 
-include(CPack)
+    include(CPack)
+endif()

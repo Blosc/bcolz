@@ -17,7 +17,7 @@
   Note: Compiling this with VS2008 does not work well with cmake.  Here
   it is a way to compile the benchmark (with added support for LZ4):
 
-  > cl /DHAVE_LZ4 /arch:SSE2 /Ox /Febench.exe /Iblosc /Iinternal-complibs\lz4-1.7.2 bench\bench.c blosc\blosc.c blosc\blosclz.c blosc\shuffle.c blosc\shuffle-sse2.c blosc\shuffle-generic.c blosc\bitshuffle-generic.c blosc\bitshuffle-sse2.c internal-complibs\lz4-1.7.2\*.c
+  > cl /DHAVE_LZ4 /arch:SSE2 /Ox /Febench.exe /Iblosc /Iinternal-complibs\lz4-1.7.5 bench\bench.c blosc\blosc.c blosc\blosclz.c blosc\shuffle.c blosc\shuffle-sse2.c blosc\shuffle-generic.c blosc\bitshuffle-generic.c blosc\bitshuffle-sse2.c internal-complibs\lz4-1.7.5\*.c
 
   See LICENSES/BLOSC.txt for details about copyright and rights to use.
 **********************************************************************/
@@ -31,14 +31,14 @@
 #if defined(_WIN32)
   /* For QueryPerformanceCounter(), etc. */
   #include <windows.h>
-#elif defined(__MACH__)
+#elif defined(__MACH__) && defined(__APPLE__)
   #include <mach/clock.h>
   #include <mach/mach.h>
   #include <time.h>
   #include <sys/time.h>
 #elif defined(__unix__)
   #include <unistd.h>
-  #if defined(__linux__)
+  #if defined(__GLIBC__)
     #include <time.h>
   #else
     #include <sys/time.h>
@@ -89,7 +89,7 @@ double blosc_elapsed_usecs(blosc_timestamp_t start_time, blosc_timestamp_t end_t
 
 /* Set a timestamp value to the current time. */
 void blosc_set_timestamp(blosc_timestamp_t* timestamp) {
-#ifdef __MACH__ // OS X does not have clock_gettime, use clock_get_time
+#if defined(__MACH__) && defined(__APPLE__) // OS X does not have clock_gettime, use clock_get_time
   clock_serv_t cclock;
   mach_timespec_t mts;
   host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
@@ -356,6 +356,8 @@ void print_compress_info(void)
   if (ret >= 0) printf("  %s: %s\n", name, version);
   ret = blosc_get_complib_info("zlib", &name, &version);
   if (ret >= 0) printf("  %s: %s\n", name, version);
+  ret = blosc_get_complib_info("zstd", &name, &version);
+  if (ret >= 0) printf("  %s: %s\n", name, version);
 
 }
 
@@ -382,8 +384,8 @@ int main(int argc, char *argv[]) {
 
   print_compress_info();
 
-  strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib] "
-	  "[noshuffle | shuffle | bitshuffle] "
+  strncpy(usage, "Usage: bench [blosclz | lz4 | lz4hc | snappy | zlib | zstd] "
+          "[noshuffle | shuffle | bitshuffle] "
           "[single | suite | hardsuite | extremesuite | debugsuite] "
           "[nthreads] [bufsize(bytes)] [typesize] [sbits]", 255);
 
@@ -398,7 +400,8 @@ int main(int argc, char *argv[]) {
       strcmp(compressor, "lz4") != 0 &&
       strcmp(compressor, "lz4hc") != 0 &&
       strcmp(compressor, "snappy") != 0 &&
-      strcmp(compressor, "zlib") != 0) {
+      strcmp(compressor, "zlib") != 0 &&
+      strcmp(compressor, "zstd") != 0) {
     printf("No such compressor: '%s'\n", compressor);
     printf("%s\n", usage);
     exit(2);

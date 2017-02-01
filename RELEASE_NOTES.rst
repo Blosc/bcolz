@@ -17,7 +17,7 @@ Changes from 1.1.0 to 1.1.1
 
   `ct['f0'] = x + 1`
 
-- C-Blosc updated to 1.9.3.
+- C-Blosc updated to 1.11.2.
 
 - Added a new `defaults_ctx` context so that users can select defaults
   easily without changing global behaviour. For example::

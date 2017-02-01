@@ -15,6 +15,11 @@ Preliminaries
 
 - Check that *VERSION* symbols in blosc/blosc.h contains the correct info.
 
+- Commit the changes::
+
+    $ git commit -a -m"Getting ready for X.Y.Z release"
+
+
 Testing
 -------
 
@@ -39,8 +44,9 @@ Tagging
 
     $ git tag -a vX.Y.Z -m "Tagging version X.Y.Z"
 
-- Push the tag to the github repo::
+- Push the previous commits and tag to the github repo::
 
+    $ git push
     $ git push --tags
 
 
