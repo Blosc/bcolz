@@ -115,9 +115,14 @@ else:
     sources += glob('c-blosc/internal-complibs/lz4*/*.c')
     sources += glob('c-blosc/internal-complibs/snappy*/*.cc')
     sources += glob('c-blosc/internal-complibs/zlib*/*.c')
+    sources += glob('c-blosc/internal-complibs/zstd*/*/*.c')
     inc_dirs += [os.path.join('c-blosc', 'blosc')]
-    inc_dirs += glob('c-blosc/internal-complibs/*')
-    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1)]
+    inc_dirs += [d for d in glob('c-blosc/internal-complibs/*')
+                 if os.path.isdir(d)]
+    inc_dirs += [d for d in glob('c-blosc/internal-complibs/zstd*/*')
+                 if os.path.isdir(d)]
+    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1),
+                   ('HAVE_ZSTD', 1)]
 
     # Guess SSE2 or AVX2 capabilities
     cpu_info = cpuinfo.get_cpu_info()
