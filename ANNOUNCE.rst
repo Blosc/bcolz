@@ -1,5 +1,5 @@
 ======================
-Announcing bcolz 1.1.1
+Announcing bcolz 1.1.2
 ======================
 
 What's new
@@ -7,6 +7,8 @@ What's new
 
 This is a maintenance release that brings quite a lot of improvements.
 Here are the highlights:
+
+- Zstd is a supported codec now.  Fixes #331.
 
 - C-Blosc updated to 1.11.2.
 

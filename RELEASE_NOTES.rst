@@ -2,6 +2,12 @@
 Release notes for bcolz
 =======================
 
+Changes from 1.1.1 to 1.1.2
+===========================
+
+- Updated setup.py to include Zstd codec in Blosc.  Fixes #331.
+
+
 Changes from 1.1.0 to 1.1.1
 ===========================
 
