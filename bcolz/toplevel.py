@@ -566,7 +566,7 @@ class cparams(object):
         The shuffle filter to be activated.  Allowed values are
         bcolz.NOSHUFFLE (0), bcolz.SHUFFLE (1) and bcolz.BITSHUFFLE (2).  The
         default is bcolz.SHUFFLE.
-    cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
+    cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd')
         Select the compressor to use inside Blosc.
     quantize : int (number of significant digits)
         Quantize data to improve (lossy) compression.  Data is quantized using
@@ -644,7 +644,7 @@ class cparams(object):
             The shuffle filter to be activated.  Allowed values are
             bcolz.NOSHUFFLE (0), bcolz.SHUFFLE (1) and bcolz.BITSHUFFLE (2).
             The default is bcolz.SHUFFLE.
-        cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib')
+        cname : string ('blosclz', 'lz4', 'lz4hc', 'snappy', 'zlib', 'zstd')
             Select the compressor to use inside Blosc.
         quantize : int (number of significant digits)
             Quantize data to improve (lossy) compression.  Data is quantized
