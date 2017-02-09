@@ -18,6 +18,13 @@ or::
 
   $ pip install -U bcolz
 
+Installing from conda-forge
+===========================
+
+Binaries for Linux, Mac and Windows are available for installation via conda. 
+Do::
+
+  $ conda install -c conda-forge bcolz
 
 Installing Windows binaries
 ===========================
