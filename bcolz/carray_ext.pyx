@@ -891,7 +891,7 @@ cdef class carray:
         purposes.
     chunklen : int, optional
         The number of items that fits into a chunk.  By specifying it you can
-        explicitely set the chunk size used for compression and memory I/O.
+        explicitly set the chunk size used for compression and memory I/O.
         Only use it if you know what are you doing.
     rootdir : str, optional
         The directory where all the data and metadata will be stored.  If
