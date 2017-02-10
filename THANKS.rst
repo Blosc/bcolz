@@ -13,4 +13,6 @@ Mark Wiebe did for the BLZ package.
 
 Matthew Rocklin and Phillip Cloud contributed conda and binstar recipes.
 
+Alistair Miles contributed the conda-forge recipe and other improvements.
+
 Many other contributed bug fixes and new features.
