@@ -1016,6 +1016,21 @@ class iterblocksTest(MayBeDiskTest):
         self.assertEqual(s, np.arange(blen-1, slen).sum())
 
 
+class iterchunksTest(MayBeDiskTest, TestCase):
+
+    def test00(self):
+        """Testing `iterchunks` method with a simple carray with 2 chunks and a half full leftovers array"""
+        a = bcolz.ones(210, chunklen=100, rootdir=self.rootdir)
+        i, l, s = 0, 0, 0
+        for iterchunk in a.iterchunks():
+            i += 1
+            l += len(iterchunk )
+            s += iterchunk .sum()
+        self.assertEqual(i, 3)
+        self.assertEqual(l, 210)
+        self.assertEqual(s, 210)
+
+
 class small_iterblocksMemoryTest(iterblocksTest, TestCase):
     N = 120
     disk = False
