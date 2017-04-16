@@ -1267,8 +1267,15 @@ class ctable(object):
                     raise IndexError(
                         "`key` %s does not represent a boolean "
                         "expression" % key)
-                return self._where(arr)
-            return self.cols[key]
+                elif arr == False:
+                    dtype = np.dtype([(name, self.cols[name].dtype) for name in self.names])
+                    return np.empty(0, dtype=dtype).view(np.ndarray)
+                elif arr == True:
+                    start = stop = step = None
+                else:
+                    return self._where(arr)
+            else:
+                return self.cols[key]
         # All the rest not implemented
         else:
             raise NotImplementedError("key not supported: %s" % repr(key))
