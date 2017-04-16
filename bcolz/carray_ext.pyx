@@ -2683,11 +2683,9 @@ cdef class carray:
         # Finally, update the sizes metadata on-disk
         self._update_disk_sizes()
 
-    # XXX This does not work.  Will have to realize how to properly
-    # flush buffers before self going away...
-    # def __del__(self):
-    #   # Make a flush to disk if this object get disposed
-    #   self.flush()
+    # for cython classes use __dealloc__ instead of __del__
+    def __dealloc__(self):
+        self.flush()
 
     def purge(self):
         """ Remove the underlying data for on-disk arrays. """
