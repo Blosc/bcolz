@@ -11,7 +11,10 @@ from __future__ import absolute_import
 
 import os
 import os.path
-import json
+try:
+    import ujson as json
+except:
+    import json
 from .py2help import dict_iteritems
 
 
