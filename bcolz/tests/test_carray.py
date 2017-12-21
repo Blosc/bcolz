@@ -2292,7 +2292,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         a = np.arange(1e5)
         filters = bcolz.filters.keys()
         if common.verbose:
-            print("Checking compressors:", cnames)
+            print("Checking filters:", filters)
         # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for filter_ in filters:
             bcolz.cparams.setdefaults(clevel=9, shuffle=filter_)
@@ -2310,7 +2310,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         a = np.arange(1e5)
         filters = bcolz.filters.keys()
         if common.verbose:
-            print("Checking compressors:", cnames)
+            print("Checking filters:", filters)
         # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for filter_ in filters:
             bcolz.defaults.cparams = {
@@ -2334,7 +2334,7 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         a = np.arange(1e5)
         filters = bcolz.filters.keys()
         if common.verbose:
-            print("Checking compressors:", cnames)
+            print("Checking filters:", filters)
         # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
         for filter_ in filters:
             with bcolz.defaults_ctx(bcolz.cparams(clevel=9, shuffle=filter_)):
