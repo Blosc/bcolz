@@ -100,7 +100,7 @@
  * Fast copy macros
  */
 #if defined(_WIN32)
-  #define CPYSIZE              32
+  #define CPYSIZE              8
 #else
   #define CPYSIZE              8
 #endif
