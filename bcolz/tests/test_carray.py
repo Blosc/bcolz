@@ -2404,7 +2404,7 @@ class reprDiskTest(MayBeDiskTest,TestCase):
         expected = textwrap.dedent("""
                    carray((0,), float64)
                      nbytes := 0; cbytes := 16.00 KB; ratio: 0.00
-                     cparams := cparams(clevel=5, shuffle=1, cname='lz4', quantize=0)
+                     cparams := cparams(clevel=5, shuffle=1, cname='blosclz', quantize=0)
                      chunklen := 2048; chunksize: 16384; blocksize: 0
                      rootdir := '%s'
                      mode    := '%s'
