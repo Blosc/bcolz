@@ -2,10 +2,9 @@ sudo: false
 language: python
 
 python:
-- 2.6
 - 2.7
-- 3.4
 - 3.5
+- 3.6
 
 install:
   # Install conda
@@ -19,9 +18,8 @@ install:
   - conda create -n bcolz_env python=$TRAVIS_PYTHON_VERSION
           numpy pandas cython nose coverage numexpr dask
   - source activate bcolz_env
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then conda install unittest2 mock; fi
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then conda install mock; fi
-  
+
   # Build bcolz
   - python setup.py build_ext --inplace
 

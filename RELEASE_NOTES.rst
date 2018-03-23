@@ -2,10 +2,10 @@
 Release notes for bcolz
 =======================
 
-Changes from 1.1.2 to 1.1.3
+Changes from 1.1.2 to 1.2.0
 ===========================
 
-#XXX version-specific blurb XXX#
+- Support for Python <= 2.6 or Python <= 3.4 has been deprecated.
 
 
 Changes from 1.1.1 to 1.1.2
