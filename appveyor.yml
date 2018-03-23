@@ -12,7 +12,7 @@ environment:
 
   matrix:
     # PYTHON 2.7
-    - PYTHON: "C:\\Miniconda27-x86"
+    - PYTHON: "C:\\Miniconda27"
       PYTHON_VERSION: "2.7"
       PYTHON_ARCH: "32"
       CONDA_PY: "27"
@@ -25,7 +25,7 @@ environment:
     #   CONDA_NPY: "111"
 
     # PYTHON 3.5
-    - PYTHON: "C:\\Miniconda35-x86"
+    - PYTHON: "C:\\Miniconda35"
       PYTHON_VERSION: "3.5"
       PYTHON_ARCH: "32"
       CONDA_PY: "35"
@@ -38,7 +38,7 @@ environment:
       CONDA_NPY: "142"
 
     # PYTHON 3.6
-    - PYTHON: "C:\\Miniconda36-x86"
+    - PYTHON: "C:\\Miniconda36"
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "32"
       CONDA_PY: "36"
@@ -72,6 +72,3 @@ test_script:
   # Build the compiled extension and run the project tests
     - "%CMD_IN_ENV% python setup.py build_ext --inplace"
     - "%CMD_IN_ENV% python -c \"import bcolz; bcolz.test(heavy=True)\""
-
-artifacts:
-  - path: dist\\*
