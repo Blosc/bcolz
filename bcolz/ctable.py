@@ -27,12 +27,13 @@ _inttypes += (np.integer,)
 ROOTDIRS = '__rootdirs__'
 
 re_ident = re.compile(r"^[^\d\W]\w*$", re.UNICODE)
-re_str_split = re.compile(",? *")
+re_str_split = re.compile("^\s+|\s*,\s*|\s+$")
 
 
 def validate_names(columns, keyword='names'):
     if not all([is_identifier(x) and not iskeyword(x) for x in columns]):
-        raise ValueError("column {0} must be valid Python identifiers, and must not start with an underscore".format(keyword))
+        raise ValueError("column {0} must be valid Python identifiers, and must "
+                         "not start with an underscore".format(keyword))
     return list(map(str, columns))
 
 
@@ -44,7 +45,7 @@ def is_identifier(x):
 def split_string(x):
     # replicates the namedtuple behavior for string splitting on spaces
     # and commas and calling str on names
-    # does not check for identifiers as keywords. that's done in validate_names
+    # does not check for identifiers as keywords. that's done in validate_names.
     return re_str_split.split(str(x))
 
 

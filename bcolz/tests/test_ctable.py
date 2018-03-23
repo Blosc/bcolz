@@ -710,7 +710,7 @@ class getitemTest(MayBeDiskTest):
         # print "t->", `t[colname]`
         # print "ra->", ra[colname]
         assert_array_equal(t[colname][:], ra[colname],
-                           "ctable values are not correct")                          
+                           "ctable values are not correct")
 
     def test_multi_unicode_colnames(self):
         """Testing __getitem__ with a list of unicode column names"""
@@ -884,7 +884,7 @@ class appendTest(MayBeDiskTest):
     def test06(self):
         """Extracting rows from table with np.object column"""
         N = 4
-        dtype = np.dtype([("a", np.object), ("b", np.uint8), ("c", np.int32), 
+        dtype = np.dtype([("a", np.object), ("b", np.uint8), ("c", np.int32),
             ("d", np.float32) ])
         with bcolz.ctable(np.empty(0, dtype=dtype), rootdir=self.rootdir) as t:
             for i in xrange(N):
@@ -1463,7 +1463,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test01(self):
         """Testing ctable.iter() without params"""
@@ -1475,7 +1475,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test02(self):
         """Testing ctable.iter() with start,stop,step"""
@@ -1487,7 +1487,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:3]]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test03(self):
         """Testing ctable.iter() with outcols"""
@@ -1499,7 +1499,7 @@ class iterTest(MayBeDiskTest):
         nl = [(r['f2'], i, r['f0']) for i, r in enumerate(ra)]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test04(self):
         """Testing ctable.iter() with start,stop,step and outcols"""
@@ -1507,11 +1507,11 @@ class iterTest(MayBeDiskTest):
         ra = np.fromiter(((i, i * 2., i * 3)
                           for i in xrange(N)), dtype='i4,f8,i8')
         t = bcolz.ctable(ra, chunklen=4, rootdir=self.rootdir)
-        cl = [r for r in t.iter(1, 9, 3, 'f2, nrow__ f0')]
+        cl = [r for r in t.iter(1, 9, 3, 'f2, nrow__, f0')]
         nl = [(r['f2'], r['f0'], r['f0']) for r in ra[1:9:3]]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test05(self):
         """Testing ctable.iter() with start, stop, step and limit"""
@@ -1523,7 +1523,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:2][:3]]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test06(self):
         """Testing ctable.iter() with start, stop, step and skip"""
@@ -1535,7 +1535,7 @@ class iterTest(MayBeDiskTest):
         nl = [r['f1'] for r in ra[1:9:2][3:]]
         # print "cl ->", cl
         # print "nl ->", nl
-        self.assertTrue(cl == nl, "iter not working correctily")
+        self.assertTrue(cl == nl, "iter not working correctly")
 
     def test07(self):
         """Testing ctable.iter() with start, stop, step and limit, skip"""
