@@ -691,13 +691,13 @@ class ctable(object):
         for key in names:
             vals = df[key].values  # just a view as a numpy array
             if vals.dtype == np.object:
-                inferred_type = pd.lib.infer_dtype(vals)
+                inferred_type = pd.api.types.infer_dtype(vals)
                 if inferred_type == 'unicode':
-                    maxitemsize = pd.lib.max_len_string_array(vals)
+                    maxitemsize = max(len(i) for i in vals)
                     col = bcolz.carray(vals,
                                        dtype='U%d' % maxitemsize, **ckwargs)
                 elif inferred_type == 'string':
-                    maxitemsize = pd.lib.max_len_string_array(vals)
+                    maxitemsize = max(len(i) for i in vals)
                     # In Python 3 strings should be represented as Unicode
                     dtype = "U" if sys.version_info >= (3, 0) else "S"
                     col = bcolz.carray(vals, dtype='%s%d' %
