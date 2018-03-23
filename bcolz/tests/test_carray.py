@@ -2275,11 +2275,11 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         filters = bcolz.filters.keys()
         if common.verbose:
             print("Checking filters:", filters)
-        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print("\nsize b uncompressed-->", a.size * a.dtype.itemsize)
         for filter_ in filters:
             b = bcolz.carray(a, rootdir=self.rootdir,
                              cparams=bcolz.cparams(clevel=9, shuffle=filter_))
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%cname
+            # print("size b compressed  -->", b.cbytes, "with '%s'"%cname)
             self.assertTrue(sys.getsizeof(b) > b.nbytes,
                             "compression does not seem to have any overhead")
             assert_array_equal(a, b[:], "Arrays are not equal")
@@ -2293,14 +2293,15 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         filters = bcolz.filters.keys()
         if common.verbose:
             print("Checking filters:", filters)
-        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print("\nsize b uncompressed-->", a.size * a.dtype.itemsize)
         for filter_ in filters:
             bcolz.cparams.setdefaults(clevel=9, shuffle=filter_)
             b = bcolz.carray(a, rootdir=self.rootdir)
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
-            self.assertTrue(sys.getsizeof(b) < b.nbytes,
-                            "carray does not seem to compress at all")
-            assert_array_equal(a, b[:], "Arrays are not equal")
+            # print("size b compressed  -->", b.cbytes, "with '%s'" % filter_)
+            if filter_ > 0:
+                self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                                "carray does not seem to compress at all")
+                assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)
@@ -2311,16 +2312,17 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         filters = bcolz.filters.keys()
         if common.verbose:
             print("Checking filters:", filters)
-        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        #print("\nsize b uncompressed-->", a.size * a.dtype.itemsize)
         for filter_ in filters:
             bcolz.defaults.cparams = {
                 'clevel': 9, 'shuffle': filter_, 'cname': "blosclz",
                 'quantize': 0}
             b = bcolz.carray(a, rootdir=self.rootdir)
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
-            self.assertTrue(sys.getsizeof(b) < b.nbytes,
-                            "carray does not seem to compress at all")
-            assert_array_equal(a, b[:], "Arrays are not equal")
+            #print("size b compressed  -->", b.cbytes, "with '%s'" % filter_)
+            if filter_ > 0:
+                self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                                "carray does not seem to compress at all")
+                assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)
@@ -2335,16 +2337,17 @@ class bloscFiltersTest(MayBeDiskTest, TestCase):
         filters = bcolz.filters.keys()
         if common.verbose:
             print("Checking filters:", filters)
-        # print "\nsize b uncompressed-->", a.size * a.dtype.itemsize
+        # print("\nsize b uncompressed-->", a.size * a.dtype.itemsize)
         for filter_ in filters:
             with bcolz.defaults_ctx(bcolz.cparams(clevel=9, shuffle=filter_)):
                 self.assertTrue(bcolz.defaults.cparams['shuffle'] == filter_)
                 b = bcolz.carray(a, rootdir=self.rootdir)
-            # print "size b compressed  -->", b.cbytes, "with '%s'"%filter_
-            self.assertTrue(bcolz.defaults.cparams['shuffle'] == bcolz.SHUFFLE)
-            self.assertTrue(sys.getsizeof(b) < b.nbytes,
-                            "carray does not seem to compress at all")
-            assert_array_equal(a, b[:], "Arrays are not equal")
+            # print("size b compressed  -->", b.cbytes, "with '%s'" % filter_)
+            if filter_ > 0:
+                self.assertTrue(bcolz.defaults.cparams['shuffle'] == bcolz.SHUFFLE)
+                self.assertTrue(sys.getsizeof(b) < b.nbytes,
+                                "carray does not seem to compress at all")
+                assert_array_equal(a, b[:], "Arrays are not equal")
             # Remove the array on disk before trying with the next one
             if self.disk:
                 common.remove_tree(self.rootdir)

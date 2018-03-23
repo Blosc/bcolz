@@ -7,6 +7,10 @@ Changes from 1.1.2 to 1.2.0
 
 - Support for Python <= 2.6 or Python <= 3.4 has been deprecated.
 
+- C-Blosc internal sources updated to 1.14.2.  Using a C-Blosc library
+  > 1.14 is important for forward compatibility.  For more info see:
+  http://blosc.org/posts/new-forward-compat-policy/
+
 
 Changes from 1.1.1 to 1.1.2
 ===========================
