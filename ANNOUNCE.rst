@@ -1,29 +1,16 @@
 ======================
-Announcing bcolz 1.1.2
+Announcing bcolz 1.2.0
 ======================
 
 What's new
 ==========
 
-This is a maintenance release that brings quite a lot of improvements.
-Here are the highlights:
+This is a minor release that essentially updates internal C-Blosc
+sources to 1.14.2.  This is important for forward compatibility reasons.
+Because of this an update is highly recommended.
+For more info, see:   http://blosc.org/posts/new-forward-compat-policy/
 
-- Zstd is a supported codec now.  Fixes #331.
-
-- C-Blosc updated to 1.11.2.
-
-- Added a new `defaults_ctx` context so that users can select defaults
-  easily without changing global behaviour. For example::
-
-   with bcolz.defaults_ctx(vm="python", cparams=bcolz.cparams(clevel=0)):
-      cout = bcolz.eval("(x + 1) < 0")
-
-- Fixed a crash occurring in `ctable.todataframe()` when both `columns`
-  and `orient='columns'` were specified.  PR #311.  Thanks to Peter
-  Quackenbush.
-
-- Use `pkg_resources.parse_version()` to test for version of packages.
-  Fixes #322 (PY27 bcolz with dask unicode error).
+Also, support for Python 2.6 and 3.4 has been dropped.
 
 For a more detailed change log, see:
 

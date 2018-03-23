@@ -94,11 +94,10 @@ wider vector units.
 Requisites
 ----------
 
-- Python >= 2.6
+- Python >= 2.7 and >= 3.5
 - NumPy >= 1.8
 - Cython >= 0.22 (just for compiling the beast)
 - C-Blosc >= 1.8.0 (optional, as the internal Blosc will be used by default)
-- unittest2 (optional, only in the case you are running Python 2.6)
 
 Optional:
 
