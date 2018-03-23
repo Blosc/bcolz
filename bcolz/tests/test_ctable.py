@@ -20,6 +20,7 @@ import bcolz
 from bcolz.py2help import xrange, PY2
 from bcolz.py2help_tests import Mock
 import pickle
+import warnings
 
 
 # Global variable for frame depth testing
@@ -1206,7 +1207,8 @@ class evalTest(MayBeDiskTest):
         """Testing eval() with Unicode vars (via where).  Ticket #38."""
         a = np.array(['a', 'b', 'c'], dtype='U4')
         b = bcolz.ctable([a], names=['text'])
-        assert [i.text for i in b.where('text == "b"')] == [u"b"]
+        with warnings.catch_warnings(record=True):
+            assert [i.text for i in b.where('text == "b"')] == [u"b"]
 
 
 class evalMemoryTest(evalTest, TestCase):
