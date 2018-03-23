@@ -1,17 +1,16 @@
 ===============================================================
- Announcing C-Blosc 1.11.2
+ Announcing C-Blosc 1.14.2
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-Enabled use as a CMake subproject, exporting shared & static library targets
-for super-projects to use. See PRs #178, #179 and #180.  Thanks to Kevin
-Murray.
+Reverted the $Configuration var in CMake configuration for Windows so
+as to restore the compatibility with MS VisualStudio compilers.
 
-Also, internal codecs have been updated.  LZ4 and LZ4HC codecs to 1.7.5 and
-Zstd to 1.1.2.
+This is the only important change in this release, so Unix users should
+not bother to upgrade to this version.
 
 For more info, please see the release notes in:
 
@@ -27,7 +26,7 @@ the processor cache faster than the traditional, non-compressed,
 direct memory fetch approach via a memcpy() OS call.
 
 Blosc has internal support for different compressors like its internal
-BloscLZ, but also LZ4, LZ4HC, Snappy and Zlib.  This way these can
+BloscLZ, but also LZ4, LZ4HC, Snappy, Zlib and Zstd.  This way these can
 automatically leverage the multithreading and pre-filtering
 (shuffling) capabilities that comes with Blosc.
 
@@ -35,15 +34,11 @@ automatically leverage the multithreading and pre-filtering
 Download sources
 ================
 
-Please go to main web site:
-
-http://www.blosc.org/
-
-and proceed from there.  The github repository is over here:
+The github repository is over here:
 
 https://github.com/Blosc
 
-Blosc is distributed using the MIT license, see LICENSES/BLOSC.txt for
+Blosc is distributed using the BSD license, see LICENSES/BLOSC.txt for
 details.
 
 

@@ -19,10 +19,10 @@ environment:
       CONDA_NPY: "111"
 
     - PYTHON: "C:\\Miniconda27-x64"
-       PYTHON_VERSION: "2.7"
-       PYTHON_ARCH: "64"
-       CONDA_PY: "27"
-       CONDA_NPY: "111"
+      PYTHON_VERSION: "2.7"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "27"
+      CONDA_NPY: "111"
 
     # PYTHON 3.5
 #    - PYTHON: "C:\\Miniconda35"
