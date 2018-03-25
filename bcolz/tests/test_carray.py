@@ -2538,6 +2538,14 @@ class LeftoverMemoryTest(LeftoverTest, TestCase):
     disk = False
 
 
+def swap32(x):
+    """Swap bytes from little to endian and the other way around."""
+    return (((x << 24) & 0xFF000000) |
+            ((x << 8) & 0x00FF0000) |
+            ((x >> 8) & 0x0000FF00) |
+            ((x >> 24) & 0x000000FF))
+
+
 class LeftoverDiskTest(LeftoverTest, TestCase):
     disk = True
 
@@ -2555,7 +2563,9 @@ class LeftoverDiskTest(LeftoverTest, TestCase):
         b = carray(rootdir=self.rootdir)
         for i in range(n_leftovers):
             out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
-            self.assertEqual((n_chunks * chunklen) + i, out.value)
+            # Fixes #329
+            value = out.value if sys.byteorder == "little" else swap32(out.value)
+            self.assertEqual((n_chunks * chunklen) + i, value)
 
     def test_leftover_ptr_with_statement_create_open(self):
         typesize = 8
@@ -2572,7 +2582,9 @@ class LeftoverDiskTest(LeftoverTest, TestCase):
         b = carray(rootdir=self.rootdir)
         for i in range(n_leftovers):
             out = ctypes.c_int32.from_address(b.leftover_ptr + (i * typesize))
-            self.assertEqual((n_chunks * chunklen) + i, out.value)
+            # Fixes #329
+            value = out.value if sys.byteorder == "little" else swap32(out.value)
+            self.assertEqual((n_chunks * chunklen) + i, value)
 
     def test_repr_of_empty_object_array(self):
         assert 'ratio: nan' in repr(carray(np.array([], dtype=object)))
