@@ -25,7 +25,12 @@ from setuptools import setup, Extension, find_packages
 from pkg_resources import resource_filename
 
 # For guessing the capabilities of the CPU for C-Blosc
-import cpuinfo
+try:
+    # Currently just Intel and some ARM archs are supported by cpuinfo module
+    import cpuinfo
+    cpu_info = cpuinfo.get_cpu_info()
+except:
+    cpu_info = {'flags': []}
 
 
 class LazyCommandClass(dict):
@@ -125,7 +130,6 @@ else:
                    ('HAVE_ZSTD', 1)]
 
     # Guess SSE2 or AVX2 capabilities
-    cpu_info = cpuinfo.get_cpu_info()
     # SSE2
     if 'DISABLE_BCOLZ_SSE2' not in os.environ and 'sse2' in cpu_info['flags']:
         print('SSE2 detected')
