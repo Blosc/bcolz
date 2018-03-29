@@ -312,14 +312,6 @@ class fetchwhereTest(MayBeDiskTest):
     def test06(self):
         """Testing `fetchwhere` method off of a timestamp (pd.datetime64)"""
         N = self.N
-        ra = np.fromiter(((i, i * 2., i * 3)
-                          for i in xrange(N)), dtype='i4,f8,i8')
-        t = bcolz.ctable(ra)
-        ct = t.fetchwhere('f1 < f2')
-        l, s = len(ct), ct['f0'].sum()
-        self.assertEqual(l, N - 1)
-        self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
-
         query_idx = np.random.randint(0, self.N)
         t = bcolz.fromiter(((i, np.datetime64('2018-03-01') + i) for i in range(N)), dtype="i4,M8[D]", count=N)
         threshold = t[query_idx][1]
