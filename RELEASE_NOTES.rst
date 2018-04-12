@@ -13,7 +13,9 @@ Changes from 1.2.0 to 1.2.1
 - `np.datetime64` and other scalar objects that have `__getitem__()` are now
   supported in _eval_blocks().  PR #377.  Thanks to apalepu23.
 
-- Vendored cpuinfo.py updated to 4.0.0.
+- Vendored cpuinfo.py updated to 4.0.0 (ARM aarch64 is recognized now).
+
+- Allow setup.py to work even if not on Intel or ARM or PPC archs are found.
 
 
 Changes from 1.1.2 to 1.2.0
