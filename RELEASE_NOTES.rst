@@ -13,6 +13,8 @@ Changes from 1.2.0 to 1.2.1
 - `np.datetime64` and other scalar objects that have `__getitem__()` are now
   supported in _eval_blocks().  PR #377.  Thanks to apalepu23.
 
+- Vendored cpuinfo.py updated to 4.0.0.
+
 
 Changes from 1.1.2 to 1.2.0
 ===========================
