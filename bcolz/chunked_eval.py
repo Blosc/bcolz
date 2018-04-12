@@ -243,7 +243,9 @@ def _eval_blocks(expression, vars, vlen, typesize, vm, out_flavor, blen,
                 else:
                     vars_[name] = var[i:i+blen]
             else:
-                if hasattr(var, "__getitem__"):
+                if np.isscalar(var):
+                    vars_[name] = var
+                elif hasattr(var, "__getitem__"):
                     vars_[name] = var[:]
                 else:
                     vars_[name] = var

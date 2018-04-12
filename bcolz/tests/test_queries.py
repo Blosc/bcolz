@@ -309,6 +309,17 @@ class fetchwhereTest(MayBeDiskTest):
         self.assertEqual(l, N - 1)
         self.assertEqual(s, (N - 1) * (N / 2))  # Gauss summation formula
 
+    def test06(self):
+        """Testing `fetchwhere` method off of a timestamp (pd.datetime64)"""
+        N = self.N
+        query_idx = np.random.randint(0, self.N)
+        t = bcolz.fromiter(((i, np.datetime64('2018-03-01') + i) for i in range(N)), dtype="i4,M8[D]", count=N)
+        threshold = t[query_idx][1]
+        result = t.fetchwhere('(f1 > threshold)', user_dict={'threshold': threshold})
+        t_fin = bcolz.fromiter(((i + query_idx, threshold + i) for i in range(1, N - query_idx)), dtype="i4,M8[D]",
+                               count=N)
+        np.testing.assert_array_equal(result[:], t_fin[:])
+
 
 class small_fetchwhereTest(fetchwhereTest, TestCase):
     N = 120
