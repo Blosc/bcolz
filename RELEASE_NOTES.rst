@@ -6,7 +6,12 @@ Release notes for bcolz
 Changes from 1.2.0 to 1.2.1
 ===========================
 
-  #XXX version-specific blurb XXX#
+- C-Blosc internal sources updated to 1.14.3.  This basically means that
+  internal Zstd sources are bumped to 1.3.4, which may lead to noticeable
+  improved speeds (specially for low compression ratios).
+
+- `np.datetime64` and other scalar objects that have `__getitem__()` are now
+  supported in _eval_blocks().  PR #377.  Thanks to apalepu23.
 
 
 Changes from 1.1.2 to 1.2.0
