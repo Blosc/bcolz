@@ -11,15 +11,13 @@ from __future__ import absolute_import
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([v < (2, 6), (3,) < v < (3, 3)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.6 "
-                    "or >= 3.3." % v[:2])
+if any([v < (2, 7), (3,) < v < (3, 5)]):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
+                    "or >= 3.5." % v[:2])
 
-import platform
 import os
 from glob import glob
 import sys
-import re
 
 from setuptools import setup, Extension, find_packages
 from pkg_resources import resource_filename
@@ -186,12 +184,10 @@ for binary data.
         'Operating System :: Microsoft :: Windows',
         'Operating System :: Unix',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
     author='Francesc Alted',
     author_email='francesc@blosc.org',
