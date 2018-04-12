@@ -7,7 +7,8 @@ import numpy as np
 import bcolz
 from bcolz.py2help import xrange
 
-N = 1e7  # the number of elements in x
+
+N = int(1e7)  # the number of elements in x
 M = 100000  # the elements to get
 clevel = 1  # the compression level
 

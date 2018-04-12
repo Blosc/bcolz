@@ -8,7 +8,9 @@ import numpy as np
 import bcolz
 
 
-N = 1e6
+N = int(1e6)
+bcolz.defaults.cparams['cname'] = 'blosclz'
+bcolz.defaults.cparams['clevel'] = 9
 
 a = np.arange(N)
 b = bcolz.carray(a)

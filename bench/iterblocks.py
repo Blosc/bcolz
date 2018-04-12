@@ -1,18 +1,17 @@
 import numpy as np
-import numexpr as ne
 import bcolz
 import time
 
-bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
-#bcolz.defaults.cparams['shuffle'] = bcolz.BITSHUFFLE
-#bcolz.defaults.cparams['cname'] = 'blosclz'
-bcolz.defaults.cparams['cname'] = 'lz4'
-bcolz.defaults.cparams['clevel'] = 5
 
-N = 1e8
+bcolz.defaults.cparams['shuffle'] = bcolz.SHUFFLE
+# bcolz.defaults.cparams['shuffle'] = bcolz.BITSHUFFLE
+bcolz.defaults.cparams['cname'] = 'blosclz'
+# bcolz.defaults.cparams['cname'] = 'lz4'
+bcolz.defaults.cparams['clevel'] = 9
+
+N = int(1e8)
 a = np.arange(N)
 ca = bcolz.carray(a)
-
 
 
 def timefunc(f):
@@ -20,7 +19,7 @@ def timefunc(f):
         start = time.time()
         result = f(*args, **kwargs)
         end = time.time()
-        print f.__name__, 'took', round(end - start, 3), 'sec'
+        print(f.__name__, 'took', round(end - start, 3), 'sec')
         return result
     return f_timer
 
@@ -29,22 +28,24 @@ def timefunc(f):
 def iterblocks0():
     return a.sum()
 
+
 @timefunc
 def iterblocks1(arr):
     return sum(i for i in arr)
 
+
 @timefunc
 def iterblocks2(arr):
-    sum = 0.
+    sum_ = 0.
     for b in bcolz.iterblocks(arr, blen=arr.chunklen):
-        sum += b.sum()
-    return sum
+        sum_ += b.sum()
+    return sum_
 
 
-print repr(ca)
+print(repr(ca))
 
 a0 = iterblocks0()
-print "a0:", a0
+print("a0:", a0)
 # a1 = iterblocks1(ca)
 # assert a0 == a1
 a1 = iterblocks2(ca)

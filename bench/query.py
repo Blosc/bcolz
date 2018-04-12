@@ -9,12 +9,12 @@ import numpy as np
 import bcolz
 
 
-N = 1e7  # the number of elements in x
-clevel = 5  # the compression level
+N = int(1e8)  # the number of elements in x
+clevel = 9    # the compression level
 cname = "blosclz"  # the compressor name
 sexpr = "(x+1)<10"  # small number of items
 # sexpr = "(x+1)<1000000"              # large number
-sexpr = "(2*x*x*x+.3*y**2+z+1)<10"  # small number
+# sexpr = "(2*x*x*x+.3*y**2+z+1)<10"  # small number
 #sexpr = "(2*x*x*x+.3*y**2+z+1)<1e15"  # medium number
 #sexpr = "(2*x*x*x+.3*y**2+z+1)<1e20"  # large number
 
