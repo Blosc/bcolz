@@ -3,6 +3,12 @@ Release notes for bcolz
 =======================
 
 
+Changes from 1.2.1 to 1.2.2
+===========================
+
+  #XXX version-specific blurb XXX#
+
+
 Changes from 1.2.0 to 1.2.1
 ===========================
 
