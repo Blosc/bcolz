@@ -1,16 +1,16 @@
 ======================
-Announcing bcolz 1.2.0
+Announcing bcolz 1.2.1
 ======================
 
 What's new
 ==========
 
-This is a minor release that essentially updates internal C-Blosc
-sources to 1.14.2.  This is important for forward compatibility reasons.
-Because of this an update is highly recommended.
-For more info, see:   http://blosc.org/posts/new-forward-compat-policy/
-
-Also, support for Python 2.6 and 3.4 has been dropped.
+This is a maintenance release where C-Blosc internal sources has been updated
+to 1.14.3, in which Zstd codec should exhibit improved performance.  Also,
+`np.datetime64` and other scalar objects that have `__getitem__()` are now
+supported in _eval_blocks() (thanks to apalepu23). Finally, there is improved
+support for ARM (specially for aarch64) and PowerPC architectures
+(only little-endian).
 
 For a more detailed change log, see:
 
