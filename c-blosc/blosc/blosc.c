@@ -137,11 +137,12 @@ struct thread_context {
 
 /* Global context for non-contextual API */
 static struct blosc_context* g_global_context;
-static pthread_mutex_t global_comp_mutex;
+static pthread_mutex_t* global_comp_mutex;
 static int32_t g_compressor = BLOSC_BLOSCLZ;  /* the compressor to use by default */
 static int32_t g_threads = 1;
 static int32_t g_force_blocksize = 0;
 static int32_t g_initlib = 0;
+static int32_t g_atfork_registered = 0;
 static int32_t g_splitmode = BLOSC_FORWARD_COMPAT_SPLIT;
 
 
@@ -861,7 +862,7 @@ static int serial_blosc(struct blosc_context* context)
     ntbytes += cbytes;
   }
 
-  // Free temporaries
+  /* Free temporaries */
   my_free(tmp);
 
   return ntbytes;
@@ -1075,9 +1076,13 @@ static int initialize_context_compression(struct blosc_context* context,
 
   /* Check buffer size limits */
   if (sourcesize > BLOSC_MAX_BUFFERSIZE) {
-    /* If buffer is too large, give up. */
     fprintf(stderr, "Input buffer size cannot exceed %d bytes\n",
             BLOSC_MAX_BUFFERSIZE);
+    return -1;
+  }
+  if (destsize < BLOSC_MAX_OVERHEAD) {
+    fprintf(stderr, "Output buffer size should be larger than %d bytes\n",
+            BLOSC_MAX_OVERHEAD);
     return -1;
   }
 
@@ -1282,7 +1287,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
   /* Check if should initialize */
   if (!g_initlib) blosc_init();
 
-  /* Check for a BLOSC_CLEVEL environment variable */
+  /* Check for environment variables */
   envvar = getenv("BLOSC_CLEVEL");
   if (envvar != NULL) {
     long value;
@@ -1292,7 +1297,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_SHUFFLE environment variable */
   envvar = getenv("BLOSC_SHUFFLE");
   if (envvar != NULL) {
     if (strcmp(envvar, "NOSHUFFLE") == 0) {
@@ -1306,7 +1310,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_TYPESIZE environment variable */
   envvar = getenv("BLOSC_TYPESIZE");
   if (envvar != NULL) {
     long value;
@@ -1316,14 +1319,12 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_COMPRESSOR environment variable */
   envvar = getenv("BLOSC_COMPRESSOR");
   if (envvar != NULL) {
     result = blosc_set_compressor(envvar);
     if (result < 0) { return result; }
   }
 
-  /* Check for a BLOSC_COMPRESSOR environment variable */
   envvar = getenv("BLOSC_BLOCKSIZE");
   if (envvar != NULL) {
     long blocksize;
@@ -1333,7 +1334,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_NTHREADS environment variable */
   envvar = getenv("BLOSC_NTHREADS");
   if (envvar != NULL) {
     long nthreads;
@@ -1344,7 +1344,6 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     }
   }
 
-  /* Check for a BLOSC_SPLITMODE environment variable */
   envvar = getenv("BLOSC_SPLITMODE");
   if (envvar != NULL) {
     if (strcmp(envvar, "FORWARD_COMPAT") == 0) {
@@ -1378,7 +1377,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
     return result;
   }
 
-  pthread_mutex_lock(&global_comp_mutex);
+  pthread_mutex_lock(global_comp_mutex);
 
   error = initialize_context_compression(g_global_context, clevel, doshuffle,
 					 typesize, nbytes, src, dest, destsize,
@@ -1391,7 +1390,7 @@ int blosc_compress(int clevel, int doshuffle, size_t typesize, size_t nbytes,
 
   result = blosc_compress_context(g_global_context);
 
-  pthread_mutex_unlock(&global_comp_mutex);
+  pthread_mutex_unlock(global_comp_mutex);
 
   return result;
 }
@@ -1421,6 +1420,11 @@ int blosc_run_decompression_with_context(struct blosc_context* context,
   context->typesize = (int32_t)context->src[3];      /* typesize */
   context->sourcesize = sw32_(context->src + 4);     /* buffer size */
   context->blocksize = sw32_(context->src + 8);      /* block size */
+
+  if (context->blocksize <= 0) {
+    fprintf(stderr, "blocksize cannot be negative or 0; corrupt header?");
+    return -1;
+  }
 
   if (version != BLOSC_VERSION_FORMAT) {
     /* Version from future */
@@ -1501,12 +1505,12 @@ int blosc_decompress(const void *src, void *dest, size_t destsize)
     return result;
   }
 
-  pthread_mutex_lock(&global_comp_mutex);
+  pthread_mutex_lock(global_comp_mutex);
 
   result = blosc_run_decompression_with_context(g_global_context, src, dest,
 						destsize, g_threads);
 
-  pthread_mutex_unlock(&global_comp_mutex);
+  pthread_mutex_unlock(global_comp_mutex);
 
   return result;
 }
@@ -2018,9 +2022,16 @@ int blosc_get_complib_info(const char *compname, char **complib, char **version)
     clibversion = sbuffer;
   }
 #endif /* HAVE_ZSTD */
+  else {
+    /* Unsupported library */
+    if (complib != NULL) *complib = NULL;
+    if (version != NULL) *version = NULL;
+    return -1;
+  }
 
-  *complib = strdup(clibname);
-  *version = strdup(clibversion);
+  if (complib != NULL) *complib = strdup(clibname);
+  if (version != NULL) *version = strdup(clibversion);
+
   return clibcode;
 }
 
@@ -2107,14 +2118,47 @@ void blosc_set_splitmode(int mode)
   g_splitmode = mode;
 }
 
+/* Child global context is invalid and pool threads no longer exist post-fork.
+ * Discard the old, inconsistent global context and global context mutex and
+ * mark as uninitialized.  Subsequent calls through `blosc_*` interfaces will
+ * trigger re-init of the global context.
+ *
+ * All pthread interfaces have undefined behavior in child handler in current
+ * posix standards: http://pubs.opengroup.org/onlinepubs/9699919799/
+ */
+void blosc_atfork_child(void) {
+  if (!g_initlib) return;
+
+  g_initlib = 0;
+
+  my_free(global_comp_mutex);
+  global_comp_mutex = NULL;
+
+  my_free(g_global_context);
+  g_global_context = NULL;
+
+}
+
 void blosc_init(void)
 {
   /* Return if we are already initialized */
   if (g_initlib) return;
 
-  pthread_mutex_init(&global_comp_mutex, NULL);
+  global_comp_mutex = (pthread_mutex_t*)my_malloc(sizeof(pthread_mutex_t));
+  pthread_mutex_init(global_comp_mutex, NULL);
+
   g_global_context = (struct blosc_context*)my_malloc(sizeof(struct blosc_context));
   g_global_context->threads_started = 0;
+
+  #if !defined(_WIN32)
+  /* atfork handlers are only be registered once, though multiple re-inits may
+   * occur via blosc_destroy/blosc_init.  */
+  if (!g_atfork_registered) {
+    g_atfork_registered = 1;
+    pthread_atfork(NULL, NULL, &blosc_atfork_child);
+  }
+  #endif
+
   g_initlib = 1;
 }
 
@@ -2124,9 +2168,14 @@ void blosc_destroy(void)
   if (!g_initlib) return;
 
   g_initlib = 0;
+
   blosc_release_threadpool(g_global_context);
   my_free(g_global_context);
-  pthread_mutex_destroy(&global_comp_mutex);
+  g_global_context = NULL;
+
+  pthread_mutex_destroy(global_comp_mutex);
+  my_free(global_comp_mutex);
+  global_comp_mutex = NULL;
 }
 
 int blosc_release_threadpool(struct blosc_context* context)

@@ -15,9 +15,23 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+
+#if defined(_WIN32) && !defined(__MINGW32__)
+  #include <windows.h>
+  /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
+  #if defined(_MSC_VER) && _MSC_VER < 1600
+    #include "win32/stdint-windows.h"
+  #else
+    #include <stdint.h>
+  #endif
+#else
+  #include <stdint.h>
+#endif  /* _WIN32 */
+
 #include "blosclz.h"
 #include "fastcopy.h"
 #include "blosc-common.h"
+#include "blosc-comp-features.h"
 
 
 /*
@@ -79,7 +93,7 @@
 
 
 
-static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static BLOSC_INLINE uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
   int64_t value, value2;
   /* Broadcast the value for every byte in a 64-bit register */
@@ -107,7 +121,7 @@ static inline uint8_t *get_run(uint8_t *ip, const uint8_t *ip_bound, const uint8
 }
 
 #ifdef __SSE2__
-static inline uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
+static BLOSC_INLINE uint8_t *get_run_16(uint8_t *ip, const uint8_t *ip_bound, const uint8_t *ref) {
   uint8_t x = ip[-1];
   __m128i value, value2, cmp;
 
@@ -511,10 +525,10 @@ int blosclz_decompress(const void* input, int length, void* output, int maxout) 
       }
 #endif
 
-      // memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
-      // On GCC-6, fastcopy this is still faster than plain memcpy
-      // However, using recent CLANG/LLVM 9.0, there is almost no difference
-      // in performance.
+      /* memcpy(op, ip, ctrl); op += ctrl; ip += ctrl;
+         On GCC-6, fastcopy this is still faster than plain memcpy
+         However, using recent CLANG/LLVM 9.0, there is almost no difference
+         in performance. */
       op = fastcopy(op, ip, (unsigned) ctrl);
       ip += ctrl;
 

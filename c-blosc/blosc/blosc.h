@@ -18,12 +18,12 @@ extern "C" {
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    14   /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  3    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_MINOR    15   /* for minor interface/format changes  */
+#define BLOSC_VERSION_RELEASE  1    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.14.3"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.15.1"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2018-04-06 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2018-12-05 #$"    /* date version */
 
 #define BLOSCLZ_VERSION_STRING "1.1.0"   /* the internal compressor version */
 
@@ -385,7 +385,8 @@ BLOSC_EXPORT const char* blosc_get_version_string(void);
   In `complib` and `version` you get a pointer to the compressor
   library name and the version in string format respectively.  After
   using the name and version, you should free() them so as to avoid
-  leaks.
+  leaks.  If any of `complib` and `version` are NULL, they will not be
+  assigned to anything, and the user should not need to free them.
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.

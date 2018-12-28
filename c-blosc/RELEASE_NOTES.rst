@@ -7,6 +7,54 @@
 :URL: http://www.blosc.org
 
 
+Changes from 1.15.0 to 1.15.1
+=============================
+
+- Add workaround for Visual Studio 2008's lack of a `stdint.h` file to
+  `blosclz.c`.
+
+
+Changes from 1.14.4 to 1.15.0
+=============================
+
+- The `blosc_compress()` and `blosc_decompress()` interfaces are now
+  fork-safe, preventing child-process deadlocks in fork-based
+  multiprocessing applications. These interfaces with BLOSC_NOLOCK were, and
+  continue to be, fork-safe. `_ctx` interface context reuse continues to be
+  unsafe in the child process post-fork. See #241.  Thanks to Alex Ford.
+
+- Replaced //-comments with /**/-comments and other improvements for
+  compatibility with quite old gcc compilers.  See PR #243.  Thanks to
+  Andreas Martin.
+
+- Empty buffers can be compressed again (this was unadvertedly prevented while
+  fixing #234).  See #247.  Thanks to Valentin Haenel.
+
+- LZ4 internal codec upgraded to 1.8.3 (from 1.8.1.2).
+
+- Zstd internal codec upgraded to 1.3.7 (from 1.3.4).
+
+
+Changes from 1.14.3 to 1.14.4
+=============================
+
+- Added a new `DEACTIVATE_SSE2` option for cmake that is useful for disabling
+  SSE2 when doing cross-compilation (see #236).
+
+- New check for detecting output buffers smaller than BLOSC_MAX_OVERHEAD.
+  Fixes #234.
+
+- The `complib` and `version` parameters for `blosc_get_complib_info()` can be
+  safely set to NULL now.  This allows to call this function even if the user is
+  not interested in these parameters (so no need to reserve memory for them).
+  Fixes #228.
+
+- In some situations that a supposedly blosc chunk is passed to
+  `blosc_decompress()`, one might end with an `Arithmetic exception`.  This
+  is probably due to the chunk not being an actual blosc chunk, and divisions
+  by zero might occur.  A protection has been added for this. See #237.
+
+
 Changes from 1.14.2 to 1.14.3
 =============================
 
