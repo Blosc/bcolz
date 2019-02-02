@@ -1,13 +1,15 @@
 ===============================================================
- Announcing C-Blosc 1.15.1
+ Announcing C-Blosc 1.16.1
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release that adds a workaround for Visual Studio
-2008's lack of a stdint.h file to blosclz.c.
+This is maintenance release that allows again to compress an empty buffer.
+This was a regression intorduced in 1.16.0.
+
+Also, the Zstd codec has been updated to 1.3.8.
 
 For more info, please see the release notes in:
 
