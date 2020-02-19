@@ -1,5 +1,6 @@
 # Benchmark for evaluate best ways to convert into a pandas dataframe
 
+from collections import OrderedDict
 import bcolz
 import pandas as pd
 from time import time
@@ -17,18 +18,18 @@ dsize = (NR * NC * 4) / 2. ** 30
 t0 = time()
 tnames = list(t.names)
 firstk = tnames.pop(0)
-df = pd.DataFrame.from_items([(firstk, t[firstk][:])])
+df = pd.DataFrame.from_dict(OrderedDict([(firstk, t[firstk][:])]))
 for key in tnames:
     df[key] = t[key][:]
 tt = time() - t0
-print("time with from_items (adding cols): %.2f (%.2f GB/s)" % (tt, dsize / tt))
+print("time with from_dict (adding cols): %.2f (%.2f GB/s)" % (tt, dsize / tt))
 del df
 
 # Using a generator
 t0 = time()
-df = pd.DataFrame.from_items(((key, t[key][:]) for key in t.names))
+df = pd.DataFrame.from_dict(OrderedDict((key, t[key][:]) for key in t.names))
 tt = time() - t0
-print("time with from_items: %.2f (%.2f GB/s)" % (tt, dsize / tt))
+print("time with from_dict: %.2f (%.2f GB/s)" % (tt, dsize / tt))
 
 # Using generic implementation
 t0 = time()

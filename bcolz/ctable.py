@@ -8,7 +8,7 @@
 
 from __future__ import absolute_import
 
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from itertools import islice
 import json
 from keyword import iskeyword
@@ -803,8 +803,8 @@ class ctable(object):
             columns = None
         # Use a generator here to minimize the number of column copies
         # existing simultaneously in-memory
-        df = pd.DataFrame.from_items(
-            ((key, self[key][:]) for key in keys),
+        df = pd.DataFrame.from_dict(
+            OrderedDict((key, self[key][:]) for key in keys),
             columns=columns, orient=orient)
         return df
 

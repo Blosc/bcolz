@@ -1,6 +1,7 @@
 # Benchmark for evaluate best ways to convert from a pandas dataframe
 # (version with a mix of columns of ints and strings)
 
+from collections import OrderedDict
 import sys
 import bcolz
 import pandas as pd
@@ -22,7 +23,7 @@ NC = 100
 print("Creating inputs...")
 a = bcolz.arange(NR, dtype='i4')
 s = bcolz.fromiter(("%d"%i for i in xrange(NR)), dtype='S7', count=NR)
-df = pd.DataFrame.from_items((
+df = pd.DataFrame.from_dict(OrderedDict(
     ('f%d'%i, a[:] if i < (NC//2) else s[:]) for i in range(NC)))
 
 dsize = (NR * (NC//2) * (a.dtype.itemsize + s.dtype.itemsize)) / 2. ** 20
