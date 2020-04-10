@@ -1,5 +1,6 @@
 # Benchmark for evaluate best ways to convert from a pandas dataframe
 
+from collections import OrderedDict
 import bcolz
 import pandas as pd
 import numpy as np
@@ -12,7 +13,7 @@ NC = 100
 
 print("Creating inputs...")
 a = bcolz.arange(NR, dtype='i4')
-df = pd.DataFrame.from_items((('f%d'%i, a[:]) for i in range(NC)))
+df = pd.DataFrame.from_dict(OrderedDict(('f%d'%i, a[:]) for i in range(NC)))
 
 dsize = (NR * NC * 4) / 2. ** 30
 
