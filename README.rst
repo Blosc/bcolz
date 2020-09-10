@@ -1,3 +1,22 @@
+===========================
+Unmaintained Package Notice
+===========================
+
+Unfortunately, and due to lack of resources, the Blosc Development Team is unable to maintain this package anymore.
+During the last 10 years we managed to find resources (even if in a quite irregular way) to develop what we think is a
+nice package for handling compressed data containers, especially tabular data.  Regrettably, for the last years we did
+not found sponsorship enough to continue the maintenance of this package.
+
+For those that depend on bcolz, a fork is welcome and we will try our best to provide advice for possible new
+maintainers.  Indeed, if we manage to get some decent grants via Blosc (https://blosc.org/pages/donate/), our umbrella
+project, we would be glad to reconsider the maintenance of bcolz.  But again, we would be very open and supportive
+for this project to get a new maintenance team.
+
+Finally, thanks to all the people that used and contributed in one way or another to bcolz; it has been a nice ride!
+Let's hope it still would have a bright future ahead.
+
+The Blosc Development Team
+
 bcolz: columnar and compressed data containers
 ==============================================
 
