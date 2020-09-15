@@ -1071,8 +1071,7 @@ class ctable(object):
 
         See Also
         --------
-        See :py:func:`<bcolz.toplevel.iterblocks>` in toplevel functions.
-
+        bcolz.iterblocks
         """
 
         if blen is None:
@@ -1368,8 +1367,7 @@ class ctable(object):
 
         See Also
         --------
-        eval (top level function)
-
+        bcolz.eval
         """
         # Call top-level eval with cols, locals and gloabls as user_dict
         user_dict = kwargs.pop('user_dict', {})

@@ -579,8 +579,7 @@ class cparams(object):
 
     See also
     --------
-    cparams.setdefaults()
-
+    cparams.setdefaults
     """
 
     @property
