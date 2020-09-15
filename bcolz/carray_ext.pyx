@@ -763,18 +763,23 @@ cdef class chunks(object):
     cdef read_chunk(self, nchunk):
         """Read a chunk and return it in compressed form."""
         schunkfile = self._chunk_file_name(nchunk)
-        if not os.path.exists(schunkfile):
-            raise ValueError("chunkfile %s not found" % schunkfile)
-        with open(schunkfile, 'rb') as schunk:
-            bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
-            blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
-            blosc_header = decode_blosc_header(blosc_header_raw)
-            ctbytes = blosc_header['ctbytes']
-            nbytes = blosc_header['nbytes']
-            # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
-            # position
-            schunk.seek(-BLOSC_HEADER_LENGTH, 1)
-            scomp = schunk.read(ctbytes)
+        try:
+            with open(schunkfile, 'rb') as schunk:
+                bloscpack_header = schunk.read(BLOSCPACK_HEADER_LENGTH)
+                blosc_header_raw = schunk.read(BLOSC_HEADER_LENGTH)
+                blosc_header = decode_blosc_header(blosc_header_raw)
+                ctbytes = blosc_header['ctbytes']
+                nbytes = blosc_header['nbytes']
+                # seek back BLOSC_HEADER_LENGTH bytes in file relative to current
+                # position
+                schunk.seek(-BLOSC_HEADER_LENGTH, 1)
+                scomp = schunk.read(ctbytes)
+        except:
+            if not os.path.exists(schunkfile):
+                raise ValueError("chunkfile %s not found" % schunkfile)
+            else:
+                print("Unexpected error:", sys.exc_info()[0])
+                raise
         return scomp
 
     def __iter__(self):
