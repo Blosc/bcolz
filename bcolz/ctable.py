@@ -645,13 +645,17 @@ class ctable(object):
         return ccopy
 
     @staticmethod
-    def fromdataframe(df, **kwargs):
+    def fromdataframe(df, index_as_columns=False, **kwargs):
         """Return a ctable object out of a pandas dataframe.
 
         Parameters
         ----------
         df : DataFrame
             A pandas dataframe.
+        index_as_columns : boolean
+            If True, the index values will be converted to columns and the
+            names of the columns will be stored in the attribute 
+            'dataframe_index_columns'.
         kwargs : list of parameters or dictionary
             Any parameter supported by the ctable constructor.
 
@@ -707,9 +711,38 @@ class ctable(object):
                 cols.append(col)
             else:
                 cols.append(vals)
-
+        # Convert index levels into columns
+        if index_as_columns:
+            index_names = []
+            for level in range(df.index.nlevels):
+                vals = df.index.get_level_values(level).values  
+                if vals.dtype == np.object:
+                    inferred_type = pd.lib.infer_dtype(vals)
+                    if inferred_type == 'unicode':
+                        maxitemsize = pd.lib.max_len_string_array(vals)
+                        col = bcolz.carray(vals,
+                                           dtype='U%d' % maxitemsize,
+                                           **ckwargs)
+                    elif inferred_type == 'string':
+                        maxitemsize = pd.lib.max_len_string_array(vals)
+                        # In Python 3 strings should be represented as Unicode
+                        dtype = "U" if sys.version_info >= (3, 0) else "S"
+                        col = bcolz.carray(vals, dtype='%s%d' %
+                                           (dtype, maxitemsize), **ckwargs)
+                    else:
+                        col = vals
+                    cols.append(col)
+                else:
+                    cols.append(vals)
+                new_index_name =  'index_column_'
+                new_index_name += str(level)
+                new_index_name += df.index.get_level_values(level).name
+                names.append(new_index_name)
+                index_names.append(new_index_name)    
         # Create the ctable
         ct = ctable(cols, names, **kwargs)
+        if index_as_columns:
+            ct.attrs.attrs['dataframe_index_columns'] = index_names
         return ct
 
     @staticmethod
@@ -806,6 +839,12 @@ class ctable(object):
         df = pd.DataFrame.from_dict(
             OrderedDict((key, self[key][:]) for key in keys),
             columns=columns, orient=orient)
+        # Check for dataframe_index_columns attribute and set index
+        if self.attrs.attrs.get('dataframe_index_columns'):
+            index_names = self.attrs.attrs.get('dataframe_index_columns')
+            original_index_names = [i[14:] for i in index_names]
+            df.set_index(index_names, inplace=True)
+            df.index.names = original_index_names
         return df
 
     def tohdf5(self, filepath, nodepath='/ctable', mode='w',
