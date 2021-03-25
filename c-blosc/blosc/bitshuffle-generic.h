@@ -82,28 +82,28 @@ extern "C" {
 
 /* Private functions */
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_byte_elem_remainder(const void* in, void* out, const size_t size,
-                                               const size_t elem_size, const size_t start);
+bshuf_trans_byte_elem_remainder(const void* in, void* out, const size_t size,
+                                const size_t elem_size, const size_t start);
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_byte_elem_scal(const void* in, void* out, const size_t size,
-                                          const size_t elem_size);
+bshuf_trans_byte_elem_scal(const void* in, void* out, const size_t size,
+                           const size_t elem_size);
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_bit_byte_remainder(const void* in, void* out, const size_t size,
-                                              const size_t elem_size, const size_t start_byte);
+bshuf_trans_bit_byte_remainder(const void* in, void* out, const size_t size,
+                               const size_t elem_size, const size_t start_byte);
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_elem(const void* in, void* out, const size_t lda,
-                                const size_t ldb, const size_t elem_size);
+bshuf_trans_elem(const void* in, void* out, const size_t lda,
+                 const size_t ldb, const size_t elem_size);
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_bitrow_eight(const void* in, void* out, const size_t size,
-                                        const size_t elem_size);
+bshuf_trans_bitrow_eight(const void* in, void* out, const size_t size,
+                         const size_t elem_size);
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_shuffle_bit_eightelem_scal(const void* in, void* out,
-                                                const size_t size, const size_t elem_size);
+bshuf_shuffle_bit_eightelem_scal(const void* in, void* out,
+                                 const size_t size, const size_t elem_size);
 
 
 /* Bitshuffle the data.
@@ -125,8 +125,8 @@ blosc_internal_bshuf_shuffle_bit_eightelem_scal(const void* in, void* out,
  */
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_trans_bit_elem_scal(const void* in, void* out, const size_t size,
-                                         const size_t elem_size, void* tmp_buf);
+bshuf_trans_bit_elem_scal(const void* in, void* out, const size_t size,
+                          const size_t elem_size, void* tmp_buf);
 
 /* Unshuffle bitshuffled data.
  *
@@ -150,8 +150,8 @@ blosc_internal_bshuf_trans_bit_elem_scal(const void* in, void* out, const size_t
  */
 
 BLOSC_NO_EXPORT int64_t
-blosc_internal_bshuf_untrans_bit_elem_scal(const void* in, void* out, const size_t size,
-                                           const size_t elem_size, void* tmp_buf);
+bshuf_untrans_bit_elem_scal(const void* in, void* out, const size_t size,
+                            const size_t elem_size, void* tmp_buf);
 
 
 #ifdef __cplusplus

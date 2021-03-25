@@ -13,15 +13,14 @@ foreach(source ${SOURCES})
     if(WIN32)
         if (target STREQUAL test_nolock OR
             target STREQUAL test_noinit OR
-            target STREQUAL test_forksafe OR
             target STREQUAL test_compressor)
             message("Skipping ${target} on Windows systems")
             continue()
         endif()
     endif()
 
-    # Disable targets that use lz4 compressor when lz4 is deactivated
-    if((target STREQUAL test_compressor) OR (target STREQUAL test_bitshuffle_leftovers) AND DEACTIVATE_LZ4)
+    # test_compressor will be enabled only when LZ4 support is in
+    if(target STREQUAL test_compressor AND DEACTIVATE_LZ4)
         message("Skipping ${target} on non-LZ4 builds")
         continue()
     endif()
@@ -49,14 +48,27 @@ foreach(source ${SOURCES})
         APPEND PROPERTY COMPILE_DEFINITIONS BLOSC_TESTING)
 
     # have to copy dlls for Visual Studio
-    if(MSVC OR MINGW)
+    if(MSVC)
+        if(MSVC_VERSION EQUAL 1500)
+            # This is an attempt to make VS2008 work, but no luck...
+            # https://cmake.org/pipermail/cmake/2014-October/058777.html
+            SET(Configuration "Release")
+        endif()
         add_custom_command(
             TARGET      ${target}
             POST_BUILD
             COMMAND     ${CMAKE_COMMAND}
             ARGS        -E copy_if_different
-                        "$<TARGET_FILE:blosc_shared_testing>"
-                        "$<TARGET_FILE_DIR:${target}>/$<TARGET_FILE_NAME:blosc_shared_testing>")
+                        "${PROJECT_BINARY_DIR}/blosc/\$\(Configuration\)/blosc_testing.dll"
+                        "${CMAKE_CURRENT_BINARY_DIR}/\$\(Configuration\)/blosc_testing.dll")
+    elseif(MINGW)
+        add_custom_command(
+            TARGET      ${target}
+            POST_BUILD
+            COMMAND     ${CMAKE_COMMAND}
+            ARGS        -E copy_if_different
+                        "${PROJECT_BINARY_DIR}/blosc/libblosc_testing.dll"
+                        "${CMAKE_CURRENT_BINARY_DIR}/libblosc_testing.dll")
     endif()
 
     target_link_libraries(${target} blosc_shared_testing)
@@ -105,23 +117,3 @@ foreach(source ${SOURCES})
         add_test(${target} ${target})
     endif()
 endforeach(source)
-
-if(NOT DEACTIVATE_SYMBOLS_CHECK)
-    if (NOT WIN32)
-        # Verify that no unexpected symbols are exported.
-        if (BUILD_SHARED)
-            add_test(
-                NAME     blosc_test_shared_symbols
-                COMMAND  python
-                         "${CMAKE_CURRENT_SOURCE_DIR}/check_symbols.py"
-                         "$<TARGET_FILE:blosc_shared>")
-        endif()
-        if (BUILD_STATIC)
-            add_test(
-                NAME     blosc_test_static_symbols
-                COMMAND  python
-                         "${CMAKE_CURRENT_SOURCE_DIR}/check_symbols.py"
-                         "$<TARGET_FILE:blosc_static>")
-        endif()
-    endif()
-endif(NOT DEACTIVATE_SYMBOLS_CHECK)

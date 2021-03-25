@@ -12,18 +12,21 @@
 #include "blosc-export.h"
 #include <string.h>
 
-#ifdef __GNUC__
-#define BLOSC_GCC_VERSION (__GNUC__ * 100 + __GNUC_MINOR__)
-#endif  // __GNUC__
-
 /* Import standard integer type definitions */
 #if defined(_WIN32) && !defined(__MINGW32__)
+
   /* stdint.h only available in VS2010 (VC++ 16.0) and newer */
   #if defined(_MSC_VER) && _MSC_VER < 1600
     #include "win32/stdint-windows.h"
   #else
     #include <stdint.h>
   #endif
+
+  /* Use inlined functions for supported systems */
+  #if defined(_MSC_VER) && !defined(__cplusplus)   /* Visual Studio */
+    #define inline __inline  /* Visual C is not C99, but supports some kind of inline */
+  #endif
+
 #else
   #include <stdint.h>
 #endif  /* _WIN32 */

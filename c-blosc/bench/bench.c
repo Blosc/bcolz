@@ -215,13 +215,12 @@ void do_bench(char *compressor, char *shuffle, int nthreads, int size, int elsiz
      if (retcode) abort();
   }
 
-  fprintf(ofile, "--> %d, %d, %d, %d, %s, %s\n", nthreads, size, elsize,
-          rshift, compressor, shuffle);
+  fprintf(ofile, "--> %d, %d, %d, %d, %s, %s\n", nthreads, size, elsize, rshift, compressor, shuffle);
   fprintf(ofile, "********************** Run info ******************************\n");
   fprintf(ofile, "Blosc version: %s (%s)\n", BLOSC_VERSION_STRING, BLOSC_VERSION_DATE);
   fprintf(ofile, "Using synthetic data with %d significant bits (out of 32)\n", rshift);
   fprintf(ofile, "Dataset size: %d bytes\tType size: %d bytes\n", size, elsize);
-  fprintf(ofile, "Working set: %.1f MB\t\t", (size * nchunks) / (float)MB);
+  fprintf(ofile, "Working set: %.1f MB\t\t", (size*nchunks) / (float)MB);
   fprintf(ofile, "Number of threads: %d\n", nthreads);
   fprintf(ofile, "********************** Running benchmarks *********************\n");
 
@@ -377,10 +376,10 @@ int main(int argc, char *argv[]) {
   int extreme_suite = 0;
   int debug_suite = 0;
   int nthreads = 4;                     /* The number of threads */
-  int size = 4 * MB;                    /* Buffer size */
+  int size = 2*MB;                      /* Buffer size */
   int elsize = 8;                       /* Datatype size */
   int rshift = 19;                      /* Significant bits */
-  int workingset = 256 * MB;            /* The maximum allocated memory */
+  int workingset = 256*MB;              /* The maximum allocated memory */
   int nthreads_, size_, elsize_, rshift_, i;
   FILE * output_file = stdout;
   blosc_timestamp_t last, current;

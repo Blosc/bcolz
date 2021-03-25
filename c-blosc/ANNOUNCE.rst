@@ -1,17 +1,16 @@
 ===============================================================
- Announcing C-Blosc 1.21.0
+ Announcing C-Blosc 1.14.3
  A blocking, shuffling and lossless compression library for C
 ===============================================================
 
 What is new?
 ============
 
-This is a maintenance release.  Vendored lz4 and zstd codecs have been
-updated to 1.9.3 and 1.4.8 respectively.
-
-Also, this should be the first release that is officially providing
-binary libraries via the Python wheels in its sibling project python-blosc.
-Thanks to Jeff Hammerbacher for his generous donation to make this happen.
+The main change for this release is that the pthreads library is
+not needed on any Windows build anymore.  Thanks to Steven G. Johnson.
+Also, the internal Zstd sources have been updated to 1.3.4; expect
+an important performance boost (can be up to 10%, specially for low
+compression levels).
 
 For more info, please see the release notes in:
 

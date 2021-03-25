@@ -27,10 +27,9 @@ def get_values(filename):
     for line in f:
         if line.startswith('-->'):
             tmp = line.split('-->')[1]
-            parts = tmp.split(', ')
-            nthreads, size, elsize, sbits, codec, shuffle = parts[:6]
+            nthreads, size, elsize, sbits, codec, shuffle = [i for i in tmp.split(', ')]
             nthreads, size, elsize, sbits = map(int, (nthreads, size, elsize, sbits))
-            values["size"] = size / MB_
+            values["size"] = size * NCHUNKS / MB_
             values["elsize"] = elsize
             values["sbits"] = sbits
             values["codec"] = codec
@@ -43,21 +42,21 @@ def get_values(filename):
         elif line.startswith('memcpy(write):'):
             tmp = line.split(',')[1]
             memcpyw = float(tmp.split(' ')[1])
-            values["memcpyw"].append(memcpyw / 1024)
+            values["memcpyw"].append(memcpyw)
         elif line.startswith('memcpy(read):'):
             tmp = line.split(',')[1]
             memcpyr = float(tmp.split(' ')[1])
-            values["memcpyr"].append(memcpyr / 1024)
+            values["memcpyr"].append(memcpyr)
         elif line.startswith('comp(write):'):
             tmp = line.split(',')[1]
             speedw = float(tmp.split(' ')[1])
             ratio = float(line.split(':')[-1])
-            speedsw.append(speedw / 1024)
+            speedsw.append(speedw)
             ratios.append(ratio)
         elif line.startswith('decomp(read):'):
             tmp = line.split(',')[1]
             speedr = float(tmp.split(' ')[1])
-            speedsr.append(speedr / 1024)
+            speedsr.append(speedr)
             if "OK" not in line:
                 print("WARNING!  OK not found in decomp line!")
 
@@ -67,7 +66,7 @@ def get_values(filename):
 
 def show_plot(plots, yaxis, legends, gtitle, xmax=None, ymax=None):
     xlabel('Compresssion ratio')
-    ylabel('Speed (GB/s)')
+    ylabel('Speed (MB/s)')
     title(gtitle)
     xlim(0, xmax)
     ylim(0, ymax)
@@ -215,8 +214,10 @@ if __name__ == '__main__':
         mean = np.mean(values["memcpyr"])
         message = "memcpy (read from memory)"
     plot_ = axhline(mean, linewidth=3, linestyle='-.', color='black')
-    text(4.0, mean+.4, message)
+    text(4.0, mean+400, message)
     plots.append(plot_)
     show_plot(plots, yaxis, legends, gtitle,
               xmax=int(options.xmax) if options.xmax else None,
               ymax=int(options.ymax) if options.ymax else None)
+
+
