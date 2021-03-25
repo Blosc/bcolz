@@ -883,9 +883,9 @@ class appendTest(MayBeDiskTest):
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test06(self):
-        """Extracting rows from table with np.object column"""
+        """Extracting rows from table with object column"""
         N = 4
-        dtype = np.dtype([("a", np.object), ("b", np.uint8), ("c", np.int32),
+        dtype = np.dtype([("a", object), ("b", np.uint8), ("c", np.int32),
             ("d", np.float32) ])
         with bcolz.ctable(np.empty(0, dtype=dtype), rootdir=self.rootdir) as t:
             for i in xrange(N):

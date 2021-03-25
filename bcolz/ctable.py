@@ -690,7 +690,7 @@ class ctable(object):
             del ckwargs['rootdir']
         for key in names:
             vals = df[key].values  # just a view as a numpy array
-            if vals.dtype == np.object:
+            if vals.dtype == object:
                 inferred_type = pd.api.types.infer_dtype(vals)
                 if inferred_type == 'unicode':
                     maxitemsize = max(len(i) for i in vals)
