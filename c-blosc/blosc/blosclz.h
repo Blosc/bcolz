@@ -3,7 +3,7 @@
 
   Author: Francesc Alted <francesc@blosc.org>
 
-  See LICENSES/BLOSC.txt for details about copyright and rights to use.
+  See LICENSE.txt for details about copyright and rights to use.
 **********************************************************************/
 
 /*********************************************************************
@@ -19,6 +19,7 @@
 #if defined (__cplusplus)
 extern "C" {
 #endif
+
 
 /**
   Compress a block of data in the input buffer and returns the size of
@@ -40,7 +41,7 @@ extern "C" {
   The input buffer and the output buffer can not overlap.
 */
 
-int blosclz_compress(const int opt_level, const void* input, int length,
+int blosclz_compress(int opt_level, const void* input, int length,
                      void* output, int maxout);
 
 /**

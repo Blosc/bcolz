@@ -11,9 +11,9 @@ from __future__ import absolute_import
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([v < (2, 7), (3,) < v < (3, 5)]):
+if any([v < (2, 7), (3,) < v < (3, 6)]):
     raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
-                    "or >= 3.5." % v[:2])
+                    "or >= 3.6." % v[:2])
 
 import os
 from glob import glob
