@@ -40,6 +40,10 @@ jobs:
             manylinux_image: manylinux2010
           - os: macos-latest
             manylinux_image: manylinux2010
+          - os: windows-latest
+            manylinux_image: manylinux2014
+          - os: macos-latest
+            manylinux_image: manylinux2014
 
     steps:
       - name: Checkout bcolz      -
