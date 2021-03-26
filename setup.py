@@ -122,7 +122,7 @@ else:
                  if os.path.isdir(d)]
     inc_dirs += [d for d in glob('c-blosc/internal-complibs/zstd*/*')
                  if os.path.isdir(d)]
-    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 1), ('HAVE_ZLIB', 1),
+    def_macros += [('HAVE_LZ4', 1), ('HAVE_SNAPPY', 0), ('HAVE_ZLIB', 1),
                    ('HAVE_ZSTD', 1)]
 
     # Guess SSE2 or AVX2 capabilities
