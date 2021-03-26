@@ -154,7 +154,9 @@ if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
 
-long_description = Path('README.rst').read_text()
+
+path = Path(__file__).resolve(strict=True).parent
+long_description = (path / 'README.rst').read_text()
 
 setup(
     name="bcolz",
