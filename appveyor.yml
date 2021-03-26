@@ -1,4 +1,4 @@
-version: '{branch}-{build}'
+5version: '{branch}-{build}'
 build: off
 cache:
   - '%LOCALAPPDATA%\\pip\\Cache'
@@ -11,32 +11,6 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\continuous-integration\\appveyor\\run_with_env.cmd"
 
   matrix:
-    # PYTHON 2.7
-    - PYTHON: "C:\\Miniconda27"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "32"
-      CONDA_PY: "27"
-      CONDA_NPY: "111"
-
-    - PYTHON: "C:\\Miniconda27-x64"
-      PYTHON_VERSION: "2.7"
-      PYTHON_ARCH: "64"
-      CONDA_PY: "27"
-      CONDA_NPY: "111"
-
-    # PYTHON 3.5
-    - PYTHON: "C:\\Miniconda35"
-      PYTHON_VERSION: "3.5"
-      PYTHON_ARCH: "32"
-      CONDA_PY: "35"
-      CONDA_NPY: "142"
-
-#    - PYTHON: "C:\\Miniconda35-x64"
-#      PYTHON_VERSION: "3.5"
-#      PYTHON_ARCH: "64"
-#      CONDA_PY: "35"
-#      CONDA_NPY: "142"
-
     # PYTHON 3.6
     - PYTHON: "C:\\Miniconda36"
       PYTHON_VERSION: "3.6"
@@ -50,6 +24,44 @@ environment:
       CONDA_PY: "36"
       CONDA_NPY: "142"
 
+    # PYTHON 3.7
+    - PYTHON: "C:\\Miniconda37"
+      PYTHON_VERSION: "3.7"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "37"
+      CONDA_NPY: "142"
+
+    - PYTHON: "C:\\Miniconda37-x64"
+      PYTHON_VERSION: "3.7"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "37"
+      CONDA_NPY: "142"
+
+    # PYTHON 3.8
+    - PYTHON: "C:\\Miniconda38"
+      PYTHON_VERSION: "3.8"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "38"
+      CONDA_NPY: "142"
+
+    - PYTHON: "C:\\Miniconda38-x64"
+      PYTHON_VERSION: "3.8"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "38"
+      CONDA_NPY: "142"
+
+    # PYTHON 3.9
+    - PYTHON: "C:\\Miniconda39"
+      PYTHON_VERSION: "3.9"
+      PYTHON_ARCH: "32"
+      CONDA_PY: "39"
+      CONDA_NPY: "142"
+
+    - PYTHON: "C:\\Miniconda39-x64"
+      PYTHON_VERSION: "3.9"
+      PYTHON_ARCH: "64"
+      CONDA_PY: "39"
+      CONDA_NPY: "142"
 
 install:
   # this installs the appropriate Miniconda (Py2/Py3, 32/64 bit),

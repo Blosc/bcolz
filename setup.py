@@ -6,16 +6,14 @@
 #
 ########################################################################
 
-from __future__ import absolute_import
-
 from sys import version_info as v
 
 # Check this Python version is supported
-if any([v < (2, 7), (3,) < v < (3, 6)]):
-    raise Exception("Unsupported Python version %d.%d. Requires Python >= 2.7 "
-                    "or >= 3.6." % v[:2])
+if any([(3,) < v < (3, 6)]):
+    raise Exception("Unsupported Python version %d.%d. Requires Python >= 3.6." % v[:2])
 
 import os
+from pathlib import Path
 from glob import glob
 import sys
 
@@ -150,13 +148,13 @@ else:
 
 
 tests_require = []
-if v < (3,):
-    tests_require.extend(['unittest2', 'mock'])
 
 # compile and link code instrumented for coverage analysis
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
+
+long_description = Path('README.rst').read_text()
 
 setup(
     name="bcolz",
@@ -166,17 +164,7 @@ setup(
         'write_to': 'bcolz/version.py'
     },
     description='columnar and compressed data containers.',
-    long_description="""\
-
-bcolz provides columnar and compressed data containers.  Column
-storage allows for efficiently querying tables with a large number of
-columns.  It also allows for cheap addition and removal of column.  In
-addition, bcolz objects are compressed by default for reducing
-memory/disk I/O needs.  The compression process is carried out
-internally by Blosc, a high-performance compressor that is optimized
-for binary data.
-
-""",
+    long_description=long_description,
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -187,17 +175,16 @@ for binary data.
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: Unix',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
     ],
     author='Francesc Alted',
     author_email='francesc@blosc.org',
     maintainer='Francesc Alted',
     maintainer_email='francesc@blosc.org',
-    url='https://github.com/Blosc/bcolz',
+    url='https://github.com/stefan-jansen/bcolz',
     license='BSD',
     platforms=['any'],
     ext_modules=[
