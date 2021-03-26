@@ -28,18 +28,18 @@ jobs:
           - os: ubuntu-latest
             bitness: 32
             platform_id: manylinux_i686
-          - os: macos-latest
-            bitness: 64
-            platform_id: macosx_x86_64
+#          - os: macos-latest
+#            bitness: 64
+#            platform_id: macosx_x86_64
         exclude:
-          - os: macos-latest
-            bitness: 32
+#          - os: macos-latest
+#            bitness: 32
           # Remove manylinux2010 from the windows and osx build matrix since
           # manylinux_image is not used for these platforms
           - os: windows-latest
             manylinux_image: manylinux2000
-          - os: macos-latest
-            manylinux_image: manylinux2001
+#          - os: macos-latest
+#            manylinux_image: manylinux2001
 
     steps:
       - name: Checkout bcolz      -
