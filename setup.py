@@ -159,7 +159,7 @@ path = Path(__file__).resolve(strict=True).parent
 long_description = (path / 'README.rst').read_text()
 
 setup(
-    name="bcolz",
+    name="bcolz-zipline",
     use_scm_version={
         'version_scheme': 'guess-next-dev',
         'local_scheme': 'dirty-tag',
