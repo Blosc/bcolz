@@ -13,7 +13,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
         python: [37, 38, 39]
         bitness: [64]
-        manylinux_image: [manylinux2010, manylinux2014]
+        manylinux_image: [manylinux1, manylinux2010]
         include:
           # Run 32 and 64 bit version in parallel for Linux and Windows
           - os: windows-latest
@@ -37,13 +37,9 @@ jobs:
           # Remove manylinux2010 from the windows and osx build matrix since
           # manylinux_image is not used for these platforms
           - os: windows-latest
-            manylinux_image: manylinux2010
+            manylinux_image: manylinux2000
           - os: macos-latest
-            manylinux_image: manylinux2010
-          - os: windows-latest
-            manylinux_image: manylinux2014
-          - os: macos-latest
-            manylinux_image: manylinux2014
+            manylinux_image: manylinux2001
 
     steps:
       - name: Checkout bcolz      -
@@ -60,7 +56,6 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_TEST_COMMAND: python -c"import bcolz; bcolz.test()"
-
 
       - name: Store artifacts
         uses: actions/upload-artifact@v2
