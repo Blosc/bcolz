@@ -204,7 +204,7 @@ setup(
     # install_requires=['numpy>=1.7'],
     setup_requires=[
         'cython>=0.22',
-        'numpy>=1.7',
+        'numpy>=1.16.5',
         'setuptools>18.0',
         'setuptools-scm>1.5.4'
     ],
