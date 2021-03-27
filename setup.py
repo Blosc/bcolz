@@ -147,7 +147,7 @@ else:
 
 
 tests_require = []
-
+CFLAGS.extend(' -std=c99')
 # compile and link code instrumented for coverage analysis
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
