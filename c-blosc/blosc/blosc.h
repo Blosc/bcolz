@@ -18,14 +18,14 @@ extern "C" {
 
 /* Version numbers */
 #define BLOSC_VERSION_MAJOR    1    /* for major interface/format changes  */
-#define BLOSC_VERSION_MINOR    14   /* for minor interface/format changes  */
-#define BLOSC_VERSION_RELEASE  3    /* for tweaks, bug-fixes, or development */
+#define BLOSC_VERSION_MINOR    21   /* for minor interface/format changes  */
+#define BLOSC_VERSION_RELEASE  1    /* for tweaks, bug-fixes, or development */
 
-#define BLOSC_VERSION_STRING   "1.14.3"  /* string version.  Sync with above! */
+#define BLOSC_VERSION_STRING   "1.21.1.dev0"  /* string version.  Sync with above! */
 #define BLOSC_VERSION_REVISION "$Rev$"   /* revision version */
-#define BLOSC_VERSION_DATE     "$Date:: 2018-04-06 #$"    /* date version */
+#define BLOSC_VERSION_DATE     "$Date:: 2020-12-22 #$"    /* date version */
 
-#define BLOSCLZ_VERSION_STRING "1.1.0"   /* the internal compressor version */
+#define BLOSCLZ_VERSION_STRING "2.3.0"   /* the internal compressor version */
 
 /* The *_FORMAT symbols should be just 1-byte long */
 #define BLOSC_VERSION_FORMAT    2   /* Blosc format version, starting at 1 */
@@ -43,6 +43,11 @@ extern "C" {
 
 /* Maximum typesize before considering source buffer as a stream of bytes */
 #define BLOSC_MAX_TYPESIZE 255         /* Cannot be larger than 255 */
+
+/* Maximum supported blocksize.  Decompression (getitem) requires a temporary
+   buffer of size 3*blocksize + sizeof(int32_t) * typesize. */
+#define BLOSC_MAX_BLOCKSIZE \
+  ((INT_MAX - BLOSC_MAX_TYPESIZE * sizeof(int32_t)) / 3)
 
 /* The maximum number of threads (for some static arrays) */
 #define BLOSC_MAX_THREADS 256
@@ -210,6 +215,10 @@ BLOSC_EXPORT void blosc_destroy(void);
   This will call blosc_set_splitmode() with the different supported values.
   See blosc_set_splitmode() docstrings for more info on each mode.
 
+  BLOSC_WARN=(INTEGER): This will print some warning message on stderr
+  showing more info in situations where data inputs cannot be compressed.
+  The values can range from 1 (less verbose) to 10 (full verbose).  0 is
+  the same as if the BLOSC_WARN envvar was not defined.
   */
 BLOSC_EXPORT int blosc_compress(int clevel, int doshuffle, size_t typesize,
 				size_t nbytes, const void *src, void *dest,
@@ -244,6 +253,8 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
   Decompress a block of compressed data in `src`, put the result in
   `dest` and returns the size of the decompressed block.
 
+  Call `blosc_cbuffer_validate` to determine the size of the destination buffer.
+
   The `src` buffer and the `dest` buffer can not overlap.
 
   Decompression is memory safe and guaranteed not to write the `dest`
@@ -270,12 +281,13 @@ BLOSC_EXPORT int blosc_compress_ctx(int clevel, int doshuffle, size_t typesize,
 */
 BLOSC_EXPORT int blosc_decompress(const void *src, void *dest, size_t destsize);
 
-
 /**
   Context interface to blosc decompression. This does not require a
   call to blosc_init() and can be called from multithreaded
   applications without the global lock being used, so allowing Blosc
   be executed simultaneously in those scenarios.
+
+  Call `blosc_cbuffer_validate` to determine the size of the destination buffer.
 
   It uses the same parameters than the blosc_decompress() function plus:
 
@@ -300,7 +312,6 @@ BLOSC_EXPORT int blosc_decompress_ctx(const void *src, void *dest,
   some error happens.
   */
 BLOSC_EXPORT int blosc_getitem(const void *src, int start, int nitems, void *dest);
-
 
 /**
   Returns the current number of threads that are used for
@@ -328,7 +339,7 @@ BLOSC_EXPORT const char* blosc_get_compressor(void);
 
 /**
   Select the compressor to be used.  The supported ones are "blosclz",
-  "lz4", "lz4hc", "snappy", "zlib" and "ztsd".  If this function is not
+  "lz4", "lz4hc", "snappy", "zlib" and "zstd".  If this function is not
   called, then "blosclz" will be used by default.
 
   In case the compressor is not recognized, or there is not support
@@ -385,7 +396,8 @@ BLOSC_EXPORT const char* blosc_get_version_string(void);
   In `complib` and `version` you get a pointer to the compressor
   library name and the version in string format respectively.  After
   using the name and version, you should free() them so as to avoid
-  leaks.
+  leaks.  If any of `complib` and `version` are NULL, they will not be
+  assigned to anything, and the user should not need to free them.
 
   If the compressor is supported, it returns the code for the library
   (>=0).  If it is not supported, this function returns -1.
@@ -417,6 +429,19 @@ BLOSC_EXPORT int blosc_free_resources(void);
 BLOSC_EXPORT void blosc_cbuffer_sizes(const void *cbuffer, size_t *nbytes,
 				      size_t *cbytes, size_t *blocksize);
 
+/**
+  Checks that the compressed buffer starting at `cbuffer` of length `cbytes` may
+  contain valid blosc compressed data, and that it is safe to call
+  blosc_decompress/blosc_decompress_ctx/blosc_getitem.
+
+  On success, returns 0 and sets *nbytes to the size of the uncompressed data.
+  This does not guarantee that the decompression function won't return an error,
+  but does guarantee that it is safe to attempt decompression.
+
+  On failure, returns -1.
+ */
+BLOSC_EXPORT int blosc_cbuffer_validate(const void* cbuffer, size_t cbytes,
+                                         size_t* nbytes);
 
 /**
   Return meta-information about a compressed buffer, namely the type size
