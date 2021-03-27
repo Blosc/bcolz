@@ -1,3 +1,6 @@
+[project]
+requires-python = ">=3.7"
+
 [build-system]
 # Minimum requirements for the build system to execute.
 requires = [
