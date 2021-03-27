@@ -114,7 +114,7 @@ else:
     sources += [f for f in glob('c-blosc/blosc/*.c')
                 if 'avx2' not in f and 'sse2' not in f]
     sources += glob('c-blosc/internal-complibs/lz4*/*.c')
-    sources += glob('c-blosc/internal-complibs/snappy*/*.cc')
+    # sources += glob('c-blosc/internal-complibs/snappy*/*.cc')
     sources += glob('c-blosc/internal-complibs/zlib*/*.c')
     sources += glob('c-blosc/internal-complibs/zstd*/*/*.c')
     inc_dirs += [os.path.join('c-blosc', 'blosc')]
