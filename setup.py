@@ -24,6 +24,7 @@ from pkg_resources import resource_filename
 try:
     # Currently just Intel and some ARM archs are supported by cpuinfo module
     import cpuinfo
+
     cpu_info = cpuinfo.get_cpu_info()
 except:
     cpu_info = {'flags': []}
@@ -34,10 +35,11 @@ class LazyCommandClass(dict):
     Lazy command class that defers operations requiring Cython and numpy until
     they've actually been downloaded and installed by setup_requires.
     """
+
     def __contains__(self, key):
         return (
-            key == 'build_ext'
-            or super(LazyCommandClass, self).__contains__(key)
+                key == 'build_ext'
+                or super(LazyCommandClass, self).__contains__(key)
         )
 
     def __setitem__(self, key, value):
@@ -56,6 +58,7 @@ class LazyCommandClass(dict):
             Custom build_ext command that lazily adds numpy's include_dir to
             extensions.
             """
+
             def build_extensions(self):
                 """
                 Lazily append numpy's include directory to Extension includes.
@@ -73,6 +76,7 @@ class LazyCommandClass(dict):
                 # which Cython's build_ext is a subclass, is an old-style class
                 # in Python 2, which doesn't support `super`.
                 cython_build_ext.build_extensions(self)
+
         return build_ext
 
 
@@ -145,33 +149,31 @@ else:
         elif os.name == 'nt':
             def_macros += [('__AVX2__', 1)]
 
-
-tests_require = []
+tests_require = ['numpy']
 CFLAGS.append('-std=gnu99')
 # compile and link code instrumented for coverage analysis
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
 
+ext_module = Extension(
+    'bcolz.carray_ext',
+    include_dirs=inc_dirs,
+    define_macros=def_macros,
+    sources=sources,
+    library_dirs=lib_dirs,
+    libraries=libs,
+    extra_link_args=LFLAGS,
+    extra_compile_args=CFLAGS
+)
+ext_module.cython_directives = dict(language_level="3")
 
 setup(
-
     # use_scm_version={
     #     'version_scheme': 'guess-next-dev',
     #     'local_scheme': 'dirty-tag',
     # },
-    ext_modules=[
-        Extension(
-            'bcolz.carray_ext',
-            include_dirs=inc_dirs,
-            define_macros=def_macros,
-            sources=sources,
-            library_dirs=lib_dirs,
-            libraries=libs,
-            extra_link_args=LFLAGS,
-            extra_compile_args=CFLAGS
-        )
-    ],
+    ext_modules=[ext_module],
     setup_requires=[
         'cython>=0.22',
         'numpy>=1.16.5',
@@ -188,7 +190,7 @@ setup(
         ],
         test=tests_require
     ),
-    packages=find_packages(),
+    # packages=find_packages(),
     package_data={'bcolz': ['carray_ext.pxd']},
     cmdclass=LazyCommandClass(),
 )

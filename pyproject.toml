@@ -2,7 +2,6 @@
 requires-python = ">=3.7"
 
 [build-system]
-# Minimum requirements for the build system to execute.
 requires = [
     "setuptools>=18.0",
     "setuptools_scm[toml]>=3.4",
