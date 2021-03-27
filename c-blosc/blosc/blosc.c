@@ -27,9 +27,9 @@
   #include "lz4.h"
   #include "lz4hc.h"
 #endif /*  HAVE_LZ4 */
-#if defined(HAVE_SNAPPY)
-  #include "snappy-c.h"
-#endif /*  HAVE_SNAPPY */
+//#if defined(HAVE_SNAPPY)
+//  #include "snappy-c.h"
+//#endif /*  HAVE_SNAPPY */
 #if defined(HAVE_ZLIB)
   #include "zlib.h"
 #endif /*  HAVE_ZLIB */
