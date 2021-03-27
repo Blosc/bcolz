@@ -440,31 +440,31 @@ static int lz4_wrap_decompress(const void* input, int compressed_length,
 
 #endif /* HAVE_LZ4 */
 
-#if defined(HAVE_SNAPPY)
-static int snappy_wrap_compress(const char* input, size_t input_length,
-                                char* output, size_t maxout)
-{
-  snappy_status status;
-  size_t cl = maxout;
-  status = snappy_compress(input, input_length, output, &cl);
-  if (status != SNAPPY_OK){
-    return 0;
-  }
-  return (int)cl;
-}
-
-static int snappy_wrap_decompress(const void* input, int compressed_length,
-                                  void* output, int maxout)
-{
-  snappy_status status;
-  size_t ul = maxout;
-  status = snappy_uncompress(input, compressed_length, output, &ul);
-  if (status != SNAPPY_OK){
-    return 0;
-  }
-  return (int)ul;
-}
-#endif /* HAVE_SNAPPY */
+//#if defined(HAVE_SNAPPY)
+//static int snappy_wrap_compress(const char* input, size_t input_length,
+//                                char* output, size_t maxout)
+//{
+//  snappy_status status;
+//  size_t cl = maxout;
+//  status = snappy_compress(input, input_length, output, &cl);
+//  if (status != SNAPPY_OK){
+//    return 0;
+//  }
+//  return (int)cl;
+//}
+//
+//static int snappy_wrap_decompress(const void* input, int compressed_length,
+//                                  void* output, int maxout)
+//{
+//  snappy_status status;
+//  size_t ul = maxout;
+//  status = snappy_uncompress(input, compressed_length, output, &ul);
+//  if (status != SNAPPY_OK){
+//    return 0;
+//  }
+//  return (int)ul;
+//}
+//#endif /* HAVE_SNAPPY */
 
 #if defined(HAVE_ZLIB)
 /* zlib is not very respectful with sharing name space with others.
