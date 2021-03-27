@@ -201,7 +201,7 @@ setup(
             extra_compile_args=CFLAGS
         )
     ],
-    install_requires=['numpy>=1.7'],
+    # install_requires=['numpy>=1.7'],
     setup_requires=[
         'cython>=0.22',
         'numpy>=1.7',
