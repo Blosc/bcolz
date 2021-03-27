@@ -154,40 +154,12 @@ if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     LFLAGS.append("-lgcov")
 
 
-path = Path(__file__).resolve(strict=True).parent
-long_description = (path / 'README.rst').read_text()
-
 setup(
-    name="bcolz-zipline",
-    use_scm_version={
-        'version_scheme': 'guess-next-dev',
-        'local_scheme': 'dirty-tag',
-        'write_to': 'bcolz/version.py'
-    },
-    description='columnar and compressed data containers.',
-    long_description=long_description,
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-        'Intended Audience :: Developers',
-        'Intended Audience :: Information Technology',
-        'Intended Audience :: Science/Research',
-        'License :: OSI Approved :: BSD License',
-        'Programming Language :: Python',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: Unix',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-    ],
-    author='Francesc Alted',
-    author_email='francesc@blosc.org',
-    maintainer='Francesc Alted',
-    maintainer_email='francesc@blosc.org',
-    url='https://github.com/stefan-jansen/bcolz',
-    license='BSD',
-    platforms=['any'],
+
+    # use_scm_version={
+    #     'version_scheme': 'guess-next-dev',
+    #     'local_scheme': 'dirty-tag',
+    # },
     ext_modules=[
         Extension(
             'bcolz.carray_ext',
@@ -200,12 +172,11 @@ setup(
             extra_compile_args=CFLAGS
         )
     ],
-    # install_requires=['numpy>=1.7'],
     setup_requires=[
         'cython>=0.22',
         'numpy>=1.16.5',
         'setuptools>18.0',
-        'setuptools-scm>1.5.4'
+        'setuptools-scm'
     ],
     tests_require=tests_require,
     extras_require=dict(
