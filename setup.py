@@ -174,12 +174,12 @@ setup(
     #     'local_scheme': 'dirty-tag',
     # },
     ext_modules=[ext_module],
-    setup_requires=[
-        'cython>=0.22',
-        'numpy>=1.16.5',
-        'setuptools>18.0',
-        'setuptools-scm'
-    ],
+    # setup_requires=[
+    #     'cython>=0.22',
+    #     'numpy>=1.16.5',
+    #     'setuptools>18.0',
+    #     'setuptools-scm'
+    # ],
     tests_require=tests_require,
     extras_require=dict(
         optional=[
@@ -190,7 +190,7 @@ setup(
         ],
         test=tests_require
     ),
-    packages=find_packages(),
+    # packages=find_packages(),
     package_data={'bcolz': ['carray_ext.pxd']},
     cmdclass=LazyCommandClass(),
 )
