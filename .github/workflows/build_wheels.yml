@@ -56,7 +56,7 @@ jobs:
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_TEST_REQUIRES: numpy
-          CIBW_TEST_COMMAND: python -c"import bcolz; bcolz.test()"
+          CIBW_TEST_COMMAND: python -c "import bcolz; bcolz.test()"
 
       - name: Store artifacts
         uses: actions/upload-artifact@v2

@@ -169,10 +169,11 @@ ext_module = Extension(
 
 tests_require = []
 setup(
-    # use_scm_version={
-    #     'version_scheme': 'guess-next-dev',
-    #     'local_scheme': 'dirty-tag',
-    # },
+    use_scm_version={
+        'write_to'      : "bcolz/version.py",
+        'version_scheme': 'guess-next-dev',
+        'local_scheme'  : 'dirty-tag',
+    },
     ext_modules=[ext_module],
     setup_requires=[
         'cython>=0.22',
