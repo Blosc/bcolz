@@ -149,12 +149,12 @@ else:
         elif os.name == 'nt':
             def_macros += [('__AVX2__', 1)]
 
-tests_require = ['numpy']
-CFLAGS.append('-std=gnu99')
 # compile and link code instrumented for coverage analysis
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
+
+CFLAGS.append('-std=gnu99')
 
 ext_module = Extension(
     'bcolz.carray_ext',
@@ -168,18 +168,19 @@ ext_module = Extension(
 )
 ext_module.cython_directives = dict(language_level="3")
 
+tests_require = []
 setup(
     # use_scm_version={
     #     'version_scheme': 'guess-next-dev',
     #     'local_scheme': 'dirty-tag',
     # },
     ext_modules=[ext_module],
-    # setup_requires=[
-    #     'cython>=0.22',
-    #     'numpy>=1.16.5',
-    #     'setuptools>18.0',
-    #     'setuptools-scm'
-    # ],
+    setup_requires=[
+        'cython>=0.22',
+        'numpy>=1.16.5',
+        'setuptools>18.0',
+        'setuptools-scm'
+    ],
     tests_require=tests_require,
     extras_require=dict(
         optional=[
