@@ -191,7 +191,7 @@ setup(
         ],
         test=tests_require
     ),
-    # packages=find_packages(),
+    packages=find_packages(),
     package_data={'bcolz': ['carray_ext.pxd']},
     cmdclass=LazyCommandClass(),
 )
