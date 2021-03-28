@@ -166,7 +166,6 @@ ext_module = Extension(
     extra_link_args=LFLAGS,
     extra_compile_args=CFLAGS
 )
-ext_module.cython_directives = dict(language_level="3")
 
 tests_require = []
 setup(
