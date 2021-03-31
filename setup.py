@@ -168,5 +168,5 @@ setup(
         extra_compile_args=CFLAGS
     )],
     cmdclass=LazyCommandClass(),
-    install_requires='numpy>=13.3'
+    install_requires=['numpy>=13.3']
 )
