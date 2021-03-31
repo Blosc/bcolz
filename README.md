@@ -82,7 +82,7 @@ with forthcoming, faster CPUs integrating more cores and wider vector units.
 ## Requisites
 
 - Python >= 3.7
-- NumPy >= 1.8
+- NumPy >= 1.16.5
 - Cython >= 0.22 (just for compiling the beast)
 - C-Blosc >= 1.8.0 (optional, as the internal Blosc will be used by default)
 
@@ -92,6 +92,21 @@ Optional:
 - dask >= 0.9.0
 - pandas
 - tables (pytables)
+
+## Installing as wheel
+
+There are wheels for Linux and Mac OS X that you can install with
+```python
+pip install bcolz-zipline
+```
+Then also install NumPy with 
+```python
+pip install numpy
+```
+and test your installation with 
+```python
+python -c 'import bcolz;bcolz.test()'
+```
 
 ## Building
 
