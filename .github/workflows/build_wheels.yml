@@ -6,6 +6,11 @@ jobs:
   build_wheels:
     name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
+    env:
+      CIBW_TEST_REQUIRES: numpy
+      CIBW_TEST_COMMAND: python -c "import bcolz; bcolz.test()"
+      CIBW_BUILD_VERBOSITY: 1
+
     strategy:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
@@ -53,12 +58,11 @@ jobs:
       - name: Build and test wheels
         uses: joerick/cibuildwheel@v1.10.0
         env:
-          CIBW_ENVIRONMENT: "DISABLE_BLOSC_AVX2=true DISABLE_BCOLZ_AVX2=true"
+#          CIBW_ENVIRONMENT: "DISABLE_BLOSC_AVX2=true DISABLE_BCOLZ_AVX2=true"
+          CIBW_ENVIRONMENT: "DISABLE_BCOLZ_AVX2=true"
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}
-          CIBW_TEST_REQUIRES: numpy
-          CIBW_TEST_COMMAND: python -c "import bcolz; bcolz.test()"
 
       - name: Store artifacts
         uses: actions/upload-artifact@v2
