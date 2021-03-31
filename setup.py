@@ -95,8 +95,6 @@ libs = []
 def_macros = []
 sources = ['bcolz/carray_ext.pyx']
 
-optional_libs = []
-
 # Handle --blosc=[PATH] --lflags=[FLAGS] --cflags=[FLAGS]
 args = sys.argv[:]
 for arg in args:
@@ -158,7 +156,6 @@ if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
 
 CFLAGS.append('-std=gnu99')
 
-tests_require = []
 setup(
     ext_modules=[Extension(
         'bcolz.carray_ext',
@@ -171,4 +168,5 @@ setup(
         extra_compile_args=CFLAGS
     )],
     cmdclass=LazyCommandClass(),
+    install_requires='numpy>=13.3'
 )
