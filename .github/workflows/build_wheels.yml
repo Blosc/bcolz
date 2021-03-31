@@ -18,7 +18,7 @@ jobs:
         os: [ macos-latest, ubuntu-latest ]
         python: [ 37, 38, 39 ]
         bitness: [ 64 ]
-        manylinux_image: [ manylinux1, manylinux2010, manylinux2014 ]
+        manylinux_image: [ manylinux2010, manylinux2014 ]
         include:
           - os: macos-latest
             bitness: 64
@@ -33,12 +33,12 @@ jobs:
           - os: ubuntu-latest
             bitness: 64
             platform_id: manylinux_x86_64
-          - os: ubuntu-latest
-            bitness: 32
-            platform_id: manylinux_i686
+#          - os: ubuntu-latest
+#            bitness: 32
+#            platform_id: manylinux_i686
         exclude:
-          - os: macos-latest
-            bitness: 32
+#          - os: macos-latest
+#            bitness: 32
           #          - os: windows-latest
           #            manylinux_image: manylinux2010
           #          - os: windows-latest
@@ -54,6 +54,9 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
+
+      - name: check env
+        run: pip list
 
       - name: Build and test wheels
         uses: joerick/cibuildwheel@v1.10.0
