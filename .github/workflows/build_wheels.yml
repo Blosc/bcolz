@@ -4,7 +4,8 @@ on: [ push ]
 
 jobs:
   build_wheels:
-    name: Build wheel for cp${{ matrix.python }}-${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+#    name: Build wheel for cp${{ matrix.python }}-
+    name: py${{ matrix.python-version }} on ${{ matrix.os }} using ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
     env:
       CIBW_TEST_REQUIRES: numpy
@@ -54,9 +55,6 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v2
-
-      - name: check env
-        run: pip list
 
       - name: Build and test wheels
         uses: joerick/cibuildwheel@v1.10.0

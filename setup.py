@@ -193,5 +193,5 @@ setup(
     # ),
     # packages=find_packages(),
     # package_data={'bcolz': ['carray_ext.pxd']},
-    # cmdclass=LazyCommandClass(),
+    cmdclass=LazyCommandClass(),
 )
