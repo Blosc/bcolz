@@ -6,6 +6,8 @@
 #
 ########################################################################
 
+import setuptools_scm  # noqa: F401
+import toml  # noqa: F401
 from sys import version_info as v
 
 # Check this Python version is supported
@@ -191,7 +193,7 @@ setup(
         ],
         test=tests_require
     ),
-    packages=find_packages(),
+    # packages=find_packages(),
     package_data={'bcolz': ['carray_ext.pxd']},
     cmdclass=LazyCommandClass(),
 )

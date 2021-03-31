@@ -3,12 +3,11 @@ requires-python = ">=3.7"
 
 [build-system]
 requires = [
-    "setuptools>=18.0",
+    "setuptools>=42",
     "setuptools_scm[toml]>=3.4",
+    "wheel>=0.31.0",
     "Cython>=0.22",
-    "numpy==1.16.5; python_version=='3.7'",
-    "numpy==1.17.3; python_version=='3.8'",
-    "numpy; python_version>='3.9'",
+    "oldest-supported-numpy", # https://github.com/scipy/oldest-supported-numpy
 ]
 build-backend = "setuptools.build_meta"
 
