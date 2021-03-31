@@ -30,17 +30,7 @@ jobs:
           - os: ubuntu-latest
             bitness: 64
             platform_id: manylinux_x86_64
-        #          - os: windows-latest
-        #            bitness: 32
-        #            platform_id: win32
-        #          - os: ubuntu-latest
-        #            bitness: 32
-        #            platform_id: manylinux_i686
         exclude:
-          #          - os: macos-latest
-          #            bitness: 32
-          #          - os: windows-latest
-          #            manylinux_image: manylinux2010
           - os: windows-latest
             manylinux_image: manylinux2010
           - os: macos-latest

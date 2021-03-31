@@ -160,11 +160,6 @@ CFLAGS.append('-std=gnu99')
 
 tests_require = []
 setup(
-    # use_scm_version={
-    #     'write_to'      : "bcolz/version.py",
-    #     'version_scheme': 'guess-next-dev',
-    #     'local_scheme'  : 'dirty-tag',
-    # },
     ext_modules=[Extension(
         'bcolz.carray_ext',
         include_dirs=inc_dirs,
@@ -175,23 +170,5 @@ setup(
         extra_link_args=LFLAGS,
         extra_compile_args=CFLAGS
     )],
-    # setup_requires=[
-    #     'cython>=0.22',
-    #     'numpy>=1.16.5',
-    #     'setuptools>18.0',
-    #     'setuptools-scm'
-    # ],
-    # tests_require=tests_require,
-    # extras_require=dict(
-    #     optional=[
-    #         'numexpr>=2.5.2',
-    #         'dask>=0.9.0',
-    #         'pandas',
-    #         'tables'
-    #     ],
-    #     test=tests_require
-    # ),
-    # packages=find_packages(),
-    # package_data={'bcolz': ['carray_ext.pxd']},
     cmdclass=LazyCommandClass(),
 )
