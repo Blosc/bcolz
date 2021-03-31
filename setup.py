@@ -153,7 +153,6 @@ else:
 if os.getenv('TRAVIS') and os.getenv('CI') and v[0:2] == (2, 7):
     CFLAGS.extend(["-fprofile-arcs", "-ftest-coverage"])
     LFLAGS.append("-lgcov")
-
 CFLAGS.append('-std=gnu99')
 
 setup(
@@ -167,6 +166,6 @@ setup(
         extra_link_args=LFLAGS,
         extra_compile_args=CFLAGS
     )],
+    install_requires=['numpy'],
     cmdclass=LazyCommandClass(),
-    install_requires=['numpy']
 )
