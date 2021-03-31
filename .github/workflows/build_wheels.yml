@@ -4,8 +4,8 @@ on: [ push ]
 
 jobs:
   build_wheels:
-#    name: Build wheel for cp${{ matrix.python }}-
-    name: py${{ matrix.python-version }} on ${{ matrix.os }} using ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
+    #    name: Build wheel for cp${{ matrix.python }}-
+    name: py${{ matrix.python }} on ${{ matrix.os }} using ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
     env:
       CIBW_TEST_REQUIRES: numpy
@@ -16,7 +16,7 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ macos-latest, ubuntu-latest ]
+        os: [ macos-latest, ubuntu-latest windows-latest ]
         python: [ 37, 38, 39 ]
         bitness: [ 64 ]
         manylinux_image: [ manylinux2010, manylinux2014 ]
@@ -24,28 +24,25 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-          #           Run 32 and 64 bit version in parallel for Linux and Windows
-          #          - os: windows-latest
-          #            bitness: 64
-          #            platform_id: win_amd64
+          - os: windows-latest
+            bitness: 64
+            platform_id: win_amd64
           #          - os: windows-latest
           #            bitness: 32
           #            platform_id: win32
           - os: ubuntu-latest
             bitness: 64
             platform_id: manylinux_x86_64
-#          - os: ubuntu-latest
-#            bitness: 32
-#            platform_id: manylinux_i686
+        #          - os: ubuntu-latest
+        #            bitness: 32
+        #            platform_id: manylinux_i686
         exclude:
-#          - os: macos-latest
-#            bitness: 32
+          #          - os: macos-latest
+          #            bitness: 32
           #          - os: windows-latest
           #            manylinux_image: manylinux2010
-          #          - os: windows-latest
-          #            manylinux_image: manylinux2014
-          - os: macos-latest
-            manylinux_image: manylinux2001
+          - os: windows-latest
+            manylinux_image: manylinux2014
           - os: macos-latest
             manylinux_image: manylinux2010
 
@@ -59,7 +56,6 @@ jobs:
       - name: Build and test wheels
         uses: joerick/cibuildwheel@v1.10.0
         env:
-          #          CIBW_ENVIRONMENT: "DISABLE_BLOSC_AVX2=true DISABLE_BCOLZ_AVX2=true"
           CIBW_ENVIRONMENT: "DISABLE_BCOLZ_AVX2=true"
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
