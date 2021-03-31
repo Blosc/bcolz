@@ -19,9 +19,9 @@ jobs:
           - bitness: 64
           - platform_id: macosx_x86_64
            Run 32 and 64 bit version in parallel for Linux and Windows
-                  - os: windows-latest
-            bitness: 64
-            platform_id: win_amd64
+#          - os: windows-latest
+#            bitness: 64
+#            platform_id: win_amd64
 #          - os: windows-latest
 #            bitness: 32
 #            platform_id: win32
