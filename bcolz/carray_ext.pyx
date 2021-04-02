@@ -1378,7 +1378,13 @@ cdef class carray:
         storagef = os.path.join(metadir, STORAGE_FILE)
         with open(storagef, 'rb') as storagefh:
             data = json.loads(storagefh.read().decode('ascii'))
-        dtype_ = np.dtype(data["dtype"])
+        # dtype_ = np.dtype(data["dtype"])
+        if data["dtype"][0] == "[" and data["dtype"][-1] == "]":
+            # read numpy array
+            import ast
+            dtype_ = np.dtype(ast.literal_eval(data["dtype"]))
+        else:
+            dtype_ = np.dtype(data["dtype"])
         chunklen = data["chunklen"]
         cparams = data["cparams"]
         cname = cparams['cname'] if 'cname' in cparams else 'blosclz'
