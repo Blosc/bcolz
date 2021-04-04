@@ -91,5 +91,5 @@ jobs:
       - name: upload macos
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-#          conda activate up
+          # conda activate up
           anaconda upload -l main -u ml4t osx-64/*.tar.bz2
