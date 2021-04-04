@@ -11,8 +11,7 @@ source:
 
 build:
   number: 0
-#  script: {{ PYTHON }} -m pip install -vv .
-#  script: {{ PYTHON }} setup.py install -v
+  script: {{ PYTHON }} -m pip install -vv .
 
 requirements:
   build:
