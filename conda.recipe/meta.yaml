@@ -12,7 +12,7 @@ source:
 build:
   number: 0
 #  script: {{ PYTHON }} -m pip install -vvv .
-  script: {{ PYTHON }} setup.py install -v .
+  script: {{ PYTHON }} setup.py install -v
 
 requirements:
   build:
