@@ -32,7 +32,6 @@ jobs:
           find / -type d -iname "macosx10.15" 2>/dev/null -ls
           ls /
 
-
 #      - name: Setup miniconda3
 #        uses: conda-incubator/setup-miniconda@v2
 #        with:
