@@ -21,16 +21,18 @@ jobs:
         python: [ '3.8' ]
 
     steps:
-      - name: Checkout bcolz
-        uses: actions/checkout@v2
-
       - name: discover macos.sdk
         run: |
-          locate macosx10.14
-          locate macosx10.15
-          find / -type d -iname "macosx10.14" 2>/dev/null -ls
-          find / -type d -iname "macosx10.15" 2>/dev/null -ls
-          ls /
+          xcode-select --print-path
+          xcrun --show-sdk-path
+          ls -l /Library/Developer/
+          ls -l /Library/Developer/CommandLineTools/SDKs/
+          ls -l /Applications
+          ls -l /Applications/Xcode_12.4.app
+          ls -l /Applications/Xcode_10.3.app
+
+#      - name: Checkout bcolz
+#        uses: actions/checkout@v2
 
 #      - name: Setup miniconda3
 #        uses: conda-incubator/setup-miniconda@v2
