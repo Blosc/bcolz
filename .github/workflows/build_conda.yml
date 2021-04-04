@@ -37,6 +37,7 @@ jobs:
         run: |
           mkdir conda/outputs;
           conda activate recipe;
+          conda install -n recipe conda-build anaconda-client
           conda list;
           conda-build --output-folder conda/outputs  --python ${{ matrix.python }} conda/.
 
