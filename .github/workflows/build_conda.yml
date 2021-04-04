@@ -16,9 +16,9 @@ jobs:
       # Ensure that conda-build finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ macos-latest ]
+        os: [ windows-latest ]
 #        python: [ '3.7', '3.9' ]
-        python: [ '3.8' ]
+        python: [ '3.9' ]
 
     steps:
       - name: Checkout bcolz
@@ -39,6 +39,12 @@ jobs:
           conda activate recipe
           conda install -n recipe conda-build anaconda-client
           conda-build --output-folder .  --python ${{ matrix.python }} conda.recipe
+
+      - name: store windows result
+        uses: actions/upload-artifact@v2
+        if: ${{ matrix.os }} == 'windows-latest'
+        with:
+          path: win-64/*.tar.bz2
 
       - name: conda build for ${{ matrix.os }}
         if: ${{ matrix.os }} == 'macos-latest'
