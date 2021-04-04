@@ -15,15 +15,20 @@ build:
 
 requirements:
   build:
+    - python                                 # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
+    - cython                                 # [build_platform != target_platform]
+    - numpy                                  # [build_platform != target_platform]    -
     - {{ compiler('c') }}
   host:
     - python
     - cython
     - numpy
+    - pip
     - setuptools_scm
   run:
     - python
-    - numpy
+    - {{ pin_compatible('numpy') }}
 
 test:
   commands:
@@ -36,3 +41,5 @@ about:
   summary: Columnar and compressed data containers.
   license: BSD-1-Clause
   license_file: LICENSES/BCOLZ.txt
+
+
