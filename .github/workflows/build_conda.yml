@@ -8,6 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       ANACONDA_API_TOKEN: ${{ secrets.ANACONDA_TOKEN }}
+      CFLAGS: -Wno-error
     defaults:
       run:
         shell: bash -l {0}
@@ -16,7 +17,7 @@ jobs:
       # Ensure that conda-build finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ macos-latest ]
         #        python: [ '3.7', '3.8', '3.9' ]
         python: [ '3.8' ]
 
@@ -32,6 +33,7 @@ jobs:
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
+          echo "::set-env -Werror=false::true"
 
       - name: Checkout bcolz
         uses: actions/checkout@v2
