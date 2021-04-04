@@ -11,7 +11,7 @@ source:
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install --no-use-pep517 -vv .
+  script: {{ PYTHON }} -m pip install -vvv .
 
 requirements:
   build:
