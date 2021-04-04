@@ -46,7 +46,7 @@ jobs:
         uses: joerick/cibuildwheel@v1.10.0
         env:
           CIBW_ENVIRONMENT: DISABLE_BCOLZ_AVX2=true
-                            MACOSX_DEPLOYMENT_TARGET=10.14
+                            MACOSX_DEPLOYMENT_TARGET=10.15
           CIBW_BUILD: cp${{ matrix.python }}-${{ matrix.platform_id }}
           CIBW_MANYLINUX_X86_64_IMAGE: ${{ matrix.manylinux_image }}
           CIBW_MANYLINUX_I686_IMAGE: ${{ matrix.manylinux_image }}

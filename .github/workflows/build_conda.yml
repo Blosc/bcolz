@@ -26,6 +26,7 @@ jobs:
           xcode-version: '11.2.1'
 
       - name: check macos.sdk
+        if: ${{ matrix.os != 'macos-latest' }}
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
