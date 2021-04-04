@@ -33,8 +33,6 @@ jobs:
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
-          echo $CFLAGS
-          echo $LFLAGS
 #          echo "::set-env -Werror=false::true"
 
       - name: Checkout bcolz
@@ -58,7 +56,10 @@ jobs:
 
       - name: conda build
         # if: ${{ matrix.os != 'macos-latest' }}
-        run: conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
+        run: |
+          echo $CFLAGS
+          echo $LFLAGS
+          conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
 
         #      - name: conda build for macosc
         #        if: ${{ matrix.os == 'macos-latest' }}
