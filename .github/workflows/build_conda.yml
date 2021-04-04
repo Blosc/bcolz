@@ -26,7 +26,7 @@ jobs:
           xcode-version: '11.2.1'
 
       - name: check macos.sdk
-        if: ${{ matrix.os != 'macos-latest' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
@@ -45,7 +45,7 @@ jobs:
 
       - name: conda install
         run: |
-          conda create -n up python=3.7 anaconda-client
+#          conda create -n up python=3.7 anaconda-client
           conda activate recipe
           conda install -n recipe conda-build conda-verify
           python -m pip install -U pip wheel setuptools
@@ -91,5 +91,5 @@ jobs:
       - name: upload macos
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
-          conda activate up
+#          conda activate up
           anaconda upload -l main -u ml4t osx-64/*.tar.bz2
