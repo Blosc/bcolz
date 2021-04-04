@@ -24,15 +24,15 @@ jobs:
           - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-          - os: windows-latest
-            bitness: 64
-            platform_id: win_amd64
-          - os: ubuntu-latest
-            bitness: 64
-            platform_id: manylinux_x86_64
+#          - os: windows-latest
+#            bitness: 64
+#            platform_id: win_amd64
+#          - os: ubuntu-latest
+#            bitness: 64
+#            platform_id: manylinux_x86_64
         exclude:
-          - os: windows-latest
-            manylinux_image: manylinux2010
+#          - os: windows-latest
+#            manylinux_image: manylinux2010
           - os: macos-latest
             manylinux_image: manylinux2010
 
