@@ -34,6 +34,7 @@ jobs:
           xcode-select --print-path
           xcrun --show-sdk-path
           echo $CFLAGS
+          echo LFLAGS
 #          echo "::set-env -Werror=false::true"
 
       - name: Checkout bcolz
