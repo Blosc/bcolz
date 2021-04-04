@@ -16,9 +16,9 @@ jobs:
       # Ensure that conda-build finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ macos-latest, windows-latest ]
-#        python: [ '3.7', '3.8', '3.9' ]
-        python: [ '3.8' ]
+        os: [ windows-latest ]
+        python: [ '3.7', '3.9' ]
+#        python: [ '3.8' ]
 
     steps:
       - name: Checkout bcolz
@@ -37,7 +37,6 @@ jobs:
         run: |
           conda activate recipe
           conda install -n recipe conda-build anaconda-client
-          conda list
           conda-build --output-folder .  --python ${{ matrix.python }} conda.recipe
           ls
 
