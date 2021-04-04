@@ -24,9 +24,9 @@ jobs:
       - name: discover macos.sdk
         run: |
           xcode-select --print-path
-#          /Applications/Xcode_12.4.app/Contents/Developer
+          # /Applications/Xcode_12.4.app/Contents/Developer
           xcrun --show-sdk-path
-#          /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk
+          #  /Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk
           echo "\n/Library/Developer/\n"
           ls -l /Library/Developer/
           echo "\n/Library/Developer/CommandLineTools\n"
