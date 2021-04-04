@@ -23,6 +23,7 @@ jobs:
     steps:
 
       - uses: maxim-lobanov/setup-xcode@v1
+        if: ${{ matrix.os == 'macos-latest' }}
         with:
           xcode-version: '11.2.1'
 
