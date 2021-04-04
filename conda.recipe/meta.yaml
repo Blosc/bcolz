@@ -12,12 +12,11 @@ source:
 build:
   number: 0
 #  script: {{ PYTHON }} -m pip install -vvv .
-  script: {{ PYTHON }} setup.py install -v
+#  script: {{ PYTHON }} setup.py install -v
 
 requirements:
   build:
     - python                                 # [build_platform != target_platform]
-    - cross-python_{{ target_platform }}     # [build_platform != target_platform]
     - cython                                 # [build_platform != target_platform]
     - numpy                                  # [build_platform != target_platform]    -
     - {{ compiler('c') }}
