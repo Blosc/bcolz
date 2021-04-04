@@ -26,9 +26,8 @@ requirements:
 
 test:
   commands:
-    - python -c 'import bcolz;bcolz.test()'
+    - python -c "import bcolz;bcolz.test()"
   requires:
-    - pip
     - numpy
 
 about:
