@@ -15,25 +15,24 @@ jobs:
       # Ensure that a wheel builder finishes even if another fails
       fail-fast: false
       matrix:
-#        os: [ macos-latest, ubuntu-latest, windows-latest ]
-        os: [ macos-10.15 ]
+        os: [ macos-latest, ubuntu-latest, windows-latest ]
         python: [ 37, 38, 39 ]
         bitness: [ 64 ]
         manylinux_image: [ manylinux2010, manylinux2014 ]
         include:
-          - os: macos-10.15
+          - os: macos-latest
             bitness: 64
             platform_id: macosx_x86_64
-#          - os: windows-latest
-#            bitness: 64
-#            platform_id: win_amd64
-#          - os: ubuntu-latest
-#            bitness: 64
-#            platform_id: manylinux_x86_64
+          - os: windows-latest
+            bitness: 64
+            platform_id: win_amd64
+          - os: ubuntu-latest
+            bitness: 64
+            platform_id: manylinux_x86_64
         exclude:
-#          - os: windows-latest
-#            manylinux_image: manylinux2010
-          - os: macos-10.15
+          - os: windows-latest
+            manylinux_image: manylinux2010
+          - os: macos-latest
             manylinux_image: manylinux2010
 
     steps:
@@ -57,38 +56,38 @@ jobs:
         with:
           path: wheelhouse/*.whl
 
-#  build_sdist:
-#    name: Build source distribution
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v1
-#
-#      - uses: actions/setup-python@v2
-#        name: Install Python
-#        with:
-#          python-version: '3.8'
-#
-#      - name: Build sdist
-#        run: pipx run --spec build pyproject-build --sdist
-#
-#      - uses: actions/upload-artifact@v2
-#        with:
-#          path: dist/*.tar.gz
+  build_sdist:
+    name: Build source distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
 
-#  upload_pypi:
-#    needs: [ build_wheels, build_sdist ]
-#    runs-on: ubuntu-latest
-#    # upload to PyPI on every push (for now)
-#    if: github.event_name == 'push'
-#    steps:
-#      - uses: actions/download-artifact@v2
-#        with:
-#          name: artifact
-#          path: dist
-#
-#      - uses: pypa/gh-action-pypi-publish@master
-#        with:
-#          user: __token__
-#          password: ${{ secrets.PYPI_TOKEN }}
+      - uses: actions/setup-python@v2
+        name: Install Python
+        with:
+          python-version: '3.8'
+
+      - name: Build sdist
+        run: pipx run --spec build pyproject-build --sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: dist/*.tar.gz
+
+  upload_pypi:
+    needs: [ build_wheels, build_sdist ]
+    runs-on: ubuntu-latest
+    # upload to PyPI on every push (for now)
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: artifact
+          path: dist
+
+      - uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_TOKEN }}
 #          password: ${{ secrets.PYPITEST_TOKEN }}
 #          repository_url: https://test.pypi.org/legacy/
