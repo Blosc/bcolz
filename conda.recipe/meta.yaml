@@ -22,6 +22,7 @@ requirements:
     - cython
     - numpy
     - setuptools_scm
+    - build # [ osx64]
   run:
     - python
     - numpy
