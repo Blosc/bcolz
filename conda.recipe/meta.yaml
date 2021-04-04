@@ -11,7 +11,7 @@ source:
 
 build:
   number: 0
-  script: {{ PYTHON }} -m pip install . -vv # [ not osx64 ]
+#  script: {{ PYTHON }} -m pip install . -vv # [ linux or win ]
 
 requirements:
   build:

@@ -38,12 +38,12 @@ jobs:
           conda activate recipe
           conda install -n recipe conda-build conda-verify anaconda-client
 
-      - name: conda build for ${{ matrix.os }}
+      - name: conda build for windows / linux
         if: ${{ matrix.os != 'macos-latest' }}
         run: |
           conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
 
-      - name: conda build for ${{ matrix.os }}
+      - name: conda build for macos
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
           pip install -U pip wheel setuptools build
