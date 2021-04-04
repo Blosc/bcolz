@@ -36,14 +36,14 @@ jobs:
           echo "\nApplications/Xcode_12.4.app/Contents/Developer\n"
           ls -l \Applications/Xcode_12.4.app/Contents/Developer
 
-    - uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: '10.3'
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '10.3'
 
-    - name: rediscover macos.sdk
-      run: |
-        xcode-select --print-path
-        xcrun --show-sdk-path
+      - name: rediscover macos.sdk
+        run: |
+          xcode-select --print-path
+          xcrun --show-sdk-path
 
 #      - name: Checkout bcolz
 #        uses: actions/checkout@v2
