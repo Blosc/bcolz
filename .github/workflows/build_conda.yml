@@ -33,7 +33,8 @@ jobs:
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
-          echo "::set-env -Werror=false::true"
+          echo $CFLAGS
+#          echo "::set-env -Werror=false::true"
 
       - name: Checkout bcolz
         uses: actions/checkout@v2
