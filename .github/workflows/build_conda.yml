@@ -33,16 +33,19 @@ jobs:
           activate-environment: recipe
           channels: defaults, conda-forge, anaconda
 
-      - name: conda builds
+      - name: conda build for ${{ matrix.os }}
         run: |
           conda activate recipe
           conda install -n recipe conda-build anaconda-client
           conda list
-          conda-build --output --output-folder .  --python ${{ matrix.python }} conda.recipe
+          conda-build --output-folder .  --python ${{ matrix.python }} conda.recipe
+          ls
 
       - name: upload macos
         if: ${{ matrix.os }} == 'macos-latest'
-        run: anaconda upload -l main -u ml4t osx-64/*.tar.bz2
+        run: |
+          anaconda upload -l main -u ml4t osx-64/*.tar.bz2
+          echo "macos success"
 
       - name: upload linux
         if: ${{ matrix.os }} == 'ubuntu-latest'
@@ -50,4 +53,6 @@ jobs:
 
       - name: upload windows
         if: ${{ matrix.os }} == 'windows-latest'
-        run: anaconda upload -l main -u ml4t win-64/*.tar.bz2        
+        run: |
+          anaconda upload -l main -u ml4t win-64/*.tar.bz2
+          echo "windows success"
