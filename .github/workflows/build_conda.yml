@@ -35,11 +35,11 @@ jobs:
 
       - name: conda builds
         run: |
-          mkdir conda/outputs;
-          conda activate recipe;
+          mkdir conda/outputs
+          conda activate recipe
           conda install -n recipe conda-build anaconda-client
-          conda list;
-          conda-build --output-folder conda/outputs  --python ${{ matrix.python }} conda/.
+          conda list
+          conda-build --output-folder conda/outputs  --python ${{ matrix.python }} conda.recipe
 
       - name: upload macos
         if: ${{ matrix.os }} == 'macos-latest'
