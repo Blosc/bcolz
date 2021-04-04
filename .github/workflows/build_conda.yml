@@ -35,8 +35,9 @@ jobs:
 
       - name: conda builds
         run: |
-          mkdir conda/outputs
-          conda activate recipe
+          mkdir conda/outputs;
+          conda activate recipe;
+          conda list;
           conda-build --output-folder conda/outputs  --python ${{ matrix.python }} conda/.
 
       - name: upload macos
