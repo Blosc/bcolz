@@ -17,8 +17,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ macos-latest ]
-#        python: [ '3.7', '3.9' ]
-        python: [ '3.8' ]
+        python: [ '3.7', '3.8', '3.9' ]
 
     steps:
       - name: Checkout bcolz
@@ -35,19 +34,20 @@ jobs:
 
       - name: conda install
         run: |
+          conda create -n up python=3.7 anaconda-client
           conda activate recipe
-          conda install -n recipe conda-build conda-verify anaconda-client
+          conda install -n recipe conda-build conda-verify
 
       - name: conda build for windows / linux
-        if: ${{ matrix.os != 'macos-latest' }}
+#        if: ${{ matrix.os != 'macos-latest' }}
         run: |
           conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
 
-      - name: conda build for macos
-        if: ${{ matrix.os == 'macos-latest' }}
-        run: |
-          pip install -U pip wheel setuptools build
-          conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
+#      - name: conda build for macos
+#        if: ${{ matrix.os == 'macos-latest' }}
+#        run: |
+#          pip install -U pip wheel setuptools build
+#          conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
 
       - name: store windows result
         uses: actions/upload-artifact@v2
@@ -80,5 +80,5 @@ jobs:
       - name: upload macos
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
+          conda activate up
           anaconda upload -l main -u ml4t osx-64/*.tar.bz2
-          echo "macos success"

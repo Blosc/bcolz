@@ -11,7 +11,7 @@ source:
 
 build:
   number: 0
-#  script: {{ PYTHON }} -m pip install . -vv # [ linux or win ]
+  script: {{ PYTHON }} -m pip install . -vv
 
 requirements:
   build:
@@ -21,7 +21,6 @@ requirements:
     - cython
     - numpy
     - setuptools_scm
-    - build # [ osx64]
   run:
     - python
     - numpy
