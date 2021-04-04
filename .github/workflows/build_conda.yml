@@ -32,6 +32,8 @@ jobs:
           python-version: ${{ matrix.python }}
           activate-environment: recipe
           channels: defaults, conda-forge, anaconda
+
+      - name: conda builds
         run: |
           mkdir conda/outputs
           conda activate recipe
