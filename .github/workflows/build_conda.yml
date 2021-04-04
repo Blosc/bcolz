@@ -16,9 +16,9 @@ jobs:
       # Ensure that conda-build finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ windows-latest ]
-        python: [ '3.7', '3.9' ]
-#        python: [ '3.8' ]
+        os: [ macos-latest ]
+#        python: [ '3.7', '3.9' ]
+        python: [ '3.8' ]
 
     steps:
       - name: Checkout bcolz
