@@ -4,7 +4,6 @@ on: [ push ]
 
 jobs:
   build_wheels:
-    #    name: Build wheel for cp${{ matrix.python }}-
     name: py${{ matrix.python }} on ${{ matrix.os }} using ${{ matrix.platform_id }}-${{ matrix.manylinux_image }}
     runs-on: ${{ matrix.os }}
     env:
