@@ -17,7 +17,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ macos-latest, windows-latest ]
-        python: [ 37, 38, 39 ]
+#        python: [ '3.7', '3.8', '3.9' ]
+        python: [ '3.8' ]
 
     steps:
       - name: Checkout bcolz
@@ -30,7 +31,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python }}
           activate-environment: recipe
-          conda-build-version: 3.21
           channels: defaults, conda-forge, anaconda
           run: mkdir conda/outputs; conda-build --output-folder conda/outputs  --python ${{ matrix.python }} conda/.
 
