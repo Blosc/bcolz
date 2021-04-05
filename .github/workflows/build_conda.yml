@@ -17,18 +17,18 @@ jobs:
       # Ensure that conda-build finishes even if another fails
       fail-fast: false
       matrix:
-        os: [ macos-10.14 ]
+        os: [ macos-latest ]
         python: [ '3.7', '3.8', '3.9' ]
 
     steps:
 
       - uses: maxim-lobanov/setup-xcode@v1
-        if: ${{ matrix.os == 'macos-10.14' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         with:
           xcode-version: '11.5'
 
       - name: check macos.sdk
-        if: ${{ matrix.os == 'macos-10.14' }}
+        if: ${{ matrix.os == 'macos-latest' }}
         run: |
           xcode-select --print-path
           xcrun --show-sdk-path
