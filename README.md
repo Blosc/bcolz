@@ -35,6 +35,7 @@
 <img src="https://imgur.com/g8emkEZ.png" width="35%">
 </a>
 </p>
+
 bcolz provides columnar, chunked data containers that can be compressed
 either in-memory and on-disk. Column storage allows for efficiently
 querying tables, as well as for cheap column addition and removal. It is
