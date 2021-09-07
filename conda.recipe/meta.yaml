@@ -7,7 +7,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.post2.tar.gz
-  md5: eae95628bb926a78ddcffd9d605c46cd
+  md5: b8c212df89901110fb2b48efe96853a4
 
 build:
   number: 0
@@ -31,10 +31,9 @@ requirements:
 
 test:
   commands:
-    - pytest
+    - python -c "import bcolz; bcolz.test()"
   requires:
     - numpy
-    - pytest
 
 about:
   home: https://github.com/stefan-jansen/bcolz-zipline
