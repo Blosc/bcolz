@@ -7,6 +7,7 @@ requires = [
     "setuptools_scm>=6.2",
     "wheel",
     "Cython>=0.22",
+    "toml",
     # see: https://github.com/scipy/oldest-supported-numpy/blob/master/setup.cfg
     "oldest-supported-numpy"
 ]
