@@ -31,9 +31,14 @@ jobs:
         run: |
           python -VV
           python -m pip install --upgrade pip wheel setuptools
-          pip install -e .
+          pip install -e .[test]
         env:
           DISABLE_BCOLZ_AVX2: true
 
       - name: Run tests
-        run: python -c "import bcolz; bcolz.test()"
+        run: pytest --cov
+
+    - name: Upload coverage data to coveralls.io
+      run: coveralls --service=github
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
