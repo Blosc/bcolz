@@ -54,11 +54,13 @@ jobs:
 
       - name: conda install
         run: |
+          conda install mamba -n base -c conda-forge
           conda activate recipe
-          conda install -n recipe conda-build conda-verify anaconda-client
+          mamba install -n recipe boa -c conda-forge
+          mamba install -n recipe conda-verify anaconda-client
 
       - name: conda build
-        run: conda-build --output-folder . --python ${{ matrix.python }} conda.recipe
+        run: conda mambabuild --output-folder . --python ${{ matrix.python }} conda.recipe
 
       - name: activate uploader
         # address broken client under py3.9
