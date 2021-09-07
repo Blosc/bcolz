@@ -24,7 +24,7 @@ local_scheme = 'dirty-tag'
 [tool.cibuildwheel]
 test-extras = "test"
 test-requires = "numpy"
-test-command = 'pytest "${{ github.workspace }}/bcolz/tests"'
+test-command = "pytest {project}/bcolz/tests"
 build-verbosity = 3
 
 # Optional: support Universal2 for Apple Silicon with these two lines:
