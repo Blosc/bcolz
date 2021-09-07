@@ -211,7 +211,7 @@ def fromiter(iterable, dtype, count, **kwargs):
     return obj
 
 
-def fill(shape, dflt=None, dtype=np.float, **kwargs):
+def fill(shape, dflt=None, dtype=float, **kwargs):
     """fill(shape, dtype=float, dflt=None, **kwargs)
 
     Return a new carray or ctable object of given shape and type, filled with
@@ -293,7 +293,7 @@ def fill(shape, dflt=None, dtype=np.float, **kwargs):
     return obj
 
 
-def zeros(shape, dtype=np.float, **kwargs):
+def zeros(shape, dtype=float, **kwargs):
     """
     zeros(shape, dtype=float, **kwargs)
 
@@ -324,7 +324,7 @@ def zeros(shape, dtype=np.float, **kwargs):
                 **kwargs)
 
 
-def ones(shape, dtype=np.float, **kwargs):
+def ones(shape, dtype=float, **kwargs):
     """
     ones(shape, dtype=float, **kwargs)
 

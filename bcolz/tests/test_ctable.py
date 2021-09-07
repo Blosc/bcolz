@@ -126,10 +126,10 @@ class createTest(MayBeDiskTest):
         """Test create empty ctable and assing names to their columns"""
         N = 0
         dtype = np.dtype(
-            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', np.float)])
+            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', float)])
         ra = np.zeros(N, dtype=dtype)
         ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
-        self.assertEquals(ct.names, ['Alice', 'Bob', 'Charlie'])
+        self.assertEqual(ct.names, ['Alice', 'Bob', 'Charlie'])
         assert_array_equal(ct[:], ra, "ctable values are not correct")
 
     def test06c(self):
@@ -163,10 +163,10 @@ class createTest(MayBeDiskTest):
         """Test create ctable full of zeros and assign names to their columns"""
         N = 10000
         dtype = np.dtype(
-            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', np.float)])
+            [('Alice', np.int16), ('Bob', np.int8), ('Charlie', float)])
         ra = np.zeros(N, dtype=dtype)
         ct = bcolz.zeros(N, dtype=dtype, rootdir=self.rootdir)
-        self.assertEquals(ct.names, ['Alice', 'Bob', 'Charlie'])
+        self.assertEqual(ct.names, ['Alice', 'Bob', 'Charlie'])
         assert_array_equal(ct[:], ra, "ctable values are not correct")
 
     def test07c(self):
@@ -921,7 +921,7 @@ class trimTest(MayBeDiskTest):
         ra = np.fromiter(((i, i * 2.) for i in xrange(N - 200)), dtype='i4,f8')
         t = bcolz.fromiter(((i, i * 2.) for i in xrange(N)), 'i4,f8', N,
                            rootdir=self.rootdir)
-        t.trim(np.int(200))
+        t.trim(int(200))
         assert_array_equal(t[:], ra, "ctable values are not correct")
 
     def test02(self):
@@ -2288,8 +2288,8 @@ class pickleTest(MayBeDiskTest, TestCase):
             self.assertTrue(type(s), bytes)
 
         b2 = pickle.loads(s)
-        self.assertEquals(b2.rootdir, b.rootdir)
-        self.assertEquals(type(b2), type(b))
+        self.assertEqual(b2.rootdir, b.rootdir)
+        self.assertEqual(type(b2), type(b))
 
     def test_pickleable_memory(self):
         b = bcolz.ctable([[1, 2, 3], [1, 2, 3]],
@@ -2302,7 +2302,7 @@ class pickleTest(MayBeDiskTest, TestCase):
             self.assertIsInstance(s, bytes)
 
         b2 = pickle.loads(s)
-        self.assertEquals(type(b2), type(b))
+        self.assertEqual(type(b2), type(b))
 
 
 class FlushDiskTest(MayBeDiskTest, TestCase):
