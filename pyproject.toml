@@ -19,3 +19,14 @@ requires = [
 write_to = "bcolz/version.py"
 version_scheme = 'guess-next-dev'
 local_scheme = 'dirty-tag'
+
+[tool.cibuildwheel]
+test-requires = "numpy"
+test-command = 'python -c "import bcolz; bcolz.test()"'
+build-verbosity = 3
+
+# Optional: support Universal2 for Apple Silicon with these two lines:
+[tool.cibuildwheel.macos]
+archs = ["x86_64", "arm64", "universal2"]
+test-skip = ["*universal2:arm64"]
+
