@@ -1,5 +1,5 @@
 {% set name = "bcolz-zipline" %}
-{% set version = "1.2.3" %}
+{% set version = "1.2.4" %}
 
 package:
   name: {{ name|lower }}
@@ -31,9 +31,10 @@ requirements:
 
 test:
   commands:
-    - python -c "import bcolz;bcolz.test()"
+    - pytest
   requires:
     - numpy
+    - pytest
 
 about:
   home: https://github.com/stefan-jansen/bcolz-zipline
