@@ -64,8 +64,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.1.1
         env:
+          CIBW_BEFORE_ALL_MACOS: brew install hdf5 c-blosc
           CIBW_BUILD: "cp${{ matrix.python }}-*"
-          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15
+          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15 DISABLE_BCOLZ_AVX2=true DISABLE_BCOLZ_SSE2=true
 
       - uses: actions/upload-artifact@v2
         with:
@@ -103,12 +104,11 @@ jobs:
         if: ${{ github.event.inputs.target }} == 'TESTPYPI'
         with:
           user: __token__
-          password: ${{ secrets.TESTPYPI_TOKEN }}
+          password: ${{ secrets.PYPITEST_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
       - name: publish to pypi
         uses: pypa/gh-action-pypi-publish@master
         if: ${{ github.event.inputs.target }} == 'PYPI' || (github.event_name == 'release' && github.event.action == 'published')
-        #        if: startsWith(github.event.head_commit.message, 'PYPI')
         with:
           user: __token__
           password: ${{ secrets.PYPI_TOKEN }}
