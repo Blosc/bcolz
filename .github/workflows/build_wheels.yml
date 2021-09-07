@@ -66,7 +66,7 @@ jobs:
         env:
           CIBW_BEFORE_ALL_MACOS: brew install hdf5 c-blosc
           CIBW_BUILD: "cp${{ matrix.python }}-*"
-          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15 DISABLE_BCOLZ_AVX2=true
+          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15 DISABLE_BCOLZ_AVX2=true DISABLE_BCOLZ_SSE2=true
 
       - uses: actions/upload-artifact@v2
         with:
