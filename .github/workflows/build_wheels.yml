@@ -64,8 +64,9 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.1.1
         env:
+          CIBW_BEFORE_ALL_MACOS: brew install hdf5 c-blosc
           CIBW_BUILD: "cp${{ matrix.python }}-*"
-          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15
+          CIBW_ENVIRONMENT: MACOSX_DEPLOYMENT_TARGET=10.15 DISABLE_BCOLZ_AVX2=true
 
       - uses: actions/upload-artifact@v2
         with:
