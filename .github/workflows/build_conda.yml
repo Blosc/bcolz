@@ -43,9 +43,10 @@ jobs:
         with:
           miniconda-version: "latest"
           auto-update-conda: true
+          mamba-version: "*"
           python-version: ${{ matrix.python }}
           activate-environment: recipe
-          channels: defaults, conda-forge, anaconda
+          channels: conda-forge, defaults, anaconda
 
       - name: create uploader
         # address broken client under py3.9
@@ -53,13 +54,14 @@ jobs:
         run: conda create -n up python=3.7 anaconda-client
 
       - name: conda install
+        shell: bash -l {0}
         run: |
-          conda install mamba -n base -c conda-forge
           conda activate recipe
           mamba install -n recipe boa -c conda-forge
           mamba install -n recipe conda-verify anaconda-client
 
       - name: conda build
+        shell: bash -l {0}
         run: conda mambabuild --output-folder . --python ${{ matrix.python }} conda.recipe
 
       - name: activate uploader

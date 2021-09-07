@@ -23,6 +23,7 @@ requirements:
     - python
     - cython
     - numpy
+    - toml
     - pip
     - setuptools_scm
   run:
