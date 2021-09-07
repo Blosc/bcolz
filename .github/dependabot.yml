@@ -11,3 +11,4 @@ updates:
       - dependency-name: "actions/checkout"
       - dependency-name: "actions/upload-artifact"
       - dependency-name: "actions/download-artifact"
+      - dependency-name: "pypa/cibuildwheel"
