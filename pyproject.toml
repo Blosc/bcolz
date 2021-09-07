@@ -23,7 +23,7 @@ local_scheme = 'dirty-tag'
 
 [tool.cibuildwheel]
 test-requires = "numpy pytest"
-test-command = 'pytest'
+test-command = 'pytest bcolz/tests'
 build-verbosity = 3
 
 # Optional: support Universal2 for Apple Silicon with these two lines:
