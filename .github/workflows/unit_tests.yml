@@ -30,9 +30,10 @@ jobs:
       - name: Install bcolz
         run: |
           python -VV
-          export DISABLE_BCOLZ_AVX2=true
           python -m pip install --upgrade pip wheel setuptools
           pip install -e .
+        env:
+          DISABLE_BCOLZ_AVX2: true
 
       - name: Run tests
         run: python -c "import bcolz; bcolz.test()"
