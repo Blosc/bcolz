@@ -10,14 +10,10 @@
     <a href="https://bcolz.readthedocs.io/en/latest/" target="_blank">
         <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
     </a>
-    <a href="#" target="_blank">
-        <img alt="Build: Travis" src="https://img.shields.io/travis/com/stefan-jansen/bcolz-zipline.svg" />
-    </a>
-    <a href="#" target="_blank">
-        <img alt="Coverage" src="https://coveralls.io/repos/Blosc/bcolz/badge.png" />
-    </a>
-    <a href="#" target="_blank">
-        <img alt="License: BSD" src="https://img.shields.io/badge/License-BSD-yellow.svg" />
+<img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/stefan-jansen/bcolz-zipline/Tests?label=tests"><a href='https://coveralls.io/github/stefan-jansen/bcolz-zipline?branch=main'><img src='https://coveralls.io/repos/github/stefan-jansen/bcolz-zipline/badge.svg?branch=main' alt='Coverage Status' /></a>
+<img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/stefan-jansen/bcolz-zipline/Build%20Wheels?label=PyPI"><a href="#" target="_blank">
+<img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/stefan-jansen/bcolz-zipline/Build%20conda%20distribution?label=Anaconda">
+<img alt="License: BSD" src="https://img.shields.io/badge/License-BSD-yellow.svg" />
     </a>
     <a href="https://twitter.com/ml4trading" target="_blank">
         <img alt="Twitter: @ml4t" src="https://img.shields.io/twitter/follow/ml4trading.svg?style=social" />
@@ -28,57 +24,32 @@
 </p>
 
 
-[comment]: <> (|Appveyor| [![appveyor]&#40;https://img.shields.io/appveyor/ci/FrancescAlted/bcolz.png&#41;]&#40;https://ci.appveyor.com/project/FrancescAlted/bcolz/branch/master&#41;|)
-
 <p align="center">
 <a href="https://www.amazon.com/Machine-Learning-Algorithmic-Trading-alternative/dp/1839217715?pf_rd_r=GZH2XZ35GB3BET09PCCA&pf_rd_p=c5b6893a-24f2-4a59-9d4b-aff5065c90ec&pd_rd_r=91a679c7-f069-4a6e-bdbb-a2b3f548f0c8&pd_rd_w=2B0Q0&pd_rd_wg=GMY5S&ref_=pd_gw_ci_mcx_mr_hp_d">
 <img src="https://imgur.com/g8emkEZ.png" width="35%">
 </a>
 </p>
 
-bcolz provides columnar, chunked data containers that can be compressed
-either in-memory and on-disk. Column storage allows for efficiently
-querying tables, as well as for cheap column addition and removal. It is
-based on [NumPy](http://www.numpy.org), and uses it as the standard data
-container to communicate with bcolz objects, but it also comes with
-support for import/export facilities to/from [HDF5/PyTables
-tables](http://www.pytables.org) and [pandas
-dataframes](http://pandas.pydata.org).
+bcolz provides columnar, chunked data containers that can be compressed either in-memory and on-disk. Column storage allows for efficiently querying tables, as well as for cheap column addition and removal. It is based on [NumPy](http://www.numpy.org), and uses it as the standard data container to communicate with bcolz objects, but it also comes with support for import/export facilities to/from [HDF5/PyTables tables](http://www.pytables.org) and [pandas dataframes](http://pandas.pydata.org).
 
-bcolz objects are compressed by default not only for reducing memory/disk storage, but also to improve I/O speed. The
-compression process is carried out internally by [Blosc](http://blosc.org), a high-performance, multithreaded
-meta-compressor that is optimized for binary data (although it works with text data just fine too).
+bcolz objects are compressed by default not only for reducing memory/disk storage, but also to improve I/O speed. The compression process is carried out internally by [Blosc](http://blosc.org), a high-performance, multithreaded meta-compressor that is optimized for binary data (although it works with text data just fine too).
 
 bcolz can also use [numexpr](https://github.com/pydata/numexpr)
 internally (it does that by default if it detects numexpr installed) or
-[dask](https://github.com/dask/dask) so as to accelerate many vector and query operations (although it can use pure
-NumPy for doing so too). numexpr/dask can optimize the memory usage and use multithreading for doing the computations,
-so it is blazing fast. This, in combination with carray/ctable disk-based, compressed containers, can be used for
-performing out-of-core computations efficiently, but most importantly
+[dask](https://github.com/dask/dask) so as to accelerate many vector and query operations (although it can use pure NumPy for doing so too). numexpr/dask can optimize the memory usage and use multithreading for doing the computations, so it is blazing fast. This, in combination with carray/ctable disk-based, compressed containers, can be used for performing out-of-core computations efficiently, but most importantly
 *transparently*.
 
-Just to whet your
-appetite, [here is an example](http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb)
+Just to whet your appetite, [here is an example](http://nbviewer.ipython.org/github/Blosc/movielens-bench/blob/master/querying-ep14.ipynb)
 with real data, where bcolz is already fulfilling the promise of accelerating memory I/O by using compression.
 
 ## Rationale
 
-By using compression, you can deal with more data using the same amount of memory, which is very good on itself. But in
-case you are wondering about the price to pay in terms of performance, you should know that nowadays memory access is
-the most common bottleneck in many computational scenarios, and that CPUs spend most of its time waiting for data.
-Hence, having data compressed in memory can reduce the stress of the memory subsystem as well.
+By using compression, you can deal with more data using the same amount of memory, which is very good on itself. But in case you are wondering about the price to pay in terms of performance, you should know that nowadays memory access is the most common bottleneck in many computational scenarios, and that CPUs spend most of its time waiting for data. Hence, having data compressed in memory can reduce the stress of the memory subsystem as well.
 
-Furthermore, columnar means that the tabular datasets are stored column-wise order, and this turns out to offer better
-opportunities to improve compression ratio. This is because data tends to expose more similarity in elements that sit in
-the same column rather than those in the same row, so compressors generally do a much better job when data is aligned in
-such column-wise order. In addition, when you have to deal with tables with a large number of columns and your
-operations only involve some of them, a columnar-wise storage tends to be much more effective because minimizes the
-amount of data that travels to CPU caches.
+Furthermore, columnar means that the tabular datasets are stored column-wise order, and this turns out to offer better opportunities to improve compression ratio. This is because data tends to expose more similarity in elements that sit in the same column rather than those in the same row, so compressors generally do a much better job when data is aligned in such column-wise order. In addition, when you have to deal with tables with a large number of columns and your operations only involve some
+of them, a columnar-wise storage tends to be much more effective because minimizes the amount of data that travels to CPU caches.
 
-So, the ultimate goal for bcolz is not only reducing the memory needs of large arrays/tables, but also making bcolz
-operations to go faster than using a traditional data container like those in NumPy or Pandas. That is actually already
-the case in some real-life scenarios (see the notebook above) but that will become pretty more noticeable in combination
-with forthcoming, faster CPUs integrating more cores and wider vector units.
+So, the ultimate goal for bcolz is not only reducing the memory needs of large arrays/tables, but also making bcolz operations to go faster than using a traditional data container like those in NumPy or Pandas. That is actually already the case in some real-life scenarios (see the notebook above) but that will become pretty more noticeable in combination with forthcoming, faster CPUs integrating more cores and wider vector units.
 
 ## Requisites
 
@@ -97,16 +68,26 @@ Optional:
 ## Installing as wheel
 
 There are wheels for Linux and Mac OS X that you can install with
+
 ```python
-pip install bcolz-zipline
+pip
+install
+bcolz - zipline
 ```
-Then also install NumPy with 
+
+Then also install NumPy with
+
 ```python
-pip install numpy
+pip
+install
+numpy
 ```
-and test your installation with 
+
+and test your installation with
+
 ```python
-python -c 'import bcolz;bcolz.test()'
+python - c
+'import bcolz;bcolz.test()'
 ```
 
 ## Building
@@ -115,12 +96,10 @@ There are different ways to compile bcolz, depending if you want to link with an
 
 ### Compiling with an installed Blosc library (recommended)
 
-Python and Blosc-powered extensions have a difficult relationship when compiled using GCC, so this is why using an
-external C-Blosc library is recommended for maximum performance (for details, see
+Python and Blosc-powered extensions have a difficult relationship when compiled using GCC, so this is why using an external C-Blosc library is recommended for maximum performance (for details, see
 <https://github.com/Blosc/python-blosc/issues/110>).
 
-Go to <https://github.com/Blosc/c-blosc/releases> and download and install the C-Blosc library. Then, you can tell bcolz
-where is the C-Blosc library in a couple of ways:
+Go to <https://github.com/Blosc/c-blosc/releases> and download and install the C-Blosc library. Then, you can tell bcolz where is the C-Blosc library in a couple of ways:
 
 Using an environment variable:
 
@@ -146,8 +125,7 @@ $ python setup.py build_ext --inplace
 
 That\'s all. You can proceed with testing section now.
 
-Note: The requirement for the C++ compiler is just for the Snappy dependency. The rest of the other components of Blosc
-are pure C
+Note: The requirement for the C++ compiler is just for the Snappy dependency. The rest of the other components of Blosc are pure C
 (including the LZ4 and Zlib libraries).
 
 ## Testing
