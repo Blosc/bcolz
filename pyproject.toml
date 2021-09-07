@@ -22,7 +22,7 @@ version_scheme = 'guess-next-dev'
 local_scheme = 'dirty-tag'
 
 [tool.cibuildwheel]
-test-requires = "numpy"
+test-requires = "numpy pytest"
 test-command = 'pytest'
 build-verbosity = 3
 
