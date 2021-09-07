@@ -44,7 +44,7 @@ jobs:
         uses: actions/setup-python@v2
 
       - name: Build and test wheels
-        uses: joerick/cibuildwheel@v1.10.0
+        uses: joerick/cibuildwheel@v2.1.1
         env:
           CIBW_ENVIRONMENT: DISABLE_BCOLZ_AVX2=true
                             MACOSX_DEPLOYMENT_TARGET=10.15
