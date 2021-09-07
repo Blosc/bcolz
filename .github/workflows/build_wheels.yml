@@ -104,7 +104,7 @@ jobs:
         if: ${{ github.event.inputs.target }} == 'TESTPYPI'
         with:
           user: __token__
-          password: ${{ secrets.TESTPYPI_TOKEN }}
+          password: ${{ secrets.PYPITEST_TOKEN }}
           repository_url: https://test.pypi.org/legacy/
       - name: publish to pypi
         uses: pypa/gh-action-pypi-publish@master
